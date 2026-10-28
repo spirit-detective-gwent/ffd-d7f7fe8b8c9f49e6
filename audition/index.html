@@ -1,0 +1,7 @@
+<!doctype html><meta name=viewport content="width=device-width,initial-scale=1"><title>Card-play sounds</title>
+<style>body{background:#101522;color:#eee;font:16px system-ui;margin:0;padding:16px}button{display:block;width:100%;margin:8px 0;padding:16px;font-size:18px;border-radius:12px;border:0;background:#26304d;color:#fff;text-align:left}button small{color:#9ab;display:block;font-size:13px}button.cur{background:#4a2a2a}h2{margin:0 0 8px}</style>
+<h2>Card-play sound options</h2><p>Tap to hear each one. Tell me the number you like.</p><div id=l></div>
+<script>
+var N=[["0 (current thud)","Table thump, what you hear now"],["1 Card placed","Short, crisp card laid on a table"],["2 Card deal, soft","Light card flick onto a table"],["3 Card deal, long","Card slide then land"],["4 Card pick, A","Card snap"],["5 Card pick, B","Card snap, lighter"],["6 Card pick, C","Card snap with a slide"],["7 Card flick","Quick flick, very light"],["8 Click","Soft UI click"],["9 Tap","Short, dry tap"],["10 Row select","Mid click with a little body"],["11 Pass","Soft swish with a click"],["12 Swoosh","Fast air whoosh, no thud"],["13 Shield tap","Short metal-and-leather block"],["14 Guard","Heavier shield sound"],["15 Blade ring","Short sword clash"]];
+var l=document.getElementById('l'),cx={};N.forEach(function(n,i){var b=document.createElement('button');if(i==0)b.className='cur';b.innerHTML=n[0]+'<small>'+n[1]+'</small>';var a=new Audio('s/'+(i==0?'o0_current':'o'+i)+'.mp3');b.onclick=function(){a.currentTime=0;a.play()};l.appendChild(b)});
+</script>
