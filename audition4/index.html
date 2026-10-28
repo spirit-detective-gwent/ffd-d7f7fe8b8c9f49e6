@@ -1,0 +1,33 @@
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><title>End songs</title>
+<style>body{background:#101522;color:#eee;font:16px system-ui;margin:0;padding:16px}button{display:block;width:100%;margin:8px 0;padding:16px;font-size:18px;border-radius:12px;border:0;background:#26304d;color:#fff;text-align:left}button small{color:#9ab;display:block;font-size:13px;margin-top:4px}h2{margin:18px 0 4px}.c{background:#4a2a2a}.p{outline:3px solid #f5b942}</style>
+<h1 style="margin:0 0 6px">End-of-game songs</h1><p>Tap to hear. Tap again to restart. Pick one for winning and one for losing.</p><div id=l></div>
+<script>
+var G=[["Win song",[
+["v0","V0 · Current win song","Won! Orchestral winning jingle · spuispuin",1],
+["v1","V1 · Huge brass hit, triumphant sting","Discovery Hit · Kevin MacLeod"],
+["v2","V2 · Heroic orchestra, rising fanfare finish","Dark Star · Kevin MacLeod"],
+["v3","V3 · Real orchestra, Beethoven victory finale","Egmont Overture Finale · Beethoven, mix by Kevin MacLeod"],
+["v4","V4 · Epic drama, horns and drums climax","Achilles · Kevin MacLeod"],
+["v5","V5 · Big, heavy horns and drums","Strength of the Titans · Kevin MacLeod"],
+["v6","V6 · Cool groove: drums and low strings","Gustav Sting · Kevin MacLeod"],
+["v7","V7 · Pounding war drums, no melody","Round Drums · Kevin MacLeod"],
+["v8","V8 · Proud, triumphant after-the-battle finale","Long Road Ahead · Kevin MacLeod"]]],
+["Lose song",[
+["d0","D0 · Current lose song","Der Kleber Sting · Kevin MacLeod",1],
+["d1","D1 · Somber strings, short and gentle","Greta Sting · Kevin MacLeod"],
+["d2","D2 · Sad solo piano","Heartbreaking · Kevin MacLeod"],
+["d3","D3 · Low brass, solemn and heavy","Death of Kings · Kevin MacLeod"],
+["d4","D4 · Dark low drone: bass clarinet and basses","Dissappointment · Kevin MacLeod"],
+["d5","D5 · Mournful cellos with lone oboe","Mourning Song · Kevin MacLeod"],
+["d6","D6 · Dark cello and horn, final held chord","The Reveal · Kevin MacLeod"],
+["d7","D7 · Bittersweet, ends on a hopeful chord","Time Passes · Kevin MacLeod"],
+["d8","D8 · Tense, foreboding fade","Ominous · Kevin MacLeod"]]]];
+var l=document.getElementById('l'),cur=null,curB=null;
+function stop(){if(cur){cur.pause();cur.currentTime=0}if(curB)curB.classList.remove('p');cur=null;curB=null}
+G.forEach(function(g){var h=document.createElement('h2');h.textContent=g[0];l.appendChild(h);
+g[1].forEach(function(n){var b=document.createElement('button');if(n[3])b.className='c';
+b.innerHTML=n[1]+'<small>'+n[2]+'</small>';var a=new Audio('s/'+n[0]+'.mp3');a.preload='none';
+a.onended=function(){if(cur===a)stop()};
+b.onclick=function(){stop();a.currentTime=0;var p=a.play();if(p&&p.catch)p.catch(function(){});cur=a;curB=b;b.classList.add('p')};
+l.appendChild(b)})});
+</script>
