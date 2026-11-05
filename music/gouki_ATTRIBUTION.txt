@@ -1,0 +1,38 @@
+Fox Fire Fist: Delinquent Duel — Gouki Chapter1 final villain (research handoff only; not integrated into game source)
+
+Artist: Eric Matyas
+Source: https://soundimage.org/
+Catalog page (both tracks): https://soundimage.org/dark-ominous/
+License: Soundimage International Public License (CC BY 4.0-shaped; commercial/game OK with attribution; prohibits obscene/pornographic use)
+License text: https://soundimage.org/sample-page/
+Attribution rules: https://soundimage.org/attribution-info/
+FAQ: https://soundimage.org/faqs/
+
+Required in-game credits (when using Matyas tracks alongside others):
+"The Island of Dr. Sinister"
+"Time Running Out"
+by Eric Matyas
+www.soundimage.org
+
+BASE — user said "The Island of Doctor Sinister" / "Doctor Sinister"
+Official title: The Island of Dr. Sinister (exact catalog spelling: Dr.)
+Page: https://soundimage.org/dark-ominous/
+Free MP3: https://soundimage.org/wp-content/uploads/2018/02/The-Island-of-Dr-Sinister.mp3
+Local: /workspace/music/gouki/The-Island-of-Dr-Sinister.mp3
+ffprobe: MP3 ID3, stereo 48 kHz, duration 64.04 s (~1:04 matches page)
+Page loop note: marked "(Looping)" on free MP3 listing. Separate _Looping.mp3 URL 404. Optional LoFi also on page (not staged).
+Blurb: "Care to take a vacation there? Muah hah hah!"
+
+BOSS — user said "Time Is Running Out" / "Time Running Out" / ~1:16
+Official title: Time Running Out (exact; no competing "Time Is Running Out" / "Time's Running Out" catalog titles; those URLs 404)
+Page: https://soundimage.org/dark-ominous/
+Free MP3: https://soundimage.org/wp-content/uploads/2014/02/Time-Running-Out.mp3
+Local: /workspace/music/gouki/Time-Running-Out.mp3
+ffprobe: MP3 ID3, stereo 44.1 kHz, duration 76.51 s (~1:16.5 — matches page 1:16 and user claim)
+Page loop note: title line NOT prefixed "(Looping)"; free companion "Time Running Out_Looping" Ogg linked on same page:
+  https://soundimage.org/wp-content/uploads/2025/10/Time-Running-Out_Looping.ogg
+Local (loop companion, free individual Ogg — not a paid pack): /workspace/music/gouki/Time-Running-Out_Looping.ogg
+ffprobe looping Ogg: vorbis stereo 44.1 kHz, duration 71.78 s
+Blurb: "Slowly being pulled toward inevitable doom."
+
+Paid Ogg packs NOT purchased. No /tmp/m434 source edits.
