@@ -1,0 +1,32 @@
+Fox Fire Fist: Delinquent Duel — Kurata cafeteria (research handoff only; not integrated into game source)
+
+Artist: Eric Matyas
+Source: https://soundimage.org/
+License: Soundimage International Public License (CC BY 4.0-shaped; commercial/game OK with attribution; prohibits obscene/pornographic use)
+License text: https://soundimage.org/sample-page/
+Attribution rules: https://soundimage.org/attribution-info/
+FAQ: https://soundimage.org/faqs/
+
+Required in-game credits (when using Matyas tracks alongside others):
+"Monster Stake Out"
+"Beware of the Blob"
+by Eric Matyas
+www.soundimage.org
+
+BASE — user said "Monster Steakout"
+Official title: Monster Stake Out (spelling: Stake Out, not Steakout; no competing Steakout title found)
+Page: https://soundimage.org/dark-ominous/
+Free MP3: https://soundimage.org/wp-content/uploads/2014/02/Monster-Stake-Out.mp3
+Local: /workspace/music/kurata/Monster-Stake-Out.mp3
+Page loop note: NOT marked "(Looping)"; no separate _Looping free file (404). Page intro says many tracks have looping versions; this listing only shows the single MP3.
+Blurb: "Waiting for those sewer covers to start moving." (~1:06 on page)
+
+BOSS — user said "Beware of the Blob"
+Official title: Beware of the Blob (exact match)
+Page: https://soundimage.org/funny-4/
+Free MP3: https://soundimage.org/wp-content/uploads/2017/12/Beware-of-the-Blob.mp3
+Local: /workspace/music/kurata/Beware-of-the-Blob.mp3
+Page loop note: marked "(Looping)" on free MP3
+Blurb: humorous monster game / sewers or underground (~1:04 on page)
+
+Paid Ogg packs NOT purchased.
