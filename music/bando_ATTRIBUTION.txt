@@ -1,0 +1,36 @@
+Fox Fire Fist: Delinquent Duel — Bando Sports Storehouse (research handoff only; not integrated into game source)
+
+Artist: Eric Matyas
+Source: https://soundimage.org/
+License: Soundimage International Public License (CC BY 4.0-shaped; commercial/game OK with attribution; prohibits obscene/pornographic use)
+License text: https://soundimage.org/sample-page/
+Attribution rules: https://soundimage.org/attribution-info/
+FAQ: https://soundimage.org/faqs/
+
+Required in-game credits (when using Matyas tracks alongside others):
+"Wicked Dreams"
+"Steamtech Mayhem"
+by Eric Matyas
+www.soundimage.org
+
+BASE — user said "Wicked Dreams"
+Official title: Wicked Dreams (exact match)
+Page: https://soundimage.org/horrorsurreal/
+Free MP3: https://soundimage.org/wp-content/uploads/2017/10/Wicked-Dreams.mp3
+Local: /workspace/music/bando/Wicked-Dreams.mp3
+Page loop note: marked "(Looping)" on free MP3
+Blurb: "being chased in a nightmare" / horror-based game (~:52 on page)
+
+BOSS — user said "Steampunk Mayhem"
+Official title: Steamtech Mayhem (Steamtech, not Steampunk; no catalog title "Steampunk Mayhem"; Steampunk-Mayhem.mp3 404)
+Primary catalog page with free MP3 + Looping: https://soundimage.org/sci-fi/
+Also listed on Action page (Ogg paths): https://soundimage.org/action/
+Free MP3: https://soundimage.org/wp-content/uploads/2021/03/Steamtech-Mayhem.mp3
+Free Looping MP3: https://soundimage.org/wp-content/uploads/2021/03/Steamtech-Mayhem_Looping.mp3
+Local: /workspace/music/bando/Steamtech-Mayhem.mp3
+Local (recommended for in-game loop): /workspace/music/bando/Steamtech-Mayhem_Looping.mp3
+Page loop note: free "Steamtech Mayhem | Steamtech Mayhem_Looping" downloads linked; title line itself not prefixed "(Looping)" but dedicated _Looping file exists free
+Blurb: "Quiet, frantic, wispy techno piece." (~1:32 on page)
+Material note: standard vs _Looping are file variants of the same titled work (not competing different songs). Prefer _Looping for boss BGM.
+
+Paid Ogg packs NOT purchased. Free individual Action-page Ogg mirrors exist but were not required; free MP3s staged.
