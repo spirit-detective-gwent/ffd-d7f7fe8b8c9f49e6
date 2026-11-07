@@ -1,0 +1,4 @@
+PC battle portraits. Same stand frame as the shipped 124x192 file.
+Generator: tools/v426 renderSingle, sheet <key>, anim stand, view 0, box [124, 192, 186] scaled by 3.
+The vectors are drawn at the rig supersample (S=4) and fitted into 372x576. Not a walk-sheet crop.
+Phone and iPad keep the 124x192 file. These load only while html.pc-arena is set.
