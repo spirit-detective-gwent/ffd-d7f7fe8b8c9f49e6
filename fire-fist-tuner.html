@@ -67,16 +67,34 @@ label.sl input[type=range]{width:100%;height:40px;accent-color:var(--teal)}
     <input id="slideTo" type="range" min="0" max="1" step="0.01"></label>
   <label class="sl">Stand up<b><small>Seconds to rise after the slide</small><output id="o-stand"></output></b>
     <input id="stand" type="range" min="0.05" max="2" step="0.01"></label>
+  <p style="margin:16px 0 0;font-weight:800">Optional poses</p>
+  <p style="margin:2px 0 0;color:var(--muted);font-size:12px">Off by default, so the move stays exactly as it is in the game until you turn one on.</p>
+  <div class="flip"><span><b>Jump-ready</b><small style="display:block;color:var(--muted)">Knees loaded, just before takeoff</small></span><button id="crouchOn" class="ghost" type="button">Off</button></div>
+  <label class="sl">Jump-ready start<b><output id="o-crouchAt"></output></b>
+    <input id="crouchAt" type="range" min="0" max="8" step="0.01"></label>
+  <label class="sl">Jump-ready length<b><output id="o-crouchDur"></output></b>
+    <input id="crouchDur" type="range" min="0.05" max="2" step="0.01"></label>
+  <div class="flip"><span><b>Air-roll tuck</b><small style="display:block;color:var(--muted)">The twirl spins this ball</small></span><button id="tuckOn" class="ghost" type="button">Off</button></div>
+  <label class="sl">Tuck start<b><output id="o-tuckAt"></output></b>
+    <input id="tuckAt" type="range" min="0" max="8" step="0.01"></label>
+  <label class="sl">Tuck length<b><output id="o-tuckDur"></output></b>
+    <input id="tuckDur" type="range" min="0.05" max="2" step="0.01"></label>
+  <div class="flip"><span><b>Superman punch</b><small style="display:block;color:var(--muted)">The landing special hit</small></span><button id="punchOn" class="ghost" type="button">Off</button></div>
+  <label class="sl">Punch start<b><output id="o-punchAt"></output></b>
+    <input id="punchAt" type="range" min="0" max="8" step="0.01"></label>
+  <label class="sl">Punch length<b><output id="o-punchDur"></output></b>
+    <input id="punchDur" type="range" min="0.05" max="2" step="0.01"></label>
 </div>
 <script>
 (function () {
 'use strict';
 /* Defaults are the live v6.3.5 Fox Fire Fist clock in src/fin.js (FFF_JUMP, tuck, FFF_MEET, FFF_FEET, skid, FFF_Q_BACK, finish). */
-var DEF = { blast: 3.60, twirlDur: 0.50, twirls: 1.75, hang: 0.375, hitRot: 180, flip: 0, slide: 4.475, slideTo: 0.14, stand: 0.45 };
+var DEF = { blast: 3.60, twirlDur: 0.50, twirls: 1.75, hang: 0.375, hitRot: 180, flip: 0, slide: 4.475, slideTo: 0.14, stand: 0.45, crouchOn: 0, crouchAt: 3.25, crouchDur: 0.35, tuckOn: 0, tuckAt: 3.60, tuckDur: 0.50, punchOn: 0, punchAt: 4.30, punchDur: 0.40 };
 var Q_HIT = 0.82, LIFT_HIT = 0.49, SKID = 0.55, HOLD = 0.20;
-var KEYS = ['blast', 'twirlDur', 'twirls', 'hang', 'hitRot', 'flip', 'slide', 'slideTo', 'stand'];
+var KEYS = ['blast', 'twirlDur', 'twirls', 'hang', 'hitRot', 'flip', 'slide', 'slideTo', 'stand', 'crouchAt', 'crouchDur', 'tuckAt', 'tuckDur', 'punchAt', 'punchDur'];
+var TOGS = ['flip', 'crouchOn', 'tuckOn', 'punchOn'];
 var cfg = Object.assign({}, DEF);
-var clip = null, sheet = null, foe = null, bufs = {}, ctxA = null, nodes = [], playing = false, raf = 0, t0 = 0, clock = 0, ready = false;
+var clip = null, sheet = null, foe = null, poses = {}, bufs = {}, ctxA = null, nodes = [], playing = false, raf = 0, t0 = 0, clock = 0, ready = false;
 var parts = [], st = {};
 var cv = document.getElementById('cv'), status = document.getElementById('status');
 
@@ -85,18 +103,21 @@ function num(n) {
   return s.replace(/0+$/, '').replace(/\.$/, '');
 }
 function line() {
-  return 'FF:blast=' + num(cfg.blast) + ',twirlDur=' + num(cfg.twirlDur) + ',twirls=' + num(cfg.twirls) + ',hang=' + num(cfg.hang) + ',hitRot=' + num(cfg.hitRot) + ',flip=' + (cfg.flip ? 1 : 0) + ',slide=' + num(cfg.slide) + ',slideTo=' + num(cfg.slideTo) + ',stand=' + num(cfg.stand);
+  return 'FF:blast=' + num(cfg.blast) + ',twirlDur=' + num(cfg.twirlDur) + ',twirls=' + num(cfg.twirls) + ',hang=' + num(cfg.hang) + ',hitRot=' + num(cfg.hitRot) + ',flip=' + (cfg.flip ? 1 : 0) + ',slide=' + num(cfg.slide) + ',slideTo=' + num(cfg.slideTo) + ',stand=' + num(cfg.stand) + ',crouchOn=' + (cfg.crouchOn ? 1 : 0) + ',crouchAt=' + num(cfg.crouchAt) + ',crouchDur=' + num(cfg.crouchDur) + ',tuckOn=' + (cfg.tuckOn ? 1 : 0) + ',tuckAt=' + num(cfg.tuckAt) + ',tuckDur=' + num(cfg.tuckDur) + ',punchOn=' + (cfg.punchOn ? 1 : 0) + ',punchAt=' + num(cfg.punchAt) + ',punchDur=' + num(cfg.punchDur);
 }
 function paintReadouts() {
   KEYS.forEach(function (k) {
-    if (k === 'flip') return;
+    if (TOGS.indexOf(k) >= 0) return;
     var el = document.getElementById(k), out = document.getElementById('o-' + k);
     if (el) el.value = cfg[k];
     if (out) out.textContent = k === 'hitRot' ? num(cfg.hitRot) + '\u00b0' : num(cfg[k]);
   });
-  var fb = document.getElementById('flip');
-  fb.textContent = cfg.flip ? 'On' : 'Off';
-  fb.classList.toggle('on', !!cfg.flip);
+  TOGS.forEach(function (k) {
+    var fb = document.getElementById(k);
+    if (!fb) return;
+    fb.textContent = cfg[k] ? 'On' : 'Off';
+    fb.classList.toggle('on', !!cfg[k]);
+  });
   document.getElementById('line').textContent = line();
   var d = duration();
   var sc = document.getElementById('scrub');
@@ -206,6 +227,21 @@ function blit(x, name, fx, fy, alpha, rot, scx, scy, feet) {
   x.drawImage(sheet, o[0], o[1], clip.w, clip.h, ax, ay, clip.w * k, clip.h * k);
   x.restore();
 }
+function blitCel(x, im, fx, fy, alpha, rot, feet) {
+  if (!im || !im.complete || !im.naturalWidth) return;
+  var k = layout().k;
+  x.save(); x.globalAlpha = alpha == null ? 1 : alpha; x.translate(fx, fy);
+  if (rot) x.rotate(rot);
+  if (cfg.flip) x.scale(-1, 1);
+  x.drawImage(im, -90 * k, (feet ? -246 : -125) * k, 180 * k, 250 * k);
+  x.restore();
+}
+function poseAt(t) {
+  if (cfg.punchOn && poses.punch && t >= cfg.punchAt && t < cfg.punchAt + cfg.punchDur) return 'punch';
+  if (cfg.tuckOn && poses.tuck && t >= cfg.tuckAt && t < cfg.tuckAt + cfg.tuckDur) return 'tuck';
+  if (cfg.crouchOn && poses.ready && t >= cfg.crouchAt && t < cfg.crouchAt + cfg.crouchDur) return 'ready';
+  return '';
+}
 function layout() {
   var W = cv.clientWidth || 360, H = cv.clientHeight || 420;
   var fw = Math.min(W * 0.42, 150), fh = fw * 1.35;
@@ -261,7 +297,11 @@ function draw(t, dt) {
     glow(x, X, Y - h * 0.52, h * en.rad * 0.45, en.aura * 0.7 * A, '255,210,90');
     x.restore();
   }
-  if (!after) {
+  var use = poseAt(t);
+  if (use === 'ready') blitCel(x, poses.ready, L.hx, L.hy, A, 0, true);
+  else if (use === 'tuck') blitCel(x, poses.tuck, X, Y - h * 0.1, A, spinRot, false);
+  else if (use === 'punch') blitCel(x, poses.punch, X, Y, A, ((cfg.hitRot - 180) * Math.PI / 180) * (cfg.flip ? -1 : 1), true);
+  else if (!after) {
     if (n === 'tuck' || n === 'meet' || n === 'ride') blit(x, 'jump', X, Y - (clip.feet - clip.h * 0.46) * L.k, A, spinRot, 1, 0.72 + 0.22 * (1 - Math.min(1, hz.spin * 3.2)), false);
     else blit(x, frameName(n), X, Y, A, 0, 1, 1, true);
   } else {
@@ -401,10 +441,15 @@ document.getElementById('copy').onclick = function () {
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(s).catch(function () {});
   status.textContent = 'Copied';
 };
-document.getElementById('flip').onclick = function () { cfg.flip = cfg.flip ? 0 : 1; paintReadouts(); if (!playing) draw(clock, 0); };
+TOGS.forEach(function (k) {
+  document.getElementById(k).onclick = function () { cfg[k] = cfg[k] ? 0 : 1; paintReadouts(); if (!playing) draw(clock, 0); };
+});
 KEYS.forEach(function (k) {
-  if (k === 'flip') return;
+  if (TOGS.indexOf(k) >= 0) return;
   document.getElementById(k).oninput = function (e) { cfg[k] = +e.target.value; paintReadouts(); if (!playing) draw(clock, 0); };
+});
+['ready', 'tuck', 'punch'].forEach(function (n) {
+  loadImage('fire-fist/ryo_' + n + '.webp').then(function (im) { poses[n] = im; if (!playing && ready) draw(clock, 0); });
 });
 paintReadouts();
 boot();
@@ -415,7 +460,17 @@ window.FFF_TUNER = {
   seek: function (t) { show(t); },
   duration: duration,
   clock: function () { return clock; },
-  sample: function () { return cv.toDataURL('image/jpeg', 0.5).length; }
+  sample: function () { return cv.toDataURL('image/jpeg', 0.5).length; },
+  sampleAt: function (t, extra) {
+    var prev = {};
+    Object.keys(extra || {}).forEach(function (k) { prev[k] = cfg[k]; cfg[k] = extra[k]; });
+    paintReadouts(); show(t);
+    var n = cv.toDataURL('image/jpeg', 0.5).length;
+    Object.keys(prev).forEach(function (k) { cfg[k] = prev[k]; });
+    paintReadouts();
+    return n;
+  },
+  poseSizes: function () { return [poses.ready, poses.tuck, poses.punch].map(function (im) { return im && im.complete ? im.naturalWidth + 'x' + im.naturalHeight : '0'; }); }
 };
 })();
 </script>
