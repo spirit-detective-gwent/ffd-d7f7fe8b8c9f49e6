@@ -1,0 +1,26 @@
+--- attribution note ---
+Fox Fire Fist: Delinquent Duel — Mai Art & Music Wing (research handoff only; not integrated into game source)
+
+Artist: Eric Matyas
+Source: https://soundimage.org/
+Catalog page (Bounce Light / Bounce Light 2 / Puzzle Clues): https://soundimage.org/puzzle-music-2/
+Catalog page (Bounce Light 3): https://soundimage.org/puzzle-music-8/
+License: Soundimage International Public License (CC BY 4.0-shaped; commercial/game OK with attribution; prohibits obscene/pornographic use)
+License text: https://soundimage.org/sample-page/
+Attribution rules: https://soundimage.org/attribution-info/
+
+Required in-game credits (when using Matyas tracks alongside others):
+"Bounce Light" [or Bounce Light 2 / Bounce Light 3 — confirm]
+"Puzzle Clues"
+by Eric Matyas
+www.soundimage.org
+
+Free MP3 downloads used (page marks each as Looping). Paid Ogg packs were NOT purchased.
+Official free URLs:
+https://soundimage.org/wp-content/uploads/2017/11/Bounce-Light.mp3
+https://soundimage.org/wp-content/uploads/2017/11/Bounce-Light-2.mp3
+https://soundimage.org/wp-content/uploads/2025/06/Bounce-Light-3.mp3
+https://soundimage.org/wp-content/uploads/2017/10/Puzzle-Clues.mp3
+
+User phrasing "Bouncing Light" has NO exact catalog title — needs clarification among Bounce Light / Bounce Light 2 / Bounce Light 3.
+User phrasing "Puzzle Clue, Clues" maps uniquely to "Puzzle Clues".
