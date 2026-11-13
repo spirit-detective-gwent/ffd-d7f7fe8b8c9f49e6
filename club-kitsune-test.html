@@ -58,9 +58,9 @@ button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
 #mark.on{display:block;animation:bob 1s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-4px)}}
 #rings{position:absolute;left:0;top:0;z-index:2;pointer-events:none}
-.ring{position:absolute;border-radius:50%;border:2px solid rgba(126,180,220,.45);box-shadow:inset 0 0 0 1px rgba(126,180,220,.2);display:none}
+.ring{position:absolute;border-radius:50%;border:3px solid rgba(186,220,255,.92);background:rgba(126,180,230,.16);box-shadow:0 0 14px rgba(158,210,255,.55);display:none}
 .ring.on{display:block}
-.eyeS{position:absolute;width:22px;height:14px;margin:-78px 0 0 -11px;z-index:6;pointer-events:none;display:none}
+.eyeS{position:absolute;width:36px;height:22px;margin:-86px 0 0 -18px;z-index:6;pointer-events:none;display:none;filter:drop-shadow(0 0 4px rgba(158,210,255,.9))}
 .eyeS.on{display:block}
 .bub{position:absolute;z-index:7;max-width:150px;padding:4px 7px;border-radius:8px;background:rgba(14,24,48,.92);box-shadow:0 0 0 1px rgba(126,217,207,.5);color:#f4e7d4;font:700 11px/1.3 system-ui;transform:translate(-50%,-100%);pointer-events:none}
 #stick{position:fixed;left:0;top:0;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;pointer-events:none;z-index:18;opacity:0;background:radial-gradient(circle,rgba(255,255,255,.06) 0 55%,rgba(255,255,255,.14) 56% 100%);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28)}
@@ -214,7 +214,7 @@ button:disabled{opacity:.45}
   <header id="hud">
     <div id="top"><div id="loc">Club Kitsune</div><div id="yen">¥60</div></div>
     <div id="eyeRow">
-      <svg id="eye" viewBox="0 0 32 22" aria-hidden="true"><path fill="none" stroke="#9ec8ea" stroke-width="2" d="M2 11C6 4 12 1 16 1s10 3 14 10c-4 7-10 10-14 10S6 18 2 11z"/><circle cx="16" cy="11" r="4" fill="#142844"/></svg>
+      <svg id="eye" viewBox="0 0 32 22" aria-hidden="true"><path fill="none" stroke="#9ec8ea" stroke-width="2" d="M2 11C6 4 12 1 16 1s10 3 14 10c-4 7-10 10-14 10S6 18 2 11z"/><circle id="hudPup" cx="16" cy="11" r="4" fill="#e7b4c6" fill-opacity="0"/></svg>
       <div id="bar"><u id="meterFill"></u></div>
       <span id="meterNum">0</span>
     </div>
@@ -236,7 +236,8 @@ button:disabled{opacity:.45}
     <label>Heat <input id="dbgHeat" type="range" min="0" max="4" value="0" step="1"></label>
     <label><input id="dbgSuit" type="checkbox"> Suit mode</label>
     <label><input id="dbgMute" type="checkbox"> Quiet</label>
-    <p>Before the suit, a win is +25 and a loss is +5. A Suit inside the ring while you are playing fills the meter. Suit mode: a win is +5, and a Suit nearby adds about +4 a second. The bartender still asks for ID.</p>
+    <p>Before the suit, a win is +25 and a loss is +5. The ring is about two tiles. If a Suit is still inside it for a second while you are seated, the eye fills and then the bar runs to 100. Suit mode: a win is +5, and a Suit nearby adds about +4 a second. The bartender still asks for ID.</p>
+    <p id="sndList"></p>
     <p>Ryo has no sit sheet, so his seat, pull, pump and slump are his walk sprite posed on the stool. Guests who are sitting use the game’s real sit sheets. Their lever pull is a lean on that seated sprite.</p>
     <div id="status"></div>
     <button type="button" id="dbgClose" class="hot">Close</button>
@@ -251,150 +252,102 @@ button:disabled{opacity:.45}
 <script>
 (function () {
 'use strict';
-/* The only music file is ck/ck_surf_inspector.mp3 ("Surf Inspector", Kevin MacLeod, CC BY 4.0).
+/* Music: ck/ck_surf_inspector.mp3 ("Surf Inspector", Kevin MacLeod, CC BY 4.0), volume ~47%.
+   Effects in ck/snd/ are CC0 recordings, played at about 90-100%. No synthesized effects.
    This page does not request music/c2night.mp3, music/map.mp3, or ck/ck_lounge.mp3.
-   Footsteps use the game's existing step one-shots. Everything else is synthesized here. */
+   Footsteps stay the game's recorded step one-shots. */
 var CLUB_AUDIO = (function () {
-  var ctx, noise, master, murmur, murmurG, spinSrc, wheelSrc, chipT, muted = false;
+  var muted = false, loops = {};
   var FILE = 'ck_surf_inspector.mp3';
-  var CREDIT = 'Music: “Surf Inspector” Kevin MacLeod (incompetech.com), CC BY 4.0. Mono 64 kbps. Club only — replaces Lobby Time, and it is not used by any other area. Murmur, chips, machines and tables are original sounds made for this page.';
-  function ac() {
-    if (!ctx) {
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return null;
-      ctx = new AC();
-      master = ctx.createGain(); master.gain.value = 1; master.connect(ctx.destination);
-      var len = ctx.sampleRate * 2, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0), i;
-      for (i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
-      noise = buf;
-    }
-    return ctx;
+  var CREDIT = 'Music: “Surf Inspector” Kevin MacLeod (incompetech.com), CC BY 4.0, about 47% volume. Effects are CC0 recordings at about 90–100%. The full list is on the TEST tab.';
+  var LIST = 'CC0 effects in ck/snd/: Kenney (kenney.nl) casino, impact, and RPG packs — chips, cards, creaks, coins, metal lever and reel-stop hits, bells. Freesound CC0: lartti 504763 coins into a slot machine; aghirlandaio 415074 slot reels; Joao_Janz 482663 roulette wheel; jack126guy 361346 slot payout; vumseplutten1709 213922 one-arm jackpot; kyles 455732 bar crowd; 16FPanskaLipovska_Katerina 497946 glass clink.';
+  function src(name) { return P.ck + 'snd/' + name; }
+  function play(name, vol, rate) {
+    if (muted) return null;
+    try {
+      var a = new Audio(src(name));
+      a.volume = vol == null ? 1 : vol;
+      if (rate) a.playbackRate = rate;
+      var p = a.play(); if (p && p.catch) p.catch(function () {});
+      return a;
+    } catch (e) { return null; }
   }
-  function eg(t, dur, peak) {
-    var g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(Math.max(0.0008, peak), t + Math.min(0.02, dur * 0.25));
-    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    g.connect(master);
-    return g;
+  function loop(key, name, vol) {
+    if (loops[key]) return;
+    if (muted) return;
+    var a = new Audio(src(name));
+    a.loop = true; a.volume = vol == null ? 0.9 : vol;
+    loops[key] = a;
+    var p = a.play(); if (p && p.catch) p.catch(function () {});
   }
-  function tone(freq, dur, type, peak, delay, slide) {
-    var c = ac(); if (!c || muted) return;
-    var t = c.currentTime + (delay || 0), o = c.createOscillator();
-    o.type = type || 'sine';
-    o.frequency.setValueAtTime(freq, t);
-    if (slide) o.frequency.exponentialRampToValueAtTime(slide, t + dur);
-    o.connect(eg(t, dur, peak == null ? 0.1 : peak));
-    o.start(t); o.stop(t + dur + 0.02);
-  }
-  function burst(dur, freq, q, peak, delay) {
-    var c = ac(); if (!c || muted || !noise) return;
-    var t = c.currentTime + (delay || 0), s = c.createBufferSource();
-    s.buffer = noise;
-    var f = c.createBiquadFilter();
-    f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q || 0.7;
-    s.connect(f); f.connect(eg(t, dur, peak == null ? 0.08 : peak));
-    s.start(t); s.stop(t + dur + 0.02);
-  }
-  function loopNoise(freq, q, peak) {
-    var c = ac(); if (!c || muted) return null;
-    var s = c.createBufferSource();
-    s.buffer = noise; s.loop = true;
-    var f = c.createBiquadFilter();
-    f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
-    var g = c.createGain(); g.gain.value = peak;
-    s.connect(f); f.connect(g); g.connect(master);
-    s.start();
-    return s;
-  }
-  function chips() {
-    if (chipT) return;
-    function tick() {
-      if (!muted) { burst(0.04, 2200, 4, 0.05); tone(1700 + Math.random() * 700, 0.04, 'square', 0.025); }
-      chipT = setTimeout(tick, 1500 + Math.random() * 1700);
-    }
-    tick();
+  function stop(key) {
+    if (!loops[key]) return;
+    try { loops[key].pause(); } catch (e) {}
+    loops[key] = null;
   }
   return {
     file: FILE,
     credit: CREDIT,
+    list: LIST,
     unlock: function (el) {
-      var c = ac();
-      if (c && c.state === 'suspended') c.resume();
-      if (!murmur && c && !muted) {
-        var s = c.createBufferSource();
-        s.buffer = noise; s.loop = true;
-        var f = c.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 480;
-        murmurG = c.createGain(); murmurG.gain.value = 0.03;
-        s.connect(f); f.connect(murmurG); murmurG.connect(master);
-        s.start(); murmur = s;
-      }
-      chips();
+      loop('crowd', 'crowd.mp3', 0.5);
       if (el && !muted) { var p = el.play(); if (p && p.catch) p.catch(function () {}); }
     },
-    near: function (g) { if (murmurG) murmurG.gain.value = muted ? 0 : g; },
-    mute: function (v) { muted = !!v; if (master) master.gain.value = muted ? 0 : 1; },
-    chime: function () { tone(880, 0.08, 'sine', 0.06); tone(1320, 0.12, 'sine', 0.04, 0.06); },
-    creak: function () { burst(0.18, 280, 0.6, 0.08); tone(180, 0.16, 'triangle', 0.05, 0.02, 90); },
-    chair: function () { burst(0.22, 400, 0.5, 0.07); tone(140, 0.18, 'sine', 0.05); },
+    near: function (v) { if (loops.crowd && !muted) loops.crowd.volume = v; },
+    mute: function (v) {
+      muted = !!v;
+      if (muted) { stop('crowd'); stop('reel'); stop('wheel'); }
+    },
+    chime: function () { play('bell.mp3', 0.85, 1.35); },
+    creak: function () { play('creak.mp3', 1); },
+    chair: function () { play('chair.mp3', 1); },
     bootSlot: function () {
-      burst(0.12, 1800, 2, 0.08);
-      tone(220, 0.08, 'square', 0.04, 0.12);
-      tone(260, 0.08, 'square', 0.04, 0.22);
-      tone(320, 0.08, 'square', 0.045, 0.32);
-      tone(523, 0.1, 'sine', 0.06, 0.45);
-      tone(659, 0.1, 'sine', 0.06, 0.58);
-      tone(880, 0.16, 'sine', 0.07, 0.72);
-      tone(1174, 0.22, 'triangle', 0.05, 0.86);
+      play('coin_in.mp3', 1);
+      play('latch.mp3', 0.95);
+      setTimeout(function () { play('latch.mp3', 0.9, 1.18); }, 160);
+      setTimeout(function () { play('bell.mp3', 0.8, 1.15); }, 420);
     },
-    voice: function () { tone(210, 0.09, 'triangle', 0.06); tone(320, 0.07, 'sine', 0.04, 0.08); burst(0.06, 500, 1, 0.06, 0.16); },
+    voice: function () { play('latch.mp3', 0.95); play('tick.mp3', 0.55); },
     bet: function (n) {
-      if (n >= 20) { burst(0.25, 900, 0.6, 0.1); tone(400, 0.25, 'triangle', 0.05); }
-      else if (n >= 10) { burst(0.08, 2000, 3, 0.09); burst(0.08, 1700, 3, 0.08, 0.09); }
-      else { burst(0.15, 2400, 4, 0.09); tone(1900, 0.06, 'square', 0.04); }
+      if (n >= 20) play('chip_stack.mp3', 1);
+      else if (n >= 10) { play('chip_two.mp3', 1); setTimeout(function () { play('chip_one.mp3', 0.95); }, 90); }
+      else play('chip_one.mp3', 1);
     },
-    clunk: function () { burst(0.12, 160, 0.5, 0.16); tone(70, 0.28, 'sine', 0.14); tone(180, 0.12, 'triangle', 0.06, 0.08); },
-    whir: function () { this.whirStop(); spinSrc = loopNoise(880, 0.7, 0.045); },
-    whirStop: function () { if (spinSrc) { try { spinSrc.stop(); } catch (e) {} spinSrc = null; } },
-    thunk: function (which) { var f = which === 0 ? 90 : which === 1 ? 140 : 210; tone(f, 0.2, 'sine', 0.12); burst(0.08, 300 + which * 120, 0.6, 0.08); },
-    tease: function () { tone(600, 0.12, 'square', 0.05); tone(760, 0.12, 'square', 0.05, 0.12); tone(980, 0.16, 'square', 0.06, 0.26); tone(1280, 0.2, 'square', 0.05, 0.42); },
-    lose: function () { tone(196, 0.16, 'sine', 0.045); tone(146, 0.22, 'sine', 0.04, 0.14); },
-    win: function () { tone(880, 0.4, 'sine', 0.1); this.coins(false); },
-    jack: function () {
-      var i; for (i = 0; i < 6; i++) tone(660 * Math.pow(1.2, i % 4), 0.18, 'sine', 0.08, i * 0.12);
-      this.coins(true); tone(523, 0.4, 'triangle', 0.07, 1.2); tone(659, 0.4, 'triangle', 0.07, 1.4); tone(784, 0.5, 'triangle', 0.07, 1.6);
+    clunk: function () { play('lever.mp3', 1); },
+    whir: function () { stop('reel'); loop('reel', 'reel.mp3', 0.95); },
+    whirStop: function () { stop('reel'); },
+    thunk: function (which) { play(which === 0 ? 'stop_low.mp3' : which === 1 ? 'stop_mid.mp3' : 'stop_high.mp3', 1); },
+    tease: function () {
+      play('tick.mp3', 0.85, 0.9);
+      setTimeout(function () { play('tick.mp3', 0.9, 1.15); }, 140);
+      setTimeout(function () { play('tick.mp3', 1, 1.4); }, 280);
     },
-    coins: function (big) { var n = big ? 14 : 6, i; for (i = 0; i < n; i++) tone(1400 + (i % 5) * 160, 0.07, 'square', big ? 0.05 : 0.035, i * (big ? 0.12 : 0.08)); },
-    felt: function () { burst(0.08, 700, 0.8, 0.06); },
-    card: function () { burst(0.12, 1200, 0.7, 0.07); tone(1800, 0.05, 'square', 0.03, 0.08); },
-    flip: function () { burst(0.1, 1600, 1.2, 0.06); },
-    tap: function () { burst(0.06, 900, 1.5, 0.07); burst(0.05, 1100, 1.5, 0.05, 0.07); },
-    whoosh: function () { burst(0.18, 1400, 0.4, 0.06); tone(500, 0.16, 'sine', 0.04, 0, 200); },
-    bust: function () { tone(90, 0.3, 'sine', 0.1); burst(0.25, 300, 0.4, 0.08, 0.05); },
-    cheer: function () { tone(523, 0.12, 'triangle', 0.05); tone(659, 0.14, 'triangle', 0.05, 0.1); tone(784, 0.2, 'triangle', 0.05, 0.22); },
-    groan: function () { tone(220, 0.22, 'triangle', 0.04); tone(160, 0.26, 'sine', 0.035, 0.12); },
-    bjWin: function () { tone(988, 0.25, 'sine', 0.09); this.coins(false); },
-    natural: function () { tone(880, 0.12, 'sine', 0.08); tone(1174, 0.12, 'sine', 0.07, 0.1); tone(1568, 0.28, 'triangle', 0.07, 0.22); },
-    drop: function (soft) { tone(soft ? 700 : 500, 0.08, 'triangle', soft ? 0.04 : 0.07); burst(0.08, soft ? 1400 : 900, 1, soft ? 0.04 : 0.07); },
-    nobets: function () { this.voice(); tone(1400, 0.1, 'sine', 0.07, 0.18); },
-    wheelOn: function () { if (wheelSrc) return; wheelSrc = loopNoise(180, 0.5, 0.04); },
-    wheelOff: function () { if (wheelSrc) { try { wheelSrc.stop(); } catch (e) {} wheelSrc = null; } },
-    rattle: function () {
-      var gap = 40, elapsed = 0;
-      function tick() {
-        if (!muted) burst(0.03, 1600, 3, 0.07);
-        elapsed += gap; gap *= 1.08;
-        if (elapsed < 3000) setTimeout(tick, gap);
-      }
-      tick();
-    },
-    pocket: function () { burst(0.1, 500, 0.5, 0.1); tone(240, 0.08, 'sine', 0.06, 0.06); tone(180, 0.08, 'sine', 0.05, 0.14); burst(0.06, 2000, 2, 0.08, 0.22); },
-    sweep: function () { burst(0.3, 600, 0.4, 0.06); },
-    clink: function () { tone(2400, 0.05, 'sine', 0.04); burst(0.04, 3000, 4, 0.04); }
+    lose: function () { play('cloth.mp3', 0.9); },
+    win: function () { play('bell.mp3', 1); play('coins.mp3', 1); },
+    jack: function () { play('jackpot.mp3', 1); play('coins_big.mp3', 1); play('bell_long.mp3', 0.9); },
+    coins: function (big) { play(big ? 'coins_big.mp3' : 'coins.mp3', 1); },
+    felt: function () { play('chip_felt.mp3', 1); },
+    card: function () { play('card_slide.mp3', 1); },
+    flip: function () { play('card_flip.mp3', 1); },
+    tap: function () { play('tick.mp3', 0.9); },
+    whoosh: function () { play('card_sweep.mp3', 0.85, 1.15); },
+    bust: function () { play('thud.mp3', 1); play('card_sweep.mp3', 0.8); },
+    cheer: function () { play('bell.mp3', 0.7, 1.2); },
+    groan: function () { play('cloth.mp3', 0.75, 0.85); },
+    bjWin: function () { play('bell.mp3', 1); play('coins.mp3', 1); },
+    natural: function () { play('bell_long.mp3', 1); play('coins.mp3', 1); },
+    drop: function (soft) { play(soft ? 'chip_one.mp3' : 'chip_felt.mp3', soft ? 0.7 : 1); },
+    nobets: function () { play('bell.mp3', 0.9); play('tick.mp3', 0.8); },
+    wheelOn: function () { loop('wheel', 'wheel.mp3', 1); },
+    wheelOff: function () { stop('wheel'); },
+    rattle: function () { this.wheelOn(); },
+    pocket: function () { play('tick.mp3', 1, 0.8); play('stop_high.mp3', 0.9); },
+    sweep: function () { play('card_sweep.mp3', 0.9); },
+    clink: function () { play('glass.mp3', 0.95); }
   };
 })();
 
-var SPW = 64.5, SPH = 86, SPEED = 137, RUN = 210, CELL = 24, TILE = 46, WATCH = 46 * 3, CLOSE = 70;
+var SPW = 64.5, SPH = 86, SPEED = 137, RUN = 210, CELL = 24, TILE = 46, WATCH = Math.round(46 * 1.8), CLOSE = 56;
 var WORLD = { w: 600, h: 2200 };
 var MASK = '<svg viewBox="0 0 32 32"><path fill="#e7b4c6" stroke="#f4e7d4" stroke-width="1.4" d="M5 7 L11 14 L8 27 Q16 31 24 27 L21 14 L27 7 L19 13 L16 5 L13 13 Z"/></svg>';
 var EYE_SVG = '<svg viewBox="0 0 32 18"><path fill="none" stroke="#9ec8ea" stroke-width="2" d="M1 9 C6 2 12 0 16 0s10 2 15 9c-5 7-11 9-15 9S6 16 1 9z"/><circle class="pup" cx="16" cy="9" r="4" fill="none" stroke="#e7b4c6" stroke-width="1.5"/></svg>';
@@ -571,7 +524,7 @@ function bootCast() {
   ST._mika = sit(230, 760, 1, 'play');
   ST._taro = sit(120, 900, 3, 'play');
   ST._dealerT = stand('npc_attendant_idle.webp', 90, 820, 2, 'idle');
-  ST._dealerS = stand('npc_clerk_idle.webp', 520, 800, 1, 'idle');
+  ST._dealerS = stand('npc_attendant_idle.webp', 488, 708, 0, 'idle');
   ST._croupier = stand('npc_courier_idle.webp', 300, 372, 0, 'idle');
   ST._betA = sit(210, 575, 3, 'play');
   ST._betB = sit(390, 575, 3, 'play');
@@ -582,7 +535,7 @@ function bootCast() {
   ST._cashier = stand('npc_attendant_idle.webp', 490, 210, 0, 'idle');
   ST._coat = stand('npc_clerk_idle.webp', 96, 1844, 0, 'idle');
   suits = [
-    { a: makeActor('c2_suit_walk.webp', 8, 300, 1500, 3), route: [[300, 1920], [300, 700]], i: 0, wait: 0, patrol: 1 },
+    { a: makeActor('c2_suit_walk.webp', 8, 248, 1500, 3), route: [[248, 1920], [248, 720], [362, 720], [362, 1920]], i: 0, wait: 0, patrol: 1, look: 0 },
     { a: makeActor('c2_suit_walk.webp', 8, 300, 130, 0), route: null, guard: 1 }
   ];
   suits.forEach(function (s) {
@@ -856,38 +809,55 @@ function stickVec() {
   }
   return null;
 }
-function suitDist() {
-  var best = 1e9, i;
-  for (i = 0; i < suits.length; i++) best = Math.min(best, hypot(suits[i].a.x, suits[i].a.y, ryo.x, ryo.y));
-  return best;
+function patrol() {
+  var i;
+  for (i = 0; i < suits.length; i++) if (suits[i].patrol) return suits[i];
+  return null;
 }
-function paintCues(d) {
-  var showRing = !!ST.playing;
-  suits.forEach(function (s) {
-    var sd = hypot(s.a.x, s.a.y, ryo.x, ryo.y);
-    s.eye.style.left = s.a.x + 'px';
-    s.eye.style.top = s.a.y + 'px';
-    var near = sd < WATCH;
-    s.eye.classList.toggle('on', near && onScreen(s.a));
-    var pup = s.eye.querySelector('.pup');
-    if (pup) pup.setAttribute('fill', sd < CLOSE ? '#e7b4c6' : 'none');
-    s.ring.style.width = (WATCH * 2) + 'px'; s.ring.style.height = (WATCH * 2) + 'px';
-    s.ring.style.left = (s.a.x - WATCH) + 'px'; s.ring.style.top = (s.a.y - WATCH) + 'px';
-    s.ring.classList.toggle('on', showRing);
-  });
+function suitDist() {
+  var s = patrol();
+  return s ? hypot(s.a.x, s.a.y, ryo.x, ryo.y) : 1e9;
+}
+function paintCues() {
+  var s = patrol(), i, other;
+  if (!s) return;
+  var sd = hypot(s.a.x, s.a.y, ryo.x, ryo.y);
+  var look = s.look || 0;
+  s.eye.style.left = s.a.x + 'px';
+  s.eye.style.top = s.a.y + 'px';
+  s.eye.classList.toggle('on', ((ST.playing && sd < WATCH) || look > 0.04) && onScreen(s.a));
+  var pup = s.eye.querySelector('.pup');
+  if (pup) { pup.setAttribute('fill', '#e7b4c6'); pup.setAttribute('fill-opacity', look.toFixed(3)); }
+  var hud = $('hudPup');
+  if (hud) hud.setAttribute('fill-opacity', look.toFixed(3));
+  s.ring.style.width = (WATCH * 2) + 'px';
+  s.ring.style.height = (WATCH * 2) + 'px';
+  s.ring.style.left = (s.a.x - WATCH) + 'px';
+  s.ring.style.top = (s.a.y - WATCH) + 'px';
+  s.ring.classList.toggle('on', !!ST.playing);
+  for (i = 0; i < suits.length; i++) {
+    other = suits[i];
+    if (other === s) continue;
+    if (other.ring) other.ring.classList.remove('on');
+    if (other.eye) other.eye.classList.remove('on');
+  }
 }
 function heatStep(dt) {
-  if (ST.closed || catching || ST.mode === 'fight' || ST.mode === 'fade') return;
-  var d = suitDist(), inR = d < WATCH;
-  paintCues(d);
-  if (ST.playing && inR) {
-    if (ST.suit) ST.meter = Math.min(100, ST.meter + 4 * dt);
-    else if (!ST.snapped) { ST.snapped = 1; ST.meter = 100; }
-  } else if (!inR) ST.snapped = 0;
+  var s = patrol();
+  if (!s) return;
+  if (ST.closed || catching || ST.mode === 'fight' || ST.mode === 'fade') { paintCues(); return; }
+  var d = hypot(s.a.x, s.a.y, ryo.x, ryo.y), inR = d < WATCH;
+  if (!s.look) s.look = 0;
+  if (ST.playing && inR && !ST.suit) {
+    s.look = Math.min(1, s.look + dt);
+    if (s.look >= 1) catchHeat();
+  } else s.look = Math.max(0, s.look - dt / 0.22);
+  if (ST.playing && inR && ST.suit) ST.meter = Math.min(100, ST.meter + 4 * dt);
   if (!ST.playing && !inR) ST.meter = Math.max(0, ST.meter - 2 * dt);
+  paintCues();
   if (ST.meter < 20) { ST.said30 = 0; ST.said70 = 0; }
-  if (ST.meter >= 30 && !ST.said30) { ST.said30 = 1; bark(suits[0].a, "Haven't seen you here before. Enjoying yourself?"); }
-  if (ST.meter >= 70 && !ST.said70) { ST.said70 = 1; bark(suits[0].a, 'Funny. You look awfully young for a high roller.'); }
+  if (ST.meter >= 30 && !ST.said30) { ST.said30 = 1; bark(s.a, "Haven't seen you here before. Enjoying yourself?"); }
+  if (ST.meter >= 70 && !ST.said70) { ST.said70 = 1; bark(s.a, 'Funny. You look awfully young for a high roller.'); }
   if (ST.meter >= 100 && !catching && ST.mode !== 'dlg') catchHeat();
 }
 function notePlay(kind) {
@@ -920,7 +890,7 @@ function idleStep() {
 function ambience() {
   var spots = [[300, 480], [120, 800], [480, 800], [300, 1300], [100, 250]], best = 1e9, i;
   for (i = 0; i < spots.length; i++) best = Math.min(best, hypot(ryo.x, ryo.y, spots[i][0], spots[i][1]));
-  CLUB_AUDIO.near(best < 180 ? 0.07 : best < 340 ? 0.045 : 0.028);
+  CLUB_AUDIO.near(best < 180 ? 0.82 : best < 340 ? 0.58 : 0.42);
   if (best < 160 && Math.random() < 0.01) CLUB_AUDIO.clink();
 }
 function sparkle() {
@@ -964,11 +934,12 @@ function raf(t) {
 
 function paintHud() {
   $('yen').textContent = yenText(ST.yen);
-  $('meterFill').style.width = Math.max(0, Math.min(100, ST.meter)) + '%';
-  $('meterNum').textContent = String(Math.round(ST.meter));
-  $('bar').classList.toggle('hot', ST.meter >= 70);
-  var d = suitDist();
-  $('prox').textContent = ST.playing && d < WATCH ? (ST.suit ? 'A Suit is watching the table' : 'A Suit has the table') : d < WATCH ? 'A Suit is in the aisle' : 'The floor is quiet';
+  var shown = Math.max(0, Math.min(100, Math.round(ST.meter)));
+  $('meterFill').style.width = shown + '%';
+  $('meterNum').textContent = String(shown);
+  $('bar').classList.toggle('hot', shown >= 70);
+  var d = suitDist(), look = patrol() && patrol().look > 0.15;
+  $('prox').textContent = look ? 'A Suit is looking this way' : (ST.playing && d < WATCH ? (ST.suit ? 'A Suit is watching the table' : 'A Suit is at this machine') : 'The floor is quiet');
   $('loc').textContent = ryo.y > 2120 ? 'Kitsune curb' : ST.closed ? 'Club Kitsune — shut' : 'Club Kitsune';
   var box = $('masks'), i;
   if (box.childElementCount !== 4) { box.innerHTML = ''; for (i = 0; i < 4; i++) { var m = document.createElement('i'); m.innerHTML = MASK; box.appendChild(m); } }
@@ -1207,7 +1178,8 @@ function spinSlots() {
     paint(ryo);
     setTimeout(function () { ryo.pose = ''; }, 700);
     if (sc.mult) { ST.yen += Math.round(ST.bet * sc.mult); bumpYen(); }
-    if (sc.kind === 'win' || sc.kind === 'lose') notePlay(sc.kind);
+    if (sc.kind === 'win') notePlay('win');
+    else if (sc.kind === 'lose') notePlay('lose');
     ST.slot.msg = sc.jack ? 'Three gold foxes.' : sc.kind === 'win' ? 'The tray pays.' : sc.kind === 'push' ? 'A pair. The bet comes back.' : 'The reels shrug.';
     ST.slot.winText = sc.mult && sc.kind !== 'push' ? yenText(Math.round(ST.bet * sc.mult)) : '';
     ST.slot.flash = sc.kind === 'win';
@@ -1580,11 +1552,26 @@ async function catchHeat() {
   closeSheet(); closeDlg();
   $('fight').className = '';
   ST.playing = false; ryo.seated = false; ryo.pose = '';
+  if (patrol()) patrol().look = 1;
+  paintCues();
   var level = Math.min(3, ST.heat);
   ST.heat = Math.min(4, ST.heat + 1);
-  ST.meter = 0; ST.snapped = 0; ST.path = null; ST.seat = null;
+  ST.snapped = 0; ST.path = null; ST.seat = null;
+  var from = Math.max(0, Math.min(100, ST.meter)), t0 = performance.now();
+  await new Promise(function (res) {
+    function tick() {
+      var u = Math.min(1, (performance.now() - t0) / 450);
+      ST.meter = from + (100 - from) * u;
+      paintHud();
+      if (u < 1) requestAnimationFrame(tick); else res();
+    }
+    tick();
+  });
+  ST.meter = 100;
   paintHud();
-  say({ name: 'Syndicate Suit', img: fig('c2_suit_fig.webp') }, 'Membership card. Now.', [{ id: 'dlgNext', label: 'Next', hot: true, fn: function () { closeDlg(); afterCard(level); } }]);
+  say({ name: 'Syndicate Suit', img: fig('c2_suit_fig.webp') }, 'Membership card. Now.', [{ id: 'dlgNext', label: 'Next', hot: true, fn: function () {
+    ST.meter = 0; if (patrol()) patrol().look = 0; paintHud(); closeDlg(); afterCard(level);
+  } }]);
 }
 function afterCard(level) {
   if (level === 0) {
@@ -1645,6 +1632,7 @@ function resetAll() {
   ST.blockDoor = false; ST.coat = 0; ST.bet = 5; ST.path = null; ST.then = null; ST.tween = null;
   ST.rolling = false; ST.playing = false; ST.seat = null; ST.token++;
   ST.said30 = 0; ST.said70 = 0; ST.snapped = 0;
+  if (typeof patrol === 'function' && patrol()) patrol().look = 0;
   closeDlg(); $('sheet').className = ''; $('fight').className = ''; $('fade').classList.remove('on');
   ST.mode = 'play';
   ryo.x = 300; ryo.y = 2010; ryo.dir = 3; ryo.seated = false; ryo.pose = ''; ryo.ph = 2;
@@ -1713,9 +1701,10 @@ function onUp(e) {
 function boot() {
   view = $('view'); map = $('map'); actors = $('actors'); props = $('props'); rings = $('rings');
   stickEl = $('stick'); mus = $('mus');
-  mus.volume = 0.34;
+  mus.volume = 0.47;
   mus.src = P.ck + CLUB_AUDIO.file;
   $('cred').textContent = CLUB_AUDIO.credit;
+  if ($('sndList')) $('sndList').textContent = CLUB_AUDIO.list;
   SOLIDS = [];
   drawFloor(); buildProps(); bootCast(); buildSpots(); bindDebug();
   refreshDoor(); placeBouncer(); paintHud(); camera();
@@ -1757,6 +1746,9 @@ function boot() {
     music: function () { return mus.src || ''; },
     suitDist: suitDist,
     note: function (k) { return notePlay(k); },
+    shown: function () { return document.getElementById('meterNum').textContent; },
+    eye: function () { var s = patrol(); return s ? (s.look || 0) : 0; },
+    placeSuit: function (x, y) { var s = patrol(); if (!s) return; s.a.x = x; s.a.y = y; s.wait = 8; paint(s.a); paintCues(); },
     reset: resetAll,
     look: function (x, y, s) {
       hold = true; ryo.x = x; ryo.y = y; cam.S = s || cam.S; cam.tx = x - 200; cam.ty = y - 300;
