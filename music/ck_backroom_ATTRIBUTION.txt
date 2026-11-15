@@ -1,0 +1,15 @@
+Fox Fire Fist: Delinquent Duel — Club Kitsune back room (Punk Tetsu)
+
+Title: tension and distress
+Artist: allen yatsura
+Source: https://opengameart.org/content/tension-and-distress
+License: CC0 1.0 Universal (public domain), verified on the OpenGameArt source page
+In-game file: music/ck_backroom.mp3
+
+Required in-game credits:
+"tension and distress"
+by allen yatsura
+CC0
+https://opengameart.org/content/tension-and-distress
+
+Duration: 2:01. Stereo MP3 at 128 kbps, 44.1 kHz. Tight repeating pulse; loops as a whole-file loop.
