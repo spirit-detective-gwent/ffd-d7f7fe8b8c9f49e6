@@ -3914,7 +3914,7 @@ function applyPst(b, p, pst, bench) { if (!pst) return; { // v4.1 story: the pla
     if (pst.combo) p.combo = true; // v4.3 story combos
     if (pst.ctrPlus) p.ctrPlus = pst.ctrPlus | 0; if (pst.dgPlus) p.dgPlus = pst.dgPlus | 0; // v4.13 bond: Strategic counters, Balanced dodge
     if (pst.buff) p.buff = (p.buff | 0) + (pst.buff | 0); // v4.18 headwear: the first attack hits harder
-    if (pst.read) { p.glamp = pst.lamp | 0; if (b.grp) b.grp.forEach(function (s) { readOne(s); if (s && s.shown != null) s.lampU = s.shown; }); } // v6.5.24 Lampglass Earring: one card in each enemy hand is read; +Spirit when they play it
+    if (pst.read && !bench) { p.glamp = pst.lamp | 0; var t0 = (b.grp && b.grp[0]) || (b.s && b.s[1]); if (t0) { readOne(t0); if (t0.shown != null) t0.lampU = t0.shown; } } // v6.5.36 Lampglass Earring: only one enemy card is read per battle; +Spirit when they play it
     if (pst.gspork) p.gspork = pst.gspork | 0; if (pst.gbcap) p.gbcap = pst.gbcap | 0; if (pst.gofuda) p.gofuda = pst.gofuda | 0; // v6.5.24 Spork Pin / Black Cap / Spirit Ofuda (this fighter's own gear)
     if (pst.soda === 'fizz') p.spirit = Math.min(R.spiritMax, p.spirit + 5); else if (pst.soda === 'cola') addGuard(p, 1); else if (pst.soda === 'orange') p.freeDisc = 1; // v4.34 sodas; v4.69 (Ernest #6): Orange = one free (0 Spirit) mid-battle redraw, opening mulligan stays 2
     if (pst.soda) p.soda = pst.soda;
@@ -4044,7 +4044,7 @@ function resolve0(b, si, me, op, c, fx, add) {
   var g0 = op.guard | 0, np0 = me.nextPierce | 0, dg0 = !!fx.dodged, ct0 = fx.counter, spk = 0;
   if (si === 1 && c.id === 'm_quiet') b.mQuiet = 1;
   if (si === 1 && me.lampU != null && c.u === me.lampU) { me.lampU = null; if (me.shown === c.u) me.shown = null;
-    if (op.glamp && !op.glampUsed && op.hp > 0) { op.glampUsed = 1; var ls0 = op.spirit | 0; op.spirit = Math.min(R.spiritMax, ls0 + op.glamp); var lg = op.spirit - ls0; fx.spirit = (fx.spirit | 0); if (lg > 0) fx.ev.push({ t: 'spirit', side: 1 - si, n: lg }); fx.log.push('Lampglass Earring: saw it coming, +' + lg + ' spirit'); fx.gear = (fx.gear || []).concat(['lampglass']); } }
+    if (op.glamp && !b.glampUsed && !op.glampUsed && op.hp > 0) { b.glampUsed = 1; op.glampUsed = 1; var ls0 = op.spirit | 0; op.spirit = Math.min(R.spiritMax, ls0 + op.glamp); var lg = op.spirit - ls0; fx.spirit = (fx.spirit | 0); if (lg > 0) fx.ev.push({ t: 'spirit', side: 1 - si, n: lg }); fx.log.push('Lampglass Earring: saw it coming, +' + lg + ' spirit'); fx.gear = (fx.gear || []).concat(['lampglass']); } }
   if (si === 0 && me.gspork && me.sporkArm && !me.sporkUsed && c.t === 'atk') { me.buff = (me.buff | 0) + me.gspork; spk = 1; }
   resolve00(b, si, me, op, c, fx, add);
   var dgNow = !!fx.dodged && !dg0;
@@ -6675,7 +6675,7 @@ function startMatch(me, story) { if (typeof commentHide === 'function') commentH
     if (story.ctx.gkLoop) { ev('match:gk:loop:' + (story.ctx.gkRevives | 0)); addLog('<b>He won\u2019t stay down</b>: that item brings him back to full.'); }
     if (story.ctx.gkFin) { /* worn from the endurance loop; one shared Double should close */ var cap = Math.max(18, Math.min(g0.hp, Math.floor(g0.max * 0.42))); g0.hp = cap; g0.max = Math.max(g0.max, cap); ev('match:gk:finhp:' + cap); addLog('<b>Finish him together</b>: Shared Double is ready.'); }
   }
-  if (story && story.pst && story.pst.read) { var rd = (ST.b.grp || [ST.b.s[1]]).map(function (s) { var c = s.hand.find(function (x) { return x.u === s.shown; }); return c ? c.n : null; }).filter(Boolean); if (rd.length) { addLog('<b>Lampglass Earring</b> reads their hand: ' + rd.join(', ')); ev('gear:read:' + rd.length); } } // v4.18
+  if (story && story.pst && story.pst.read) { var rd = (ST.b.grp || [ST.b.s[1]]).map(function (s) { var c = s.hand.find(function (x) { return x.u === s.shown; }); return c ? c.n : null; }).filter(Boolean); if (rd.length) { addLog('<b>Lampglass Earring</b> reads one enemy card: ' + rd.join(', ')); ev('gear:read:' + rd.length); } } // v6.5.36: one card per battle
   if (story && story.ctx && story.ctx.seal) { addLog('<b>Seal</b>: ' + story.ctx.seal); ev('match:seal:' + story.ctx.seal); }
   if (ST.b.freeOpen) { addLog('<b>Drop on them</b>: your first turn is free. They do not answer it.'); ev('match:freeOpen'); }
   try { if (story && root.FFF_WAVE) root.FFF_WAVE.post(ST, story); } catch (eWv1) { ev('wave:post:err'); } /* v6.5.30 ROUND 1 / ROUND 2 */
