@@ -40452,7 +40452,7 @@ function paint(x, st, S, dt) {
   if (st.cuts) st.cuts = st.cuts.filter(function (c) { return c.l > 0; });
   (S.post || []).forEach(function (f) { f(x); });
   x.restore(); k.drawParts(x, st.parts, dt, u);
-  if (S.hits) { x.save(); x.setTransform(SCR, 0, 0, SCR, 0, 0); x.globalAlpha = A; var fs = Math.round(Math.min(44, st.W * 0.1) * (st.lastPop !== S.hits ? 1.15 : 1)); st.lastPop = S.hits;
+  if (S.hits) { x.save(); if (st.scrTxt) x.setTransform(st.dpr, 0, 0, st.dpr, 0, 0); x.globalAlpha = A; var fs = Math.round(Math.min(44, st.W * 0.1) * (st.lastPop !== S.hits ? 1.15 : 1)); st.lastPop = S.hits;
     x.font = 'italic 900 ' + fs + 'px system-ui,sans-serif'; x.textAlign = 'right'; x.lineWidth = 4; x.strokeStyle = S.hcs || '#2a0c00'; var tx = st.W - 18, ty = Math.max(90, st.H * 0.2);
     x.strokeText(S.hits + ' HITS', tx, ty); x.fillStyle = S.hc || '#ffb347'; x.fillText(S.hits + ' HITS', tx, ty); x.restore(); }
   if (S.flash > 0) { x.fillStyle = 'rgba(' + (S.fcol || '255,245,225') + ',' + S.flash + ')'; x.fillRect(0, 0, st.W, st.H); }
