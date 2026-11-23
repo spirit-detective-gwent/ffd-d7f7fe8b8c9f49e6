@@ -305,6 +305,11 @@ footer{font-size:10px;color:#778;margin-top:auto;padding:8px;text-align:center}
 @keyframes spk{0%{opacity:1;transform:rotate(var(--a)) translateY(4px) scaleY(.2)}60%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateY(var(--d,40px)) scaleY(1)}}
 @keyframes spf{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.6);opacity:0}}
 #stage.shake{animation:sshake .32s}
+/* v6.5.59: Energy / Guard stacks in a combo (no zoom): an aura flare per Energy card, a shield-lock ring stamp per Guard card */
+.custk{position:fixed;z-index:47;pointer-events:none;border-radius:50%}
+.custk.fl{background:radial-gradient(circle,rgba(255,255,255,.95) 0,var(--c) 38%,transparent 70%);mix-blend-mode:screen}
+.custk.rg{border:4px solid var(--c);box-shadow:0 0 14px var(--c),inset 0 0 12px var(--c)}
+
 /* v6.5.59: close-up camera (translate + scale as individual properties so the stage shake's transform keeps working) */
 #cuVig{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .18s;background:radial-gradient(ellipse at 50% 38%,rgba(0,0,0,0) 30%,rgba(0,0,12,.5) 100%),rgba(0,0,10,.1)}
 #game.cucam #cuVig{opacity:1}
@@ -7808,6 +7813,16 @@ var COMBO_T_RYO = { 2: { gap: 0.20, dash: 0.2 }, 3: { gap: 0.17, dash: 0.22 } },
  * burst, a white flash + hurt frame + knock-back on the target, and a 95 ms freeze that starts 34 ms after impact. Out: 200 ms while the attacker returns. */
 var CU = { on: false, Z: 1, F: { x: 0, y: 0 }, S: { x: 195, y: 290 }, n: 0 }, CU_IN = 180, CU_OUT = 200, CU_HOLD = 95, CU_DELAY = 34;
 function cuOK() { var c = ST.set.cam; if (c !== 'on' && c !== 'off') c = ((root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches) || ST.set.rm) ? 'off' : 'on'; return c !== 'off' && !ST.ff && !document.documentElement.classList.contains('pc-arena') && innerHeight > innerWidth; }
+/* v6.5.59: one visible beat per stacked Energy (aura flare + the Spirit meter stepping up) or Guard (ring stamp + guard sound + a 1.05x pulse) card in a combo. Same speed as before:
+ * it rides the card's own animation, nothing waits. k = 1-based stack number, n = stack count. */
+function cuStack(si, kind, k, n) {
+  if (ST.ff || !cuStackOK()) return; var g = geo(si), body = sideEl(si).querySelector('.fbody'), col = (si === 0 ? ST.me : ST.foe) === 'ryo' ? '#ffb040' : (si === 0 ? ST.me : ST.foe) === 'aoi' ? '#7fefff' : '#c9a0ff', e = document.createElement('div'), sz = kind === 'charge' ? 100 + 30 * k : 140;
+  e.className = 'custk ' + (kind === 'charge' ? 'fl' : 'rg'); e.style.cssText = 'left:' + (g.x - sz / 2) + 'px;top:' + (g.y - sz / 2) + 'px;width:' + sz + 'px;height:' + sz + 'px;--c:' + col; document.body.appendChild(e);
+  var an = e.animate(kind === 'charge' ? [{ transform: 'scale(.35)', opacity: 0.95 }, { transform: 'scale(1.5)', opacity: 0 }] : [{ transform: 'scale(1.9)', opacity: 0 }, { transform: 'scale(1)', opacity: 1, offset: 0.35 }, { transform: 'scale(1.08)', opacity: 0 }], { duration: kind === 'charge' ? 340 : 360, easing: 'cubic-bezier(.2,.8,.3,1)' }); an.onfinish = function () { e.remove(); }; setTimeout(function () { e.remove(); }, 600);
+  if (kind === 'charge') { var fg = figOf(si); if (fg) fg.glow = 1; } else { playGuard(si, 0.55 + 0.1 * k); if (body && body.animate) body.animate([{ scale: '1' }, { scale: '1.05' }, { scale: '1' }], { duration: 150 }); }
+  ev('cu:stack:' + kind + ':' + k + '/' + n);
+}
+function cuStackOK() { var c = ST.set.cam; if (c !== 'on' && c !== 'off') c = ((root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches) || ST.set.rm) ? 'off' : 'on'; return c !== 'off'; }
 function cuPt(x, y) { return CU.on ? { x: CU.S.x + CU.Z * (x - CU.F.x), y: CU.S.y + CU.Z * (y - CU.F.y) } : { x: x, y: y }; }
 function cuIn(a, d, dir, hz, label) {
   var st = $('#stage'), g = $('#game'); if (CU.on || !cuOK() || !st || !st.animate) return null;
@@ -8106,8 +8121,10 @@ async function doPlay(si, mv) {
     if (fx.chain) { await chainAnim(si, cparts); ev('combo:end:' + si); pre = null; } // v4.5 partner combo: one card's move, then the other's, ~30% faster, sparks between
     if (pre) {
     ST.cm = 1.7;
+    var stk = { charge: 0, guard: 0 }, stN = { charge: pre.filter(function (q) { return q.part.card.t === 'charge'; }).length, guard: pre.filter(function (q) { return q.part.card.t === 'guard'; }).length }, spSt = ST.view[si] ? ST.view[si].spirit : 0; /* v6.5.59 */
     for (var pi = 0; pi < pre.length; pi++) { var q0 = pre[pi], ipc = null; ev('anim:start:' + q0.part.card.id);
-      await figAnim(figOf(si), q0.part.card, (function (q) { return function () { ipc = impactPhase({ ev: q.part.ev, card: q.part.card }, q.view); }; })(q0)); if (ipc) await ipc; ev('anim:end:' + q0.part.card.id); }
+      if (q0.part.card.t === 'charge' && stN.charge > 1 && pre.length === cparts.length) { spSt = Math.min(RU.spiritMax, spSt + E.cardGain(q0.part.card)); if (pi < pre.length - 1) q0.view[si].spirit = spSt; } /* v6.5.59: the Spirit meter steps up per stacked Energy card, not once at the end */
+      await figAnim(figOf(si), q0.part.card, (function (q) { return function () { var tt = q.part.card.t; if ((tt === 'charge' || tt === 'guard') && stN[tt] > 1) cuStack(si, tt, ++stk[tt], stN[tt]); ipc = impactPhase({ ev: q.part.ev, card: q.part.card }, q.view); }; })(q0)); if (ipc) await ipc; ev('anim:end:' + q0.part.card.id); }
     ST.cm = 1;
     if (hits.length) await comboAnim(si, Math.min(3, fx.combo), hits); else AU.play(comboKey(si, Math.min(3, fx.combo)), { gain: 0.9 });
     ev('combo:end:' + si); }
