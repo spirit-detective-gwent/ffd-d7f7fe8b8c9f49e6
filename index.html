@@ -5634,7 +5634,7 @@ function cueArm(self, names, opt, w, nowish, rec) {
 }
 Snd.prototype.at = function (t, name, opt) { // t = seconds on the finisher clock. A buffer that is still decoding plays if it arrives within 0.3 s of the cue.
   opt = opt || {}; var names = [].concat(name), A = this.A, rec = { t: +(+t).toFixed(3), name: names[0], want: names[0], gain: opt.gain || 1, dur: opt.dur || null, offset: opt.offset || 0, fadeOut: opt.fadeOut || null, rate: opt.rate || 1, loop: !!opt.loop, voice: opt.voice ? 1 : 0 };
-  this.sched.push(rec); if (!A) return; var sl = this.slow, tw = sl && t > sl.from ? t + (Math.min(t, sl.to) - sl.from) * (1 / sl.r - 1) : t; cueArm(this, names, opt, this.t0 + tw / this.sp, false, rec); /* v6.5.59: cues after the slow-motion window move out with it */
+  this.sched.push(rec); if (!A) return; var sl = this.slow, tw = this.warp ? this.warp(t) : sl && t > sl.from ? t + (Math.min(t, sl.to) - sl.from) * (1 / sl.r - 1) : t; if (this.warp && opt.dur) { opt = Object.assign({}, opt, { dur: this.warp(t + opt.dur) - tw }); } cueArm(this, names, opt, this.t0 + tw / this.sp, false, rec); /* v6.5.59: cues after the slow-motion window move out with it */
 };
 Snd.prototype.now = function (t, name, opt) { // start right now. Same 0.3 s grace if the buffer is still decoding.
   opt = opt || {}; var names = [].concat(name), A = this.A, rec = { t: +(+t).toFixed(3), name: names[0], want: names[0], gain: opt.gain || 1, dur: null, loop: false, now: 1 };
@@ -5652,7 +5652,8 @@ function backdrop(x, W, H, g, a, t) {
   var gr = x.createLinearGradient(0, g.GY - g.hh * 1.3, 0, g.GY + 30); gr.addColorStop(0, 'rgba(60,24,10,0)'); gr.addColorStop(1, 'rgba(120,48,14,' + 0.35 * a + ')'); x.fillStyle = gr; x.fillRect(0, g.GY - g.hh * 1.3, W, g.hh * 1.3 + 30);
   x.fillStyle = 'rgba(255,170,90,' + 0.25 * a + ')'; x.fillRect(0, g.GY, W, 1.5);
 }
-function banner(x, W, H, sub, a) { if (!sub || a <= 0) return; x.save(); x.globalAlpha = a; x.font = '900 ' + Math.round(Math.min(15, W * 0.038)) + 'px system-ui,sans-serif'; x.textAlign = 'center'; x.fillStyle = '#d5e4f2'; x.shadowColor = 'rgba(0,0,0,.8)'; x.shadowBlur = 6; x.fillText(sub, W / 2, Math.max(40, H * 0.1)); x.restore(); }
+var SCR = 1; /* v6.5.59: the device-pixel scale; text and counters are drawn in screen space so the rush camera does not carry them off the screen */
+function banner(x, W, H, sub, a) { if (!sub || a <= 0) return; x.save(); x.setTransform(SCR, 0, 0, SCR, 0, 0); x.globalAlpha = a; x.font = '900 ' + Math.round(Math.min(15, W * 0.038)) + 'px system-ui,sans-serif'; x.textAlign = 'center'; x.fillStyle = '#d5e4f2'; x.shadowColor = 'rgba(0,0,0,.8)'; x.shadowBlur = 6; x.fillText(sub, W / 2, Math.max(40, H * 0.1)); x.restore(); }
 var OFF = null; // tints are drawn on an offscreen canvas (source-atop on the stage tinted the backdrop as a box)
 function tinted(i, w, h, col) { if (!OFF) OFF = document.createElement('canvas'); var cw = Math.max(1, Math.ceil(w)), ch = Math.max(1, Math.ceil(h)); if (OFF.width < cw) OFF.width = cw; if (OFF.height < ch) OFF.height = ch; var o = OFF.getContext('2d'); o.clearRect(0, 0, OFF.width, OFF.height); o.globalCompositeOperation = 'source-over'; o.drawImage(i, 0, 0, w, h); o.globalCompositeOperation = 'source-atop'; o.fillStyle = col; o.fillRect(0, 0, w, h); o.globalCompositeOperation = 'source-over'; return OFF; }
 function figTarget(x, g, tgt, ox, oy, rot, flash, alpha) { if (!tgt || !tgt.img || !tgt.img.complete || !tgt.img.naturalWidth) return; var i = tgt.img, h = g.fh, w = h * i.naturalWidth / i.naturalHeight;
@@ -5669,30 +5670,61 @@ function drawParts(x, parts, dt, u) { x.save(); x.globalCompositeOperation = 'li
   x.restore(); for (var j = parts.length - 1; j >= 0; j--) if (parts[j].a >= parts[j].l) parts.splice(j, 1); if (parts.length > 700) parts.splice(0, parts.length - 700); }
 /* ---- runner ---- */
 function stFf() { var u = root.FFF_UI; return !!(u && u.ST && u.ST.ff); }
+/* v6.5.59: the rush director. Per kind: the hit times (for the hitstop and the kick), the speed ramp, the tight camera, and a warp()
+ * that maps a finisher-clock time to the real clock so the pre-scheduled sounds stay on the hits through the ramp, the hitstops and the final freeze. */
+function mkDir(kind, S, blowAt, D) {
+  var CFG = root.cuFinal.cfg, hits = [], hs = [], win = null, FZ = (CFG.DELAY + (kind === 'ds' ? 420 : CFG.HOLD)) / 1000, a0, i, cam;
+  if (kind === 'hfb') { a0 = startOf(S, 'rush'); var pr = (HFB_RL - 0.3) / HFB_N; for (i = 0; i < HFB_N; i++) { hits.push(a0 + 0.1 + i * pr); hs.push(i < 15 ? 0.04 : i < 40 ? 0.02 : 0); } win = [a0, a0 + HFB_RL, 0.55, 1.9]; }
+  else if (kind === 'hpc') { a0 = startOf(S, 'petal'); for (i = 0; i < HPC_N; i++) { hits.push(a0 + 0.05 + i * 0.04); hs.push(i < 15 ? 0.04 : i < 40 ? 0.02 : 0); } win = [a0, a0 + 4.2, 0.55, 1.9]; }
+  else if (kind === 'fsc') { a0 = startOf(S, 'cuts'); for (i = 0; i < FSC_N; i++) { hits.push(a0 + 0.1 + i * 0.4); hs.push(i < FSC_N - 1 ? 0.06 : 0); } win = [a0, a0 + 2.0, 0.65, 0.65]; }
+  else if (kind === 'ds') { a0 = startOf(S, 'bind'); }
+  else return null;
+  function rate(t) { if (t >= blowAt) return 1; if (t >= blowAt - CFG.AP) return CFG.R; if (win && t >= win[0] && t < win[1]) return win[2] + (win[3] - win[2]) * (t - win[0]) / (win[1] - win[0]); return 1; }
+  var STEP = 0.004, E = [0], n = Math.ceil(D / STEP) + 2; for (i = 0; i < n; i++) E.push(E[i] + (1 / rate(i * STEP + STEP / 2) - 1) * STEP);
+  function warp(t) { var q = Math.max(0, t) / STEP, k = Math.min(n - 1, Math.floor(q)), ex = E[k] + (E[k + 1] - E[k]) * (q - k), h = 0; for (var j = 0; j < hits.length && hits[j] < t; j++) h += hs[j]; return t + ex + h + (t > blowAt ? FZ : 0); }
+  var ease2 = function (q) { q = Math.max(0, Math.min(1, q)); return q * q * (3 - 2 * q); };
+  function frame(st, W, H, z, c, e, k, a) { var f = { x: c.x, y: c.y }, zz = 1 + (z - 1) * e * (1 + 0.05 * k); return { z: zz, fx: f.x, fy: f.y, ax: f.x + (W / 2 - f.x) * e, ay: f.y + ((a || 0.5) * H - f.y) * e }; }
+  if (kind === 'hfb' || kind === 'hpc') cam = function (st, t, W, H) { var p = st.pf; if (!p) return null; var e = ease2((t - (a0 - 0.45)) / 0.4); if (e <= 0) return null; var k = st.kick || 0, dx = p.fx - p.px, dy = p.fy - p.py, dl = Math.max(1, Math.hypot(dx, dy));
+    return frame(st, W, H, 1.9, { x: p.px * 0.62 + p.fx * 0.38 + dx / dl * 7 * k, y: p.py * 0.62 + p.fy * 0.38 + dy / dl * 7 * k }, e, k, 0.48); };
+  else if (kind === 'fsc') { var OFF = [[0, 0], [-0.2, -0.04], [0.2, 0.02], [-0.12, 0.1], [0.16, -0.1], [0, 0]], ZS = [1.45, 1.6, 1.7, 1.65, 1.8, 2.0];
+    cam = function (st, t, W, H) { var p = st.pf; if (!p) return null; var e = ease2((t - (startOf(S, 'turn') - 0.1)) / 0.5); if (e <= 0) return null; var j = 0; while (j < hits.length && hits[j] <= t + 0.03) j++;
+      var u = j > 0 ? ease2((t - (hits[j - 1] - 0.05)) / 0.16) : 1, o0 = OFF[Math.max(0, j - 1)], o1 = OFF[j], z0 = ZS[Math.max(0, j - 1)], z1 = ZS[j], k = st.kick || 0, h = p.h;
+      return frame(st, W, H, z0 + (z1 - z0) * u, { x: p.fx + (o0[0] + (o1[0] - o0[0]) * u) * h * 1, y: p.fy + (o0[1] + (o1[1] - o0[1]) * u) * h }, e, k * 1.6, 0.46); }; }
+  else if (kind === 'ds') cam = function (st, t, W, H) { var p = st.pf; if (!p || !p.tip) return null; var B = a0, tip = p.tip, pin = p.pin, mid = { x: (tip.x + pin.x) / 2, y: (tip.y + pin.y) / 2 }, c, z, e = 1, b = t - B, d = 0.04 * Math.sin(t * 15);
+    if (t < B - 0.35) return null; if (t < B - 0.05) { e = ease2((t - (B - 0.35)) / 0.3); c = mid; z = 1.5; } // glide: tighten toward the two of them
+    else if (b < 0.35) { c = tip; z = 3.0 + d; } // snap to the pointing finger
+    else if (b < 0.65) { var q = (b - 0.35) / 0.3; c = { x: tip.x + (pin.x - tip.x) * ease2(q * 1.4), y: tip.y + (pin.y - tip.y) * ease2(q * 1.4) }; z = 2.2 + 0.5 * Math.sin(q * Math.PI) + d; } // bounce out to the slip on the foe
+    else if (b < 0.9) { var q2 = ease2((b - 0.65) / 0.12); c = { x: pin.x + (tip.x - pin.x) * q2, y: pin.y + (tip.y - pin.y) * q2 }; z = 3.2 + 0.5 * ease2((b - 0.65) / 0.25) + d; } // back to the fingertip: the charge builds
+    else { var q3 = ease2((b - 0.9) / 0.4); c = { x: tip.x + (mid.x - tip.x) * q3, y: tip.y + (mid.y - tip.y) * q3 }; z = 3.7 - 1.8 * q3; } // the arm straightens: pull back to see it drive the blast
+    return { z: 1 + (z - 1) * e, fx: c.x, fy: c.y, ax: c.x + (W / 2 - c.x) * e, ay: c.y + (H * 0.46 - c.y) * e }; };
+  return { hits: hits, hs: hs, rate: rate, warp: warp, cam: cam, cf: kind === 'ds' ? function (c, st) { var p = st.pf; if (p && p.tip) { c.F = { x: (p.tip.x + p.pin.x) / 2, y: (p.tip.y + p.pin.y) / 2 }; c.Zf = 1.9; c.hold = 420; } } : null };
+}
 function run(canvas, opts, S, draw, sound, impactAt, blowAt, blowSnd) {
   opts = opts || {}; var sp = opts.speed || 1, done = false, blown = false, resolveF, start = 0, last = 0, impact = false, timers = [];
   var pr = new Promise(function (r) { resolveF = r; }), dpr = Math.min(2, root.devicePixelRatio || 1), W = canvas.clientWidth || 360, H = canvas.clientHeight || 640;
   canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); var x = canvas.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
   var tg = opts.target && opts.target.src ? { img: new Image(), scale: opts.target.scale || 1, id: opts.target.id } : null; if (tg) tg.img.src = opts.target.src;
   var st = { W: W, H: H, g: geo(W, H, tg), tg: tg, parts: [], sub: opts.sub || '', stage: '', opts: opts, dpr: dpr }, snd = new Snd(sp), D = total(S); st.u = st.g.hh / 200;
-  if (opts.cuFinal && blowAt != null && root.cuFinal && !stFf()) snd.slow = { from: blowAt - root.cuFinal.cfg.AP, to: blowAt, r: root.cuFinal.cfg.R }; sound(snd, st); FIN.tl = null; FIN.log = { kind: opts.kind, blow: blowAt, stages: S.map(function (q) { return [q[0], startOf(S, q[0]), q[1]]; }), total: D, sched: snd.sched, speed: sp, mode: opts.field ? 'field' : 'pose', sub: opts.sub || '' };
+  var DR = null; if (opts.cuFinal && blowAt != null && root.cuFinal && !stFf()) { snd.slow = { from: blowAt - root.cuFinal.cfg.AP, to: blowAt, r: root.cuFinal.cfg.R }; DR = mkDir(opts.kind, S, blowAt, D); if (DR) { snd.warp = DR.warp; st.dir = DR; } } SCR = dpr; sound(snd, st); FIN.tl = null; FIN.log = { kind: opts.kind, blow: blowAt, stages: S.map(function (q) { return [q[0], startOf(S, q[0]), q[1]]; }), total: D, sched: snd.sched, speed: sp, mode: opts.field ? 'field' : 'pose', sub: opts.sub || '' };
   function blow(skipped) { if (blown) return; blown = true; if (!skipped && blowSnd) blowSnd(snd, st.t || 0); ev('fin:blow:' + opts.kind + (skipped ? ':skipped' : '')); if (!skipped && opts.cuFinal && root.cuFinal) { if (!st.cf) st.cf = root.cuFinal.begin(opts); root.cuFinal.blown(st.cf); } /* v6.5.59: final-blow close-up */ if (opts.onBlow) opts.onBlow(!!skipped); }
   function finish(skipped) { if (done) return; done = true; timers.forEach(clearTimeout); if (st.cf && root.cuFinal) root.cuFinal.end(st.cf); if (skipped) snd.stop(); blow(skipped); if (opts.field) opts.field.pose(null); if (!impact && opts.onImpact) { impact = true; opts.onImpact(); }
     x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, canvas.width, canvas.height); ev('fin:end:' + opts.kind + (skipped ? ':skipped' : '')); resolveF({ skipped: !!skipped, t: st.t || 0 }); }
   function frame(ts) { if (done) return; if (!start) { start = last = ts; } FN++;
     if (st.cf && !st.cf.done && root.cuFinal.hold(st.cf)) { start += ts - last; last = ts; root.requestAnimationFrame(frame); return; } /* v6.5.59: the final freeze: the timeline waits, the last frame stays up */
-    var rr = 1; if (snd.slow && st.t != null && !blown && !stFf() && st.t >= snd.slow.from) { rr = snd.slow.r; start += (ts - last) * (1 - rr); } /* v6.5.59: slow-motion into the blow */
+    if (DR && ts < (st.fz || 0)) { start += ts - last; last = ts; root.requestAnimationFrame(frame); return; } /* v6.5.59: the per-punch hitstop: the timeline waits a few frames */
+    var rr = 1; if (DR && st.t != null && !blown && !stFf()) { rr = DR.rate(st.t); start += (ts - last) * (1 - rr); } else if (snd.slow && st.t != null && !blown && !stFf() && st.t >= snd.slow.from) { rr = snd.slow.r; start += (ts - last) * (1 - rr); } /* v6.5.59: slow-motion into the blow (and the rush's speed ramp) */
     var t = (ts - start) / 1000 * sp, dt = Math.min(0.05, (ts - last) / 1000) * sp * rr; last = ts; st.t = t;
-    if (snd.slow && !st.cf && !blown && !stFf() && t >= snd.slow.from) { st.cf = root.cuFinal.begin(opts); if (st.cf) st.cf.t0 = ts; }
+    if (snd.slow && !st.cf && !blown && !stFf() && t >= snd.slow.from) { st.cf = root.cuFinal.begin(opts); if (st.cf) { st.cf.t0 = ts; if (DR && DR.cf) DR.cf(st.cf, st); } }
+    if (DR) { if (st.di == null) st.di = 0; while (st.di < DR.hits.length && DR.hits[st.di] <= t) { if (t - DR.hits[st.di] < 0.2) { st.kickT = ts; st.kickN = st.di + 1; if (DR.hs[st.di] > 0) st.fz = ts + DR.hs[st.di] * 1000; } st.di++; } st.kick = Math.max(0, 1 - (ts - (st.kickT || -1e9)) / 120); }
     if (t >= D) { finish(false); return; }
     var s0 = stageAt(S, t); if (s0.n !== st.stage) { st.stage = s0.n; ev('fin:stage:' + opts.kind + ':' + s0.n); }
     if (!st.hurtOn && opts.hurtAt != null && t >= opts.hurtAt) { st.hurtOn = 1; if (opts.onHurt) opts.onHurt(); ev('fin:hurt:contact:' + opts.kind); }
     if (!impact && t >= impactAt) { impact = true; if (opts.onImpact) opts.onImpact(); }
     if (!blown && blowAt != null && t >= blowAt) { FIN.tl = { kind: opts.kind, frame: FN, t: +t.toFixed(3) }; blow(false); } // v4.21: sound, damage, reaction and effect on this frame
     x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
-    var cf = st.cf && !st.cf.done ? st.cf : null; if (cf) { x.save(); root.cuFinal.apply(x, W, H, cf); } /* v6.5.59 */
+    var cf = st.cf && !st.cf.done ? st.cf : null, bc = DR && !blown ? DR.cam(st, t, W, H) : null; if (cf) { x.save(); root.cuFinal.apply(x, W, H, cf, bc); } else if (bc) { x.save(); x.translate(bc.ax, bc.ay); x.scale(bc.z, bc.z); x.translate(-bc.fx, -bc.fy); } /* v6.5.59 */
     try { draw(x, st, t, dt, s0); } catch (e) { ev('fin:err:' + (e && e.message)); }
-    if (cf) { x.restore(); root.cuFinal.flash(x, W, H, cf); }
+    if (cf || bc) x.restore(); if (cf) root.cuFinal.flash(x, W, H, cf);
     root.requestAnimationFrame(frame); }
   warm(); ev('fin:start:' + opts.kind);
   timers.push(setTimeout(function () { finish(false); }, D * 1000 / sp + 1500)); // watchdog (rAF throttled in a background tab)
@@ -6170,7 +6202,7 @@ function drawHFB(x, st, t, dt, s0) {
   pose(x, g, fr2, rx, ry, A);
   if (n === 'rush' || n === 'knee' || n === 'kick') { x.save(); x.globalCompositeOperation = 'lighter'; x.strokeStyle = 'rgba(255,220,170,.5)'; x.lineWidth = 1.2; for (var q = 0; q < 6; q++) { var yy = ry - g.hh * rnd(0.2, 0.9); x.beginPath(); x.moveTo(rx - rnd(40, 120) * u, yy); x.lineTo(rx - rnd(5, 20) * u, yy); x.stroke(); } x.restore(); }
   x.restore(); drawParts(x, st.parts, dt, u);
-  if ((n === 'rush' || n === 'final' || n === 'hold') && st.hits) { x.save(); x.globalAlpha = A; var fs = Math.round(Math.min(44, W * 0.1) * (st.lastPop !== st.hits ? 1.15 : 1)); st.lastPop = st.hits;
+  if ((n === 'rush' || n === 'final' || n === 'hold') && st.hits) { x.save(); x.setTransform(SCR, 0, 0, SCR, 0, 0); x.globalAlpha = A; var fs = Math.round(Math.min(44, W * 0.1) * (st.lastPop !== st.hits ? 1.15 : 1)); st.lastPop = st.hits;
     x.font = 'italic 900 ' + fs + 'px system-ui,sans-serif'; x.textAlign = 'right'; x.lineWidth = 4; x.strokeStyle = '#2a0c00'; var tx = W - 18, ty = Math.max(90, H * 0.2);
     x.strokeText(st.hits + ' HITS', tx, ty); x.fillStyle = st.hits >= HFB_N ? '#d5e4f2' : '#7ec8c4'; x.fillText(st.hits + ' HITS', tx, ty); x.restore(); }
   if (n === 'final' && p < 0.25) { x.fillStyle = 'rgba(255,245,225,' + 0.7 * (1 - p * 4) + ')'; x.fillRect(0, 0, W, H); }
@@ -6237,7 +6269,7 @@ function drawFieldDS(x, st, t, dt, s0) {
   if (n === 'burst' && !st.burst) { st.burst = 1; sparkBurst(st.parts, pinX, pinY, 46, u, '170,215,255'); sparkBurst(st.parts, pinX, pinY, 24, u); ev('fin:ds:burst'); mark('fx'); mark('react'); }
   if (n === 'burst' && p < 0.3) { var hb = bkHand(F, L, fr, X, Y); x.save(); x.globalCompositeOperation = 'lighter'; glow(x, hb.x, hb.y, 14 * u, 0.8 * (1 - p / 0.3), '160,210,255'); x.restore(); } // "bang"
   x.restore(); drawParts(x, st.parts, dt, u);
-  if ((n === 'bind' || n === 'burst') && A > 0) { x.save(); x.globalAlpha = A * (n === 'burst' ? 1 - p : Math.min(1, p * 3)); x.font = 'italic 900 ' + Math.round(Math.min(40, W * 0.09)) + 'px system-ui,sans-serif'; x.textAlign = 'right'; x.lineWidth = 4; x.strokeStyle = '#081a33'; var tx = W - 18, ty = Math.max(90, H * 0.2); x.strokeText('BOUND', tx, ty); x.fillStyle = '#bfe2ff'; x.fillText('BOUND', tx, ty); x.restore(); }
+  if ((n === 'bind' || n === 'burst') && A > 0) { x.save(); x.setTransform(SCR, 0, 0, SCR, 0, 0); x.globalAlpha = A * (n === 'burst' ? 1 - p : Math.min(1, p * 3)); x.font = 'italic 900 ' + Math.round(Math.min(40, W * 0.09)) + 'px system-ui,sans-serif'; x.textAlign = 'right'; x.lineWidth = 4; x.strokeStyle = '#081a33'; var tx = W - 18, ty = Math.max(90, H * 0.2); x.strokeText('BOUND', tx, ty); x.fillStyle = '#bfe2ff'; x.fillText('BOUND', tx, ty); x.restore(); }
   if (n === 'stick' && p < 0.3) { x.fillStyle = 'rgba(220,240,255,' + 0.35 * (1 - p / 0.3) + ')'; x.fillRect(0, 0, W, H); }
   if (n === 'burst' && p < 0.25) { x.fillStyle = 'rgba(235,245,255,' + 0.55 * (1 - p * 4) + ')'; x.fillRect(0, 0, W, H); }
   if (st.pose !== fr) { st.pose = fr; ev('fin:bk:' + fr); } banner(x, W, H, st.sub, A);
@@ -6317,20 +6349,22 @@ function drawFieldHFB(x, st, t, dt, s0) {
     ghosts = [[X, Y + h * 0.1, 'jump']]; }
   else if (n === 'rush') { var per = (RL - 0.3) / HFB_N, hi = Math.min(HFB_N, Math.floor((s0.lt - 0.1) / per) + 1), ph = ((s0.lt - 0.1) / per) % 1; st.hits = Math.max(0, hi);
     X = nx + rnd(-2, 2) * u; Y = ny + rnd(-2, 2) * u; lift = air * 0.75 + 5 * u * Math.sin(t * 25); foy = -air - 6 * u * Math.sin(t * 25); frot = (-0.3 + 0.06 * Math.sin(t * 30)) * dir; ffl = st.hits > 0 ? 0.45 * (1 - Math.min(1, ph * 2)) : 0;
+    var kk = st.kick || 0; ffl = Math.max(ffl, 0.7 * kk); fox += -tox * 10 * u * kk; foy += -toy * 10 * u * kk; frot += (st.hits % 2 ? 1 : -1) * 0.07 * kk * dir; /* v6.5.59: every punch is felt: the foe flinches back, flashes and rocks */
     nm = st.hits % 2 ? 'punchR' : 'punchL'; var snap = st.hits > 0 && ph < 0.4 ? (1 - ph / 0.4) : 0; X -= tox * 10 * u * snap; Y -= toy * 10 * u * snap; // each punch snaps toward the foe
-    ghosts = [[X + tox * 8 * u, Y + toy * 8 * u - lift * 0, st.hits % 2 ? 'punchL' : 'punchR'], [X - dir * 7 * u, Y + 3 * u, nm]];
-    if (st.lastHit !== st.hits && st.hits > 0) { st.lastHit = st.hits; var hp = bkHand(F, L, nm, X, Y - lift); sparkBurst(st.parts, hp.x + rnd(-6, 6) * u, hp.y + rnd(-6, 6) * u, 7, u, '255,230,160'); ev('fin:hit:' + st.hits); } }
+    ghosts = [[X + tox * 8 * u, Y + toy * 8 * u - lift * 0, st.hits % 2 ? 'punchL' : 'punchR'], [X - dir * 7 * u, Y + 3 * u, nm], [X + tox * 18 * u + dir * 5 * u, Y + toy * 18 * u, st.hits % 2 ? 'punchL' : 'punchR'], [X - dir * 15 * u, Y + 5 * u, st.hits % 2 ? 'punchL' : 'punchR']]; /* the Stand-style echo: more fists, fading out behind */
+    if (st.lastHit !== st.hits && st.hits > 0) { st.lastHit = st.hits; var hp = bkHand(F, L, nm, X, Y - lift); sparkBurst(st.parts, hp.x + rnd(-6, 6) * u, hp.y + rnd(-6, 6) * u, 11, u, '255,230,160'); sparkBurst(st.parts, L.fx + rnd(-8, 8) * u, L.fy - h * rnd(0.35, 0.7), 5, u, '255,246,220'); ev('fin:hit:' + st.hits); }
+    if (kk > 0.05) { x.save(); x.globalCompositeOperation = 'lighter'; var hq = bkHand(F, L, nm, X, Y - lift); glow(x, hq.x - tox * 14 * u, hq.y - toy * 14 * u, (16 + 14 * kk) * u, 0.7 * kk, '255,190,90'); x.restore(); } }
   else if (n === 'final') { st.hits = HFB_N; X = nx; Y = ny; nm = 'final'; lift = air * 0.75 * (1 - ease(p)); foy = -air * (1 - Math.min(1, p * 3)); fox = -tox * 16 * u * Math.min(1, p * 2); foy -= toy * 16 * u * Math.min(1, p * 2); frot = -0.3 * dir * (1 - p); ffl = p < 0.3 ? 0.9 : 0;
     if (!st.big) { st.big = 1; var fp = bkHand(F, L, 'final', X, Y - lift); sparkBurst(st.parts, fp.x, fp.y, 46, u); sparkBurst(st.parts, L.fx, L.fy - h * 0.5, 20, u, '255,230,160'); mark('fx'); mark('react'); } }
   else { var e3 = ease(Math.min(1, p * 1.6)); X = nx + (L.hx - nx) * e3; Y = ny + (L.hy - ny) * e3; nm = 'finish'; lift = h * 0.1 * Math.sin(e3 * Math.PI); if (e3 < 1) ghosts = [[nx + (L.hx - nx) * e3 * 0.7, ny + (L.hy - ny) * e3 * 0.7, 'finish']]; }
-  var sh = n === 'final' && p < 0.4 ? 6 * u : n === 'kick' && p > 0.33 && p < 0.5 ? 3 * u : 0; x.save(); x.translate(rnd(-sh, sh), rnd(-sh, sh));
+  var sh = n === 'final' && p < 0.4 ? 6 * u : n === 'kick' && p > 0.33 && p < 0.5 ? 3 * u : n === 'rush' ? 2.4 * u * (st.kick || 0) : 0; st.pf = { px: X, py: Y - lift - h * 0.45, fx: L.fx + fox, fy: L.fy - h * 0.5 + foy, h: h }; x.save(); x.translate(rnd(-sh, sh), rnd(-sh, sh));
   softFig(x, F.cv('foe'), T, fox, foy, ffl > 0 ? 'rgba(255,230,190,' + ffl + ')' : null, foy < -2 * u); // lifted: its box edge is feathered so no hard line floats under the feet
   for (var gi = ghosts.length - 1; gi >= 0; gi--) bkDraw(x, F, L, ghosts[gi][2], ghosts[gi][0], ghosts[gi][1] - lift, 0.16 * A * (ghosts.length - gi) / ghosts.length + 0.08, 'rgba(255,150,60,.55)');
   if (n === 'rush') { x.save(); x.globalCompositeOperation = 'lighter'; x.strokeStyle = 'rgba(255,220,170,.45)'; x.lineWidth = 1.2; var hp2 = bkHand(F, L, nm, X, Y - lift);
     for (var q = 0; q < 6; q++) { var ax = hp2.x + rnd(-14, 14) * u, ay = hp2.y + rnd(-14, 14) * u; x.beginPath(); x.moveTo(ax + tox * rnd(20, 50) * u, ay + toy * rnd(20, 50) * u); x.lineTo(ax, ay); x.stroke(); } x.restore(); }
   bkDraw(x, F, L, nm, X, Y - lift, 1);
   x.restore(); drawParts(x, st.parts, dt, u);
-  if ((n === 'rush' || n === 'final' || n === 'hold') && st.hits) { x.save(); x.globalAlpha = A; var fs = Math.round(Math.min(44, W * 0.1) * (st.lastPop !== st.hits ? 1.15 : 1)); st.lastPop = st.hits;
+  if ((n === 'rush' || n === 'final' || n === 'hold') && st.hits) { x.save(); x.setTransform(SCR, 0, 0, SCR, 0, 0); x.globalAlpha = A; var fs = Math.round(Math.min(44, W * 0.1) * (st.lastPop !== st.hits ? 1.15 : 1)); st.lastPop = st.hits;
     x.font = 'italic 900 ' + fs + 'px system-ui,sans-serif'; x.textAlign = 'right'; x.lineWidth = 4; x.strokeStyle = '#2a0c00'; var tx = W - 18, ty = Math.max(90, H * 0.2);
     x.strokeText(st.hits + ' HITS', tx, ty); x.fillStyle = st.hits >= HFB_N ? '#d5e4f2' : '#7ec8c4'; x.fillText(st.hits + ' HITS', tx, ty); x.restore(); }
   if (n === 'final' && p < 0.25) { x.fillStyle = 'rgba(255,245,225,' + 0.5 * (1 - p * 4) + ')'; x.fillRect(0, 0, W, H); }
@@ -6427,7 +6461,7 @@ function drawFieldAoi(x, st, t, dt, s0) {
   for (var gi = ghosts.length - 1; gi >= 0; gi--) bkDraw(x, F, L, ghosts[gi][2], ghosts[gi][0], ghosts[gi][1] - lift, (0.14 * (ghosts.length - gi) / ghosts.length + 0.07) * A, 'rgba(' + col + ',.55)');
   if (!behind) me(1);
   x.restore(); drawParts(x, st.parts, dt, u);
-  if (hits && (K === 'hpc' || K === 'rfg') && n !== 'run') { x.save(); x.globalAlpha = A; var fs = Math.round(Math.min(44, W * 0.1) * (st.lastPop !== hits ? 1.15 : 1)); st.lastPop = hits;
+  if (hits && (K === 'hpc' || K === 'rfg') && n !== 'run') { x.save(); x.setTransform(SCR, 0, 0, SCR, 0, 0); x.globalAlpha = A; var fs = Math.round(Math.min(44, W * 0.1) * (st.lastPop !== hits ? 1.15 : 1)); st.lastPop = hits;
     x.font = 'italic 900 ' + fs + 'px system-ui,sans-serif'; x.textAlign = 'right'; x.lineWidth = 4; x.strokeStyle = '#06261e'; var tx = W - 18, ty = Math.max(90, H * 0.2);
     x.strokeText(hits + ' HITS', tx, ty); x.fillStyle = hits >= N ? '#eafff6' : 'rgb(' + col + ')'; x.fillText(hits + ' HITS', tx, ty); x.restore(); }
   if (st.pose !== nm) { st.pose = nm; ev('fin:bk:' + nm); } banner(x, W, H, st.sub, A);
@@ -7868,15 +7902,16 @@ root.cuFinal = {
   /* starts the slow approach: the push-in eases to its peak over c.ap ms (the timeline runs at CF.R meanwhile); the music dip starts with it */
   begin: function (opts) { if (!opts.cuFocus) return null; var F = opts.cuFocus(); if (!F) return null; var c = { t0: performance.now(), F: F, tb: 0, ap: CF.AP * 1000 / ((opts.speed || 1) * CF.R) }; CF.st = c; root.CU_Z = CF.Z; cuMusic(true); ev('cu:final:in'); return c; },
   /* the blow lands: the board freezes with the canvas, at the peak */
-  blown: function (c) { if (!c || c.done || c.tb) return; c.tb = performance.now(); c.ft = setTimeout(function () { if (ST.ff || c.done) return; ST.frz = true; $('#game').classList.add('hitstop'); c.ft2 = setTimeout(function () { ST.frz = false; $('#game').classList.remove('hitstop'); }, CF.HOLD); }, CF.DELAY); },
+  blown: function (c) { if (!c || c.done || c.tb) return; c.tb = performance.now(); c.ft = setTimeout(function () { if (ST.ff || c.done) return; ST.frz = true; $('#game').classList.add('hitstop'); c.ft2 = setTimeout(function () { ST.frz = false; $('#game').classList.remove('hitstop'); }, c.hold || CF.HOLD); }, CF.DELAY); },
   end: function (c) { if (!c || c.done) return; c.done = 1; clearTimeout(c.ft); clearTimeout(c.ft2); if (ST.frz) { ST.frz = false; $('#game').classList.remove('hitstop'); } if (CF.st === c) CF.st = null; root.CU_Z = CU.on ? CU.Z : 1; cuMusic(false); ev('cu:final:out'); },
   /* true while the frame should hold (the timeline is paused by the caller) */
-  hold: function (c) { if (!c.tb) return false; var z = performance.now() - c.tb; return z >= CF.DELAY && z < CF.DELAY + CF.HOLD; },
-  apply: function (x, W, H, c) { var now = performance.now(), k, T = CF.DELAY + CF.HOLD + 120;
+  hold: function (c) { if (!c.tb) return false; var z = performance.now() - c.tb; return z >= CF.DELAY && z < CF.DELAY + (c.hold || CF.HOLD); },
+  apply: function (x, W, H, c, b) { var now = performance.now(), k, T = CF.DELAY + (c.hold || CF.HOLD) + 120;
     if (!c.tb) { var u = Math.min(1, (now - c.t0) / c.ap); k = 1 - (1 - u) * (1 - u); }
     else { var z = now - c.tb; k = z < T ? 1 : (function (u) { u = Math.max(0, 1 - (z - T) / CF.OUT); return u * u * (3 - 2 * u); })(); if (z > T + CF.OUT) root.cuFinal.end(c); }
-    var zz = 1 + (CF.Z - 1) * k, F = c.F, Sx = F.x + (W / 2 - F.x) * 0.7 * k, Sy = F.y + (H * 0.42 - F.y) * 0.7 * k;
-    x.translate(Sx, Sy); x.scale(zz, zz); x.translate(-F.x, -F.y); },
+    var F = c.F, Zf = c.Zf || CF.Z, bb = b || { z: 1, fx: F.x, fy: F.y, ax: F.x, ay: F.y }; /* v6.5.59: blends from the rush camera (b) into the final push */
+    var zz = bb.z + (Zf - bb.z) * k, fx = bb.fx + (F.x - bb.fx) * k, fy = bb.fy + (F.y - bb.fy) * k, Sx = bb.ax + (F.x + (W / 2 - F.x) * 0.7 - bb.ax) * k, Sy = bb.ay + (F.y + (H * 0.42 - F.y) * 0.7 - bb.ay) * k;
+    x.translate(Sx, Sy); x.scale(zz, zz); x.translate(-fx, -fy); },
   flash: function (x, W, H, c) { if (!c.tb) return; var z = performance.now() - c.tb; if (z < 120) { x.fillStyle = 'rgba(255,248,230,' + 0.8 * (1 - z / 120) + ')'; x.fillRect(0, 0, W, H); } }
 };
 function cuPt(x, y) { return CU.on ? { x: CU.S.x + CU.Z * (x - CU.F.x), y: CU.S.y + CU.Z * (y - CU.F.y) } : { x: x, y: y }; }
@@ -40411,7 +40446,7 @@ function paint(x, st, S, dt) {
   if (st.cuts) st.cuts = st.cuts.filter(function (c) { return c.l > 0; });
   (S.post || []).forEach(function (f) { f(x); });
   x.restore(); k.drawParts(x, st.parts, dt, u);
-  if (S.hits) { x.save(); x.globalAlpha = A; var fs = Math.round(Math.min(44, st.W * 0.1) * (st.lastPop !== S.hits ? 1.15 : 1)); st.lastPop = S.hits;
+  if (S.hits) { x.save(); x.setTransform(SCR, 0, 0, SCR, 0, 0); x.globalAlpha = A; var fs = Math.round(Math.min(44, st.W * 0.1) * (st.lastPop !== S.hits ? 1.15 : 1)); st.lastPop = S.hits;
     x.font = 'italic 900 ' + fs + 'px system-ui,sans-serif'; x.textAlign = 'right'; x.lineWidth = 4; x.strokeStyle = S.hcs || '#2a0c00'; var tx = st.W - 18, ty = Math.max(90, st.H * 0.2);
     x.strokeText(S.hits + ' HITS', tx, ty); x.fillStyle = S.hc || '#ffb347'; x.fillText(S.hits + ' HITS', tx, ty); x.restore(); }
   if (S.flash > 0) { x.fillStyle = 'rgba(' + (S.fcol || '255,245,225') + ',' + S.flash + ')'; x.fillRect(0, 0, st.W, st.H); }
