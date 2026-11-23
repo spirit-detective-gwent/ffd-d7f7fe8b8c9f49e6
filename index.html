@@ -5630,7 +5630,7 @@ function cueArm(self, names, opt, w, nowish, rec) {
 }
 Snd.prototype.at = function (t, name, opt) { // t = seconds on the finisher clock. A buffer that is still decoding plays if it arrives within 0.3 s of the cue.
   opt = opt || {}; var names = [].concat(name), A = this.A, rec = { t: +(+t).toFixed(3), name: names[0], want: names[0], gain: opt.gain || 1, dur: opt.dur || null, offset: opt.offset || 0, fadeOut: opt.fadeOut || null, rate: opt.rate || 1, loop: !!opt.loop, voice: opt.voice ? 1 : 0 };
-  this.sched.push(rec); if (!A) return; cueArm(this, names, opt, this.t0 + t / this.sp, false, rec);
+  this.sched.push(rec); if (!A) return; var sl = this.slow, tw = sl && t > sl.from ? t + (Math.min(t, sl.to) - sl.from) * (1 / sl.r - 1) : t; cueArm(this, names, opt, this.t0 + tw / this.sp, false, rec); /* v6.5.59: cues after the slow-motion window move out with it */
 };
 Snd.prototype.now = function (t, name, opt) { // start right now. Same 0.3 s grace if the buffer is still decoding.
   opt = opt || {}; var names = [].concat(name), A = this.A, rec = { t: +(+t).toFixed(3), name: names[0], want: names[0], gain: opt.gain || 1, dur: null, loop: false, now: 1 };
@@ -5664,19 +5664,22 @@ function drawParts(x, parts, dt, u) { x.save(); x.globalCompositeOperation = 'li
     else { x.strokeStyle = q.c ? 'rgba(' + q.c + ',' + life + ')' : 'rgba(255,' + (200 + 55 * life | 0) + ',120,' + life + ')'; x.lineWidth = Math.max(0.8, 1.6 * u); x.beginPath(); x.moveTo(q.x, q.y); x.lineTo(q.x - q.vx * 0.03, q.y - q.vy * 0.03); x.stroke(); } }
   x.restore(); for (var j = parts.length - 1; j >= 0; j--) if (parts[j].a >= parts[j].l) parts.splice(j, 1); if (parts.length > 700) parts.splice(0, parts.length - 700); }
 /* ---- runner ---- */
+function stFf() { var u = root.FFF_UI; return !!(u && u.ST && u.ST.ff); }
 function run(canvas, opts, S, draw, sound, impactAt, blowAt, blowSnd) {
   opts = opts || {}; var sp = opts.speed || 1, done = false, blown = false, resolveF, start = 0, last = 0, impact = false, timers = [];
   var pr = new Promise(function (r) { resolveF = r; }), dpr = Math.min(2, root.devicePixelRatio || 1), W = canvas.clientWidth || 360, H = canvas.clientHeight || 640;
   canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); var x = canvas.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
   var tg = opts.target && opts.target.src ? { img: new Image(), scale: opts.target.scale || 1, id: opts.target.id } : null; if (tg) tg.img.src = opts.target.src;
   var st = { W: W, H: H, g: geo(W, H, tg), tg: tg, parts: [], sub: opts.sub || '', stage: '', opts: opts, dpr: dpr }, snd = new Snd(sp), D = total(S); st.u = st.g.hh / 200;
-  sound(snd, st); FIN.tl = null; FIN.log = { kind: opts.kind, blow: blowAt, stages: S.map(function (q) { return [q[0], startOf(S, q[0]), q[1]]; }), total: D, sched: snd.sched, speed: sp, mode: opts.field ? 'field' : 'pose', sub: opts.sub || '' };
-  function blow(skipped) { if (blown) return; blown = true; if (!skipped && blowSnd) blowSnd(snd, st.t || 0); ev('fin:blow:' + opts.kind + (skipped ? ':skipped' : '')); if (!skipped && opts.cuFinal && root.cuFinal) st.cf = root.cuFinal.begin(opts); /* v6.5.59: final-blow close-up */ if (opts.onBlow) opts.onBlow(!!skipped); }
+  if (opts.cuFinal && blowAt != null && root.cuFinal && !stFf()) snd.slow = { from: blowAt - root.cuFinal.cfg.AP, to: blowAt, r: root.cuFinal.cfg.R }; sound(snd, st); FIN.tl = null; FIN.log = { kind: opts.kind, blow: blowAt, stages: S.map(function (q) { return [q[0], startOf(S, q[0]), q[1]]; }), total: D, sched: snd.sched, speed: sp, mode: opts.field ? 'field' : 'pose', sub: opts.sub || '' };
+  function blow(skipped) { if (blown) return; blown = true; if (!skipped && blowSnd) blowSnd(snd, st.t || 0); ev('fin:blow:' + opts.kind + (skipped ? ':skipped' : '')); if (!skipped && opts.cuFinal && root.cuFinal) { if (!st.cf) st.cf = root.cuFinal.begin(opts); root.cuFinal.blown(st.cf); } /* v6.5.59: final-blow close-up */ if (opts.onBlow) opts.onBlow(!!skipped); }
   function finish(skipped) { if (done) return; done = true; timers.forEach(clearTimeout); if (st.cf && root.cuFinal) root.cuFinal.end(st.cf); if (skipped) snd.stop(); blow(skipped); if (opts.field) opts.field.pose(null); if (!impact && opts.onImpact) { impact = true; opts.onImpact(); }
     x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, canvas.width, canvas.height); ev('fin:end:' + opts.kind + (skipped ? ':skipped' : '')); resolveF({ skipped: !!skipped, t: st.t || 0 }); }
   function frame(ts) { if (done) return; if (!start) { start = last = ts; } FN++;
     if (st.cf && !st.cf.done && root.cuFinal.hold(st.cf)) { start += ts - last; last = ts; root.requestAnimationFrame(frame); return; } /* v6.5.59: the final freeze: the timeline waits, the last frame stays up */
-    var t = (ts - start) / 1000 * sp, dt = Math.min(0.05, (ts - last) / 1000) * sp; last = ts; st.t = t;
+    var rr = 1; if (snd.slow && st.t != null && !blown && !stFf() && st.t >= snd.slow.from) { rr = snd.slow.r; start += (ts - last) * (1 - rr); } /* v6.5.59: slow-motion into the blow */
+    var t = (ts - start) / 1000 * sp, dt = Math.min(0.05, (ts - last) / 1000) * sp * rr; last = ts; st.t = t;
+    if (snd.slow && !st.cf && !blown && !stFf() && t >= snd.slow.from) { st.cf = root.cuFinal.begin(opts); if (st.cf) st.cf.t0 = ts; }
     if (t >= D) { finish(false); return; }
     var s0 = stageAt(S, t); if (s0.n !== st.stage) { st.stage = s0.n; ev('fin:stage:' + opts.kind + ':' + s0.n); }
     if (!st.hurtOn && opts.hurtAt != null && t >= opts.hurtAt) { st.hurtOn = 1; if (opts.onHurt) opts.onHurt(); ev('fin:hurt:contact:' + opts.kind); }
@@ -7844,7 +7847,7 @@ root.FFF_SIGWORD = function (i, n) { if (ST.ff) return; AU.play('hit', { gain: 0
 /* v6.5.59: stronger close-up on a signature's FINAL blow. Only the in-engine field finishers (Fox Fire Fist, Hundred Fist Barrage, Detention Slip, Aoi's three) draw on #cutCv with the real fighters:
  * the camera there is a canvas transform applied before the draw (the sheets are re-drawn at the new scale; nothing is a CSS-scaled bitmap) and the board fighters are redrawn at 2.4x resolution.
  * Video cut-ins (CI.playCut) are footage, so they are not zoomed. On the blow: push in 2.4x in 90 ms, a white flash, a 200 ms freeze starting 34 ms later, a 260 ms pull-out. Music dips only for this beat. */
-var CF = { Z: 2.4, IN: 90, DELAY: 34, HOLD: 200, OUT: 260, st: null }, CFA = null;
+var CF = { Z: 2.4, DELAY: 34, HOLD: 200, OUT: 260, AP: 0.30, R: 0.5, st: null }, CFA = null; /* AP: the last 0.30 s of the lead-in to the blow run at R = half speed while the camera pushes in (0.60 s of wall time), then the freeze lands at the peak: the zoom runs about 1.2 s instead of 0.6 s */
 function cuMusic(on) {
   var A0 = root.AUDIO && root.AUDIO.st, c = A0 && A0.ctx; if (!c || !A0.mus) return; var t = c.currentTime;
   try { var dest = A0.hi && A0.hf ? A0.hf.mus[0] : A0.master;
@@ -7854,13 +7857,20 @@ function cuMusic(on) {
       clearTimeout(CFA.t); CFA.t = setTimeout(function () { try { CFA.lp.disconnect(); CFA.ag.disconnect(); A0.mus.disconnect(); A0.mus.connect(dest); } catch (e) {} }, 320); } } catch (e) { ev('cu:music:err'); }
 }
 root.cuFinal = {
-  begin: function (opts) { if (!opts.cuFocus) return null; var F = opts.cuFocus(); if (!F) return null; var c = { t0: performance.now(), F: F, frozen: 0 }; CF.st = c; root.CU_Z = CF.Z; cuMusic(true); c.ft = setTimeout(function () { if (ST.ff || c.done) return; ST.frz = true; $('#game').classList.add('hitstop'); c.ft2 = setTimeout(function () { ST.frz = false; $('#game').classList.remove('hitstop'); }, CF.HOLD); }, CF.DELAY); /* the board freezes with the canvas */ ev('cu:final:in'); return c; },
+  cfg: CF,
+  /* starts the slow approach: the push-in eases to its peak over c.ap ms (the timeline runs at CF.R meanwhile); the music dip starts with it */
+  begin: function (opts) { if (!opts.cuFocus) return null; var F = opts.cuFocus(); if (!F) return null; var c = { t0: performance.now(), F: F, tb: 0, ap: CF.AP * 1000 / ((opts.speed || 1) * CF.R) }; CF.st = c; root.CU_Z = CF.Z; cuMusic(true); ev('cu:final:in'); return c; },
+  /* the blow lands: the board freezes with the canvas, at the peak */
+  blown: function (c) { if (!c || c.done || c.tb) return; c.tb = performance.now(); c.ft = setTimeout(function () { if (ST.ff || c.done) return; ST.frz = true; $('#game').classList.add('hitstop'); c.ft2 = setTimeout(function () { ST.frz = false; $('#game').classList.remove('hitstop'); }, CF.HOLD); }, CF.DELAY); },
   end: function (c) { if (!c || c.done) return; c.done = 1; clearTimeout(c.ft); clearTimeout(c.ft2); if (ST.frz) { ST.frz = false; $('#game').classList.remove('hitstop'); } if (CF.st === c) CF.st = null; root.CU_Z = CU.on ? CU.Z : 1; cuMusic(false); ev('cu:final:out'); },
   /* true while the frame should hold (the timeline is paused by the caller) */
-  hold: function (c) { var z = performance.now() - c.t0; return z >= CF.DELAY && z < CF.DELAY + CF.HOLD; },
-  apply: function (x, W, H, c) { var z = performance.now() - c.t0, T = CF.DELAY + CF.HOLD, k = z < CF.IN ? 1 - Math.pow(1 - z / CF.IN, 3) : z < T + 120 ? 1 : (function (u) { u = Math.max(0, 1 - (z - T - 120) / CF.OUT); return u * u * (3 - 2 * u); })(); var zz = 1 + (CF.Z - 1) * k, F = c.F, Sx = F.x + (W / 2 - F.x) * 0.7 * k, Sy = F.y + (H * 0.42 - F.y) * 0.7 * k;
-    x.translate(Sx, Sy); x.scale(zz, zz); x.translate(-F.x, -F.y); if (z > T + 120 + CF.OUT) root.cuFinal.end(c); },
-  flash: function (x, W, H, c) { var z = performance.now() - c.t0; if (z < 120) { x.fillStyle = 'rgba(255,248,230,' + 0.8 * (1 - z / 120) + ')'; x.fillRect(0, 0, W, H); } }
+  hold: function (c) { if (!c.tb) return false; var z = performance.now() - c.tb; return z >= CF.DELAY && z < CF.DELAY + CF.HOLD; },
+  apply: function (x, W, H, c) { var now = performance.now(), k, T = CF.DELAY + CF.HOLD + 120;
+    if (!c.tb) { var u = Math.min(1, (now - c.t0) / c.ap); k = 1 - (1 - u) * (1 - u); }
+    else { var z = now - c.tb; k = z < T ? 1 : (function (u) { u = Math.max(0, 1 - (z - T) / CF.OUT); return u * u * (3 - 2 * u); })(); if (z > T + CF.OUT) root.cuFinal.end(c); }
+    var zz = 1 + (CF.Z - 1) * k, F = c.F, Sx = F.x + (W / 2 - F.x) * 0.7 * k, Sy = F.y + (H * 0.42 - F.y) * 0.7 * k;
+    x.translate(Sx, Sy); x.scale(zz, zz); x.translate(-F.x, -F.y); },
+  flash: function (x, W, H, c) { if (!c.tb) return; var z = performance.now() - c.tb; if (z < 120) { x.fillStyle = 'rgba(255,248,230,' + 0.8 * (1 - z / 120) + ')'; x.fillRect(0, 0, W, H); } }
 };
 function cuPt(x, y) { return CU.on ? { x: CU.S.x + CU.Z * (x - CU.F.x), y: CU.S.y + CU.Z * (y - CU.F.y) } : { x: x, y: y }; }
 function cuIn(a, d, dir, hz, label) {
