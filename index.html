@@ -7830,8 +7830,8 @@ var COMBO_T_RYO = { 2: { gap: 0.20, dash: 0.2 }, 3: { gap: 0.17, dash: 0.22 } },
  * resolution (CU_Z, no CSS-scaled bitmap), the HUD / hand blur and dim, the painted backdrop pushes in 1.3x and keeps animating. Every hit gets its own
  * burst, a white flash + hurt frame + knock-back on the target, and a 95 ms freeze that starts 34 ms after impact. Out: 200 ms while the attacker returns. */
 var CU = { on: false, Z: 1, F: { x: 0, y: 0 }, S: { x: 195, y: 290 }, n: 0 }, CU_IN = 180, CU_OUT = 200, CU_HOLD = 95, CU_DELAY = 34;
-/* v6.5.59: the enemy close-up is boss-only (story.boss, the same flag the fight setup reads); your own side always gets it */
-function cuFor(si) { return si === 0 || !!(ST.story && ST.story.boss); }
+/* v6.5.59: the enemy close-up is boss-only (story.boss, the flag the fight setup reads) plus the Chapter 1-2 mini-bosses (story.mini); your own side always gets it */
+function cuFor(si) { return si === 0 || !!(ST.story && (ST.story.boss || (ST.story.mini && /^mb2?_/.test(String(ST.story.mini))))); } /* the Chapter 1 (mb_*) and Chapter 2 (mb2_*) mini-bosses count as bosses; Chapter 3 harbor minis (mb3_*) and regular enemies do not */
 function cuOK() { var c = ST.set.cam; if (c !== 'on' && c !== 'off') c = ((root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches) || ST.set.rm) ? 'off' : 'on'; return c !== 'off' && !ST.ff && !document.documentElement.classList.contains('pc-arena') && innerHeight > innerWidth; }
 /* v6.5.59: one visible beat per stacked Energy (aura flare + the Spirit meter stepping up) or Guard (ring stamp + guard sound + a 1.05x pulse) card in a combo. Same speed as before:
  * it rides the card's own animation, nothing waits. k = 1-based stack number, n = stack count. */
