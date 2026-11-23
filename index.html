@@ -6434,8 +6434,8 @@ function drawFieldAoi(x, st, t, dt, s0) {
     else if (n === 'turn') { behind = true; X = bx; Y = by; nm = 'fstance'; var tq = ease(p); fmir = tq; } // the foe turns round (a squash through its edge) to face her
     else if (n === 'cuts') { behind = true; fmir = 1; X = bx; Y = by; var ci = Math.min(FSC_N, Math.floor((s0.lt - 0.1) / 0.4) + 1), cp = ((s0.lt - 0.1) / 0.4) % 1; hits = st.hits = Math.max(0, s0.lt < 0.1 ? 0 : ci);
       nm = cp < 0.3 ? 'fwind' : ['fcut1', 'fcut2', 'fcut3', 'fcut1', 'fcut3'][(hits - 1 + 5) % 5]; if (hits >= FSC_N) nm = 'fcut3';
-      var kick = hits > 0 && cp < 0.35 ? 1 - cp / 0.35 : 0; fox = dir * 7 * u * kick * Math.min(hits, 4) / 4; ffl = 0.55 * kick; sh = kick * 3.2 * u;
-      if (st.lastHit !== hits && hits > 0) { st.lastHit = hits; var a = [-0.5, 0.5, -1.1, 0.9, 0][(hits - 1) % 5]; st.cuts = [{ a: a, r: 0.38 * h, l: 0.32, ln: 1, big: hits >= FSC_N }]; sparkBurst(st.parts, fc.x, fc.y, hits >= FSC_N ? 40 : 16, u, '210,235,255'); ev('fin:hit:' + hits); if (hits >= FSC_N) { mark('fx'); mark('react'); } } }
+      var kick = Math.max(hits > 0 && cp < 0.35 ? 1 - cp / 0.35 : 0, st.kick || 0); fox = dir * 12 * u * kick * Math.min(hits, 4) / 4; foy = -4 * u * kick; frot = dir * 0.05 * kick * (hits % 2 ? 1 : -1); ffl = 0.7 * kick; sh = kick * 4.5 * u; /* v6.5.59: each of the five cuts hits hard: flinch, flash, rock */
+      if (st.lastHit !== hits && hits > 0) { st.lastHit = hits; var a = [-0.5, 0.5, -1.1, 0.9, 0][(hits - 1) % 5]; st.cuts = [{ a: a, r: 0.46 * h, l: 0.5, ln: 1, big: true }]; sparkBurst(st.parts, fc.x, fc.y, hits >= FSC_N ? 40 : 24, u, '210,235,255'); ev('fin:hit:' + hits); if (hits >= FSC_N) { mark('fx'); mark('react'); } } }
     else if (n === 'backup') { behind = true; fmir = 1; nm = 'fback'; X = bx + dir * h * 0.22 * ease(p); Y = by - h * 0.05 * ease(p); fa = 1 - ease(Math.max(0, p - 0.5) * 2); fox = dir * 7 * u; ffl = 0; }
     else if (n === 'home') { fmir = 1 - ease(p); nm = 'stance'; fa = ease(p); }
     else { nm = 'stance'; } }
@@ -6462,9 +6462,9 @@ function drawFieldAoi(x, st, t, dt, s0) {
   for (var gi = ghosts.length - 1; gi >= 0; gi--) bkDraw(x, F, L, ghosts[gi][2], ghosts[gi][0], ghosts[gi][1] - lift, (0.14 * (ghosts.length - gi) / ghosts.length + 0.07) * A, 'rgba(' + col + ',.55)');
   if (!behind) me(1);
   x.restore(); drawParts(x, st.parts, dt, u);
-  if (hits && (K === 'hpc' || K === 'rfg') && n !== 'run') { x.save(); x.setTransform(SCR, 0, 0, SCR, 0, 0); x.globalAlpha = A; var fs = Math.round(Math.min(44, W * 0.1) * (st.lastPop !== hits ? 1.15 : 1)); st.lastPop = hits;
+  if (hits && (K === 'hpc' || K === 'rfg' || (K === 'fsc' && (n === 'cuts' || n === 'backup'))) && n !== 'run') { x.save(); x.setTransform(SCR, 0, 0, SCR, 0, 0); x.globalAlpha = A; var fs = Math.round(Math.min(44, W * 0.1) * (st.lastPop !== hits ? 1.15 : 1)); st.lastPop = hits;
     x.font = 'italic 900 ' + fs + 'px system-ui,sans-serif'; x.textAlign = 'right'; x.lineWidth = 4; x.strokeStyle = '#06261e'; var tx = W - 18, ty = Math.max(90, H * 0.2);
-    x.strokeText(hits + ' HITS', tx, ty); x.fillStyle = hits >= N ? '#eafff6' : 'rgb(' + col + ')'; x.fillText(hits + ' HITS', tx, ty); x.restore(); }
+    var lab = K === 'fsc' ? '\u00d7' + hits : hits + ' HITS'; x.strokeText(lab, tx, ty); x.fillStyle = hits >= N ? '#eafff6' : 'rgb(' + col + ')'; x.fillText(lab, tx, ty); x.restore(); }
   if (st.pose !== nm) { st.pose = nm; ev('fin:bk:' + nm); } banner(x, W, H, st.sub, A);
 }
 var FIN = root.FIN = { has: has, warm: warm, fff: fff, fffDraw: fffDraw, fffCues: fffCues, hfb: hfb, ds: ds, hpc: hpc, fsc: fsc, rfg: rfg, log: null, HFB_N: HFB_N, HPC_N: HPC_N, FSC_N: FSC_N, RFG_N: RFG_N, stages: { fff: FFF, hfb: HFB, ds: DS, hpc: AHPC, fsc: AFSC, rfg: ARFG }, FFF_END: startOf(FFF, 'finish'), mark: mark, tl: null };
