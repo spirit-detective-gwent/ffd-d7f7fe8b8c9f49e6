@@ -11,6 +11,13 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
+### 2026-11-23 — executor (Grok Bot) — v6.5.59 (local branch v6559-closeup, NOT pushed, NOT published)
+- Combo close-up camera ("base" from the prototype) on every Ryo/Aoi/enemy double and triple: 2x push-in on the contact point, fighters redrawn at 2x, HUD blur/dim/vignette, backdrop push-in, per-hit burst + white flash + hurt frame + knock-back, 95 ms freeze 34 ms after each hit, unblurred x1/x2/x3 counter. Code: `cuIn/cuOut/cuBeat/cuDmg` before `comboAnim`; hooks in `comboAnim`, `clashAnim` (cards with 2-3 hits), `chainAnim` (shared camera); `drawFigs` (CU_Z resolution + `pw` white tint); `sparks` follows the camera.
+- Setting `ST.set.cam` ('on'/'off', default on, off by default when the device asks for reduced motion). Battle-menu cycle button `#setCam` beside Screen shake; Settings > Display switch; per-save + kept across new games.
+- Phone portrait only (skipped in pc-arena and landscape), skipped under fast-forward (`ST.ff`). Signature cut-ins, double moves, Energy and Guard are untouched. Cards with 4-5 hits are not zoomed.
+- No A/B/C extras, no music dip.
+- Half-done / not decided: Energy and Guard stacking beats (recommendation only, not built).
+
 ### 2026-11-23 — main assistant — v6.5.58 (commit 35573d5) — LIVE
 State of the game at handoff start.
 - Recent changes (v6.5.55–v6.5.58):
