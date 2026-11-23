@@ -6421,8 +6421,9 @@ function drawFieldAoi(x, st, t, dt, s0) {
     if (n === 'run') runTo(p, L.hx, L.hy, nx, ny);
     else if (n === 'petal') { var per = (4.2 - 0.2) / HPC_N, hi = Math.min(HPC_N, Math.floor((s0.lt - 0.05) / per) + 1), ph = ((s0.lt - 0.05) / per) % 1; hits = st.hits = Math.max(0, hi);
       X = nx + rnd(-2, 2) * u; Y = ny + rnd(-1.5, 1.5) * u; nm = ['slashUR', 'slashH', 'slashUL', 'slashD'][hits % 4]; ffl = hits > 0 ? 0.35 * (1 - Math.min(1, ph * 2)) : 0; fox = -tox * 3 * u * Math.sin(t * 40); sh = 1.2 * u;
-      ghosts = [[X + dir * 9 * u, Y, ['slashUR', 'slashH', 'slashUL', 'slashD'][(hits + 1) % 4]], [X - dir * 9 * u, Y + 2 * u, ['slashUR', 'slashH', 'slashUL', 'slashD'][(hits + 3) % 4]]];
-      if (st.lastHit !== hits && hits > 0) { st.lastHit = hits; st.cuts = (st.cuts || []).concat([{ a: rnd(0, 6.28), r: rnd(0.18, 0.34) * h, l: 0.22 }]).slice(-7); sparkBurst(st.parts, fc.x + rnd(-14, 14) * u, fc.y + rnd(-20, 20) * u, 5, u, '235,255,245'); ev('fin:hit:' + hits); try { if (root.INPUT && root.INPUT.rumble) root.INPUT.rumble(hits >= HPC_N ? 'aoiFinal' : 'aoiCut', hits); } catch (eH) {} } }
+      var kk = st.kick || 0; ffl = Math.max(ffl, 0.65 * kk); fox += -tox * 9 * u * kk + (hits % 2 ? 1 : -1) * 4 * u * kk; foy += -toy * 9 * u * kk; frot += (hits % 2 ? 1 : -1) * 0.06 * kk; sh += 2 * u * kk; /* v6.5.59: every cut is felt: the foe flinches, flashes, rocks */
+      ghosts = [[X + dir * 9 * u, Y, ['slashUR', 'slashH', 'slashUL', 'slashD'][(hits + 1) % 4]], [X - dir * 9 * u, Y + 2 * u, ['slashUR', 'slashH', 'slashUL', 'slashD'][(hits + 3) % 4]], [X + dir * 20 * u, Y - 3 * u, ['slashUR', 'slashH', 'slashUL', 'slashD'][(hits + 2) % 4]], [X - dir * 22 * u, Y + 4 * u, ['slashUR', 'slashH', 'slashUL', 'slashD'][hits % 4]]]; /* the blade echo: more afterimages */
+      if (st.lastHit !== hits && hits > 0) { st.lastHit = hits; st.cuts = (st.cuts || []).concat([{ a: rnd(0, 6.28), r: rnd(0.2, 0.38) * h, l: 0.3, ln: hits % 2 }]).slice(-9); sparkBurst(st.parts, fc.x + rnd(-14, 14) * u, fc.y + rnd(-20, 20) * u, 9, u, '235,255,245'); ev('fin:hit:' + hits); try { if (root.INPUT && root.INPUT.rumble) root.INPUT.rumble(hits >= HPC_N ? 'aoiFinal' : 'aoiCut', hits); } catch (eH) {} } }
     else if (n === 'final') { hits = st.hits = HPC_N; X = nx; Y = ny; nm = 'slashD'; fox = -tox * 14 * u * Math.min(1, p * 2); foy = -toy * 14 * u * Math.min(1, p * 2); frot = -0.12 * dir * Math.min(1, p * 3); ffl = p < 0.3 ? 0.85 : 0; sh = p < 0.4 ? 5 * u : 0;
       if (!st.big) { st.big = 1; sparkBurst(st.parts, fc.x, fc.y, 44, u, '230,255,240'); st.cuts = [{ a: -0.6, r: 0.42 * h, l: 0.5, big: 1 }]; mark('fx'); mark('react'); try { if (root.INPUT && root.INPUT.rumble) root.INPUT.rumble('aoiFinal', HPC_N); } catch (eH) {} } }
     else if (n === 'back') { var e3 = ease(Math.min(1, p * 1.5)); X = nx + (L.hx - nx) * e3; Y = ny + (L.hy - ny) * e3; nm = 'hop'; lift = h * 0.12 * Math.sin(e3 * Math.PI); fox = -tox * 14 * u; foy = -toy * 14 * u; }
@@ -6448,7 +6449,7 @@ function drawFieldAoi(x, st, t, dt, s0) {
       if (!st.big) { st.big = 1; sparkBurst(st.parts, fc.x, fc.y, 40, u, '255,220,180'); st.cuts = [{ a: 2.5, r: 0.44 * h, l: 0.45, big: 1 }]; mark('fx'); mark('react'); }
       if (p < 0.6) ghosts = [[nx + (L.hx - nx) * e4 * 0.6, ny + (L.hy - ny) * e4 * 0.6 - lift * 0.6, 'hop']]; }
     else { nm = 'stance'; fox = -tox * 16 * u * (1 - p); foy = -toy * 16 * u * (1 - p); } }
-  x.save(); x.translate(rnd(-sh, sh), rnd(-sh, sh));
+  st.pf = { px: X, py: Y - lift - h * 0.45, fx: fc.x + fox, fy: fc.y + foy, h: h }; x.save(); x.translate(rnd(-sh, sh), rnd(-sh, sh));
   var front = /^f/.test(nm); // her own painted front frames (Five-Step Cut): drawn without the back view's mirroring rules
   function me(alpha) { var Lm = front ? Object.assign({}, L, { mir: L.fx > X }) : L; bkDraw(x, F, Lm, nm, X, Y - lift, alpha * fa); }
   if (behind) me(1);
