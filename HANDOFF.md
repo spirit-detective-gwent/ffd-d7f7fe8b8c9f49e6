@@ -16,6 +16,8 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 - Setting `ST.set.cam` ('on'/'off', default on, off by default when the device asks for reduced motion). Battle-menu cycle button `#setCam` beside Screen shake; Settings > Display switch; per-save + kept across new games.
 - Phone portrait only (skipped in pc-arena and landscape), skipped under fast-forward (`ST.ff`). Signature cut-ins, double moves, Energy and Guard are untouched. Cards with 4-5 hits are not zoomed.
 - No A/B/C extras, no music dip.
+- Aoi swing fix (commit 0f60f3b): each hit of an Aoi double/triple plays its own ready/cut/follow-through cells from her existing board sheets (`SWING_AOI`, `aoiSwing`, `clip.cells` + `clip.snap` support in `drawBoard`/`drawFigs`); close-up bursts and sparks sit behind her sprite during the camera. Flurry beats now follow the clip's own slash cues.
+- Tested: KO right after a close-up combo cleans up (no freeze, no overlays, result screen shows); overworld loads, no console errors.
 - Half-done / not decided: Energy and Guard stacking beats (recommendation only, not built).
 
 ### 2026-11-23 — main assistant — v6.5.58 (commit 35573d5) — LIVE
