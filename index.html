@@ -314,8 +314,9 @@ footer{font-size:10px;color:#778;margin-top:auto;padding:8px;text-align:center}
 #game.cucam.hitstop{filter:contrast(1.05) brightness(1.03) saturate(1.05)}
 #game.cucam .fig{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 16%,#000 84%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 14%,#000 94%,transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 16%,#000 84%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 14%,#000 94%,transparent 100%);-webkit-mask-composite:source-in;mask-composite:intersect}
 body.cuc .float.cmbf{display:none}
+body.cuc .sparks{z-index:19}
 .culab{position:fixed;left:50%;transform:translateX(-50%);z-index:60;pointer-events:none;color:#ffd84a;font:800 21px/1 system-ui,sans-serif;letter-spacing:1px;white-space:nowrap;text-shadow:0 2px 0 #000,0 0 8px rgba(0,0,0,.8)}
-.cuburst{position:fixed;z-index:46;pointer-events:none}.cuburst i{position:absolute}.cu-star{inset:0;background:var(--c);clip-path:polygon(50% 0,60% 38%,100% 30%,68% 56%,90% 100%,50% 70%,10% 100%,32% 56%,0 30%,40% 38%)}.cu-core{inset:28%;border-radius:50%;background:radial-gradient(circle,#fff 0,#fff 45%,var(--c) 78%,transparent 80%)}
+.cuburst{position:fixed;z-index:19;pointer-events:none}.cuburst i{position:absolute}.cu-star{inset:0;background:var(--c);clip-path:polygon(50% 0,60% 38%,100% 30%,68% 56%,90% 100%,50% 70%,10% 100%,32% 56%,0 30%,40% 38%)}.cu-core{inset:28%;border-radius:50%;background:radial-gradient(circle,#fff 0,#fff 45%,var(--c) 78%,transparent 80%)}
 
 @keyframes sshake{0%,100%{transform:none}20%{transform:translate(-6px,4px)}40%{transform:translate(5px,-4px)}60%{transform:translate(-3px,2px)}80%{transform:translate(2px,-1px)}}
 /* v3.4: switch between Ryo's two signatures (shown next to the big signature card once Detention Slip is unlocked) */
@@ -5492,7 +5493,8 @@ function frameOrigin(clip, fi) {
 function drawBoard(x, clip, im, t, cx, by, fh, alpha) {
   if (!clip._t) { var t0 = 0; clip._t = []; clip.frames.forEach(function (f) { clip._t.push(t0); t0 += f.ms / 1000; }); clip.dur = t0; }
   var fi = 0; while (fi + 1 < clip.frames.length && clip._t[fi + 1] <= t) fi++;
-  var k = fh / clip.sh, w = clip.w * k, h = clip.h * k, X = cx - clip.cx * k, Y = by - clip.feet * k;
+  var k = fh / clip.sh, w = clip.w * k, h = clip.h * k, X = cx - clip.cx * k, Y = by - clip.feet * k, cl = clip.cells; /* v6.5.59: clip.cells = which sheet cell each timed frame shows (a re-sequenced swing) */
+  if (cl) { if (!ok(im)) return false; var oc = frameOrigin(clip, cl[fi]); x.globalAlpha = alpha; x.drawImage(im, oc[0], oc[1], clip.w, clip.h, X, Y, w, h); x.globalAlpha = 1; return true; }
   var tim = tileOf(clip, fi);
   if (tim) {
     if (!ok(tim)) return false;
@@ -6757,7 +6759,7 @@ function drawFigs(ts) {
       x.save(); x.beginPath(); x.ellipse(W / 2, H - 3, Math.max(18, W * 0.32), 8, 0, 0, 7); x.fillStyle = 'rgba(0,0,0,0.32)'; x.fill(); x.restore();
     } else if (!sparQuiet) { var g = x.createRadialGradient(W / 2, H * 0.9, 2, W / 2, H * 0.9, W * 0.5); g.addColorStop(0, 'rgba(' + col + ',' + (0.45 + 0.4 * f.glow) + ')'); g.addColorStop(1, 'rgba(' + col + ',0)'); x.fillStyle = g; x.fillRect(0, 0, W, H); }
     var an = f.anim, aA = 0, at = 0;
-    if (an) { at = (nowG() - an.t0) / 1000 * an.sp; if (at >= an.clip.dur + 0.16) { f.anim = null; an = null; } else aA = at < 0.12 ? at / 0.12 : at > an.clip.dur ? Math.max(0, 1 - (at - an.clip.dur) / 0.16) : 1; }
+    if (an) { at = (nowG() - an.t0) / 1000 * an.sp; if (at >= an.clip.dur + 0.16) { f.anim = null; an = null; } else aA = an.clip.snap ? (at > an.clip.dur ? Math.max(0, 1 - (at - an.clip.dur) / 0.16) : 1) /* v6.5.59: a re-sequenced swing shows at once, no fade-in */ : at < 0.12 ? at / 0.12 : at > an.clip.dur ? Math.max(0, 1 - (at - an.clip.dur) / 0.16) : 1; }
     if (an && !CI.ok(an.im)) aA = 0;
     if (src.complete && src.naturalWidth) {
       if (pc) { var body = c.closest('.fbody'); if (body) body.style.setProperty('--pfh', (src.naturalHeight / dpr) + 'px'); } /* CSS height is min(34vh, --pfh): a 3x stand or a tall painting can fill the row, and nothing is drawn larger than its own pixels */
@@ -7739,7 +7741,7 @@ function clashAnim(si, card, onImpact, o) {
     if (onImpact) onImpact();
     if (fistR) fistSpark(si, cx, cy);
     var cuB = !ST.ff && CU.on && (cu || o.cuc); /* v6.5.59: one camera beat per hit (the chain shares one camera) */
-    if (cuB) for (var bj = 0; bj < (nb || 1); bj++) (function (j) { setTimeout(function () { if (CU.on) cuBeat(si, CU.n, cuDmg(1 - si, CU.n), dir, false, CU_HOLD, cx, cy, col, []); }, j * 140 / spd()); })(bj);
+    if (cuB) for (var bj = 0; bj < (nb || 1); bj++) (function (j) { setTimeout(function () { if (CU.on) cuBeat(si, CU.n, cuDmg(1 - si, CU.n), dir, false, CU_HOLD, cx, cy, col, []); }, cuOff(clip, j) / spd()); /* v6.5.59: beats on the clip's own cut sounds */ })(bj);
     if (!ST.ff) { if (!cuB) recoil(1 - si, PUNCHY[card.mv] ? 'punch' : 'slash', dir); sparks(cx, cy, col, card.hits > 1 ? 16 : 12); stageShake(); if (card.hits > 1) [140, 280].forEach(function (ms) { setTimeout(function () { if (!ST.ff) sparks(cx + (Math.random() - 0.5) * 30, cy + (Math.random() - 0.5) * 16, col, 7); }, ms / spd()); }); }
   }
   return figAnim(figOf(si), card, hit, 1.15).then(function () {
@@ -7837,8 +7839,18 @@ function cuBeat(si, i, dmg, dir, last, hold, cx, cy, col, anims) {
     setTimeout(function () { ST.frz = false; g.classList.remove('hitstop'); anims.forEach(function (x) { try { x.play(); } catch (e0) {} }); }, hold);
   }, CU_DELAY);
 }
+function cuOff(clip, j) { var q = clip && (clip.cues || []).filter(function (c) { return /slash|hit|fist/.test(c.snd) && c.t >= clip.impact - 0.08; }); return q && q.length > j ? Math.max(0, (q[j].t - q[0].t) * 1000) + (q[0].t < clip.impact ? 0 : 0) : j * 140; }
 /* does the i-th hit on side tsi do damage (a blocked hit still flashes and knocks back, but no hurt frame) */
 function cuDmg(tsi, i) { var fx = ST.lastFx, evs = []; try { evs = (fx && fx.parts ? fx.parts.reduce(function (a, q) { return a.concat(q.ev || []); }, []) : (fx && fx.ev) || []).filter(function (e) { return e.t === 'hit' && e.side === tsi; }); } catch (e0) {} return evs.length ? evs[Math.min(i, evs.length - 1)].n > 0 : true; }
+/* v6.5.59: Aoi's swing per hit. Her board clips are one slash each (wind-up 1 s, then 4-5 cut frames of 75 ms). Squeezed into a 0.13 s combo gap the cut frames
+ * lasted about 8 ms each and read as no strike at all. Each hit now plays its own 3-cell sequence from the SAME handmade sheet: a ready pose, a cut pose (shown on the
+ * impact), a follow-through, and the next hit uses different cells so the sword arcs alternate. cells = [ready, cut, follow] per hit. */
+var SWING_AOI = { aoi_slash: [[1, 2, 3], [5, 6, 7], [4, 3, 2]], aoi_kata: [[4, 5, 6], [3, 7, 1], [2, 8, 7]], aoi_rising: [[1, 4, 5], [3, 6, 7], [2, 8, 7]], aoi_counter: [[3, 4, 5], [3, 6, 7], [1, 8, 7]], aoi_flurry: [[2, 5, 6], [3, 7, 6], [4, 8, 7]] };
+function aoiSwing(fig, card, i, lead, gap) {
+  var tb = SWING_AOI[card.clip], base = tb && CI.boardClip(card.clip), im = base && CI.sheet(card.clip); if (!tb || !base || !CI.ok(im) || ST.ff) return false;
+  var cells = tb[i % tb.length], ms = [lead * 1000, Math.max(50, gap * 1000 * 0.5), Math.max(40, gap * 1000 * 0.45)], c = Object.assign({}, base, { frames: ms.map(function (m) { return { ms: m }; }), cells: cells, blend: 0, snap: 1, impact: lead, cues: [], _t: null, _tv: null });
+  var t = 0; c._t = ms.map(function (m) { var v = t; t += m / 1000; return v; }); c.dur = t; fig.anim = { clip: c, im: im, t0: nowG(), sp: 1, id: card.clip }; return true;
+}
 function comboAnim(si, n, hits) {
   var att = sideEl(si), body = att.querySelector('.fbody'), fig = figOf(si), sp = ST.speed * (ST.set.fast ? 2 : 1), ryo = chOfSide(si) === 'ryo', T = (ryo ? COMBO_T_RYO : COMBO_T)[n === 3 ? 3 : 2], ck = comboKey(si, n);
   var a = geo(si), d = geo(1 - si), hz = TRA() === 'translateX', dir = hz ? (d.x < a.x ? -1 : 1) : (d.y < a.y ? -1 : 1), jab = 16, travel = fitTravel(a, Math.max(0, hz ? Math.abs(d.x - a.x) - a.w * 0.8 : Math.abs(d.y - a.y) - a.h * 0.8), dir, hz, jab);
@@ -7851,7 +7863,7 @@ function comboAnim(si, n, hits) {
   function punch(i) { // the jab out from wherever the body is (home for a double, the contact point for a triple) and back
     var h = hits[i]; ev('anim:start:' + h.part.card.id);
     var clip = CI.boardClip(h.part.card.clip), lead = Math.min(gap * 0.9, 0.12), mul = clip ? Math.max(1, clip.impact / (lead * sp)) : 1;
-    if (!ST.ff) { if (clip && CI.ok(CI.sheet(h.part.card.clip))) figAnim(fig, h.part.card, null, mul, true); // no fallback whoosh/hit: the combo sound is the hits
+    if (!ST.ff) { if (!ryo && aoiSwing(fig, h.part.card, i, Math.min(gap * 0.4, 0.055), gap)) { /* v6.5.59 */ } else if (clip && CI.ok(CI.sheet(h.part.card.clip))) figAnim(fig, h.part.card, null, mul, true); // no fallback whoosh/hit: the combo sound is the hits
       if (body.animate) anims.push(body.animate([{ transform: TRA() + '(' + dir * base + 'px) ' }, { transform: TRA() + '(' + dir * (base + jab) + 'px)', offset: 0.45 }, { transform: TRA() + '(' + dir * base + 'px) ' }], { duration: gap * 1000 * 0.95, easing: 'ease-out', fill: 'forwards' })); }
   }
   function land(i) {
@@ -7864,7 +7876,7 @@ function comboAnim(si, n, hits) {
   }
   return new Promise(function (res) {
     var done = false;
-    hits.forEach(function (h, i) { var ti = t0 + i * gap; timers.push(setTimeout(function () { if (!done) punch(i); }, Math.max(0, ti - Math.min(gap * 0.9, 0.12)) * 1000)); timers.push(setTimeout(function () { if (!done) land(i); }, ti * 1000)); });
+    hits.forEach(function (h, i) { var ti = t0 + i * gap; timers.push(setTimeout(function () { if (!done) punch(i); }, Math.max(0, ti - (ryo ? Math.min(gap * 0.9, 0.12) : Math.min(gap * 0.4, 0.055))) * 1000)); timers.push(setTimeout(function () { if (!done) land(i); }, ti * 1000)); });
     var tEnd = t0 + (hits.length - 1) * gap + 0.14 / sp + (cu ? 0.14 : 0); /* v6.5.59: the last hit holds a beat */
     function finish() {
       if (done) return; done = true; timers.forEach(clearTimeout); for (var i = landed; i < hits.length; i++) land(i);
