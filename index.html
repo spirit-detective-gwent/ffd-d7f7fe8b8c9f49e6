@@ -7744,7 +7744,7 @@ function clashAnim(si, card, onImpact, o) {
   var cx = hz ? d.x - dir * d.w * 0.42 : (a.x + d.x) / 2, cy = hz ? d.y : d.y - dir * d.h * 0.42, col = (si === 0 ? ST.me : ST.foe) === 'ryo' ? '#ffb040' : '#7fefff';
   var imp = clip ? clip.impact : 0.3, leave = Math.max(0, imp / sp - 0.34 / spd()), dash = Math.max(120, Math.min(340, imp / sp * 1000 - leave * 1000 - 20));
   att.classList.add('lunge'); ev('clash:start:' + si + (o.held ? ':held' : ''));
-  var nb = card.hits >= 2 && card.hits <= 3 ? card.hits : 0, cu = nb && cuFor(si) && !o.cuc && !o.held && !o.hold ? cuIn(a, d, dir, hz, nb === 3 ? 'TRIPLE HIT' : 'DOUBLE HIT') : null; /* v6.5.59: a card that hits 2 or 3 times gets the close-up too */
+  var nb = card.hits >= 2 && card.hits <= 6 ? card.hits : 0, cu = nb && cuFor(si) && !o.cuc && !o.held && !o.hold ? cuIn(a, d, dir, hz, ['', '', 'DOUBLE HIT', 'TRIPLE HIT', 'FOUR HIT', 'FIVE HIT', 'SIX HIT'][nb]) : null; /* v6.5.59: a card that hits 2 or 3 times gets the close-up too */
   var fistR = chOfSide(si) === 'ryo' && !!FISTY[card.mv]; if (fistR) fistOnFig(figOf(si), ST.cm === CHAIN_SP ? 2 : 1, si); // v4.33: his fist burns for the attack (both in a chained combo)
   var atT = TRA() + '(' + dir * travel + 'px)';
   var t1 = setTimeout(function () {
@@ -7757,8 +7757,8 @@ function clashAnim(si, card, onImpact, o) {
     if (afl && !ST.ff) { STRIKE_AOI.forEach(function (q) { CI.sheet(q[0]); }); for (var aj = 0; aj < nb; aj++) (function (j) { setTimeout(function () { if (ST.ff) return; if (j > 0) { aoiSwing(figOf(si), card, j, 0.05, 0.2); } else aoiSwing(figOf(si), card, 0, 0.05, 0.2, 1); aoiTrail(cx, cy, j); AU.play('slash', { gain: [1, 0.85, 0.75][j] }); }, Math.max(0, j * 200 - (j ? 50 : 0)) / spd()); })(aj); }
     if (onImpact) onImpact();
     if (fistR) fistSpark(si, cx, cy);
-    var cuB = !ST.ff && CU.on && (cu || o.cuc); /* v6.5.59: one camera beat per hit (the chain shares one camera) */
-    if (cuB) for (var bj = 0; bj < (nb || 1); bj++) (function (j) { setTimeout(function () { if (CU.on) cuBeat(si, CU.n, cuDmg(1 - si, CU.n), dir, false, CU_HOLD, cx, cy, col, []); }, (afl ? j * 200 : cuOff(clip, j)) / spd()); /* v6.5.59: beats on the clip's own cut sounds (flurry: 0.20 s apart) */ })(bj);
+    var cuN = clip ? (clip.cues || []).filter(function (c) { return /slash|hit|fist/.test(c.snd) && c.t >= clip.impact - 0.08; }).length : 1, cuB = !ST.ff && CU.on && (cu || o.cuc); /* v6.5.59: one camera beat per hit (the chain shares one camera) */
+    if (cuB) for (var bj = 0; bj < (nb || 1); bj++) (function (j) { setTimeout(function () { if (CU.on) cuBeat(si, CU.n, cuDmg(1 - si, CU.n), dir, false, nb > 3 ? 40 : CU_HOLD, cx, cy, col, []); }, (afl ? j * 200 : nb > 3 ? j * (nb === 4 ? 100 : 70) : cuOff(clip, j)) / spd()); if (nb > 3 && j >= cuN && !ST.ff) setTimeout(function () { if (!ST.ff) AU.play(hitKey(1 - si), { gain: 0.6 }); }, j * (nb === 4 ? 100 : 70) / spd()); /* v6.5.59: 4-6 hit cards: one beat per hit inside the same clip window (the clip only has 3 hit sounds, the rest are added) */ /* v6.5.59: beats on the clip's own cut sounds (flurry: 0.20 s apart) */ })(bj);
     if (!ST.ff) { if (!cuB) recoil(1 - si, PUNCHY[card.mv] ? 'punch' : 'slash', dir); sparks(cx, cy, col, card.hits > 1 ? 16 : 12); stageShake(); if (card.hits > 1) [140, 280].forEach(function (ms) { setTimeout(function () { if (!ST.ff) sparks(cx + (Math.random() - 0.5) * 30, cy + (Math.random() - 0.5) * 16, col, 7); }, ms / spd()); }); }
   }
   if (afl) { [['whoosh', 0.5, 0.7], ['grunt_f', 0.93, 0.7]].forEach(function (q) { setTimeout(function () { if (!ST.ff) AU.play(q[0], { gain: q[2], p: 0.55 }); }, q[1] * 1000 / sp); }); }
