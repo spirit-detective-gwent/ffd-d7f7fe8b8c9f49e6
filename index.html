@@ -3890,6 +3890,10 @@ body.fff-dlg-on #qnote{
 /* v6.5.59 WORDS: each word drops in, overshoots and settles (stamp), a path-coloured brush stroke wipes in behind it; 130 ms between words */
 #sfx.v-words .sw{animation-name:sfxWs}
 #sfx.v-words .sgsp{display:inline-block;width:.34em}
+#sfx.v-words .P.wd.cr{--gl:rgba(255,150,30,.85)}#sfx.v-words .P.wd.ca{--gl:rgba(47,216,232,.85)}
+#sfx.v-words .P.wd.cr i{background-image:linear-gradient(180deg,#fff6cf 0%,#ffcf40 44%,#ff9a1a 54%,#ffd36a 100%)}
+#sfx.v-words .P.wd.ca i{background-image:linear-gradient(180deg,#f0ffff 0%,#7fefff 44%,#1f9a92 54%,#b8fbff 100%)}
+#sfx.v-words .P.wd.ca b{text-shadow:0 0 calc(var(--fs)*.32) #2fd8e8,0 3px 0 #000}
 #sfx.v-words .P.wd{isolation:isolate;animation:sfxWd calc(var(--k)*130ms) cubic-bezier(.2,1.5,.4,1) both;animation-delay:calc(var(--k)*var(--i)*130ms)}
 @keyframes sfxWd{0%{transform:scale(2.6) rotate(-6deg);opacity:0}55%{transform:scale(.9) rotate(-3deg);opacity:1}80%{transform:scale(1.07) rotate(-3deg)}100%{transform:scale(1) rotate(-3deg);opacity:1}}
 #sfx.v-words .P.wd u{position:absolute;left:-8%;right:-8%;top:14%;bottom:6%;z-index:-1;background:linear-gradient(90deg,transparent,var(--gl) 16%,var(--gl) 84%,transparent);opacity:0;transform-origin:0 50%;animation:sfxBr calc(var(--k)*300ms) ease-out both;animation-delay:calc(var(--k)*var(--i)*130ms)}
@@ -41314,7 +41318,8 @@ html.hi-find #wtags .wtag.obj.loot.near {
   var el = null, tEnd = 0, cur = null, seq = 0, shown = 0, lastN = '';
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function P(t, cls) { var x = esc(t).replace(/ /g, '\u00a0'); return '<span class="P' + (cls ? ' ' + cls : '') + '"><b>' + x + '</b><i>' + x + '</i></span>'; }
-  function pick(name, o) { if (o.dbl) return 'duo'; if (o.id && VAR[o.id] && /\s/.test(name) && root.FFF_SIGWORDS !== false) return 'words'; if (o.id && VAR[o.id]) return VAR[o.id]; if (BY_NAME[name]) return BY_NAME[name];
+  var DORD = { 'Spring Tide': 'ra', 'Final Bell': 'ar', 'Burn the Line': 'rra' }; /* v6.5.59: a partner double's words are split between the two (r = Ryo's fire orange, a = Aoi's cyan) */
+  function pick(name, o) { if (o.dbl && DORD[name] && /\s/.test(name) && root.FFF_SIGWORDS !== false) return 'words'; if (o.dbl) return 'duo'; if (o.id && VAR[o.id] && /\s/.test(name) && root.FFF_SIGWORDS !== false) return 'words'; if (o.id && VAR[o.id]) return VAR[o.id]; if (BY_NAME[name]) return BY_NAME[name];
     var h = 0; for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0; return ROT[Math.abs(h) % ROT.length]; }
   function rectOf(id) { var n = document.getElementById(id); return n ? n.getBoundingClientRect() : null; }
   /* the band sits in the open strip between the two fighters (where the old small callout lived), never over the hand */
@@ -41325,7 +41330,7 @@ html.hi-find #wtags .wtag.obj.loot.near {
   function ensure() { if (el && el.isConnected) return el; el = document.createElement('div'); el.id = 'sfx'; el.setAttribute('aria-hidden', 'true'); document.body.appendChild(el); return el; }
   function fit(name) { var W = innerWidth, n = name.length, fs = Math.floor((W - 34) / (n * 0.5 + 0.6)); return Math.max(30, Math.min(W >= 700 ? 84 : 64, fs)); }
   function build(v, name) { var m;
-    if (v === 'words') { var ws = name.split(/\s+/); return '<div class="st sm">' + ws.map(function (w, i) { return '<span class="P wd" style="--i:' + i + '"><u></u><b>' + esc(w) + '</b><i>' + esc(w) + '</i></span>' + (i < ws.length - 1 ? '<span class="sgsp">\u00a0</span>' : ''); }).join('') + '</div>'; } /* v6.5.59: each word slams in on its own beat (130 ms apart), under 0.5 s in all */
+    if (v === 'words') { var ws = name.split(/\s+/), od = DORD[name] || ''; return '<div class="st sm">' + ws.map(function (w, i) { return '<span class="P wd' + (od ? ' c' + od.charAt(i % od.length) : '') + '" style="--i:' + i + '"><u></u><b>' + esc(w) + '</b><i>' + esc(w) + '</i></span>' + (i < ws.length - 1 ? '<span class="sgsp">\u00a0</span>' : ''); }).join('') + '</div>'; } /* v6.5.59: each word slams in on its own beat (130 ms apart), under 0.5 s in all */
     if (v === 'cascade') m = '<div class="st sm" style="--sg:' + Math.max(1, Math.round(50 / Math.max(1, name.length - 1))) + 'ms">' + name.split('').map(function (c, i) { return P(c).replace('class="P"', 'class="P" style="--i:' + i + '"'); }).join('') + '</div>';
     else if (v === 'duo') { var k = name.lastIndexOf(' '); m = '<div class="st sm">' + P(name.slice(0, k) + ' ', 'd1') + P(name.slice(k + 1), 'd2') + '</div>'; }
     else m = '<div class="st sm">' + P(name) + '</div>';
