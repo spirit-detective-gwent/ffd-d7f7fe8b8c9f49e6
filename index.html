@@ -3823,6 +3823,7 @@ body.fff-dlg-on #qnote{
 #sfx .sm b{color:var(--ol);-webkit-text-stroke:calc(var(--fs)*.17) var(--ol);text-shadow:0 0 calc(var(--fs)*.32) var(--gl),0 3px 0 #000}
 #sfx .sm .P{display:inline-block;position:relative;will-change:transform,opacity}
 #sfx .sm .P i{position:absolute;left:0;top:0;color:transparent;-webkit-background-clip:text;background-clip:text;background-image:linear-gradient(180deg,var(--g1) 0%,var(--g2) 44%,var(--g3) 54%,var(--g4) 100%);-webkit-text-stroke:1px rgba(255,255,255,.55)}
+#sfx .wsp{display:inline-block;width:.62em}
 #sfx .se{color:transparent;-webkit-text-stroke:2px var(--ac);opacity:0}
 #sfx .sc{opacity:0}
 #sfx .sc.c1{color:var(--ac2)} #sfx .sc.c2{color:#ff4f8b}
@@ -3886,6 +3887,12 @@ body.fff-dlg-on #qnote{
 #sfx.v-impact .se{animation:sfxIe calc(var(--k)*800ms) linear both}
 #sfx.v-impact .se.e2{animation-delay:calc(var(--k)*40ms)} #sfx.v-impact .se.e3{animation-delay:calc(var(--k)*80ms)}
 @keyframes sfxIe{0%,18%{transform:scale(1.1) rotate(-3deg);opacity:0}21%{opacity:.8}52%,100%{transform:translateY(-28px) scale(1.12) rotate(-3deg);opacity:0}}
+/* v6.5.59 WORDS: each word drops in, overshoots and settles (stamp), a path-coloured brush stroke wipes in behind it; 130 ms between words */
+#sfx.v-words .sw{animation-name:sfxWs}
+#sfx.v-words .P.wd{isolation:isolate;animation:sfxWd calc(var(--k)*130ms) cubic-bezier(.2,1.5,.4,1) both;animation-delay:calc(var(--k)*var(--i)*130ms)}
+@keyframes sfxWd{0%{transform:scale(2.6) rotate(-6deg);opacity:0}55%{transform:scale(.9) rotate(-3deg);opacity:1}80%{transform:scale(1.07) rotate(-3deg)}100%{transform:scale(1) rotate(-3deg);opacity:1}}
+#sfx.v-words .P.wd u{position:absolute;left:-8%;right:-8%;top:14%;bottom:6%;z-index:-1;background:linear-gradient(90deg,transparent,var(--gl) 16%,var(--gl) 84%,transparent);opacity:0;transform-origin:0 50%;animation:sfxBr calc(var(--k)*300ms) ease-out both;animation-delay:calc(var(--k)*var(--i)*130ms)}
+@keyframes sfxBr{0%{transform:scaleX(0) skewX(-14deg);opacity:.6}50%{transform:scaleX(1) skewX(-14deg);opacity:.5}100%{transform:scaleX(1.06) skewX(-14deg);opacity:0}}
 /* 7 DUO (double moves): the two halves charge in from both sides, gold and teal, and collide with a flash */
 #sfx.v-duo .P.d1 i{background-image:linear-gradient(180deg,#fff6cf 0%,#ffcf40 44%,#ff9a1a 54%,#ffd36a 100%)}
 #sfx.v-duo .P.d2 i{background-image:linear-gradient(180deg,#f0ffff 0%,#7fefff 44%,#1f9a92 54%,#b8fbff 100%)}
@@ -5663,10 +5670,11 @@ function run(canvas, opts, S, draw, sound, impactAt, blowAt, blowSnd) {
   var tg = opts.target && opts.target.src ? { img: new Image(), scale: opts.target.scale || 1, id: opts.target.id } : null; if (tg) tg.img.src = opts.target.src;
   var st = { W: W, H: H, g: geo(W, H, tg), tg: tg, parts: [], sub: opts.sub || '', stage: '', opts: opts, dpr: dpr }, snd = new Snd(sp), D = total(S); st.u = st.g.hh / 200;
   sound(snd, st); FIN.tl = null; FIN.log = { kind: opts.kind, blow: blowAt, stages: S.map(function (q) { return [q[0], startOf(S, q[0]), q[1]]; }), total: D, sched: snd.sched, speed: sp, mode: opts.field ? 'field' : 'pose', sub: opts.sub || '' };
-  function blow(skipped) { if (blown) return; blown = true; if (!skipped && blowSnd) blowSnd(snd, st.t || 0); ev('fin:blow:' + opts.kind + (skipped ? ':skipped' : '')); if (opts.onBlow) opts.onBlow(!!skipped); }
-  function finish(skipped) { if (done) return; done = true; timers.forEach(clearTimeout); if (skipped) snd.stop(); blow(skipped); if (opts.field) opts.field.pose(null); if (!impact && opts.onImpact) { impact = true; opts.onImpact(); }
+  function blow(skipped) { if (blown) return; blown = true; if (!skipped && blowSnd) blowSnd(snd, st.t || 0); ev('fin:blow:' + opts.kind + (skipped ? ':skipped' : '')); if (!skipped && opts.cuFinal && root.cuFinal) st.cf = root.cuFinal.begin(opts); /* v6.5.59: final-blow close-up */ if (opts.onBlow) opts.onBlow(!!skipped); }
+  function finish(skipped) { if (done) return; done = true; timers.forEach(clearTimeout); if (st.cf && root.cuFinal) root.cuFinal.end(st.cf); if (skipped) snd.stop(); blow(skipped); if (opts.field) opts.field.pose(null); if (!impact && opts.onImpact) { impact = true; opts.onImpact(); }
     x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, canvas.width, canvas.height); ev('fin:end:' + opts.kind + (skipped ? ':skipped' : '')); resolveF({ skipped: !!skipped, t: st.t || 0 }); }
   function frame(ts) { if (done) return; if (!start) { start = last = ts; } FN++;
+    if (st.cf && !st.cf.done && root.cuFinal.hold(st.cf)) { start += ts - last; last = ts; root.requestAnimationFrame(frame); return; } /* v6.5.59: the final freeze: the timeline waits, the last frame stays up */
     var t = (ts - start) / 1000 * sp, dt = Math.min(0.05, (ts - last) / 1000) * sp; last = ts; st.t = t;
     if (t >= D) { finish(false); return; }
     var s0 = stageAt(S, t); if (s0.n !== st.stage) { st.stage = s0.n; ev('fin:stage:' + opts.kind + ':' + s0.n); }
@@ -5674,7 +5682,9 @@ function run(canvas, opts, S, draw, sound, impactAt, blowAt, blowSnd) {
     if (!impact && t >= impactAt) { impact = true; if (opts.onImpact) opts.onImpact(); }
     if (!blown && blowAt != null && t >= blowAt) { FIN.tl = { kind: opts.kind, frame: FN, t: +t.toFixed(3) }; blow(false); } // v4.21: sound, damage, reaction and effect on this frame
     x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+    var cf = st.cf && !st.cf.done ? st.cf : null; if (cf) { x.save(); root.cuFinal.apply(x, W, H, cf); } /* v6.5.59 */
     try { draw(x, st, t, dt, s0); } catch (e) { ev('fin:err:' + (e && e.message)); }
+    if (cf) { x.restore(); root.cuFinal.flash(x, W, H, cf); }
     root.requestAnimationFrame(frame); }
   warm(); ev('fin:start:' + opts.kind);
   timers.push(setTimeout(function () { finish(false); }, D * 1000 / sp + 1500)); // watchdog (rAF throttled in a background tab)
@@ -7823,6 +7833,28 @@ function cuStack(si, kind, k, n) {
   ev('cu:stack:' + kind + ':' + k + '/' + n);
 }
 function cuStackOK() { var c = ST.set.cam; if (c !== 'on' && c !== 'off') c = ((root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches) || ST.set.rm) ? 'off' : 'on'; return c !== 'off'; }
+root.FFF_SIGWORD = function (i, n) { if (ST.ff) return; AU.play('hit', { gain: 0.35 + 0.12 * i }); if (i === n - 1) stageShake(); }; /* v6.5.59: a small thud per signature word */
+/* v6.5.59: stronger close-up on a signature's FINAL blow. Only the in-engine field finishers (Fox Fire Fist, Hundred Fist Barrage, Detention Slip, Aoi's three) draw on #cutCv with the real fighters:
+ * the camera there is a canvas transform applied before the draw (the sheets are re-drawn at the new scale; nothing is a CSS-scaled bitmap) and the board fighters are redrawn at 2.4x resolution.
+ * Video cut-ins (CI.playCut) are footage, so they are not zoomed. On the blow: push in 2.4x in 90 ms, a white flash, a 200 ms freeze starting 34 ms later, a 260 ms pull-out. Music dips only for this beat. */
+var CF = { Z: 2.4, IN: 90, DELAY: 34, HOLD: 200, OUT: 260, st: null }, CFA = null;
+function cuMusic(on) {
+  var A0 = root.AUDIO && root.AUDIO.st, c = A0 && A0.ctx; if (!c || !A0.mus) return; var t = c.currentTime;
+  try { var dest = A0.hi && A0.hf ? A0.hf.mus[0] : A0.master;
+    if (on) { if (!CFA || CFA.lp.context !== c) CFA = { lp: c.createBiquadFilter(), ag: c.createGain() }; CFA.lp.type = 'lowpass'; CFA.lp.Q.value = 0.8; clearTimeout(CFA.t); CFA.lp.disconnect(); CFA.ag.disconnect(); A0.mus.disconnect(); A0.mus.connect(CFA.lp); CFA.lp.connect(CFA.ag); CFA.ag.connect(dest);
+      CFA.lp.frequency.cancelScheduledValues(t); CFA.lp.frequency.setValueAtTime(18000, t); CFA.lp.frequency.exponentialRampToValueAtTime(1000, t + 0.15); CFA.ag.gain.cancelScheduledValues(t); CFA.ag.gain.setValueAtTime(1, t); CFA.ag.gain.linearRampToValueAtTime(0.35, t + 0.15); }
+    else if (CFA) { CFA.lp.frequency.cancelScheduledValues(t); CFA.lp.frequency.setValueAtTime(Math.max(200, CFA.lp.frequency.value), t); CFA.lp.frequency.exponentialRampToValueAtTime(18000, t + 0.25); CFA.ag.gain.cancelScheduledValues(t); CFA.ag.gain.setValueAtTime(CFA.ag.gain.value, t); CFA.ag.gain.linearRampToValueAtTime(1, t + 0.25);
+      clearTimeout(CFA.t); CFA.t = setTimeout(function () { try { CFA.lp.disconnect(); CFA.ag.disconnect(); A0.mus.disconnect(); A0.mus.connect(dest); } catch (e) {} }, 320); } } catch (e) { ev('cu:music:err'); }
+}
+root.cuFinal = {
+  begin: function (opts) { if (!opts.cuFocus) return null; var F = opts.cuFocus(); if (!F) return null; var c = { t0: performance.now(), F: F, frozen: 0 }; CF.st = c; root.CU_Z = CF.Z; cuMusic(true); c.ft = setTimeout(function () { if (ST.ff || c.done) return; ST.frz = true; $('#game').classList.add('hitstop'); c.ft2 = setTimeout(function () { ST.frz = false; $('#game').classList.remove('hitstop'); }, CF.HOLD); }, CF.DELAY); /* the board freezes with the canvas */ ev('cu:final:in'); return c; },
+  end: function (c) { if (!c || c.done) return; c.done = 1; clearTimeout(c.ft); clearTimeout(c.ft2); if (ST.frz) { ST.frz = false; $('#game').classList.remove('hitstop'); } if (CF.st === c) CF.st = null; root.CU_Z = CU.on ? CU.Z : 1; cuMusic(false); ev('cu:final:out'); },
+  /* true while the frame should hold (the timeline is paused by the caller) */
+  hold: function (c) { var z = performance.now() - c.t0; return z >= CF.DELAY && z < CF.DELAY + CF.HOLD; },
+  apply: function (x, W, H, c) { var z = performance.now() - c.t0, T = CF.DELAY + CF.HOLD, k = z < CF.IN ? 1 - Math.pow(1 - z / CF.IN, 3) : z < T + 120 ? 1 : (function (u) { u = Math.max(0, 1 - (z - T - 120) / CF.OUT); return u * u * (3 - 2 * u); })(); var zz = 1 + (CF.Z - 1) * k, F = c.F, Sx = F.x + (W / 2 - F.x) * 0.7 * k, Sy = F.y + (H * 0.42 - F.y) * 0.7 * k;
+    x.translate(Sx, Sy); x.scale(zz, zz); x.translate(-F.x, -F.y); if (z > T + 120 + CF.OUT) root.cuFinal.end(c); },
+  flash: function (x, W, H, c) { var z = performance.now() - c.t0; if (z < 120) { x.fillStyle = 'rgba(255,248,230,' + 0.8 * (1 - z / 120) + ')'; x.fillRect(0, 0, W, H); } }
+};
 function cuPt(x, y) { return CU.on ? { x: CU.S.x + CU.Z * (x - CU.F.x), y: CU.S.y + CU.Z * (y - CU.F.y) } : { x: x, y: y }; }
 function cuIn(a, d, dir, hz, label) {
   var st = $('#stage'), g = $('#game'); if (CU.on || !cuOK() || !st || !st.animate) return null;
@@ -8099,7 +8131,7 @@ async function doPlay(si, mv) {
       recoil(1 - si, chId === 'aoi' ? 'slash' : 'punch'); sparks(d.x, d.y, col, 18); setTimeout(function () { if (!ST.ff) sparks(d.x + (Math.random() - 0.5) * 30, d.y - 10, col, 9); }, 120 / spd2); stageShake();
       if (root.FIN) FIN.mark('recoil'); ev('sig:recoil:' + (1 - si)); }
     var nameT = null, camT = null, FLD = null, AOIF = root.FIN && FIN.hpc && AOI_FIN[card.id] ? FIN[AOI_FIN[card.id]] : null, FINP = AOIF || (root.FIN && chId === 'ryo' && card.id === 'r_ds' && FIN.ds ? FIN.ds : root.FIN && FIN.has() && !root.FFF_OLD_FFF && chId === 'ryo' && (card.id === 'r_fff' ? FIN.fff : card.id === 'r_hfb' ? FIN.hfb : null)), FLD = AOIF ? fieldApi(si, AOI_BACK) : FINP && (FINP === FIN.ds || (FINP === FIN.fff || FINP === FIN.hfb && !root.FFF_HFB_POSE) && !root.FFF_FFF_POSE) && CI.boardClip(FLD_CLIP) ? fieldApi(si) : null; /* v4.24: Aoi's three singles always play on the field (aoi_back) */ /* v4.15: Detention Slip is always on the field (no pose art, no video) */ if (FLD && FLD.back) await FLD.back.ready(); /* v4.14: Hundred Fist Barrage on the field too */ if (FLD) { cut.classList.add('fld'); $('#game').classList.add('sigfld'); ev('fin:field:on'); }
-    var player = (FINP ? function (cv, cd, ch, o) { return FINP(cv, o); } : CI.playCut)($('#cutCv'), card, CH[chId], { /* v4.13: pose finishers (src/fin.js); v4.13.1: Fox Fire Fist on the field */ field: FLD, speed: spd2, sub: sub, anchor: sigAnchor(), target: sigTarget(si), foeHurt: hurtOf(1 - si), onHurt: function () { if (si !== 0) return; var foe = figOf(1); if (!foe) return; foe.hurtLock = 1; if ((foe.poseT || 0) < 0.4) foe.poseT = 0.4; ev('hurt:hold:fin:' + card.id); }, onBlow: function (sk) { boardHit(sk); }, onStart: function () {
+    var player = (FINP ? function (cv, cd, ch, o) { return FINP(cv, o); } : CI.playCut)($('#cutCv'), card, CH[chId], { /* v4.13: pose finishers (src/fin.js); v4.13.1: Fox Fire Fist on the field */ cuFinal: !!FLD && cuStackOK() && innerHeight > innerWidth && !document.documentElement.classList.contains('pc-arena'), cuFocus: function () { var dd = geo(1 - si); return { x: dd.x, y: dd.y - 6 }; }, field: FLD, speed: spd2, sub: sub, anchor: sigAnchor(), target: sigTarget(si), foeHurt: hurtOf(1 - si), onHurt: function () { if (si !== 0) return; var foe = figOf(1); if (!foe) return; foe.hurtLock = 1; if ((foe.poseT || 0) < 0.4) foe.poseT = 0.4; ev('hurt:hold:fin:' + card.id); }, onBlow: function (sk) { boardHit(sk); }, onStart: function () {
       ev('cut:clock:' + card.id); if (card.id === 'r_fff') { /* t2862u: in at the middle of Ryo's charge (swell..boom), out while he dashes in (meet), gone before contact (skid) */ var FS = root.FIN && FIN.stages && FIN.stages.fff, fAt = function (n) { var a = 0; for (var q = 0; q < FS.length; q++) { if (FS[q][0] === n) return a; a += FS[q][1]; } return -1; }, nIn = 1.98, nOut = 4.37; if (FS && fAt('swell') >= 0 && fAt('tuck') > 0 && fAt('meet') > 0 && fAt('skid') > fAt('meet')) { nIn = (fAt('swell') + fAt('tuck')) / 2; nOut = fAt('meet') + 0.6 * (fAt('skid') - fAt('meet')); } nameT = setTimeout(function () { nameT = null; sigNameShow(si, card.n, { id: card.id, ch: chId, until: (nOut - nIn) * 1000 / spd2 }); }, nIn * 1000 / spd2); ev('signame:plan:' + Math.round(nIn * 1000) + ':' + Math.round(nOut * 1000)); } else sigNameShow(si, card.n, { id: card.id, ch: chId });
       // the board camera returns while the footage fades out, so the recoil plays on the normal board
       camT = setTimeout(function () { sigCam(si, false, spd2); }, Math.max(0, (player.dur || 5) - 0.34) * 1000 / spd2); } });
@@ -41245,13 +41277,13 @@ html.hi-find #wtags .wtag.obj.loot.near {
  * cut-ins and double moves call, so normal cards and gang skills never get a name. One overlay, built on show, cleared on end. */
 (function (root) {
   'use strict';
-  var VAR = { r_fff: 'slam', r_hfb: 'cascade', r_ds: 'slash', a_hpc: 'chroma', a_fsc: 'band', a_rfg: 'impact' };
+  var VAR = { r_fff: 'slam', r_hfb: 'cascade', r_ds: 'slash', a_hpc: 'chroma', a_fsc: 'band', a_rfg: 'impact' }; /* v6.5.59: a signature with 2+ words comes in word by word ('words', see pick) */
   var BY_NAME = { 'Fox Fire Fist': 'slam', 'Hundred Fist Barrage': 'cascade', 'Detention Slip': 'slash', 'Hundred Petal Cut': 'chroma', 'Five-Step Cut': 'band', 'Wildfire Rush': 'impact', 'Spring Tide': 'duo', 'Final Bell': 'duo', 'Burn the Line': 'duo' };
-  var ROT = ['slam', 'slash', 'impact', 'band', 'chroma', 'cascade'], VN = { slam: 1, cascade: 2, slash: 3, chroma: 4, band: 5, impact: 6, duo: 7 };
+  var ROT = ['slam', 'slash', 'impact', 'band', 'chroma', 'cascade'], VN = { slam: 1, cascade: 2, slash: 3, chroma: 4, band: 5, impact: 6, duo: 7, words: 8 };
   var el = null, tEnd = 0, cur = null, seq = 0, shown = 0, lastN = '';
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function P(t, cls) { var x = esc(t).replace(/ /g, '\u00a0'); return '<span class="P' + (cls ? ' ' + cls : '') + '"><b>' + x + '</b><i>' + x + '</i></span>'; }
-  function pick(name, o) { if (o.dbl) return 'duo'; if (o.id && VAR[o.id]) return VAR[o.id]; if (BY_NAME[name]) return BY_NAME[name];
+  function pick(name, o) { if (o.dbl) return 'duo'; if (o.id && VAR[o.id] && /\s/.test(name) && root.FFF_SIGWORDS !== false) return 'words'; if (o.id && VAR[o.id]) return VAR[o.id]; if (BY_NAME[name]) return BY_NAME[name];
     var h = 0; for (var i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) | 0; return ROT[Math.abs(h) % ROT.length]; }
   function rectOf(id) { var n = document.getElementById(id); return n ? n.getBoundingClientRect() : null; }
   /* the band sits in the open strip between the two fighters (where the old small callout lived), never over the hand */
@@ -41262,6 +41294,7 @@ html.hi-find #wtags .wtag.obj.loot.near {
   function ensure() { if (el && el.isConnected) return el; el = document.createElement('div'); el.id = 'sfx'; el.setAttribute('aria-hidden', 'true'); document.body.appendChild(el); return el; }
   function fit(name) { var W = innerWidth, n = name.length, fs = Math.floor((W - 34) / (n * 0.5 + 0.6)); return Math.max(30, Math.min(W >= 700 ? 84 : 64, fs)); }
   function build(v, name) { var m;
+    if (v === 'words') { var ws = name.split(/\s+/); return '<div class="st sm">' + ws.map(function (w, i) { return '<span class="P wd" style="--i:' + i + '"><u></u><b>' + esc(w) + '</b><i>' + esc(w) + '</i></span>' + (i < ws.length - 1 ? '<span class="wsp">\u00a0</span>' : ''); }).join('') + '</div>'; } /* v6.5.59: each word slams in on its own beat (130 ms apart), under 0.5 s in all */
     if (v === 'cascade') m = '<div class="st sm" style="--sg:' + Math.max(1, Math.round(50 / Math.max(1, name.length - 1))) + 'ms">' + name.split('').map(function (c, i) { return P(c).replace('class="P"', 'class="P" style="--i:' + i + '"'); }).join('') + '</div>';
     else if (v === 'duo') { var k = name.lastIndexOf(' '); m = '<div class="st sm">' + P(name.slice(0, k) + ' ', 'd1') + P(name.slice(k + 1), 'd2') + '</div>'; }
     else m = '<div class="st sm">' + P(name) + '</div>';
@@ -41290,7 +41323,8 @@ html.hi-find #wtags .wtag.obj.loot.near {
       if (!fontOk) tw = name.length * fs * 0.42; /* fallback metrics would be too wide: use Bangers' average width */
       if (tw > 0) { var mx = innerWidth >= 700 ? 92 : 72, f2 = Math.max(28, Math.min(mx, Math.floor(fs * (innerWidth - 40) / tw))); if (f2 !== fs) { fs = f2; n.style.setProperty('--fs', fs + 'px'); n.firstChild.style.top = bandY(fs) + 'px'; } }
       n.style.visibility = ''; void n.offsetWidth; n.classList.add('v-' + v); cur = v; lastN = name; shown = 1; var id = ++seq, hold = Math.max(0, Math.round((+o.until || 0) - 800 * k)); tEnd = Date.now() + 800 * k + hold;
-      if (hold) setTimeout(function () { if (id === seq) { n.classList.add('hold'); setTimeout(function () { if (id === seq) n.classList.remove('hold'); }, hold); } }, 400 * k); /* o.until: hold the settled name so it leaves right before the blow */
+      if (v === 'words') name.split(/\s+/).forEach(function (w, wi, wa) { setTimeout(function () { if (id === seq && root.FFF_SIGWORD) root.FFF_SIGWORD(wi, wa.length); }, wi * 130 * k + 20); }); /* v6.5.59 */
+      if (hold) setTimeout(function () { if (id === seq) { n.classList.add('hold'); setTimeout(function () { if (id === seq) n.classList.remove('hold'); }, hold); } }, (v === 'words' ? 520 : 400) * k); /* o.until: hold the settled name so it leaves right before the blow */
       setTimeout(function () { clear(id); }, 800 * k + hold + 60); return { v: v }; } catch (e) { return null; } }
   /* early end (the move was skipped): a quick fade, then gone */
   function hide() { if (pend) { clearTimeout(pend.t); pend = null; } if (!shown) return false; shown = 0; if (!el || !cur) return true; if (Date.now() >= tEnd) { clear(seq); return true; } var id = seq, w = el.querySelector('.sw'); if (w) w.classList.add('sout'); setTimeout(function () { clear(id); }, 130); return true; }
