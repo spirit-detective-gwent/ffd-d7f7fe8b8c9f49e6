@@ -7860,6 +7860,8 @@ function cuMusic(on) {
     else if (CFA) { CFA.lp.frequency.cancelScheduledValues(t); CFA.lp.frequency.setValueAtTime(Math.max(200, CFA.lp.frequency.value), t); CFA.lp.frequency.exponentialRampToValueAtTime(18000, t + 0.25); CFA.ag.gain.cancelScheduledValues(t); CFA.ag.gain.setValueAtTime(CFA.ag.gain.value, t); CFA.ag.gain.linearRampToValueAtTime(1, t + 0.25);
       clearTimeout(CFA.t); CFA.t = setTimeout(function () { try { CFA.lp.disconnect(); CFA.ag.disconnect(); A0.mus.disconnect(); A0.mus.connect(dest); } catch (e) {} }, 320); } } catch (e) { ev('cu:music:err'); }
 }
+root.cuMusic = cuMusic;
+root.cuDblOK = function () { return cuStackOK() && innerHeight > innerWidth && !ST.ff && !document.documentElement.classList.contains('pc-arena'); }; /* v6.5.59: the partner doubles' camera follows ST.set.cam / reduced motion / fast-forward like the other close-ups */
 root.cuFinal = {
   cfg: CF,
   /* starts the slow approach: the push-in eases to its peak over c.ap ms (the timeline runs at CF.R meanwhile); the music dip starts with it */
@@ -40385,6 +40387,7 @@ function lays(Fr, Fa) {
 function unit(ax, ay, bx, by) { var dx = ax - bx, dy = ay - by, l = Math.max(1, Math.hypot(dx, dy)); return [dx / l, dy / l]; }
 /* ---- the shared painter: foe (turned / lifted / tinted), both performers depth-sorted, cuts, sparks ---- */
 function paint(x, st, S, dt) {
+  st.act = S.actors;
   var k = K(), F = S.F, T = F.r.rect('foe'), u = S.u, A = S.A;
   x.save(); x.translate(k.rnd(-S.sh, S.sh), k.rnd(-S.sh, S.sh));
   (S.pre || []).forEach(function (f) { f(x); });
@@ -40596,28 +40599,63 @@ var MOVES = { st: ST_, fb: FB_, bl: BL_ };
 /* ---- the runner: one clock for both performers, every hit fires on the frame it shows (sound + board hit together) ---- */
 var CUR = null;
 function release() { if (!CUR || !CUR.cv) return; var cv = CUR.cv, PV = CUR.pv; try { var x = cv.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, cv.width, cv.height); } catch (e) {} if (PV && PV.end) PV.end(); ev('dbl:release:' + (CUR.kind || '')); CUR = null; }
+/* v6.5.59 partner-double showpiece. CAMS: TF = the last blow; seg = [who, from, to, zoom] windows where the camera pushes in on that performer (the next window whips across: the weights cross-fade over 0.2 s). */
+var CAMS = { st: { TF: 13.44, seg: [['r', 8.4, 9.55, 1.7], ['a', 9.45, 10.5, 1.7]] }, fb: { TF: 5.29, seg: [['a', 1.3, 2.4, 1.6], ['r', 2.3, 3.2, 1.7]] }, bl: { fly: [3.6, 4.47], TF: 4.47, seg: [['a', 1.3, 3.55, 1.6], ['r', 3.45, 4.0, 1.7]] } };
+function sm01(u) { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); }
+function who2(st, F, who) { var a = st.act || []; for (var i = 0; i < a.length; i++) if (a[i].F === (who === 'r' ? F.r : F.a)) return a[i]; return null; }
+function showDraw(x, st, M, t, dt, F, G, ts, CM, TF, FZ) {
+  var W = st.W, H = st.H, h = G.h, foe = { x: G.fx, y: G.fy - h * 0.5 };
+  function pos(who) { var p = who2(st, F, who), q = p ? { x: p.X, y: p.Y - h * 0.45 } : foe; if (who === 'r' && CM.fly && t >= CM.fly[0]) { var u = sm01((t - CM.fly[0]) / (CM.fly[1] - CM.fly[0])); q = { x: q.x + (foe.x - q.x) * u, y: q.y + (foe.y - q.y) * u }; } return q; } /* Burn the Line: Ryo's teleport and slide are drawn by the fire-fist routine, not at his stance spot, so the camera follows the slide */
+  function tr(c, z, k, sx, sy) { x.translate(c.x + (sx - c.x) * 0.7 * k, c.y + (sy - c.y) * 0.7 * k); x.scale(z, z); x.translate(-c.x, -c.y); }
+  var split = !st.tfw && t >= TF - 0.45 && t < TF - 0.30;
+  if (split) { /* the screen splits for a beat: Ryo left, Aoi right, both mid-move */
+    var wp = Math.min(1, (t - (TF - 0.45)) / 0.05) * W / 2;
+    [['r', 0], ['a', 1]].forEach(function (q) { var i = q[1]; x.save(); x.beginPath(); if (i) x.rect(W - wp, 0, wp, H); else x.rect(0, 0, wp, H); x.clip(); x.translate(i ? W * 0.75 - W / 2 : W * 0.25 - W / 2, 0); x.translate(W / 2, H * 0.45); x.scale(1.7, 1.7); x.translate(-pos(q[0]).x, -pos(q[0]).y); x.translate(0, 0);
+      M.draw(x, st, t, i ? 0 : dt, F, G); x.restore(); });
+    x.save(); x.fillStyle = 'rgba(255,150,40,.10)'; x.fillRect(0, 0, W / 2, H); x.fillStyle = 'rgba(60,220,240,.10)'; x.fillRect(W / 2, 0, W / 2, H); x.fillStyle = 'rgba(255,250,240,.95)'; x.fillRect(W / 2 - 1.5, 0, 3, H); x.restore(); return; }
+  var fx = 0, fy = 0, wsum = 0, zs = 0; CM.seg.forEach(function (s) { var e = sm01((t - (s[1] - 0.2)) / 0.2) * sm01((s[2] + 0.2 - t) / 0.2); if (e > 0) { var p = pos(s[0]); fx += p.x * e; fy += p.y * e; wsum += e; zs += (s[3] - 1) * e; } });
+  var c = wsum > 0 ? { x: fx / wsum, y: fy / wsum } : foe, z = 1 + Math.min(0.75, zs), k = wsum > 0 ? Math.min(1, wsum) : 0, kf = 0, since = st.tfw ? ts - st.tfw : -1;
+  if (!st.tfw) kf = sm01((t - (TF - 0.30)) / 0.30); else kf = since < FZ * 1000 + 120 ? 1 : 1 - sm01((since - FZ * 1000 - 120) / 260);
+  if (kf > 0) { c = { x: c.x + (foe.x - c.x) * kf, y: c.y + (foe.y - c.y) * kf }; z = z + (2.4 - z) * kf; k = k + (1 - k) * kf; }
+  x.save(); if (z > 1.001) tr(c, z, Math.max(k, 0.6), W / 2, H * 0.42);
+  M.draw(x, st, t, dt, F, G);
+  if (st.tfw) { var e = since / 1000, u = G.u || 1; if (!st.burst) { st.burst = 1; var kk = K(); kk.sparkBurst(st.parts, foe.x, foe.y, 40, u, '255,150,40'); kk.sparkBurst(st.parts, foe.x, foe.y, 40, u, '120,240,255'); }
+    x.save(); x.globalCompositeOperation = 'lighter'; [['255,150,40', 1], ['110,240,255', 0.72]].forEach(function (q) { var r2 = h * (0.12 + 0.75 * Math.min(1, e * 3) * q[1]) * (1 + 0.4 * (q[1] < 1)); x.strokeStyle = 'rgba(' + q[0] + ',' + Math.max(0, 0.9 - e * 1.4) + ')'; x.lineWidth = Math.max(2, 10 * u * Math.max(0.1, 1 - e * 2.2)); x.beginPath(); x.arc(foe.x, foe.y, r2, 0, 6.283); x.stroke(); });
+    var g = x.createRadialGradient(foe.x, foe.y, 0, foe.x, foe.y, h * 0.5); g.addColorStop(0, 'rgba(255,245,230,' + Math.max(0, 0.9 - e * 2) + ')'); g.addColorStop(0.45, 'rgba(255,150,40,' + Math.max(0, 0.4 - e) + ')'); g.addColorStop(1, 'rgba(60,220,240,0)'); x.fillStyle = g; x.beginPath(); x.arc(foe.x, foe.y, h * 0.5, 0, 6.283); x.fill(); x.restore(); }
+  x.restore();
+  if (st.tfw && since < 120) { x.fillStyle = 'rgba(255,248,230,' + 0.8 * (1 - since / 120) + ')'; x.fillRect(0, 0, W, H); }
+}
 function play(kind, opt) {
   opt = opt || {}; var M = MOVES[kind], UI = root.FFF_UI, PV = UI && UI.pv, k = K(); if (!M || !PV || !k) return null; stop();
-  var cv = document.querySelector('#cutCv'), Fr = PV.field(0), Fa = PV.field(0, 'aoi_back'), sp = opt.speed || 1, done = false, start = 0, last = 0, fn = 0, pr, res;
+  var cv = document.querySelector('#cutCv'), Fr = PV.field(0), Fa = PV.field(0, 'aoi_back'), sp = opt.speed || 1, done = false, start = 0, last = 0, fn = 0, lastTs = 0, pr, res;
   pr = new Promise(function (r) { res = r; }); PV.begin(); if (opt.hp) PV.hp(opt.hp);
   var dpr = Math.min(2, root.devicePixelRatio || 1), W = cv.clientWidth || 360, H = cv.clientHeight || 640; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); var x = cv.getContext('2d');
-  var st = { W: W, H: H, dpr: dpr, parts: [], cuts: [] }, snd = new k.Snd(sp); M.sound(snd);
+  var st = { W: W, H: H, dpr: dpr, parts: [], cuts: [] }, snd = new k.Snd(sp);
+  /* v6.5.59 showpiece: tag-in camera, split-screen beat, slow-motion final blow, long freeze, fire + cyan burst. The windows stretch the clock, so every cue after them is moved out by the same amount. */
+  var CM = CAMS[kind], SHOW = !!(CM && root.cuDblOK && root.cuDblOK() && opt.hold == null), TF = CM ? Math.max.apply(null, M.hits.map(function (h) { return h.t; })) : 0, FZ = 0.28, WIN = [[TF - 0.45, TF - 0.30, 0.5], [TF - 0.30, TF, 0.5]];
+  function wall(t) { if (!SHOW) return t; var e = 0; WIN.forEach(function (w) { e += Math.max(0, Math.min(t, w[1]) - w[0]) * (1 / w[2] - 1); }); return t + e + (t >= TF ? FZ * sp : 0); }
+  if (SHOW) { var oat = snd.at; snd.at = function (t, n, o) { return oat.call(snd, wall(t), n, o); }; }
+  M.sound(snd);
   var log = DBL.log = { kind: kind, name: M.name, total: +M.D.toFixed(3), speed: sp, gap: GAP, first: M.first, move: M.move, beats: M.beats.map(function (b) { return [b[0], +b[1].toFixed(3), +b[2].toFixed(3)]; }), hits: [], sched: snd.sched, frames: 0 };
   var hits = M.hits.map(function (h) { return Object.assign({ done: false }, h); });
   PV.name(M.name); ev('dbl:start:' + kind);
   function HIT(h) { return opt.hit ? opt.hit(h.who, h.kind, h.k) : PV.hit(h.dmg, h.kind); } // v4.25: in a card battle the board's own hit (engine damage) lands here
-  function fire(h, t) { h.done = true; var e = { k: h.k, who: h.who, at: +h.t.toFixed(3), t: +t.toFixed(3), frame: fn, dmg: h.dmg }; e.sndFrame = fn; h.snd(snd, t); if (h.dmg) { HIT(h); e.dmgFrame = fn; } e.ms = +(root.performance.now()).toFixed(1); log.hits.push(e); ev('dbl:blow:' + h.k); }
-  function end(sk) { if (done) return; done = true; if (sk) { snd.stop(); hits.forEach(function (h) { if (!h.done && h.dmg) { h.done = true; HIT(h); } }); }
+  function fire(h, t) { h.done = true; if (SHOW && h.t === TF && !st.tfw) { st.tfw = lastTs; ev('dbl:cam:final'); } var e = { k: h.k, who: h.who, at: +h.t.toFixed(3), t: +t.toFixed(3), frame: fn, dmg: h.dmg }; e.sndFrame = fn; h.snd(snd, t); if (h.dmg) { HIT(h); e.dmgFrame = fn; } e.ms = +(root.performance.now()).toFixed(1); log.hits.push(e); ev('dbl:blow:' + h.k); }
+  function end(sk) { if (done) return; done = true; if (st.mus === 1) { st.mus = 2; root.cuMusic(false); } if (sk) { snd.stop(); hits.forEach(function (h) { if (!h.done && h.dmg) { h.done = true; HIT(h); } }); }
     if (opt.keep && !sk) { ev('dbl:keep:' + kind); CUR = { cv: cv, pv: PV, kind: kind }; res({ skipped: false, kept: 1 }); return; }
     x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, cv.width, cv.height); PV.end(); ev('dbl:end:' + kind + (sk ? ':skipped' : '')); CUR = null; res({ skipped: !!sk }); }
-  function frame(ts) { if (done) return; if (!start) start = last = ts; fn++; log.frames = fn;
-    var t = (ts - start) / 1000 * sp, dt = Math.min(0.05, (ts - last) / 1000) * sp; last = ts; st.t = t;
+  function frame(ts) { if (done) return; if (!start) start = last = ts; fn++; log.frames = fn; lastTs = ts;
+    if (SHOW && st.tfw && ts < st.tfw + FZ * 1000) { start += ts - last; last = ts; root.requestAnimationFrame(frame); return; } /* the long freeze at the peak: the last frame stays up */
+    var rr = 1; if (SHOW && st.t != null && !st.tfw && st.t >= TF - 0.45) { rr = 0.5; start += (ts - last) * 0.5; }
+    var t = (ts - start) / 1000 * sp, dt = Math.min(0.05, (ts - last) / 1000) * sp * rr; last = ts; st.t = t;
     if (opt.hold != null) t = st.t = opt.hold; // stills: freeze the clock
+    if (SHOW && !st.mus && t >= TF - 0.45) { st.mus = 1; root.cuMusic(true); ev('dbl:cam:split'); }
+    if (SHOW && st.mus === 1 && st.tfw && ts > st.tfw + FZ * 1000 + 380) { st.mus = 2; root.cuMusic(false); }
     if (t >= M.D) { end(false); return; }
     hits.forEach(function (h) { if (!h.done && t >= h.t) fire(h, t); });
     x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
     var G = lays(Fr, Fa); if (t > 0.35 && t - dt <= 0.35) PV.name(M.name);
-    try { M.draw(x, st, t, dt, { r: Fr, a: Fa }, G); } catch (e) { ev('dbl:err:' + (e && e.message)); if (root.console) console.error(e); }
+    try { if (SHOW) showDraw(x, st, M, t, dt, { r: Fr, a: Fa }, G, ts, CM, TF, FZ); else M.draw(x, st, t, dt, { r: Fr, a: Fa }, G); } catch (e) { ev('dbl:err:' + (e && e.message)); if (root.console) console.error(e); }
     root.requestAnimationFrame(frame); }
   var bk = [Fr.back && Fr.back.ready ? Fr.back.ready() : null, Fa.back && Fa.back.ready ? Fa.back.ready() : null];
   Promise.all(bk).then(function () { root.requestAnimationFrame(frame); });
