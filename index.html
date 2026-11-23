@@ -6414,7 +6414,7 @@ E.init(D);
 var $ = function (s) { return document.querySelector(s); };
 function nowG() { return root.FFF_NOW ? root.FFF_NOW() : Date.now(); }
 var CH = E.chars(), RU = E.rules();
-var ST = { b: null, me: 'ryo', foe: 'aoi', sel: null, busy: false, speed: 1, events: [], skill: 0.8, phase: 'play', mark: [], set: { sfx: true, music: true, fast: false, txt: 'slow', tips: true, pcScale: '150', rumble: 'normal', audioMode: 'auto', txtSize: 'md', musVol: 100, sfxVol: 100, shake: 'normal', flash: 'normal', deadz: 'normal' } }; // v4.14 tips = the narrator's Help Index; v6.1 comfort volumes / shake / flashes / dead zone
+var ST = { b: null, me: 'ryo', foe: 'aoi', sel: null, busy: false, speed: 1, events: [], skill: 0.8, phase: 'play', mark: [], set: { sfx: true, music: true, fast: false, txt: 'slow', tips: true, pcScale: '150', rumble: 'normal', audioMode: 'auto', txtSize: 'md', musVol: 100, sfxVol: 100, shake: 'normal', flash: 'normal', deadz: 'normal', cam: 'on' } }; /* v6.5.59: cam = close-up camera on double / triple attacks */ // v4.14 tips = the narrator's Help Index; v6.1 comfort volumes / shake / flashes / dead zone
 root.FFF = ST; ST.E = E; ST.render = function () { render(); }; ST.cardEl = function (c, s) { return cardEl(c, s); };
 try { var sv = JSON.parse(localStorage.getItem('fff_set') || 'null'); if (sv) ST.set = Object.assign(ST.set, sv); } catch (e) {}
 try { if (root.AUDIO && root.AUDIO.setProfile) root.AUDIO.setProfile(ST.set.audioMode || 'auto'); } catch (e) {} // v5.3.1: Hi-Fi / Phone mastering picked before the AudioContext exists
@@ -6431,7 +6431,7 @@ function pcArenaSync() { var mm = root.matchMedia, fine = !!(mm && mm('(hover: h
   document.documentElement.classList.toggle('pc-arena', on); try { pcArtRefresh(); } catch (e) {} try { root.dispatchEvent(new Event('fff-pc')); } catch (e2) {} return on; }
 pcScaleSync();
 function comfortSync() { var s = ST.set, clamp = function (v, d) { v = Math.round(+v); return v >= 0 && v <= 100 ? v : d; }, m = clamp(s.musVol, 100), x = clamp(s.sfxVol, 100); s.musVol = m; s.sfxVol = x;
-  if (['normal', 'low', 'high', 'off'].indexOf(s.shake) < 0) s.shake = 'normal'; if (s.flash !== 'low') s.flash = 'normal'; if (['normal', 'tight', 'wide'].indexOf(s.deadz) < 0) s.deadz = 'normal';
+  if (['normal', 'low', 'high', 'off'].indexOf(s.shake) < 0) s.shake = 'normal'; if (s.flash !== 'low') s.flash = 'normal'; if (s.cam !== 'on' && s.cam !== 'off') s.cam = ((root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches) || s.rm) ? 'off' : 'on'; /* v6.5.59: close-up camera defaults off for reduced motion */ if (['normal', 'tight', 'wide'].indexOf(s.deadz) < 0) s.deadz = 'normal';
   try { document.documentElement.dataset.shake = s.shake; document.documentElement.classList.toggle('lessflash', s.flash === 'low'); if (AU.setVol) AU.setVol(m / 100, x / 100); } catch (e) {} return s; }
 comfortSync();
 addEventListener('resize', function () { pcArenaSync(); });
@@ -7007,6 +7007,8 @@ function renderSet() {
   cyc('musVol', 'setMusVol', 'Music volume', 'set:musvol:'); cyc('sfxVol', 'setSfxVol', 'Effects volume', 'set:sfxvol:');
   var SHK = ['normal', 'low', 'high', 'off'], SHL = { normal: 'Normal', low: 'Low', high: 'High', off: 'Off' }, shc = SHK.indexOf(s.shake) >= 0 ? s.shake : 'normal', shb = el('button', 'tog txt' + (shc !== 'off' ? ' on' : ''), '<span>Screen shake</span><i>' + SHL[shc] + '</i>'); shb.id = 'setShake';
   shb.onclick = function () { s.shake = SHK[(SHK.indexOf(shc) + 1) % SHK.length]; saveSet(); worldSavePatch({ shake: s.shake }); comfortSync(); AU.play('ui_sel'); ev('set:shake:' + s.shake); renderSet(); }; box.appendChild(shb);
+  var cmb = el('button', 'tog txt' + (s.cam !== 'off' ? ' on' : ''), '<span>Combo close-up camera</span><i>' + (s.cam === 'off' ? 'Off' : 'On') + '</i>'); cmb.id = 'setCam'; /* v6.5.59 */
+  cmb.onclick = function () { s.cam = s.cam === 'off' ? 'on' : 'off'; saveSet(); worldSavePatch({ cam: s.cam }); comfortSync(); AU.play('ui_sel'); ev('set:cam:' + s.cam); renderSet(); }; box.appendChild(cmb);
   var flb = el('button', 'tog' + (s.flash === 'low' ? '' : ' on'), '<span>Bright flashes</span><i>' + (s.flash === 'low' ? 'Reduced' : 'Normal') + '</i>'); flb.id = 'setFlash';
   flb.onclick = function () { s.flash = s.flash === 'low' ? 'normal' : 'low'; saveSet(); worldSavePatch({ flash: s.flash }); comfortSync(); AU.play('ui_sel'); ev('set:flash:' + s.flash); renderSet(); }; box.appendChild(flb);
   var DZS = ['normal', 'tight', 'wide'], DZL = { normal: 'Normal', tight: 'Tight', wide: 'Wide' }, dz = DZS.indexOf(s.deadz) >= 0 ? s.deadz : 'normal', dzb = el('button', 'tog txt on', '<span>Controller dead zone</span><i>' + DZL[dz] + '</i>'); dzb.id = 'setDead';
