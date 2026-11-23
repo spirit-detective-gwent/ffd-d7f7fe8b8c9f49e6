@@ -7727,6 +7727,7 @@ function clashAnim(si, card, onImpact, o) {
   var cx = hz ? d.x - dir * d.w * 0.42 : (a.x + d.x) / 2, cy = hz ? d.y : d.y - dir * d.h * 0.42, col = (si === 0 ? ST.me : ST.foe) === 'ryo' ? '#ffb040' : '#7fefff';
   var imp = clip ? clip.impact : 0.3, leave = Math.max(0, imp / sp - 0.34 / spd()), dash = Math.max(120, Math.min(340, imp / sp * 1000 - leave * 1000 - 20));
   att.classList.add('lunge'); ev('clash:start:' + si + (o.held ? ':held' : ''));
+  var nb = card.hits >= 2 && card.hits <= 3 ? card.hits : 0, cu = nb && !o.cuc && !o.held && !o.hold ? cuIn(a, d, dir, hz, nb === 3 ? 'TRIPLE HIT' : 'DOUBLE HIT') : null; /* v6.5.59: a card that hits 2 or 3 times gets the close-up too */
   var fistR = chOfSide(si) === 'ryo' && !!FISTY[card.mv]; if (fistR) fistOnFig(figOf(si), ST.cm === CHAIN_SP ? 2 : 1, si); // v4.33: his fist burns for the attack (both in a chained combo)
   var atT = TRA() + '(' + dir * travel + 'px)';
   var t1 = setTimeout(function () {
@@ -7737,10 +7738,12 @@ function clashAnim(si, card, onImpact, o) {
     ev('clash:impact:' + si);
     if (onImpact) onImpact();
     if (fistR) fistSpark(si, cx, cy);
-    if (!ST.ff) { recoil(1 - si, PUNCHY[card.mv] ? 'punch' : 'slash', dir); sparks(cx, cy, col, card.hits > 1 ? 16 : 12); stageShake(); if (card.hits > 1) [140, 280].forEach(function (ms) { setTimeout(function () { if (!ST.ff) sparks(cx + (Math.random() - 0.5) * 30, cy + (Math.random() - 0.5) * 16, col, 7); }, ms / spd()); }); }
+    var cuB = !ST.ff && CU.on && (cu || o.cuc); /* v6.5.59: one camera beat per hit (the chain shares one camera) */
+    if (cuB) for (var bj = 0; bj < (nb || 1); bj++) (function (j) { setTimeout(function () { if (CU.on) cuBeat(si, CU.n, cuDmg(1 - si, CU.n), dir, false, CU_HOLD, cx, cy, col, []); }, j * 140 / spd()); })(bj);
+    if (!ST.ff) { if (!cuB) recoil(1 - si, PUNCHY[card.mv] ? 'punch' : 'slash', dir); sparks(cx, cy, col, card.hits > 1 ? 16 : 12); stageShake(); if (card.hits > 1) [140, 280].forEach(function (ms) { setTimeout(function () { if (!ST.ff) sparks(cx + (Math.random() - 0.5) * 30, cy + (Math.random() - 0.5) * 16, col, 7); }, ms / spd()); }); }
   }
   return figAnim(figOf(si), card, hit, 1.15).then(function () {
-    clearTimeout(t1);
+    clearTimeout(t1); if (cu) cuOut(); /* v6.5.59 */
     if (o.hold && !ST.ff) { body.style.transform = atT; anims.forEach(function (x) { x.cancel(); }); ev('clash:hold:' + si); return; } // keep standing at the enemy for the next move
     var was = o.held && body.style.transform; body.style.transform = '';
     var back = ST.ff || (!anims.length && !was) ? null : body.animate([{ transform: atT }, { transform: 'none' }], { duration: 260 / spd(), easing: 'ease-in-out' });
@@ -7778,13 +7781,14 @@ function playGuard(si, gain) { var c = chOfSide(si); if (c === 'aoi') AU.play('g
 async function chainAnim(si, cparts) {
   var a = geo(si), d = geo(1 - si), col = (si === 0 ? ST.me : ST.foe) === 'ryo' ? '#ffb040' : '#7fefff';
   AU.play(comboKey(si, 2), { gain: 0.5 }); ST.cm = CHAIN_SP; ev('combo:chain:' + si);
+  var cuc = null, natk = cparts.filter(function (q) { return q.part.card.t === 'atk'; }).length; if (natk >= 2) { var hz = TRA() === 'translateX', dir = hz ? (d.x < a.x ? -1 : 1) : (d.y < a.y ? -1 : 1); cuc = cuIn(a, d, dir, hz, natk >= 3 ? 'TRIPLE COMBO' : 'DOUBLE COMBO'); } /* v6.5.59: partner combos share one close-up camera */
   for (var i = 0; i < cparts.length; i++) { var q = cparts[i], ipc = null; ev('anim:start:' + q.part.card.id);
     var onImp = (function (qq) { return function () { ipc = impactPhase({ ev: qq.part.ev, card: qq.part.card }, qq.view); }; })(q);
     var nx = cparts[i + 1], atk = q.part.card.t === 'atk', held = atk && i > 0 && cparts[i - 1].part.card.t === 'atk', hold = atk && !!nx && nx.part.card.t === 'atk';
-    if (atk) await clashAnim(si, q.part.card, onImp, { held: held, hold: hold }); else await figAnim(figOf(si), q.part.card, onImp); // v4.6: consecutive attacks stay at the enemy
+    if (atk) await clashAnim(si, q.part.card, onImp, { held: held, hold: hold, cuc: cuc }); else await figAnim(figOf(si), q.part.card, onImp); // v4.6: consecutive attacks stay at the enemy
     if (ipc) await ipc; ev('anim:end:' + q.part.card.id);
     if (i < cparts.length - 1 && !ST.ff) { sparks((a.x + d.x) / 2, (a.y + d.y) / 2, col, 14); ev('combo:chain:sparks'); await wait(110); } }
-  ST.cm = 1;
+  ST.cm = 1; if (cuc) cuOut();
 }
 var COMBO_T = { 2: { gap: 0.16, dash: 0.2 }, 3: { gap: 0.13, dash: 0.22 } }; // v4.6: doubles run up to the enemy too
 /* v4.31.1 (Ernest: Ryo's combo sounds were not heard). They were played, on time, but (1) combo2_ryo's two recorded punches are 0.20 s apart
@@ -7822,7 +7826,7 @@ function cuOut() {
 }
 /* one beat = one hit: burst at the contact point, the target's white flash + hurt frame + knock-back, the 95 ms freeze (anims = the attacker's running animations, paused with it) */
 function cuBeat(si, i, dmg, dir, last, hold, cx, cy, col, anims) {
-  if (!CU.on) return; var tsi = 1 - si, fg = figOf(tsi), fe = sideEl(tsi).querySelector('.fig'), p = cuPt(cx + (i % 2 ? 9 : -9), cy + (Math.random() - 0.5) * 10), sz = last ? 150 : 118, e = document.createElement('div');
+  if (!CU.on || ST.ff) return; var tsi = 1 - si, fg = figOf(tsi), fe = sideEl(tsi).querySelector('.fig'), p = cuPt(cx + (i % 2 ? 9 : -9), cy + (Math.random() - 0.5) * 10), sz = last ? 150 : 118, e = document.createElement('div');
   CU.n++; if (CU.lab) { CU.lab.textContent = CU.lname + '  \u00d7' + CU.n; CU.lab.animate([{ transform: 'translateX(-50%) scale(1.3)' }, { transform: 'translateX(-50%) scale(1)' }], { duration: 160, easing: 'ease-out' }); }
   e.className = 'cuburst'; e.style.cssText = 'left:' + p.x + 'px;top:' + p.y + 'px;width:' + sz + 'px;height:' + sz + 'px;margin:' + (-sz / 2) + 'px 0 0 ' + (-sz / 2) + 'px;--c:' + col; e.innerHTML = '<i class="cu-star"></i><i class="cu-core"></i>'; document.body.appendChild(e);
   var rot = i * 47 + Math.random() * 30, an = e.animate([{ transform: 'rotate(' + rot + 'deg) scale(.3)', opacity: 1 }, { transform: 'rotate(' + (rot + 10) + 'deg) scale(1)', opacity: 1, offset: 0.3 }, { transform: 'rotate(' + (rot + 20) + 'deg) scale(1.2)', opacity: 0 }], { duration: last ? 260 : 210, easing: 'ease-out' }); an.onfinish = function () { e.remove(); }; setTimeout(function () { e.remove(); }, 500);
