@@ -21394,7 +21394,7 @@ function phSetUI() { return root.FFF_UI; }
 function phSaveSet() {
   var s = phSetUI().ST.set;
   try { localStorage.setItem('fff_set', JSON.stringify(s)); } catch (e) {}
-  ['musVol', 'sfxVol', 'shake', 'flash', 'deadz', 'txtSize', 'autoRun', 'rumble', 'audioMode', 'pcScale', 'foeStr', 'ambRate', 'itemScarce', 'xpMode'].forEach(function (k) { if (s[k] != null) SAVE[k] = s[k]; });
+  ['musVol', 'sfxVol', 'shake', 'cam', 'flash', 'deadz', 'txtSize', 'autoRun', 'rumble', 'audioMode', 'pcScale', 'foeStr', 'ambRate', 'itemScarce', 'xpMode'].forEach(function (k) { if (s[k] != null) SAVE[k] = s[k]; });
   try { if (W.ryo) save(); } catch (e2) {}
   try { phSetUI().comfortSync(); } catch (e3) {}
 }
@@ -21460,6 +21460,7 @@ function phRenderSet() {
     h += '<div class="set-row col"><span><b>Text size</b><small>Dialogue and menu text</small></span>' + phSeg('tsz', tz, [['sm', 'Small'], ['md', 'Medium'], ['lg', 'Large'], ['xl', 'Extra']]) + '</div>';
     h += phRow('Fast animations', 'Play battle moves at 2\u00d7 speed', phSw('fast', !!s.fast));
     h += '<div class="set-row col"><span><b>Screen shake</b><small>Camera shake on heavy hits</small></span>' + phSeg('shake', sh, [['off', 'Off'], ['low', 'Low'], ['normal', 'Normal'], ['high', 'High']]) + '</div>';
+    h += phRow('Combo close-up camera', 'Zoom in on doubles and triples', phSw('cam', s.cam !== 'off')); /* v6.5.59 */
     h += phRow('Bright flashes', 'Allow bright battle flashes', phSw('flash', s.flash !== 'low'));
     if (innerWidth >= 1024 && innerHeight >= 600) {
       var pc = ['150', '125', '100'].indexOf(String(s.pcScale)) >= 0 ? String(s.pcScale) : '150';
@@ -21528,6 +21529,7 @@ function phSetWire(box) {
       if (a === 'txt') { s.txt = v; phSaveSet(); ev('set:txt:' + v); paint(); return; }
       if (a === 'fast') { s.fast = !s.fast; phSaveSet(); paint(); return; }
       if (a === 'shake') { s.shake = v; phSaveSet(); paint(); return; }
+      if (a === 'cam') { s.cam = s.cam === 'off' ? 'on' : 'off'; phSaveSet(); ev('set:cam:' + s.cam); paint(); return; } /* v6.5.59 */
       if (a === 'flash') { s.flash = s.flash === 'low' ? 'normal' : 'low'; phSaveSet(); paint(); return; }
       if (a === 'pc') { s.pcScale = v; phSaveSet(); try { pcApply(); } catch (e3) {} paint(); return; }
       if (a === 'ctl') { s.ctl = s.ctl === 'buttons' ? 'stick' : 'buttons'; if (typeof setCtl === 'function') setCtl(s.ctl); else phSaveSet(); paint(); return; }
@@ -32107,7 +32109,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
  * (a mid-chapter save from before this pack) uses an expanded fallback wipe.
  * Chapter One's Reset story already uses fresh(); this pack leaves that path. */
 (function () {
-  var KEEP = { binds: 1, pcScale: 1, padBinds: 1, padRev: 1, rumble: 1, autoRun: 1, audioMode: 1, txtSize: 1, musVol: 1, sfxVol: 1, shake: 1, flash: 1, deadz: 1 };
+  var KEEP = { binds: 1, pcScale: 1, padBinds: 1, padRev: 1, rumble: 1, autoRun: 1, audioMode: 1, txtSize: 1, musVol: 1, sfxVol: 1, shake: 1, cam: 1, flash: 1, deadz: 1 }; /* v6.5.59 */
   var SKIP = { c2entry: 1, c3entry: 1 };
 
   function clone(o) { try { return JSON.parse(JSON.stringify(o)); } catch (e) { return null; } }
