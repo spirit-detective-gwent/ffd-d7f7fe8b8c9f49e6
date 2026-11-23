@@ -3889,6 +3889,7 @@ body.fff-dlg-on #qnote{
 @keyframes sfxIe{0%,18%{transform:scale(1.1) rotate(-3deg);opacity:0}21%{opacity:.8}52%,100%{transform:translateY(-28px) scale(1.12) rotate(-3deg);opacity:0}}
 /* v6.5.59 WORDS: each word drops in, overshoots and settles (stamp), a path-coloured brush stroke wipes in behind it; 130 ms between words */
 #sfx.v-words .sw{animation-name:sfxWs}
+#sfx.v-words .sgsp{display:inline-block;width:.34em}
 #sfx.v-words .P.wd{isolation:isolate;animation:sfxWd calc(var(--k)*130ms) cubic-bezier(.2,1.5,.4,1) both;animation-delay:calc(var(--k)*var(--i)*130ms)}
 @keyframes sfxWd{0%{transform:scale(2.6) rotate(-6deg);opacity:0}55%{transform:scale(.9) rotate(-3deg);opacity:1}80%{transform:scale(1.07) rotate(-3deg)}100%{transform:scale(1) rotate(-3deg);opacity:1}}
 #sfx.v-words .P.wd u{position:absolute;left:-8%;right:-8%;top:14%;bottom:6%;z-index:-1;background:linear-gradient(90deg,transparent,var(--gl) 16%,var(--gl) 84%,transparent);opacity:0;transform-origin:0 50%;animation:sfxBr calc(var(--k)*300ms) ease-out both;animation-delay:calc(var(--k)*var(--i)*130ms)}
@@ -41314,7 +41315,7 @@ html.hi-find #wtags .wtag.obj.loot.near {
   function ensure() { if (el && el.isConnected) return el; el = document.createElement('div'); el.id = 'sfx'; el.setAttribute('aria-hidden', 'true'); document.body.appendChild(el); return el; }
   function fit(name) { var W = innerWidth, n = name.length, fs = Math.floor((W - 34) / (n * 0.5 + 0.6)); return Math.max(30, Math.min(W >= 700 ? 84 : 64, fs)); }
   function build(v, name) { var m;
-    if (v === 'words') { var ws = name.split(/\s+/); return '<div class="st sm">' + ws.map(function (w, i) { return '<span class="P wd" style="--i:' + i + '"><u></u><b>' + esc(w) + '</b><i>' + esc(w) + '</i></span>' + (i < ws.length - 1 ? '<span class="wsp">\u00a0</span>' : ''); }).join('') + '</div>'; } /* v6.5.59: each word slams in on its own beat (130 ms apart), under 0.5 s in all */
+    if (v === 'words') { var ws = name.split(/\s+/); return '<div class="st sm">' + ws.map(function (w, i) { return '<span class="P wd" style="--i:' + i + '"><u></u><b>' + esc(w) + '</b><i>' + esc(w) + '</i></span>' + (i < ws.length - 1 ? '<span class="sgsp">\u00a0</span>' : ''); }).join('') + '</div>'; } /* v6.5.59: each word slams in on its own beat (130 ms apart), under 0.5 s in all */
     if (v === 'cascade') m = '<div class="st sm" style="--sg:' + Math.max(1, Math.round(50 / Math.max(1, name.length - 1))) + 'ms">' + name.split('').map(function (c, i) { return P(c).replace('class="P"', 'class="P" style="--i:' + i + '"'); }).join('') + '</div>';
     else if (v === 'duo') { var k = name.lastIndexOf(' '); m = '<div class="st sm">' + P(name.slice(0, k) + ' ', 'd1') + P(name.slice(k + 1), 'd2') + '</div>'; }
     else m = '<div class="st sm">' + P(name) + '</div>';
