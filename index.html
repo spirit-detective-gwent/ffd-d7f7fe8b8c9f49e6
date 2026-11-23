@@ -40464,12 +40464,12 @@ var SL4 = ['slashUR', 'slashH', 'slashUL', 'slashD'];
 
 /* =============== Balanced: SPRING TIDE =============== */
 var ST_ = (function () { var RS = 2.25, RL = 7.0, N = 100, PER = (RL - 0.3) / N, RB = RS + RL; // Ryo: his Barrage clock, unchanged; RB = his final punch
-  var AP = RB + GAP - 0.05, APL = 4.2, AN = 100, APER = (APL - 0.2) / AN, AB = AP + APL; // Aoi: petal stage (first cut at AP + 0.05 = RB + 40 ms), AB = her knock-down cut
+  var STG = 0.5, AP = RB + STG, APL = 5.0, AN = 150, APER = (APL - 0.2) / AN, AB = AP + APL; // Aoi: petal stage. v6.5.59: the rush stops and the foe staggers for STG s, then she cuts in with 150 cuts (was 100); AB = her knock-down cut
   var AR = AP - 0.44, AH = AP - 0.14, D = AB + 0.6 + 0.6 + 0.25;
-  return { kind: 'st', name: 'Spring Tide', D: D,
+  return { kind: 'st', name: 'Spring Tide', D: D, RS: RS, RB: RB, AP: AP, AB: AB, N: N, AN: AN, PER: PER, APER: APER,
     beats: [['ryo dodge', 0, 0.6], ['ryo knee', 0.6, 1.15], ['ryo kick (launch)', 1.15, 1.75], ['ryo jump', 1.75, RS], ['ryo rush (100 punches)', RS, RB], ['ryo FINAL PUNCH (blow 1)', RB, RB + 0.35], ['ryo springs home', RB + 0.35, RB + 1.05],
       ['aoi runs in', AR, AH], ['aoi jumps', AH, AP], ['aoi air cuts (100)', AP, AB], ['aoi KNOCK-DOWN cut (blow 2)', AB, AB + 0.6], ['aoi hops home', AB + 0.6, AB + 1.2], ['hold', AB + 1.2, D]],
-    first: { a: RB, b: AP + 0.05, what: 'Ryo final punch -> Aoi first air cut' }, move: { who: 'aoi', t: AR },
+    first: { a: RB, b: AP + 0.05, what: 'Ryo final punch -> (stagger beat) -> Aoi first air cut' }, move: { who: 'aoi', t: AR },
     sound: function (snd) { var k = K();
       snd.at(0, ['whoosh', 'whoosh_b'], { gain: 0.8 }); snd.at(0.6 + 0.18, ['fin_knee', 'hit_b'], { gain: 1 }); snd.at(1.15 + 0.2, ['fin_kick', 'fist', 'hit'], { gain: 1 }); snd.at(1.75, ['fin_jump', 'grunt_m_a'], { gain: 0.9 });
       snd.at(RS, ['fin_scream_hfb', 'fin_scream'], { gain: 0.45, dur: RL - k.HFB_VGAP, voice: 1 }); snd.at(RS, 'fin_barrage', { gain: 0.8, dur: RL, loop: true });
@@ -40496,7 +40496,8 @@ var ST_ = (function () { var RS = 2.25, RL = 7.0, N = 100, PER = (RL - 0.3) / N,
       else if ((p = seg(t, RS, RB)) >= 0) { var lt = t - RS, hi = Math.min(N, Math.floor((lt - 0.1) / PER) + 1), ph = ((lt - 0.1) / PER) % 1; hits = Math.max(0, hi);
         R.X = nx + k.rnd(-2, 2) * u; R.Y = ny + k.rnd(-2, 2) * u; R.lift = air * 0.75 + 5 * u * Math.sin(t * 25); f.oy = -air - 6 * u * Math.sin(t * 25); f.rot = -0.3 + 0.06 * Math.sin(t * 30); ffl = hits > 0 ? 0.45 * (1 - Math.min(1, ph * 2)) : 0;
         R.nm = hits % 2 ? 'punchR' : 'punchL'; var snap = hits > 0 && ph < 0.4 ? 1 - ph / 0.4 : 0; R.X -= tox * 10 * u * snap; R.Y -= toy * 10 * u * snap; R.ghosts = [[R.X + tox * 8 * u, R.Y + toy * 8 * u, hits % 2 ? 'punchL' : 'punchR'], [R.X - 7 * u, R.Y + 3 * u, R.nm]];
-        if (st.rh !== hits && hits > 0) { st.rh = hits; var hp = k.bkHand(F.r, L, R.nm, R.X, R.Y - R.lift); k.sparkBurst(st.parts, hp.x + k.rnd(-6, 6) * u, hp.y + k.rnd(-6, 6) * u, 7, u, '255,230,160'); ev('dbl:hit:ryo:' + hits); dblMotor('ryo'); }
+        if (st.scrTxt) { var kk = st.kick || 0; ffl = Math.max(ffl, 0.7 * kk); f.ox += -tox * 10 * u * kk; f.oy += -toy * 10 * u * kk; f.rot += (hits % 2 ? 1 : -1) * 0.07 * kk; sh = 2.4 * u * kk; R.ghosts.push([R.X + tox * 18 * u + 5 * u, R.Y + toy * 18 * u, hits % 2 ? 'punchL' : 'punchR'], [R.X - 15 * u, R.Y + 5 * u, hits % 2 ? 'punchL' : 'punchR']); /* the Stand-style echo */ }
+        if (st.rh !== hits && hits > 0) { st.rh = hits; var hp = k.bkHand(F.r, L, R.nm, R.X, R.Y - R.lift); k.sparkBurst(st.parts, hp.x + k.rnd(-6, 6) * u, hp.y + k.rnd(-6, 6) * u, st.scrTxt ? 11 : 7, u, '255,230,160'); if (st.scrTxt) k.sparkBurst(st.parts, G.fx + k.rnd(-8, 8) * u, G.fy - h * k.rnd(0.35, 0.7) - air, 5, u, '255,246,220'); ev('dbl:hit:ryo:' + hits); dblMotor('ryo'); }
         R.after = function (xx) { xx.save(); xx.globalCompositeOperation = 'lighter'; xx.strokeStyle = 'rgba(255,220,170,.45)'; xx.lineWidth = 1.2; var h2 = k.bkHand(F.r, L, R.nm, R.X, R.Y - R.lift);
           for (var q = 0; q < 6; q++) { var qx = h2.x + k.rnd(-14, 14) * u, qy = h2.y + k.rnd(-14, 14) * u; xx.beginPath(); xx.moveTo(qx + tox * k.rnd(20, 50) * u, qy + toy * k.rnd(20, 50) * u); xx.lineTo(qx, qy); xx.stroke(); } xx.restore(); }; }
       else if ((p = seg(t, RB, RB + 0.35)) >= 0) { hits = N; R.X = nx; R.Y = ny; R.nm = 'final'; R.lift = air * 0.75 * (1 - 0.5 * k.ease(p)); sh = p < 0.4 ? 6 * u : 0; flash = p < 0.3 ? 0.5 * (1 - p / 0.3) : 0;
@@ -40505,7 +40506,7 @@ var ST_ = (function () { var RS = 2.25, RL = 7.0, N = 100, PER = (RL - 0.3) / N,
       else if (t >= RB + 1.05) R.nm = 'finish';
       // ---- the foe after his final punch: thrown a little higher and back, held up by her cuts, then slammed down ----
       var kb = t >= RB ? Math.min(1, (t - RB) * 6) : 0, up = t >= RB && t < AB ? air + h * 0.08 * kb : 0;
-      if (t >= RB && t < AB) { f.oy = -up - 4 * u * Math.sin(t * 22); f.ox = -tox * 14 * u * kb + ta[0] * 8 * u * Math.min(1, Math.max(0, t - AP) * 2); f.rot = -0.3 * (1 - Math.min(1, (t - RB) * 2)) + 0.05 * Math.sin(t * 28); if (t < RB + 0.3) ffl = 0.9 * (1 - (t - RB) / 0.3); }
+      if (t >= RB && t < AB) { f.oy = -up - 4 * u * Math.sin(t * 22); f.ox = -tox * 14 * u * kb + ta[0] * 8 * u * Math.min(1, Math.max(0, t - AP) * 2); f.rot = -0.3 * (1 - Math.min(1, (t - RB) * 2)) + 0.05 * Math.sin(t * 28); if (t < RB + 0.3) ffl = 0.9 * (1 - (t - RB) / 0.3); if (t < AP + 0.05) { f.rot += 0.1 * Math.sin((t - RB) * 18) * (1 - (t - RB) / STG); f.ox += 6 * u * Math.sin((t - RB) * 14); } /* the stagger beat */ }
       // ---- Aoi (drawFieldAoi hpc, re-timed: she runs in under him, jumps, cuts in the air, the knock-down cut) ----
       var ac = st.ah || 0;
       if ((p = seg(t, AR, AH)) >= 0) Object.assign(Q, runTo(p, La.hx, La.hy, ax, ay, t));
@@ -40513,7 +40514,8 @@ var ST_ = (function () { var RS = 2.25, RL = 7.0, N = 100, PER = (RL - 0.3) / N,
       else if ((p = seg(t, AP, AB)) >= 0) { var l2 = t - AP, hj = Math.min(AN, Math.floor((l2 - 0.05) / APER) + 1), pj = ((l2 - 0.05) / APER) % 1; ac = Math.max(0, hj);
         Q.X = ax + k.rnd(-2, 2) * u; Q.Y = ay + k.rnd(-1.5, 1.5) * u; Q.lift = air * 0.75 + h * 0.08 * kb + 4 * u * Math.sin(t * 22); Q.nm = SL4[ac % 4]; if (ac > 0) ffl = Math.max(ffl, 0.35 * (1 - Math.min(1, pj * 2)));
         Q.ghosts = [[Q.X + 9 * u, Q.Y, SL4[(ac + 1) % 4]], [Q.X - 9 * u, Q.Y + 2 * u, SL4[(ac + 3) % 4]]];
-        if (st.ah !== ac && ac > 0) { st.ah = ac; st.cuts = (st.cuts || []).concat([{ a: k.rnd(0, 6.28), r: k.rnd(0.18, 0.34) * h, l: 0.22, col: k.ACOL.hpc }]).slice(-7); k.sparkBurst(st.parts, G.fx + k.rnd(-14, 14) * u, G.fy - h * 0.5 - up + k.rnd(-20, 20) * u, 5, u, '235,255,245'); ev('dbl:hit:aoi:' + ac); dblMotor('aoi'); } }
+        if (st.scrTxt) { var kq = st.kick || 0; ffl = Math.max(ffl, 0.65 * kq); f.ox += -ta[0] * 9 * u * kq + (ac % 2 ? 1 : -1) * 4 * u * kq; f.oy += -ta[1] * 9 * u * kq; f.rot += (ac % 2 ? 1 : -1) * 0.06 * kq; sh += 2 * u * kq; Q.ghosts.push([Q.X + 20 * u, Q.Y - 3 * u, SL4[(ac + 2) % 4]], [Q.X - 22 * u, Q.Y + 4 * u, SL4[ac % 4]]); }
+        if (st.ah !== ac && ac > 0) { st.ah = ac; st.cuts = (st.cuts || []).concat([{ a: k.rnd(0, 6.28), r: k.rnd(0.2, 0.38) * h, l: st.scrTxt ? 0.3 : 0.22, ln: st.scrTxt ? ac % 2 : 0, col: k.ACOL.hpc }]).slice(-9); k.sparkBurst(st.parts, G.fx + k.rnd(-14, 14) * u, G.fy - h * 0.5 - up + k.rnd(-20, 20) * u, st.scrTxt ? 9 : 5, u, '235,255,245'); ev('dbl:hit:aoi:' + ac); dblMotor('aoi'); } }
       else if ((p = seg(t, AB, AB + 0.6)) >= 0) { ac = AN; Q.X = ax; Q.Y = ay; Q.nm = 'slashD'; Q.lift = (air * 0.75 + h * 0.08) * (1 - k.ease(Math.min(1, p * 2.2))); var dn = Math.min(1, p * 3.2);
         f.oy = -(air + h * 0.08) * (1 - dn) + h * 0.04 * dn; f.ox = -ta[0] * 18 * u * Math.min(1, p * 2); f.rot = 0.42 * k.ease(dn) * (ta[0] > 0 ? -1 : 1); f.tint = p < 0.3 ? 'rgba(230,255,240,.85)' : null; sh = p < 0.4 ? 6 * u : 0; flash = p < 0.25 ? 0.55 * (1 - p * 4) : 0;
         if (!st.big2) { st.big2 = 1; k.sparkBurst(st.parts, G.fx, G.fy - h * 0.5 - air * 0.8, 44, u, '230,255,240'); st.cuts = [{ a: -0.6, r: 0.42 * h, l: 0.5, big: 1, col: k.ACOL.hpc }]; } }
@@ -40642,21 +40644,21 @@ var MOVES = { st: ST_, fb: FB_, bl: BL_ };
 var CUR = null;
 function release() { if (!CUR || !CUR.cv) return; var cv = CUR.cv, PV = CUR.pv; try { var x = cv.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, cv.width, cv.height); } catch (e) {} if (PV && PV.end) PV.end(); ev('dbl:release:' + (CUR.kind || '')); CUR = null; }
 /* v6.5.59 partner-double showpiece. CAMS: TF = the last blow; seg = [who, from, to, zoom] windows where the camera pushes in on that performer (the next window whips across: the weights cross-fade over 0.2 s). */
-var CAMS = { st: { TF: 13.44, seg: [['r', 8.4, 9.55, 1.7], ['a', 9.45, 10.5, 1.7]] }, fb: { TF: 5.29, seg: [['a', 1.3, 2.4, 1.6], ['r', 2.3, 3.2, 1.7]] }, bl: { fly: [3.6, 4.47], TF: 4.47, seg: [['a', 1.3, 3.55, 1.6], ['r', 3.45, 4.0, 1.7]] } };
+var CAMS = { st: { TF: ST_.AB, nosplit: 1, cap: 1, seg: [['r', ST_.RS - 0.2, ST_.RB + 0.1, 1.9, 0.38], ['f', ST_.RB + 0.1, ST_.AP - 0.2, 1.45], ['a', ST_.AP - 0.4, ST_.AB - 0.3, 1.9, 0.38]] }, fb: { TF: 5.29, seg: [['a', 1.3, 2.4, 1.6], ['r', 2.3, 3.2, 1.7]] }, bl: { fly: [3.6, 4.47], TF: 4.47, seg: [['a', 1.3, 3.55, 1.6], ['r', 3.45, 4.0, 1.7]] } };
 function sm01(u) { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); }
 function who2(st, F, who) { var a = st.act || []; for (var i = 0; i < a.length; i++) if (a[i].F === (who === 'r' ? F.r : F.a)) return a[i]; return null; }
 function showDraw(x, st, M, t, dt, F, G, ts, CM, TF, FZ) {
   var W = st.W, H = st.H, h = G.h, foe = { x: G.fx, y: G.fy - h * 0.5 };
   function pos(who) { var p = who2(st, F, who), q = p ? { x: p.X, y: p.Y - h * 0.45 } : foe; if (who === 'r' && CM.fly && t >= CM.fly[0]) { var u = sm01((t - CM.fly[0]) / (CM.fly[1] - CM.fly[0])); q = { x: q.x + (foe.x - q.x) * u, y: q.y + (foe.y - q.y) * u }; } return q; } /* Burn the Line: Ryo's teleport and slide are drawn by the fire-fist routine, not at his stance spot, so the camera follows the slide */
   function tr(c, z, k, sx, sy) { x.translate(c.x + (sx - c.x) * 0.7 * k, c.y + (sy - c.y) * 0.7 * k); x.scale(z, z); x.translate(-c.x, -c.y); }
-  var split = !st.tfw && t >= TF - 0.45 && t < TF - 0.30;
+  var split = !CM.nosplit && !st.tfw && t >= TF - 0.45 && t < TF - 0.30;
   if (split) { /* the screen splits for a beat: Ryo left, Aoi right, both mid-move */
     var wp = Math.min(1, (t - (TF - 0.45)) / 0.05) * W / 2;
     [['r', 0], ['a', 1]].forEach(function (q) { var i = q[1]; x.save(); x.beginPath(); if (i) x.rect(W - wp, 0, wp, H); else x.rect(0, 0, wp, H); x.clip(); x.translate(i ? W * 0.75 - W / 2 : W * 0.25 - W / 2, 0); x.translate(W / 2, H * 0.45); x.scale(1.7, 1.7); x.translate(-pos(q[0]).x, -pos(q[0]).y); x.translate(0, 0);
       M.draw(x, st, t, i ? 0 : dt, F, G); x.restore(); });
     x.save(); x.fillStyle = 'rgba(255,150,40,.10)'; x.fillRect(0, 0, W / 2, H); x.fillStyle = 'rgba(60,220,240,.10)'; x.fillRect(W / 2, 0, W / 2, H); x.fillStyle = 'rgba(255,250,240,.95)'; x.fillRect(W / 2 - 1.5, 0, 3, H); x.restore(); return; }
-  var fx = 0, fy = 0, wsum = 0, zs = 0; CM.seg.forEach(function (s) { var e = sm01((t - (s[1] - 0.2)) / 0.2) * sm01((s[2] + 0.2 - t) / 0.2); if (e > 0) { var p = pos(s[0]); fx += p.x * e; fy += p.y * e; wsum += e; zs += (s[3] - 1) * e; } });
-  var c = wsum > 0 ? { x: fx / wsum, y: fy / wsum } : foe, z = 1 + Math.min(0.75, zs), k = wsum > 0 ? Math.min(1, wsum) : 0, kf = 0, since = st.tfw ? ts - st.tfw : -1;
+  var fx = 0, fy = 0, wsum = 0, zs = 0; CM.seg.forEach(function (s) { var e = sm01((t - (s[1] - 0.2)) / 0.2) * sm01((s[2] + 0.2 - t) / 0.2); if (e > 0) { var p = pos(s[0]); if (s[4] != null) p = { x: p.x * (1 - s[4]) + foe.x * s[4], y: p.y * (1 - s[4]) + foe.y * s[4] }; fx += p.x * e; fy += p.y * e; wsum += e; zs += (s[3] - 1) * e; } });
+  var c = wsum > 0 ? { x: fx / wsum, y: fy / wsum } : foe, z = 1 + Math.min(CM.cap ? 0.95 : 0.75, zs) + 0.05 * (st.kick || 0) * (wsum > 0 ? 1 : 0), k = wsum > 0 ? Math.min(1, wsum) : 0, kf = 0, since = st.tfw ? ts - st.tfw : -1;
   if (!st.tfw) kf = sm01((t - (TF - 0.30)) / 0.30); else kf = since < FZ * 1000 + 120 ? 1 : 1 - sm01((since - FZ * 1000 - 120) / 260);
   if (kf > 0) { c = { x: c.x + (foe.x - c.x) * kf, y: c.y + (foe.y - c.y) * kf }; z = z + (2.4 - z) * kf; k = k + (1 - k) * kf; }
   x.save(); if (z > 1.001) tr(c, z, Math.max(k, 0.6), W / 2, H * 0.42);
@@ -40667,6 +40669,16 @@ function showDraw(x, st, M, t, dt, F, G, ts, CM, TF, FZ) {
   x.restore();
   if (st.tfw && since < 120) { x.fillStyle = 'rgba(255,248,230,' + 0.8 * (1 - since / 120) + ')'; x.fillRect(0, 0, W, H); }
 }
+/* v6.5.59 Spring Tide: the rush director. Ryo's 100 punches ramp up in speed, Aoi's 150 cuts ramp up after the stagger; every hit has a short hitstop and a kick; warp() keeps the pre-scheduled sounds on the hits. */
+function mkStDir(M, TF, FZ) {
+  var hits = [], hs = [], i, WN = [[M.RS, M.RB, 0.55, 1.9], [M.AP, TF - 0.3, 0.55, 2.0], [TF - 0.3, TF, 0.5, 0.5]];
+  for (i = 0; i < M.N; i++) { hits.push(M.RS + 0.1 + i * M.PER); hs.push(i < 15 ? 0.04 : i < 40 ? 0.02 : 0); }
+  for (i = 0; i < M.AN; i++) { hits.push(M.AP + 0.05 + i * M.APER); hs.push(i < 20 ? 0.035 : i < 50 ? 0.02 : 0); }
+  function rate(t) { if (t >= TF) return 1; for (var j = 0; j < WN.length; j++) { var w = WN[j]; if (t >= w[0] && t < w[1]) return w[2] + (w[3] - w[2]) * (t - w[0]) / (w[1] - w[0]); } return 1; }
+  var STEP = 0.004, E = [0], n = Math.ceil(M.D / STEP) + 2; for (i = 0; i < n; i++) E.push(E[i] + (1 / rate(i * STEP + STEP / 2) - 1) * STEP);
+  function warp(t) { var q = Math.max(0, t) / STEP, k = Math.min(n - 1, Math.floor(q)), ex = E[k] + (E[k + 1] - E[k]) * (q - k), h = 0; for (var j = 0; j < hits.length && hits[j] < t; j++) h += hs[j]; return t + ex + h + (t > TF ? FZ : 0); }
+  return { hits: hits, hs: hs, rate: rate, warp: warp };
+}
 function play(kind, opt) {
   opt = opt || {}; var M = MOVES[kind], UI = root.FFF_UI, PV = UI && UI.pv, k = K(); if (!M || !PV || !k) return null; stop();
   var cv = document.querySelector('#cutCv'), Fr = PV.field(0), Fa = PV.field(0, 'aoi_back'), sp = opt.speed || 1, done = false, start = 0, last = 0, fn = 0, lastTs = 0, pr, res;
@@ -40675,8 +40687,9 @@ function play(kind, opt) {
   var st = { W: W, H: H, dpr: dpr, parts: [], cuts: [] }, snd = new k.Snd(sp);
   /* v6.5.59 showpiece: tag-in camera, split-screen beat, slow-motion final blow, long freeze, fire + cyan burst. The windows stretch the clock, so every cue after them is moved out by the same amount. */
   var CM = CAMS[kind], SHOW = !!(CM && root.cuDblOK && root.cuDblOK() && opt.hold == null), TF = CM ? Math.max.apply(null, M.hits.map(function (h) { return h.t; })) : 0, FZ = 0.28, WIN = [[TF - 0.45, TF - 0.30, 0.5], [TF - 0.30, TF, 0.5]];
-  function wall(t) { if (!SHOW) return t; var e = 0; WIN.forEach(function (w) { e += Math.max(0, Math.min(t, w[1]) - w[0]) * (1 / w[2] - 1); }); return t + e + (t >= TF ? FZ * sp : 0); }
-  if (SHOW) { var oat = snd.at; snd.at = function (t, n, o) { return oat.call(snd, wall(t), n, o); }; }
+  var RUSH = kind === 'st' && SHOW ? mkStDir(M, TF, FZ) : null; if (RUSH) { st.scrTxt = 1; WIN = []; }
+  function wall(t) { if (RUSH) return RUSH.warp(t); if (!SHOW) return t; var e = 0; WIN.forEach(function (w) { e += Math.max(0, Math.min(t, w[1]) - w[0]) * (1 / w[2] - 1); }); return t + e + (t >= TF ? FZ * sp : 0); }
+  if (SHOW) { var oat = snd.at; snd.at = function (t, n, o) { if (RUSH && o && o.dur) { o = Object.assign({}, o, { dur: wall(t + o.dur) - wall(t) }); } return oat.call(snd, wall(t), n, o); }; }
   M.sound(snd);
   var log = DBL.log = { kind: kind, name: M.name, total: +M.D.toFixed(3), speed: sp, gap: GAP, first: M.first, move: M.move, beats: M.beats.map(function (b) { return [b[0], +b[1].toFixed(3), +b[2].toFixed(3)]; }), hits: [], sched: snd.sched, frames: 0 };
   var hits = M.hits.map(function (h) { return Object.assign({ done: false }, h); });
@@ -40688,10 +40701,12 @@ function play(kind, opt) {
     x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, cv.width, cv.height); PV.end(); ev('dbl:end:' + kind + (sk ? ':skipped' : '')); CUR = null; res({ skipped: !!sk }); }
   function frame(ts) { if (done) return; if (!start) start = last = ts; fn++; log.frames = fn; lastTs = ts;
     if (SHOW && st.tfw && ts < st.tfw + FZ * 1000) { start += ts - last; last = ts; root.requestAnimationFrame(frame); return; } /* the long freeze at the peak: the last frame stays up */
-    var rr = 1; if (SHOW && st.t != null && !st.tfw && st.t >= TF - 0.45) { rr = 0.5; start += (ts - last) * 0.5; }
+    if (RUSH && ts < (st.fz || 0)) { start += ts - last; last = ts; root.requestAnimationFrame(frame); return; } /* the per-hit hitstop */
+    var rr = 1; if (RUSH && st.t != null && !st.tfw) { rr = RUSH.rate(st.t); start += (ts - last) * (1 - rr); } else if (SHOW && st.t != null && !st.tfw && st.t >= TF - 0.45) { rr = 0.5; start += (ts - last) * 0.5; }
     var t = (ts - start) / 1000 * sp, dt = Math.min(0.05, (ts - last) / 1000) * sp * rr; last = ts; st.t = t;
     if (opt.hold != null) t = st.t = opt.hold; // stills: freeze the clock
-    if (SHOW && !st.mus && t >= TF - 0.45) { st.mus = 1; root.cuMusic(true); ev('dbl:cam:split'); }
+    if (RUSH) { if (st.di == null) st.di = 0; while (st.di < RUSH.hits.length && RUSH.hits[st.di] <= t) { if (t - RUSH.hits[st.di] < 0.2) { st.kickT = ts; if (RUSH.hs[st.di] > 0) st.fz = ts + RUSH.hs[st.di] * 1000; } st.di++; } st.kick = Math.max(0, 1 - (ts - (st.kickT || -1e9)) / 120); }
+    if (SHOW && !st.mus && t >= TF - (RUSH ? 0.3 : 0.45)) { st.mus = 1; root.cuMusic(true); ev('dbl:cam:split'); }
     if (SHOW && st.mus === 1 && st.tfw && ts > st.tfw + FZ * 1000 + 380) { st.mus = 2; root.cuMusic(false); }
     if (t >= M.D) { end(false); return; }
     hits.forEach(function (h) { if (!h.done && t >= h.t) fire(h, t); });
