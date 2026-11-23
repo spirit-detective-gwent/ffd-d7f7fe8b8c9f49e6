@@ -305,6 +305,18 @@ footer{font-size:10px;color:#778;margin-top:auto;padding:8px;text-align:center}
 @keyframes spk{0%{opacity:1;transform:rotate(var(--a)) translateY(4px) scaleY(.2)}60%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateY(var(--d,40px)) scaleY(1)}}
 @keyframes spf{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.6);opacity:0}}
 #stage.shake{animation:sshake .32s}
+/* v6.5.59: close-up camera (translate + scale as individual properties so the stage shake's transform keeps working) */
+#cuVig{position:absolute;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .18s;background:radial-gradient(ellipse at 50% 38%,rgba(0,0,0,0) 30%,rgba(0,0,12,.5) 100%),rgba(0,0,10,.1)}
+#game.cucam #cuVig{opacity:1}
+#game.cucam #stage{z-index:1}
+#game #handRow,#game .ctrl,#game .topbar,#game #pvSlot,#game .fhud,#game .fside,#game #bfxA,#game #bfxB{transition:filter .18s}
+#game.cucam #handRow,#game.cucam .ctrl,#game.cucam .topbar,#game.cucam #pvSlot,#game.cucam .fhud,#game.cucam .fside,#game.cucam #bfxA,#game.cucam #bfxB{filter:blur(3px) brightness(.6)}
+#game.cucam.hitstop{filter:contrast(1.05) brightness(1.03) saturate(1.05)}
+#game.cucam .fig{-webkit-mask-image:linear-gradient(to right,transparent 0,#000 16%,#000 84%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 14%,#000 94%,transparent 100%);mask-image:linear-gradient(to right,transparent 0,#000 16%,#000 84%,transparent 100%),linear-gradient(to bottom,transparent 0,#000 14%,#000 94%,transparent 100%);-webkit-mask-composite:source-in;mask-composite:intersect}
+body.cuc .float.cmbf{display:none}
+.culab{position:fixed;left:50%;transform:translateX(-50%);z-index:60;pointer-events:none;color:#ffd84a;font:800 21px/1 system-ui,sans-serif;letter-spacing:1px;white-space:nowrap;text-shadow:0 2px 0 #000,0 0 8px rgba(0,0,0,.8)}
+.cuburst{position:fixed;z-index:46;pointer-events:none}.cuburst i{position:absolute}.cu-star{inset:0;background:var(--c);clip-path:polygon(50% 0,60% 38%,100% 30%,68% 56%,90% 100%,50% 70%,10% 100%,32% 56%,0 30%,40% 38%)}.cu-core{inset:28%;border-radius:50%;background:radial-gradient(circle,#fff 0,#fff 45%,var(--c) 78%,transparent 80%)}
+
 @keyframes sshake{0%,100%{transform:none}20%{transform:translate(-6px,4px)}40%{transform:translate(5px,-4px)}60%{transform:translate(-3px,2px)}80%{transform:translate(2px,-1px)}}
 /* v3.4: switch between Ryo's two signatures (shown next to the big signature card once Detention Slip is unlocked) */
 .sigsw{position:absolute;left:calc(100% + 8px);top:38%;pointer-events:auto;z-index:36;border:0;border-radius:10px;padding:7px 8px;width:86px;font:900 15px system-ui;line-height:1.1;color:#fff;background:linear-gradient(180deg,#5a2a10,#2a1206);box-shadow:0 0 0 1.5px #ffb040,0 0 12px rgba(255,140,0,.55);text-align:center}
@@ -6733,7 +6745,7 @@ function drawFigs(ts) {
   if (ST.frz) { requestAnimationFrame(drawFigs); return; } // v4.8 hit-stop
   var t = (root.FFF_HRCLK ? root.FFF_HRCLK('figs', ts) : ts) / 1000; /* v6.5.41 b12b: House Rules focus slow-motion */
   FIGS.forEach(function (f) {
-    var c = f.c; if (!c.isConnected) return; var dpr = Math.min(2, root.devicePixelRatio || 1) /* v6.5.17: cap figure DPR at 2 to cut paint cost on 3x phones */, W = c.clientWidth, H = c.clientHeight; if (!W) return;
+    var c = f.c; if (!c.isConnected) return; var dpr = Math.min(2, root.devicePixelRatio || 1) * (root.CU_Z || 1) /* v6.5.59: redraw at the close-up's zoom so it stays sharp */ /* v6.5.17: cap figure DPR at 2 to cut paint cost on 3x phones */, W = c.clientWidth, H = c.clientHeight; if (!W) return;
     if (c.width !== Math.round(W * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
     var x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
     if (f.flip) { x.translate(W, 0); x.scale(-1, 1); } /* portraits stay unmirrored on the vertical PC field (same as the phone board) */
@@ -6786,6 +6798,7 @@ function drawFigs(ts) {
         var PI0 = FIST_PTS[f.key], bw = im.naturalWidth || src.naturalWidth, bh = im.naturalHeight || src.naturalHeight; if (PI0 && aA < 0.5) for (var hj = 0; hj < nH; hj++, f.fl++) { var fx0 = x0 + PI0[hj][0] * w / bw + shake, fy0 = y0 + (bob || 0) + PI0[hj][1] * h / bh; if (!burnHand(x, f, fx0, fy0, h, { a: 0, b: 1, p: 0 }, 0, 1)) fistFlame(x, fx0, fy0, fr, t, hj, 1); }
       }
       if (f.hit > 0) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(255,40,40,' + f.hit * 0.6 + ')'; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'source-over'; }
+      if (f.pw > 0) { x.globalCompositeOperation = 'source-atop'; x.fillStyle = 'rgba(255,255,255,' + f.pw * 0.85 + ')'; x.fillRect(0, 0, W, H); x.globalCompositeOperation = 'source-over'; f.pw = Math.max(0, f.pw - 0.2); } /* v6.5.59: white hit flash (close-up) */
     }
     x.globalCompositeOperation = 'lighter';
     if ((!pc || f.glow > 0.2) && !sparQuiet) f.parts.forEach(function (p) { /* PC idle has no spark field; those dashes crossed the hip line. A Ryo vs Aoi spar draws neither glow. */
@@ -7696,6 +7709,7 @@ function recoil(si, kind, dir) {
 function sparks(x, y, col, n) {
   var s = el('div', 'sparks'); s.style.left = x + 'px'; s.style.top = y + 'px'; s.style.setProperty('--c', col); s.appendChild(el('b'));
   for (var i = 0; i < (n || 12); i++) { var k = el('i'); k.style.setProperty('--a', Math.round(Math.random() * 360) + 'deg'); k.style.setProperty('--d', (28 + Math.random() * 34) + 'px'); k.style.setProperty('--l', (12 + Math.random() * 16) + 'px'); k.style.animationDelay = Math.round(Math.random() * 60) + 'ms'; s.appendChild(k); }
+  if (CU.on) { s.style.left = (CU.S.x + CU.Z * (x - CU.F.x)) + 'px'; s.style.top = (CU.S.y + CU.Z * (y - CU.F.y)) + 'px'; s.style.transform = 'scale(' + CU.Z + ')'; } /* v6.5.59: sparks follow the close-up camera */
   document.body.appendChild(s); setTimeout(function () { s.remove(); }, 700);
 }
 /* v5.1 Chapter Two: grown men hit harder. A heavy adult strike (5+) rocks the whole stage and lands with a deep thud; a beaten adult
@@ -7783,13 +7797,51 @@ var COMBO_T = { 2: { gap: 0.16, dash: 0.2 }, 3: { gap: 0.13, dash: 0.22 } }; // 
  * lands at about -1.1 dBFS before the compressor, so no clipping. Aoi / bullies / Gouki stay at 0.9. */
 var COMBO_GAIN_RYO = 1.35;
 var COMBO_T_RYO = { 2: { gap: 0.20, dash: 0.2 }, 3: { gap: 0.17, dash: 0.22 } }, COMBO_HIT0 = { combo2_ryo: 0.074, combo3_ryo: 0.008 };
+/* v6.5.59: close-up camera for double / triple attacks. Phone portrait only. In: 180 ms ease-out to 2x on the contact point, the fighters redraw at 2x
+ * resolution (CU_Z, no CSS-scaled bitmap), the HUD / hand blur and dim, the painted backdrop pushes in 1.3x and keeps animating. Every hit gets its own
+ * burst, a white flash + hurt frame + knock-back on the target, and a 95 ms freeze that starts 34 ms after impact. Out: 200 ms while the attacker returns. */
+var CU = { on: false, Z: 1, F: { x: 0, y: 0 }, S: { x: 195, y: 290 }, n: 0 }, CU_IN = 180, CU_OUT = 200, CU_HOLD = 95, CU_DELAY = 34;
+function cuOK() { var c = ST.set.cam; if (c !== 'on' && c !== 'off') c = ((root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches) || ST.set.rm) ? 'off' : 'on'; return c !== 'off' && !ST.ff && !document.documentElement.classList.contains('pc-arena') && innerHeight > innerWidth; }
+function cuPt(x, y) { return CU.on ? { x: CU.S.x + CU.Z * (x - CU.F.x), y: CU.S.y + CU.Z * (y - CU.F.y) } : { x: x, y: y }; }
+function cuIn(a, d, dir, hz, label) {
+  var st = $('#stage'), g = $('#game'); if (CU.on || !cuOK() || !st || !st.animate) return null;
+  var sr = st.getBoundingClientRect(), F = hz ? { x: d.x - dir * a.w * 0.4, y: d.y } : { x: d.x, y: d.y - dir * a.h * 0.4 }, S = { x: innerWidth / 2, y: Math.min(innerHeight * 0.34, 290) };
+  CU.F = F; CU.S = S; CU.Z = 2; CU.n = 0; root.CU_Z = 2; st.style.transformOrigin = (F.x - sr.left) + 'px ' + (F.y - sr.top) + 'px';
+  CU.anim = st.animate([{ translate: '0px 0px', scale: '1' }, { translate: (S.x - F.x) + 'px ' + (S.y - F.y) + 'px', scale: '2' }], { duration: CU_IN, easing: 'cubic-bezier(.16,.84,.3,1)', fill: 'forwards' });
+  CU.bg = [$('#bfxA'), $('#bfxB')].filter(function (e) { return e && e.animate; }); CU.bgA = CU.bg.map(function (e) { e.style.transformOrigin = F.x + 'px ' + F.y + 'px'; return e.animate([{ scale: '1' }, { scale: '1.3' }], { duration: CU_IN, easing: 'cubic-bezier(.16,.84,.3,1)', fill: 'forwards' }); });
+  var v = document.getElementById('cuVig'); if (!v) { v = document.createElement('div'); v.id = 'cuVig'; g.appendChild(v); }
+  CU.lab = document.createElement('div'); CU.lab.className = 'culab'; CU.lab.style.top = (S.y + 215) + 'px'; CU.lab.textContent = CU.lname = label; document.body.appendChild(CU.lab); document.body.classList.add('cuc');
+  CU.on = true; g.classList.add('cucam'); ev('cu:in'); return CU;
+}
+function cuOut() {
+  var st = $('#stage'), g = $('#game'); if (!CU.on) return; CU.on = false; g.classList.remove('cucam'); document.body.classList.remove('cuc');
+  var lb = CU.lab; if (lb) { lb.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, fill: 'forwards' }).onfinish = function () { lb.remove(); }; setTimeout(function () { lb.remove(); }, 400); }
+  var S = CU.S, F = CU.F, an = st.animate([{ translate: (S.x - F.x) + 'px ' + (S.y - F.y) + 'px', scale: '2' }, { translate: '0px 0px', scale: '1' }], { duration: CU_OUT, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+  if (CU.anim) CU.anim.cancel(); CU.bgA.forEach(function (x, i) { var e = CU.bg[i], o = e.animate([{ scale: '1.3' }, { scale: '1' }], { duration: CU_OUT, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' }); x.cancel(); o.onfinish = function () { try { o.cancel(); } catch (e0) {} }; setTimeout(function () { try { o.cancel(); } catch (e0) {} }, CU_OUT + 60); });
+  function fin() { try { an.cancel(); } catch (e) {} st.style.transformOrigin = ''; if (!CU.on) root.CU_Z = 1; ev('cu:out'); } an.onfinish = fin; setTimeout(fin, CU_OUT + 60);
+}
+/* one beat = one hit: burst at the contact point, the target's white flash + hurt frame + knock-back, the 95 ms freeze (anims = the attacker's running animations, paused with it) */
+function cuBeat(si, i, dmg, dir, last, hold, cx, cy, col, anims) {
+  if (!CU.on) return; var tsi = 1 - si, fg = figOf(tsi), fe = sideEl(tsi).querySelector('.fig'), p = cuPt(cx + (i % 2 ? 9 : -9), cy + (Math.random() - 0.5) * 10), sz = last ? 150 : 118, e = document.createElement('div');
+  CU.n++; if (CU.lab) { CU.lab.textContent = CU.lname + '  \u00d7' + CU.n; CU.lab.animate([{ transform: 'translateX(-50%) scale(1.3)' }, { transform: 'translateX(-50%) scale(1)' }], { duration: 160, easing: 'ease-out' }); }
+  e.className = 'cuburst'; e.style.cssText = 'left:' + p.x + 'px;top:' + p.y + 'px;width:' + sz + 'px;height:' + sz + 'px;margin:' + (-sz / 2) + 'px 0 0 ' + (-sz / 2) + 'px;--c:' + col; e.innerHTML = '<i class="cu-star"></i><i class="cu-core"></i>'; document.body.appendChild(e);
+  var rot = i * 47 + Math.random() * 30, an = e.animate([{ transform: 'rotate(' + rot + 'deg) scale(.3)', opacity: 1 }, { transform: 'rotate(' + (rot + 10) + 'deg) scale(1)', opacity: 1, offset: 0.3 }, { transform: 'rotate(' + (rot + 20) + 'deg) scale(1.2)', opacity: 0 }], { duration: last ? 260 : 210, easing: 'ease-out' }); an.onfinish = function () { e.remove(); }; setTimeout(function () { e.remove(); }, 500);
+  if (fg) { fg.pw = 1; if (dmg) { fg.hit = 1; fg.hurtLock = 0; fg.poseT = Math.max(fg.poseT || 0, 0.85); if (!last) setTimeout(function () { fg.poseT = 0; fg.hit = 0; }, 140); } } /* back to standing before the next hit */
+  if (fe && fe.animate) anims.push(fe.animate([{ transform: 'none' }, { transform: TRA() + '(' + dir * 17 + 'px) rotate(' + (dir * 4) + 'deg)', offset: 0.16 }, { transform: TRA() + '(' + dir * 11 + 'px)', offset: 0.5 }, { transform: 'none' }], { duration: 240, easing: 'ease-out' }));
+  setTimeout(function () {
+    if (ST.ff || !CU.on) return; var g = $('#game'); ST.frz = true; g.classList.add('hitstop'); anims.forEach(function (x) { try { x.pause(); } catch (e0) {} });
+    setTimeout(function () { ST.frz = false; g.classList.remove('hitstop'); anims.forEach(function (x) { try { x.play(); } catch (e0) {} }); }, hold);
+  }, CU_DELAY);
+}
+/* does the i-th hit on side tsi do damage (a blocked hit still flashes and knocks back, but no hurt frame) */
+function cuDmg(tsi, i) { var fx = ST.lastFx, evs = []; try { evs = (fx && fx.parts ? fx.parts.reduce(function (a, q) { return a.concat(q.ev || []); }, []) : (fx && fx.ev) || []).filter(function (e) { return e.t === 'hit' && e.side === tsi; }); } catch (e0) {} return evs.length ? evs[Math.min(i, evs.length - 1)].n > 0 : true; }
 function comboAnim(si, n, hits) {
   var att = sideEl(si), body = att.querySelector('.fbody'), fig = figOf(si), sp = ST.speed * (ST.set.fast ? 2 : 1), ryo = chOfSide(si) === 'ryo', T = (ryo ? COMBO_T_RYO : COMBO_T)[n === 3 ? 3 : 2], ck = comboKey(si, n);
   var a = geo(si), d = geo(1 - si), hz = TRA() === 'translateX', dir = hz ? (d.x < a.x ? -1 : 1) : (d.y < a.y ? -1 : 1), jab = 16, travel = fitTravel(a, Math.max(0, hz ? Math.abs(d.x - a.x) - a.w * 0.8 : Math.abs(d.y - a.y) - a.h * 0.8), dir, hz, jab);
   var cx = hz ? d.x - dir * d.w * 0.42 : (a.x + d.x) / 2, cy = hz ? d.y : d.y - dir * d.h * 0.42, col = (si === 0 ? ST.me : ST.foe) === 'ryo' ? '#ffb040' : '#7fefff';
   var rush = n >= 2 && !!body.animate, base = rush ? travel : 0, gap = T.gap, t0 = (rush ? T.dash : T.first) / sp, anims = [], timers = [], ipcs = [], landed = 0, t00 = nowG();
   ST.ct = []; function mark(k) { ST.ct.push({ k: k, t: Math.round(nowG() - t00), a: AU.now() }); ev('combo:' + k + ':' + si); }
-  att.classList.add('lunge'); mark(rush ? 'rush' : 'inplace'); if (ryo) fistOnFig(fig, 2, si); // v4.33: double / triple = both fists burn
+  att.classList.add('lunge'); mark(rush ? 'rush' : 'inplace'); var cu = cuIn(a, d, dir, hz, n === 3 ? 'TRIPLE COMBO' : 'DOUBLE COMBO') /* v6.5.59 */; if (ryo) fistOnFig(fig, 2, si); // v4.33: double / triple = both fists burn
   if (ryo) { ST.cs = { k: ck, at: AU.now() + t0, off: COMBO_HIT0[ck] || 0, gap: gap }; AU.play(ck, { gain: COMBO_GAIN_RYO, delay: t0, off: COMBO_HIT0[ck] || 0 }); } else if (COMBO_GAIN_AOI[ck]) AU.play(ck, { gain: COMBO_GAIN_AOI[ck], delay: Math.max(0, t0 - COMBO_LEAD_AOI) }); else AU.play(ck, { gain: 0.9, delay: t0 });
   if (rush && !ST.ff) anims.push(body.animate([{ transform: 'none' }, { transform: TRA() + '(' + (-dir * 6) + 'px)', offset: 0.25 }, { transform: TRA() + '(' + dir * base + 'px)' }], { duration: t0 * 1000, easing: 'cubic-bezier(.45,0,.85,.55)', fill: 'forwards' }));
   function punch(i) { // the jab out from wherever the body is (home for a double, the contact point for a triple) and back
@@ -7802,17 +7854,18 @@ function comboAnim(si, n, hits) {
     var h = hits[i]; landed = i + 1; mark('punch:' + (i + 1)); ev('clash:impact:' + si);
     ipcs.push(impactPhase({ ev: h.part.ev, card: h.part.card, noHurt: ryo && i < hits.length - 1 }, h.view)); // v4.31.1: Ryo: the hurt voice only on the last punch
     if (ryo) fistSpark(si, cx + (Math.random() - 0.5) * 16, cy + (Math.random() - 0.5) * 10);
-    if (!ST.ff) { recoil(1 - si, 'punch', dir); sparks(cx + (Math.random() - 0.5) * 24, cy + (Math.random() - 0.5) * 12, col, i === hits.length - 1 ? 16 : 11); stageShake(); }
+    if (cu) cuBeat(si, i, (h.part.ev || []).some(function (e) { return e.t === 'hit' && e.n > 0; }), dir, i === hits.length - 1, i === hits.length - 1 ? 140 : CU_HOLD, cx, cy, col, anims); /* v6.5.59 */
+    if (!ST.ff) { if (!cu) recoil(1 - si, 'punch', dir); sparks(cx + (Math.random() - 0.5) * 24, cy + (Math.random() - 0.5) * 12, col, i === hits.length - 1 ? 16 : 11); stageShake(); }
     ev('anim:end:' + h.part.card.id);
   }
   return new Promise(function (res) {
     var done = false;
     hits.forEach(function (h, i) { var ti = t0 + i * gap; timers.push(setTimeout(function () { if (!done) punch(i); }, Math.max(0, ti - Math.min(gap * 0.9, 0.12)) * 1000)); timers.push(setTimeout(function () { if (!done) land(i); }, ti * 1000)); });
-    var tEnd = t0 + (hits.length - 1) * gap + 0.14 / sp;
+    var tEnd = t0 + (hits.length - 1) * gap + 0.14 / sp + (cu ? 0.14 : 0); /* v6.5.59: the last hit holds a beat */
     function finish() {
       if (done) return; done = true; timers.forEach(clearTimeout); for (var i = landed; i < hits.length; i++) land(i);
       var from = rush ? TRA() + '(' + dir * base + 'px)' : 'none', back = ST.ff || !rush || !body.animate ? null : body.animate([{ transform: from }, { transform: 'none' }], { duration: 260 / sp, easing: 'ease-in-out' });
-      anims.forEach(function (x) { x.cancel(); }); if (rush) mark('return');
+      anims.forEach(function (x) { x.cancel(); }); if (rush) mark('return'); if (cu) cuOut(); /* v6.5.59: pull back while he returns */
       function fin() { att.classList.remove('lunge'); if (ryo) fistOffFig(fig, si); ev('clash:end:' + si); Promise.all(ipcs).then(res); }
       if (!back) { fin(); return; } animDone(back, fin, 260 / sp);
     }
