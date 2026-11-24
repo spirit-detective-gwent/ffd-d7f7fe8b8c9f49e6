@@ -37565,6 +37565,160 @@ function camPan(to, o, done) {
   var WD = 'world/';
   function reg(id, k, nm, sheets) { sheets.forEach(function (sh) { IMG[id + '_' + sh] = WD + id + '_' + sh + '.webp'; }); BW_IDS[id] = 1; SHC[id + '_walk'] = 8; C2K[id] = k; NM[id] = nm; if (!PT[id]) PT[id] = 'c2_hustler_fig'; }
   reg('c2_gray', 1.1, 'Gray Coat', ['walk', 'map', 'fig']); PT.c2_gray = 'c2_gray_fig'; /* his own portrait, not a Hustler's */
+  /* ================= v6.5.61 path voice: the Nails chain in Fierce / Strategic / Compassionate (balanced), Ch1 style =================
+   * Every scene table is either a plain array or { fierce, strategic, balanced }; scene() resolves it with pathLines().
+   * V3(pre, { fierce, strategic, balanced }, post) shares the NPC lines and swaps Ryo/Aoi's. pv(x) resolves a table to an array
+   * where a caller concatenates. Pacing marks: {slow} {fast} {brisk} {quiet} {shout} {p} {p=ms}. */
+  var PP = ['fierce', 'strategic', 'balanced'];
+  function V3(pre, mid, post) { var o = {}; PP.forEach(function (p) { o[p] = (pre || []).concat(mid[p] || [], post || []); }); return o; }
+  function pv(x) { try { return typeof pathLines === 'function' ? pathLines(x) : (x.balanced || x); } catch (e) { return x.balanced || []; } }
+  var VO = NQ.VO = {};
+  /* Kitsune Udon: the shutter goes up */
+  VO.udon = V3([['nq_udon', 'They’re gone? Three nights those boys stood on my flower bed.']], {
+    fierce: [['ryo', 'They won’t stand anywhere for a while.', { hype: 1 }], ['aoi', 'Kazan.{p} He means they won’t be back on this corner.']],
+    strategic: [['aoi', 'They won’t be back. Their crew just lost the corner, and they know it.'], ['ryo', 'Next time they’ll pick a softer flower bed.']],
+    balanced: [['ryo', '{slow}Sorry about the flowers.{/slow}'], ['aoi', 'They won’t be back on this corner. We made sure.']]
+  }, [['nq_udon', 'Then the shutter stays up. Kitsune Udon is open.'], ['nq_udon', 'Nails’ kids eat at Nails’ price.{p} Twenty off.']].concat([]));
+  VO.udon.fierce = VO.udon.fierce.concat([['ryo', '{fast}Twenty off? Then I’m eating twice.{/fast}', { hype: 1 }], ['nq_udon', 'You’ll pay twice, then. Machi next door has the bay open again too.']]);
+  VO.udon.strategic = VO.udon.strategic.concat([['ryo', 'Twenty off, every night. That’s rent money.'], ['nq_udon', 'It’s noodles, boy. Machi next door has the bay open again too.']]);
+  VO.udon.balanced = VO.udon.balanced.concat([['ryo', 'Twenty off… is that a lot?', { hype: 1 }], ['nq_udon', 'It’s noodles. Don’t push it. Machi next door has the bay open again too.']]);
+  /* Flip on the phone: Hold the West Street */
+  VO.flip = V3([['n13flip', '{quiet}(on the phone){/quiet} Corner’s red. Nails saw.'], ['n13flip', 'Gōda keeps pushing up the west side street.{p} Two waves, then his heavies. Push back.'], ['n13flip', 'I’ll be at the south end when it counts.']], {
+    fierce: [['ryo', '{brisk}Two waves. Fine. I’ll take the heavies.{/brisk}'], ['aoi', 'We take the north end first. Together.']],
+    strategic: [['aoi', '{brisk}North end first. Thin them before the heavies come down.{/brisk}'], ['ryo', 'And Flip shows up right when it’s easy. Convenient.']],
+    balanced: [['aoi', 'The west side street. North end first.'], ['ryo', 'People live on that street. Let’s keep it standing.']]
+  });
+  /* the clash at the south end */
+  VO.clash = V3([['n13flip', 'Told you. South end, when it counts.'], ['c2_hustler', 'Nails sends schoolkids now?']], {
+    fierce: [['ryo', '{shout}Nails sent us.{/shout} We brought friends.', { hype: 1 }], ['aoi', 'Three on three. Nobody runs.']],
+    strategic: [['ryo', 'Nails sent us. Count again.'], ['aoi', '{brisk}Three on three. Their left man’s already backing up.{/brisk}']],
+    balanced: [['ryo', 'Nails sent us. Walk away and nobody gets hurt.'], ['c2_hustler', 'Cute.'], ['aoi', 'Then three on three. Nobody runs.']]
+  });
+  VO.clashWon = V3([['n13flip', 'West street’s ours. Nails hears it from me tonight.']], {
+    fierce: [['ryo', 'That’s it? {fast}We just… stand here?{/fast}']],
+    strategic: [['ryo', 'That’s it? No handshake, no list of the next street?']],
+    balanced: [['ryo', 'That’s it? We just… stand here?'], ['aoi', '{quiet}Look at the windows. Lights are coming back on.{/quiet}']]
+  });
+  VO.cold = V3([['n13flip', 'Next. Kitsune Hotel, by the station. Gōda’s boys lean on the front door and the guests walk.'], ['n13flip', '{slow}Make the water cold.{/slow}']], {
+    fierce: [['ryo', 'Cold. Got it.', { hype: 1 }]],
+    strategic: [['aoi', 'Cold water. Clear the door, and the guests do the rest.']],
+    balanced: [['aoi', 'Cold water. Got it.'], ['ryo', 'Guests first. Then the door.']]
+  });
+  /* the tagger at the west wall gives up the door man */
+  VO.paintFin = V3([['c2_hustler', 'Hah… you think the wall matters?'], ['c2_hustler', 'Gōda’s man at the door decides who gets in. Not me. Not you.']], {
+    fierce: [['ryo', '{shout}Which door.{/shout}', { hype: 1 }]],
+    strategic: [['ryo', 'Which door? You’ve got paint on your sleeve and nowhere to run.']],
+    balanced: [['ryo', 'Which door? Easy. Nobody’s hitting you again.']]
+  }, [['c2_hustler', 'The bathhouse. By the station. Ask for Kaneda.{p} He’ll ask for your teeth.']]);
+  /* Ms. Kanda at the hotel desk */
+  VO.clerk = V3([['nq_clerk', 'You’re the two who cleared the door. The guests told me.'], ['nq_clerk', 'Kanda. Front desk, nine years. Gōda’s boys were here every night this month.'], ['aoi', 'Where do they go when they’re not here?'], ['nq_clerk', 'They tag the west wall every night. Right across the plaza. Like they own it.']], {
+    fierce: [['ryo', 'Then we take the wall back.', { hype: 1 }]],
+    strategic: [['ryo', 'Every night, same wall. Then we know where to wait.']],
+    balanced: [['ryo', 'Then we take the wall back. For the guests, too.']]
+  }, [['nq_clerk', 'The couch is yours whenever you need it. Lobby’s open to you two.']]);
+  /* Kaneda at the door, then Aoi's call (BOND_Q.c2nq_door) */
+  VO.door = V3([['c2_doorman', 'Members, family, and people Gōda owes money.{p} You’re none of those.']], {
+    fierce: [['ryo', 'We’re the ones scrubbing his tags off the wall.', { hype: 1 }], ['c2_doorman', 'Then you’re the reason I’m working tonight.']],
+    strategic: [['ryo', 'Two guards, one door, and you’re the only one who’s been hit before.'], ['c2_doorman', '{slow}Observant.{/slow} Doesn’t open the door.']],
+    balanced: [['ryo', 'There are old people sitting on buckets out here. In the cold.'], ['c2_doorman', 'I know. I walk past them every night.']]
+  }, [['aoi', 'Kaneda. The door man.'], ['@bond', 'c2nq_door']]);
+  VO.doorWon = V3([['c2_doorman', '{slow}…Fine.{/slow}{p} You knocked.'], ['c2_doorman', 'Gōda’ll see you. Bathhouse. All the way to the back.']], {
+    fierce: [['ryo', 'He’d better.'], ['aoi', 'The boiler room. That’s where the seal is.']],
+    strategic: [['aoi', 'The boiler room. That’s where the seal is.'], ['ryo', 'And nobody uses the front of a bathhouse to hide anything.']],
+    balanced: [['ryo', 'Get some sleep, Kaneda.'], ['c2_doorman', '…'], ['aoi', 'The boiler room. That’s where the seal is.']]
+  });
+  /* the wing guards, and Kaneda again upstairs */
+  VO.guardU = V3([['c2_hustler', 'Staff only, kids. The old lady stays in the kitchen.']], {
+    fierce: [['ryo', '{shout}You locked an old woman in a kitchen?{/shout}', { hype: 1 }]],
+    strategic: [['aoi', 'Two of you to guard one grandmother. Who’s she scaring?']],
+    balanced: [['aoi', 'You’re keeping an old woman locked in a kitchen?']]
+  }, [['c2_hustler', 'Boss says she stays out of the cold. We say she stays out of the way.']]);
+  VO.guardK = V3([['c2_doorman', 'You again. Upstairs is the boss’s house.']], {
+    fierce: [['ryo', 'We’ve seen the banzuke. Move.', { hype: 1 }]],
+    strategic: [['ryo', 'We’ve seen the banzuke. We know whose house it is.']],
+    balanced: [['ryo', 'We’ve seen the banzuke. We’re not here to wreck his house.']]
+  }, [['c2_doorman', '…Then you know he’s not going to let you through.{p} Neither am I.']]);
+  VO.guardKWon = V3([['c2_doorman', '…Boss carried this whole alley on his back once. On TV. You were babies.'], ['c2_doorman', '{slow}He’s not a bad man.{/slow}{p} He’s a tired one.']], {
+    fierce: [['ryo', 'Tired doesn’t get you a pass.'], ['aoi', 'It gets him a conversation. Come on.']],
+    strategic: [['aoi', 'Then let’s see him rest.']],
+    balanced: [['aoi', 'Then let’s see him rest.'], ['ryo', '{quiet}Yeah.{/quiet}']]
+  });
+  /* Tome-baa in the staff kitchen */
+  VO.tome = V3([['nq_tome', 'Oh… you beat them? Good. Sit, sit. I sat that counter for fifty years.'], ['nq_tome', 'You want Dai-chan. Gōda.{p} I wiped his nose when he was this high.'],
+    ['nq_tome', 'He went off to Tokyo, to the stable. Came back an ōzeki.{p} On television. {slow}The whole alley cried.{/slow}'], ['nq_tome', 'Then his knee went,{p=500} and his father went,{p=500} {slow}the same winter.{/slow} He came home and picked up the shovel.']], {
+    fierce: [['ryo', 'So why lock everyone out? {fast}Why the gangs?{/fast}']],
+    strategic: [['ryo', 'A man like that doesn’t lock his own door for nothing. What changed?']],
+    balanced: [['ryo', '{slow}Why did he lock everyone out?{/slow}']]
+  }, [['nq_tome', 'Ask him. He won’t tell me. He only says, “{quiet}not this winter, Tome.{/quiet}” Every night.'], ['nq_tome', 'Here. The stair key. His room is upstairs. Be gentle with his things.']]);
+  VO.tome.fierce = VO.tome.fierce.concat([['ryo', 'Gentle. Right.'], ['aoi', 'We will. {p}Both of us.']]);
+  VO.tome.strategic = VO.tome.strategic.concat([['aoi', 'We will. And we’ll read everything we touch.']]);
+  VO.tome.balanced = VO.tome.balanced.concat([['aoi', 'We will.'], ['ryo', 'Thank you, Tome-baa.']]);
+  /* the lore beats (Ryo / Aoi's reactions by path; the narration stays shared) */
+  VO.lore = {
+    towels: { fierce: [['ryo', 'He locked them out… {fast}and he still washes their towels?{/fast}'], ['aoi', 'Every week. For people he won’t let in.']],
+      strategic: [['aoi', 'Dated this week. All of them.'], ['ryo', 'So the lockout isn’t about them. Something else.']],
+      balanced: [['ryo', '{slow}He still washes their towels.{/slow}'], ['aoi', 'Every week. For people he won’t let in.']] },
+    loan: { fierce: [['aoi', 'Collection. That’s the Hustlers’ street money.'], ['ryo', '{shout}He sold his basement{/shout} to the gray coats for a boiler.', { hype: 1 }]],
+      strategic: [['aoi', '{brisk}Repayment by storage and by collection.{/brisk} The crates, and the Hustlers.'], ['ryo', 'A boiler on paper. The gray coats got the better deal.']],
+      balanced: [['aoi', 'Collection. That’s the Hustlers’ street money.'], ['ryo', 'He sold the gray coats his basement for a boiler.{p} {quiet}For the bath.{/quiet}']] },
+    banzuke: { fierce: [['ryo', 'Ōzeki. That’s one step under yokozuna.'], ['aoi', 'The bath man was the second-best wrestler in Japan.']],
+      strategic: [['ryo', 'Ōzeki. One step under yokozuna.'], ['aoi', 'So he won’t go down easy. Heavy guard, heavy hands.']],
+      balanced: [['ryo', 'Ōzeki. That’s one step under yokozuna.'], ['aoi', '{slow}Somebody touches this glass every day.{/slow}']] },
+    mirror: { fierce: [['aoi', 'He still ties his own top-knot. Thirty years after he retired.'], ['ryo', 'He lives up here. Alone.']],
+      strategic: [['aoi', 'One cup. One bowl.'], ['ryo', 'Nobody comes up here. So nobody’s seen the city’s letter.']],
+      balanced: [['aoi', 'He still ties his own top-knot. Thirty years after he retired.'], ['ryo', '{quiet}He lives up here. Alone.{/quiet}']] },
+    kesho: { fierce: [['ryo', 'One bad knee and it’s over.'], ['aoi', 'Then he came home to shovel coal.']],
+      strategic: [['ryo', 'Brace on the left knee.'], ['aoi', 'Then he plants on the right. Remember that downstairs.']],
+      balanced: [['ryo', '{slow}One bad knee and it’s over.{/slow}'], ['aoi', 'Then he came home to shovel coal.']] },
+    altar: { fierce: [['aoi', '{slow}…He didn’t lock the old folks out to hurt them.{/slow}'], ['aoi', 'The boiler could go any night. And the crates came with the money for a new one.'], ['ryo', 'So he shut the door on everybody he was trying to keep warm.'], ['ryo', '{fast}And let the gray coats walk right in.{/fast}'], ['ryo', 'Take the key. We’re going down there.', { hype: 1 }]],
+      strategic: [['aoi', 'Condemned by March. The loan was for a new boiler.'], ['ryo', 'And the parts never came. The gray coats want the boiler dead and the basement full.'], ['aoi', '{brisk}Then the seal isn’t what keeps the fire lit.{/brisk}{p} He just thinks it is.'], ['ryo', 'Take the key. We go down and tell him.']],
+      balanced: [['aoi', '{slow}…He didn’t lock the old folks out to hurt them.{/slow}'], ['aoi', 'The boiler could go any night. And the crates came with the money for a new one.'], ['ryo', 'So he shut the door on everybody he was trying to keep warm.'], ['aoi', '{quiet}And bathes alone. Keeping the fire.{/quiet}{p} Waiting for parts the gray coats never send.'], ['ryo', 'Take the key. {slow}We’re going down to talk to him.{/slow}', { hype: 1 }]] },
+    deck: { fierce: [['ryo', 'They’re still waiting at the door.'], ['aoi', 'Then we open it for them.']],
+      strategic: [['ryo', 'They’re still waiting at the door.'], ['aoi', 'And the chute goes straight to the boiler. He won’t expect us from above.']],
+      balanced: [['ryo', '{slow}They’re still waiting at the door.{/slow}'], ['aoi', 'Then we open it for them.']] }
+  };
+  /* Gōda in the boiler room: before the fight */
+  VO.goda = V3([['mb2_sento', '{slow}Coal chute.{/slow}{p} Nobody’s come down that since my father.']], {
+    fierce: [['ryo', 'We saw the banzuke. The apron. The letters on the altar.'], ['mb2_sento', 'Then you read my mail. Kids today.'], ['ryo', '{fast}You took gray-coat money and locked the whole alley out.{/fast}'], ['mb2_sento', 'Parts never come. The crates do. The Hustlers collect.{p} Every winter, “next winter.”'], ['ryo', 'Tome-baa says the miso’s gone cold too.']],
+    strategic: [['aoi', 'Condemned by March. The loan was for a new boiler. The parts never came.'], ['mb2_sento', 'Then you read my mail. Kids today.'], ['ryo', 'The gray coats don’t want your fire lit. They want your basement.'], ['mb2_sento', 'Parts never come. The crates do. The Hustlers collect.{p} Every winter, “next winter.”']],
+    balanced: [['ryo', 'We saw the banzuke. The apron. The letters on the altar.'], ['mb2_sento', 'Then you read my mail. Kids today.'], ['aoi', 'You locked them out because the boiler could blow. And you took the gray coats’ money for a new one.'], ['mb2_sento', 'Parts never come. The crates do. The Hustlers collect.{p} Every winter, “next winter.”'], ['ryo', '{slow}Tome-baa says the miso’s gone cold too.{/slow}']]
+  }, [['mb2_sento', '…{p=500}{slow}The seal keeps the fire lit, boy.{/slow}{p=600} Break it and this alley has no bath at all.', { cam: 'bars+push', z: 1.6, ms: 2400 }], ['mb2_sento', 'An ōzeki doesn’t step out of the ring.{p} {slow}Come.{/slow}', { cam: 'hold' }]]);
+  /* Gōda on the clay: after the fight (concatenated with the Tetsu reveal) */
+  VO.godaOut = V3([['mb2_sento', '…{p=600}{slow}Thirty years since anyone put me on the clay.{/slow}', { cam: 'bars+pull', z: 1.35, ms: 3600 }], ['mb2_sento', 'Go on. Open it. Let the old folks in.{p} I’ll keep the fire the honest way.']], {
+    fierce: [['ryo', 'Hot bath’s on the alley tonight. {shout}Not on the gray coats.{/shout}', { hype: 1 }]],
+    strategic: [['aoi', 'Then the gray coats lose their basement.'], ['ryo', 'And a city inspector gets a call about a boiler with no parts.']],
+    balanced: [['ryo', '{slow}You kept it lit for thirty years.{/slow} Let them help keep it lit now.'], ['mb2_sento', '…{p}Hnh.']]
+  });
+  VO.tetsu = V3([['mb2_sento', 'Hnh… kids.{p} Nails is hiding behind kids.'], ['mb2_sento', 'You want the man who moves my goods?'], ['mb2_sento', '{slow}Tetsu.{/slow}{p} Back room of Club Kitsune.']], {
+    fierce: [['aoi', 'Club Kitsune. The door that wouldn’t let us in.'], ['ryo', '{shout}It will now.{/shout}', { hype: 1 }]],
+    strategic: [['aoi', 'Club Kitsune. The door that wouldn’t let us in.'], ['ryo', 'It will. Tetsu just lost his warehouse.']],
+    balanced: [['aoi', 'Club Kitsune. The door that wouldn’t let us in.'], ['ryo', 'It will now.', { hype: 1 }]]
+  });
+  /* the big sting: the station quarter and Kissa Gekko turn red */
+  VO.bigSting = V3([['aoi', 'The whole station quarter.{p} And Gekko’s block.']], {
+    fierce: [['ryo', '{brisk}Nails’ red, all the way to the Kissa.{/brisk}', { hype: 1 }], ['aoi', 'Don’t let it go to your head. Gekko will want to talk.']],
+    strategic: [['ryo', 'Nails’ red, all the way to the Kissa.'], ['aoi', 'Which makes us the next target. Gekko will want to talk. And the bathhouse counter’s open.']],
+    balanced: [['ryo', 'Nails’ red, all the way to the Kissa.'], ['aoi', 'Gekko will want to talk. {slow}And the bath’s open.{/slow} Tonight the old folks get in.']]
+  });
+  /* Kaneda's door: a real call (force / angle / talk). Every answer still ends in the fight; the grade and the banter follow the
+   * locked path (matrix: locked path -> answer). */
+  try { if (typeof BOND_Q === 'object' && typeof BOND_TXT === 'object') {
+    BOND_Q.c2nq_door = { q: '<b>Aoi asks</b><p>Kaneda and two Hustlers on the bathhouse door. How do we get past?</p>', o: { fierce: ['Straight through him', 'Fierce'], strategic: ['Hit the guards first, leave him alone', 'Strategic'], balanced: ['Ask him to stand aside', 'Compassionate'] } };
+    if (typeof BOND_MID === 'object') BOND_MID.c2nq_door = 'strategic';
+    BOND_TXT.c2nq_door = { _mx: 1,
+      fierce: {
+        fierce: [['{LEAD}', '{shout}Move.{/shout}', { hype: 1 }], ['c2_doorman', 'Make me.'], ['{PARTNER}', 'He asked for it.']],
+        strategic: [['{LEAD}', 'Your two first. Then you.'], ['c2_doorman', '{slow}You counted.{/slow} Good. Count your teeth after.'], ['{PARTNER}', 'Huh. You thought about it.']],
+        balanced: [['{LEAD}', 'Stand aside, Kaneda. {p}Please.'], ['c2_doorman', '…{p}Can’t. Not tonight.'], ['{PARTNER}', '{quiet}You did ask.{/quiet}']] },
+      strategic: {
+        fierce: [['{LEAD}', 'Forget the angles. {fast}Through him.{/fast}', { hype: 1 }], ['c2_doorman', 'Plenty of kids tried that.'], ['{PARTNER}', 'Fine. I’ll cover the left.']],
+        strategic: [['{LEAD}', 'Left Hustler drops his guard when he talks. Him first.'], ['c2_doorman', 'Observant. Doesn’t open the door.'], ['{PARTNER}', '{brisk}Left one. On three.{/brisk}']],
+        balanced: [['{LEAD}', 'We don’t want you, Kaneda. Just the door.'], ['c2_doorman', 'The door is me.'], ['{PARTNER}', 'Then he chose. Watch his right hand.']] },
+      balanced: {
+        fierce: [['{LEAD}', '{shout}Out of the way!{/shout}', { hype: 1 }], ['c2_doorman', 'There it is.'], ['{PARTNER}', 'Easy. {p}They’re only doing a job.']],
+        strategic: [['{LEAD}', 'The guards first. Nobody needs to hurt you.'], ['c2_doorman', 'Kind. Doesn’t open the door.'], ['{PARTNER}', 'Then we keep it quick.']],
+        balanced: [['{LEAD}', '{slow}Let the old folks in, Kaneda.{/slow}{p} That’s all.'], ['c2_doorman', '{quiet}…I want to.{/quiet}{p=500} Gōda pays me not to.'], ['{PARTNER}', 'Then we’ll talk to Gōda. After this.']] } };
+  } } catch (eB) {}
   /* ================= the street layout (planned four-corner layout, user-approved) =================
    * bathhouse door: Fox Mart slot by the station (330,880). Herbalist: the old Kitsune-no-Yu building (380,2640).
    * Fox Mart: the old Kampo building (4470), no interior. Facades are painted in-engine once into small canvases. */
@@ -37949,21 +38103,9 @@ function camPan(to, o, done) {
     var own = npc('nq_udon', 960, 3306, Math.PI / 2), r = W.ryo, a = W.aoi;
     try { c2WalkAll([[r, 930, 3372, 140], [a, 990, 3378, 140]], go); } catch (e1) { go(); }
     function go() { c2Face(r, own.x, own.y); c2Face(a, own.x, own.y); shutterUp();
-      later(900, function () { lockIn(false); talk([
-        ['nq_udon', 'They\u2019re gone? Three nights those boys stood on my flower bed.'],
-        ['aoi', 'They won\u2019t be back on this corner.'],
-        ['nq_udon', 'Then the shutter stays up. Kitsune Udon is open.'],
-        ['nq_udon', 'Nails\u2019 kids eat at Nails\u2019 price. Twenty off.'],
-        ['ryo', 'Twenty off\u2026 is that a lot?', { hype: 1 }],
-        ['nq_udon', 'It\u2019s noodles. Don\u2019t push it. Machi next door has the bay open again too.']
-      ], function () { sting('udon', function () { kill(own); flipText(); }); }); }); }
+      later(900, function () { lockIn(false); talk(VO.udon, function () { sting('udon', function () { kill(own); flipText(); }); }); }); }
   }
-  function flipText() { talk([
-      ['n13flip', '{quiet}(on the phone){/quiet} Corner\u2019s red. Nails saw.'],
-      ['n13flip', 'G\u014dda keeps pushing up the west side street. Two waves, then his heavies. Push back.'],
-      ['n13flip', 'I\u2019ll be at the south end when it counts.'],
-      ['aoi', 'The west side street. North end first.']
-    ], function () { setStg('west', 'w1'); qOpen('west'); crewSync(); try { qBanner('NEW JOB', Q.west.n, Q.west.giver); } catch (e) {} }); }
+  function flipText() { talk(VO.flip, function () { setStg('west', 'w1'); qOpen('west'); crewSync(); try { qBanner('NEW JOB', Q.west.n, Q.west.giver); } catch (e) {} }); }
   NQ.udonBeat = udonBeat;
   /* the fight hooks */
   if (typeof fight === 'function') { var fightN = fight; fight = function (grp, boss, ctx) { try { if (ctx && on()) { var ks = ctx.dgks || [ctx.dgk]; ks.forEach(function (k) { var m = /^(nq_[a-z]\d?)_\d+$/.exec(String(k || '')); if (m) ctx.nqk = ctx.nqk || m[1]; }); if (ctx.nqk) ev('world:nq:fight:' + ctx.nqk); } } catch (e) {} return fightN.apply(this, arguments); }; }
@@ -37972,7 +38114,7 @@ function camPan(to, o, done) {
   function crewsDown(p) { return [0, 1, 2].filter(function (i) { return crewDown(p + i); }).length; }
   function crewDown(k) { var s = S(), c = C2CREW.find(function (x) { return x.k === k; }), n = c ? c.ids.length : (k === 'nq_w2' ? 3 : 2); for (var i = 0; i < n; i++) if (!s.f[k + '_' + i]) return false; return true; }
   function paintFin() { if (NS().paintFin) return; NS().paintFin = 1; sv();
-      talk([[H, 'Hah\u2026 you think the wall matters?'], [H, 'G\u014dda\u2019s man at the door decides who gets in. Not me. Not you.'], ['ryo', 'Which door?'], [H, 'The bathhouse. By the station. Ask for Kaneda. He\u2019ll ask for your teeth.']], function () {
+      talk(VO.paintFin, function () {
         qClose('paint'); won().wall = 1; sv(); wallPaint(); sting('wall', function () { ginko('Q4', 'used-book'); qOpen('door'); try { qBanner('NEW JOB', Q.door.n, Q.door.giver); } catch (e) {} }); }); }
   function nqBack(win, c) {
     var s = S(); if (!win) { if (c.nqk === 'nq_d' || c.nqk === 'nq_x') whenFree(function () { beatReset(true); }); return; } (c.dgks || []).forEach(function (k) { if (/^nq_/.test(k)) s.f[k] = 1; }); sv();
@@ -37996,16 +38138,16 @@ function camPan(to, o, done) {
     var fx = r.x, fy = r.y - 240; CL.flip = npc('n13flip', fx, fy, Math.PI / 2); CL.pk = [npc(P, fx - 50, fy - 20, Math.PI / 2), npc(P, fx + 50, fy - 26, Math.PI / 2)];
     NPC.clash.forEach(function (h) { face(h, r.x, r.y); });
     var n = 0, fin = function () { if (++n < 3) return; [CL.flip].concat(CL.pk).forEach(function (q) { face(q, 1790, 2550); }); lockIn(false);
-      talk([['n13flip', 'Told you. South end, when it counts.'], [H, 'Nails sends schoolkids now?'], ['ryo', 'Nails sent us. We brought friends.', { hype: 1 }], ['aoi', 'Three on three. Nobody runs.']], function () {
+      talk(VO.clash, function () {
         var hs = NPC.clash; CL.f = 1; fight([H, H, H], false, { dg: 'c2', dgk: 'nq_x_0', dgks: ['nq_x_0', 'nq_x_1', 'nq_x_2'], nqk: 'nq_x', toughHp: typeof C2HP3 === 'number' ? C2HP3 : undefined, c2pos: hs.map(function (h) { return [H, h.x, h.y]; }) }); }); };
     move(CL.flip, [[r.x - 70, r.y + 10]], 210, fin); move(CL.pk[0], [[r.x - 120, r.y - 4]], 210, fin); move(CL.pk[1], [[r.x + 100, r.y + 4]], 210, fin);
   }
   function clashWon() {
     NPC.clash.forEach(function (h) { try { var le = lieEl(H, h.x, h.y, C2K[H]); if (le) { layer.appendChild(le); W.ints.push({ el: le }); setTimeout(function () { le.classList.add('fade'); }, 4000); setTimeout(function () { le.remove(); }, 5000); } } catch (e) {} kill(h); }); NPC.clash = [];
     var fl = CL && CL.flip;
-    talk([['n13flip', 'West street\u2019s ours. Nails hears it from me tonight.'], ['ryo', 'That\u2019s it? We just\u2026 stand here?']], function () {
+    talk(VO.clashWon, function () {
       setStg('west', 'done'); E().vend_x2st = 1; qClose('west'); sting('west', function () { ginko('Q2', 'dagashi'); later(1400, function () { toast('Lantern Alley: the West Street stall is open.'); });
-        talk([['n13flip', 'Next. Kitsune Hotel, by the station. G\u014dda\u2019s boys lean on the front door and the guests walk.'], ['n13flip', 'Make the water cold.'], ['aoi', 'Cold water. Got it.']], function () {
+        talk(VO.cold, function () {
           setStg('cold', 0); qOpen('cold'); crewSync(); try { qBanner('NEW JOB', Q.cold.n, Q.cold.giver); } catch (e) {}
           if (CL) [CL.flip].concat(CL.pk).forEach(function (q, i) { move(q, [[1790 + i * 30, 2700]], 120, function () { kill(q); }); }); CL = null; }); }); });
   }
@@ -38016,14 +38158,14 @@ function camPan(to, o, done) {
     var bg = window.c2DoorGuard && window.c2DoorGuard('sento'); if (bg && bg.el) bg.el.style.visibility = 'hidden';
     DM.k = npc('c2_doorman', 330, 884, Math.PI / 2); DM.g = [npc(H, 284, 906, Math.PI / 2), npc(H, 376, 906, Math.PI / 2)];
     move(DM.k, [[330, 918]], 90, function () { face(DM.k, r.x, r.y); lockIn(false);
-      talk([['c2_doorman', 'Members, family, and people G\u014dda owes money. You\u2019re none of those.'], ['ryo', 'We\u2019re the ones scrubbing his tags off the wall.'], ['c2_doorman', 'Then you\u2019re the reason I\u2019m working tonight.'], ['aoi', 'Kaneda. The door man.']], function () {
+      talk(VO.door, function () {
         DM.f = 1; fight(['c2_doorman', H, H], false, { dg: 'c2', dgk: 'nq_d_0', dgks: ['nq_d_0', 'nq_d_1', 'nq_d_2'], nqk: 'nq_d', c2pos: [['c2_doorman', DM.k.x, DM.k.y], [H, DM.g[0].x, DM.g[0].y], [H, DM.g[1].x, DM.g[1].y]] }); }); });
   }
   function doorWon() {
     if (!DM || !DM.k || !DM.k.el || !DM.k.el.isConnected) { if (DM) { kill(DM.k); (DM.g || []).forEach(kill); } DM = { k: npc('c2_doorman', 330, 930, Math.PI / 2), g: [] }; }
     var e = E(); e.baseOpen_bat = 1; e.guardGone_sento = 1; sv();
     DM.g.forEach(function (g) { kill(g); }); try { var bg = window.c2DoorGuard && window.c2DoorGuard('sento'); if (bg && bg.el) bg.el.remove(); if (window.c2GuardLeave) window.c2GuardLeave('sento', 'nq'); } catch (e1) {}
-    talk([['c2_doorman', '\u2026Fine. You knocked.'], ['c2_doorman', 'G\u014dda\u2019ll see you. Bathhouse. All the way to the back.'], ['aoi', 'The boiler room. That\u2019s where the seal is.']], function () {
+    talk(VO.doorWon, function () {
       move(DM.k, [[150, 930]], 100, function () { kill(DM.k); DM = null; }); qClose('door'); setStg('seal', 'open'); qOpen('seal'); try { qBanner('KITSUNE-NO-YU', 'The door is open.', Q.seal.n); } catch (e2) {} });
   }
   NQ.clashBeat = clashBeat; NQ.doorBeat = doorBeat;
@@ -38047,12 +38189,12 @@ function camPan(to, o, done) {
   /* the sento: closed to the Nails run until the door is won; Goda names Tetsu after the seal */
   if (typeof c2LmOpen === 'function') { var lmo0 = c2LmOpen; c2LmOpen = function (k) { if (nailsRun() && k === 'sento') return qDone('door') || !!E().seal_sento; return lmo0.apply(this, arguments); }; }
   if (typeof c2BossOut === 'function') { var bo0 = c2BossOut; c2BossOut = function (k) { if (nailsRun() && k === 'sento') { E().ckNamed = 1; NS().named = 1; sv();
-      return [['mb2_sento', 'Hnh\u2026 kids. Nails is hiding behind kids.'], ['mb2_sento', 'You want the man who moves my goods?'], ['mb2_sento', 'Tetsu. Back room of Club Kitsune.'], ['aoi', 'Club Kitsune. The door that wouldn\u2019t let us in.'], ['ryo', 'It will now.', { hype: 1 }]]; } return bo0.apply(this, arguments); }; }
+      return pv(VO.godaOut).concat(pv(VO.tetsu)); } return bo0.apply(this, arguments); }; }
   function sealTick() { var e = E(), n = NS();
     if (e.seal_sento && !n.sealDone && qOn('seal') && !busy()) { n.sealDone = 1; setStg('seal', 'done'); qClose('seal'); n.bigSting = 1; sv(); }
     if (n.bigSting && inTown() && !busy() && !document.getElementById('nqsting')) { n.bigSting = 0; sv();
       sting(['nw', 'kissa'], function () { ginko('Q6', 'gacha'); try { var C = root.FFF_13U; if (C && C.contestSync) C.contestSync(); } catch (eC) {}
-        talk([['aoi', 'The whole station quarter. And Gekko\u2019s block.'], ['ryo', 'Nails\u2019 red, all the way to the Kissa.'], ['aoi', 'Gekko will want to talk. And the bathhouse counter\u2019s open now.']]); }); } }
+        talk(VO.bigSting); }); } }
   /* the frame: proximity beats (cheap distance checks) */
   function flowTick() {
     if (!inTown() || busy() || document.getElementById('nqsting')) return; var r = W.ryo; if (!r) return;
@@ -38401,7 +38543,7 @@ function camPan(to, o, done) {
       try { if (nails) { var d = document.getElementById('wdlg'); if (d) { var tw = d.querySelector('.tw'); if (tw && !tw.querySelector('.nqnpl')) tw.insertAdjacentHTML('beforeend', '<p class="nqnpl">' + NP + ' \u00b7 20% off on Nails\u2019 turf</p>'); d.querySelectorAll('button').forEach(function (b) { root.GK_MENU.forEach(function (it) { var s0 = '\u00b7 \u00a5' + it.cost; if (b.textContent.indexOf(it.n) >= 0 && b.textContent.indexOf(s0) >= 0 && b.innerHTML.indexOf('<s>') < 0) b.innerHTML = b.innerHTML.replace(s0, '\u00b7 <s>\u00a5' + it.base0 + '</s> \u00a5' + it.cost); }); }); } } } catch (e) {} return r; }; }
   /* the hotel desk */
   function deskTalk() { var n = NS();
-    if (qOn('cold') && (stg('cold') | 0) >= 3) { talk([['nq_clerk', 'You\u2019re the two who cleared the door. The guests told me.'], ['nq_clerk', 'Kanda. Front desk, nine years. G\u014dda\u2019s boys were here every night this month.'], ['aoi', 'Where do they go when they\u2019re not here?'], ['nq_clerk', 'They tag the west wall every night. Right across the plaza. Like they own it.'], ['ryo', 'Then we take the wall back.', { hype: 1 }], ['nq_clerk', 'The couch is yours whenever you need it. Lobby\u2019s open to you two.']],
+    if (qOn('cold') && (stg('cold') | 0) >= 3) { talk(VO.clerk,
       function () { qClose('cold'); sting('hotel', function () { ginko('Q3', 'drugstore'); setStg('paint', 0); qOpen('paint'); crewSync(); try { qBanner('NEW JOB', Q.paint.n, Q.paint.giver); } catch (e) {} }); }); return; }
     talk([['nq_clerk', ['Lobby\u2019s yours. Sit a while.', 'Quiet night. Thanks to you.', 'The west wall looks better pink, I\u2019ll say that.'][((n.desk = (n.desk | 0) + 1)) % 3]]]); }
   /* actions + tags + sig */
@@ -38555,12 +38697,9 @@ function camPan(to, o, done) {
   NQ.loreLook = loreLook; NQ.sentoShow = sentoShow;
   /* the boiler-room meeting knows what you found on the way */
   (function () { if (typeof C2SC !== 'object') return; var A0 = C2SC.lm_sento, B0 = C2SC.lm_sento_out;
-    var A1 = [['mb2_sento', '{slow}Coal chute. Nobody\u2019s come down that since my father.{/slow}'], ['ryo', 'We saw the banzuke. The apron. The letters on the altar.'], ['mb2_sento', 'Then you read my mail. Kids today.'],
-      ['aoi', 'You locked them out because the boiler could blow. And you took the gray coats\u2019 money for a new one.'], ['mb2_sento', 'Parts never come. The crates do. The Hustlers collect. Every winter, \u201cnext winter.\u201d'],
-      ['ryo', 'Tome-baa says the miso\u2019s gone cold too.'], ['mb2_sento', '\u2026{p=500}{slow}The seal keeps the fire lit, boy.{/slow}{p=600} Break it and this alley has no bath at all.', { cam: 'bars+push', z: 1.6, ms: 2400 }], ['mb2_sento', 'An \u014czeki doesn\u2019t step out of the ring. Come.']];
-    var B1 = [['mb2_sento', '\u2026{p=600}{slow}Thirty years since anyone put me on the clay.{/slow}', { cam: 'bars+pull', z: 1.35, ms: 3600 }], ['mb2_sento', 'Go on. Open it. Let the old folks in. I\u2019ll keep the fire the honest way.'], ['aoi', 'Then the gray coats lose their basement.'], ['ryo', 'Hot bath\u2019s on the alley tonight. Not on the gray coats.']];
-    try { Object.defineProperty(C2SC, 'lm_sento', { configurable: true, get: function () { return nailsRun() ? A1 : A0; }, set: function (v) { A0 = v; } });
-      Object.defineProperty(C2SC, 'lm_sento_out', { configurable: true, get: function () { return nailsRun() ? B1 : B0; }, set: function (v) { B0 = v; } }); } catch (e) {} })();
+    var A1 = VO.goda, B1 = VO.godaOut;
+    try { Object.defineProperty(C2SC, 'lm_sento', { configurable: true, get: function () { return nailsRun() ? pv(A1) : A0; }, set: function (v) { A0 = v; } });
+      Object.defineProperty(C2SC, 'lm_sento_out', { configurable: true, get: function () { return nailsRun() ? pv(B1) : B0; }, set: function (v) { B0 = v; } }); } catch (e) {} })();
   /* ================= Kitsune-no-Yu, the back of the house: two more wings so the walk to Gōda is a real dungeon =================
    * Bath side (c2_sento): genkan -> changing room -> bath hall -> steam corridor. The boiler-room door is chained from inside.
    * Staff side (sentoU): laundry -> staff kitchen (Tome-baa, the key) -> storeroom -> stairwell (locked) -> upstairs.
@@ -38620,25 +38759,26 @@ function camPan(to, o, done) {
     if (k === 'sentoK' && !(s.f.nq_k_0 && s.f.nq_k_1)) { WN.npc.push(gd(H, 1720, 860, 'nq_k_0')); WN.npc.push(gd('c2_doorman', 1800, 870, 'nq_k_1')); } }
   function gd(id, x, y, key) { var g = npc(id, x, y, Math.PI / 2); g.nqGd = key; g.nqId = id; return g; }
   var WF = 0;
+  /* v6.5.61: the lore reactions speak in the locked path (narration line stays shared) */
+  Object.keys(VO.lore).forEach(function (k) { var L = LORE[k]; if (!L) return; var n0 = L.lines[0];
+    try { Object.defineProperty(L, 'lines', { configurable: true, get: function () { return [n0].concat(pv(VO.lore[k])); } }); } catch (e) {} });
   function wingFightTick() { var k = room(); if ((k !== 'sentoU' && k !== 'sentoK') || busy() || WF || !W.ryo) return; var r = W.ryo, s = S();
     var gs = WN.npc.filter(function (g) { return g.nqGd && !g.gone && !s.f[g.nqGd]; }); if (!gs.length) return;
     var near = gs.some(function (g) { return Math.hypot(g.x - r.x, g.y - r.y) < 230; }); if (!near) return; WF = 1; lockIn(true); gs.forEach(function (g) { face(g, r.x, r.y); });
-    var L = k === 'sentoU' ? [[H, 'Staff only, kids. The old lady stays in the kitchen.'], ['aoi', 'You\u2019re keeping an old woman locked in a kitchen?'], [H, 'Boss says she stays out of the cold. We say she stays out of the way.']]
-      : [['c2_doorman', 'You again. Upstairs is the boss\u2019s house.'], ['ryo', 'We\u2019ve seen the banzuke. We know whose house it is.'], ['c2_doorman', '\u2026Then you know he\u2019s not going to let you through. Neither am I.']];
+    var L = k === 'sentoU' ? pv(VO.guardU)
+      : pv(VO.guardK);
     talk(L, function () { lockIn(false); var ids = gs.map(function (g) { return g.nqId; }), keys = gs.map(function (g) { return g.nqGd; }), nk = k === 'sentoU' ? 'nq_u' : 'nq_k';
       fight(ids, false, { dg: 'c2', dgk: keys[0], dgks: keys, nqk: nk, c2pos: gs.map(function (g) { return [g.nqId, g.x, g.y]; }) }); setTimeout(function () { WF = 0; }, 1500); }); }
   NQ.wingFightTick = wingFightTick;
   /* after a won wing fight (nqBack calls wingWon) */
   function wingWon(k) { WN.npc.forEach(function (g) { if (g.nqGd && S().f[g.nqGd]) kill(g); });
     if (k === 'nq_u') say([['aoi', 'Kitchen\u2019s clear. Somebody\u2019s behind the noren.']]);
-    if (k === 'nq_k') talk([['c2_doorman', '\u2026Boss carried this whole alley on his back once. On TV. You were babies.'], ['c2_doorman', 'He\u2019s not a bad man. He\u2019s a tired one.'], ['aoi', 'Then let\u2019s see him rest.']]); }
+    if (k === 'nq_k') talk(VO.guardKWon); }
   NQ.wingWon = wingWon;
   function tomeTalk() { var w = E().nqW = E().nqW || {}, s = S();
     if (!(s.f.nq_u_0 && s.f.nq_u_1)) { talk([['nq_tome', 'Not now, dears. Not with those two at the door.']]); return; }
     if (w.uKey) { talk([['nq_tome', ['Go on up. Mind the third stair.', 'Tell him Tome says the miso\u2019s gone cold too.', 'He was such a big baby. Cried at every bout he won.'][((w.tome = (w.tome | 0) + 1)) % 3]]]); return; }
-    talk([['nq_tome', 'Oh\u2026 you beat them? Good. Sit, sit. I sat that counter for fifty years.'], ['nq_tome', 'You want Dai-chan. G\u014dda. I wiped his nose when he was this high.'],
-      ['nq_tome', 'He went off to Tokyo, to the stable. Came back an \u014czeki. On television. The whole alley cried.'], ['nq_tome', 'Then his knee went, and his father went, the same winter. He came home and picked up the shovel.'],
-      ['ryo', 'Why did he lock everyone out?'], ['nq_tome', 'Ask him. He won\u2019t tell me. He only says, \u201cnot this winter, Tome.\u201d Every night.'], ['nq_tome', 'Here. The stair key. His room is upstairs. Be gentle with his things.'], ['aoi', 'We will.']],
+    talk(VO.tome,
       function () { w.uKey = 1; sv(); try { sfx('pickup'); } catch (e) {} toast('Stair key: the staff stairwell is open.'); }); }
   /* moving between the wings */
   function goWing(k, at) { if (typeof intFade === 'function') intFade(function () { c2Go(k, at); }); else c2Go(k, at); }
