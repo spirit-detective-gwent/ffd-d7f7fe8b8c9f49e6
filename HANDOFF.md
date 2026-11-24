@@ -11,14 +11,57 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
-### 2026-11-23 — executor (Grok Bot) — v6.5.59 (local branch v6559-closeup, NOT pushed, NOT published)
-- Combo close-up camera ("base" from the prototype) on every Ryo/Aoi/enemy double and triple: 2x push-in on the contact point, fighters redrawn at 2x, HUD blur/dim/vignette, backdrop push-in, per-hit burst + white flash + hurt frame + knock-back, 95 ms freeze 34 ms after each hit, unblurred x1/x2/x3 counter. Code: `cuIn/cuOut/cuBeat/cuDmg` before `comboAnim`; hooks in `comboAnim`, `clashAnim` (cards with 2-3 hits), `chainAnim` (shared camera); `drawFigs` (CU_Z resolution + `pw` white tint); `sparks` follows the camera.
-- Setting `ST.set.cam` ('on'/'off', default on, off by default when the device asks for reduced motion). Battle-menu cycle button `#setCam` beside Screen shake; Settings > Display switch; per-save + kept across new games.
-- Phone portrait only (skipped in pc-arena and landscape), skipped under fast-forward (`ST.ff`). Signature cut-ins, double moves, Energy and Guard are untouched. Cards with 4-5 hits are not zoomed.
-- No A/B/C extras, no music dip.
-- Aoi swing fix (commit 0f60f3b): each hit of an Aoi double/triple plays its own ready/cut/follow-through cells from her existing board sheets (`SWING_AOI`, `aoiSwing`, `clip.cells` + `clip.snap` support in `drawBoard`/`drawFigs`); close-up bursts and sparks sit behind her sprite during the camera. Flurry beats now follow the clip's own slash cues.
-- Tested: KO right after a close-up combo cleans up (no freeze, no overlays, result screen shows); overworld loads, no console errors.
-- Half-done / not decided: Energy and Guard stacking beats (recommendation only, not built).
+### 2026-11-23 — executor (Grok Bot) — v6.5.59 (final commit: see "Published" line) — LIVE after Ernest's OK
+Versions: `window.FFF_BUILD="v6559"`, title `.vtag` "v6.5.59", `#ver` text "v6.5.59" (bumped in b34c591, checked consistent before publish).
+Everything below is approved by Ernest and published in one push on top of 70dbe47 (v6.5.58 base).
+What shipped:
+- BASE close-up camera on every Ryo/Aoi/enemy double and triple: 2x push-in, fighters redrawn hi-res at 2x, HUD blur/dim/vignette, backdrop parallax push-in, per-hit burst, hurt flinch/knock-back, 95 ms freeze, unblurred x1/x2/x3 counter. Code: `cuIn/cuOut/cuBeat/cuDmg` before `comboAnim`; hooks in `comboAnim`, `clashAnim`, `chainAnim`; `drawFigs`.
+- `ST.set.cam` ('on'/'off', default on, off for reduced motion, skipped on fast-forward `ST.ff`); switch in Settings > Display and the battle-menu button `#setCam`; per-save, kept across new games. Phone portrait only.
+- Aoi per-hit swings (ready/cut/follow-through cells, `SWING_AOI`, `aoiSwing`, `clip.cells`/`clip.snap`) with cyan blade trail, 0.20 s gaps.
+- Ryo 4- and 6-hit cards (Kazan Rush, Hundred-Fist Barrage): one beat, burst and flinch per hit.
+- Energy and Guard stacks: flare/meter step per Energy card, shield-ring stamp per Guard card (no zoom).
+- Signature banners: names word by word (stamp, brush stroke), final blow in slow motion (last 0.30 s at half speed, ~1.2 s zoom, freeze, music dip).
+- JoJo-style rushes via the rush director: Hundred Fist Barrage, Hundred Petal Cut, Spring Tide (Ryo rush, stagger beat, Aoi follow-up, slow-mo finish; split-screen dropped for Spring Tide only).
+- Five-Step Cut: camera beat per cut (x1-x5 counter), then slow-mo final blow.
+- Detention Slip: spirit-gun camera (fingertip close-ups, charge glow, bounce to the slip, pull-out to the blast).
+- Partner doubles: two-color word-by-word names (Ryo fire orange, Aoi cyan) and the showpiece (tag-in camera, split-screen beat, slow-mo final blow, fire+cyan burst) for Burn the Line and Final Bell.
+- Final-hit red hurt pose: target holds its existing hurt pose with a red flash through the slow-mo zoom and freeze, then recovers/KOs normally.
+- Enemy close-up gate (`cuFor`): story.boss, mb_*, mb2_*, plus enforcer, chinpira1, c2_boss, hall_mon, c3_boss. Regular enemies and mb3_* excluded; own side always.
+- Fix: enemy doubles/triples drew Aoi's swing frames and cyan trail (Aoi-only swing was keyed on "not Ryo"); enemies now attack with their own sprite (cb730b0). Chapter 1 library/arts/cafeteria bosses (Mizuno, Mai Kurosawa, Kurata) ship as-is with the lunge.
+Commits (oldest first):
+- `446be6b` add a Combo close-up camera On/Off setting beside Screen shake (default On, Off when the device asks for reduced motion)
+- `7e319a4` add the close-up camera (push-in, per-hit burst, white flash, hurt frame, knock-back, 95 ms freeze) to same-card doubles and triples
+- `50be5db` give multi-hit single cards, partner chains and enemy 2-3 hit strings the same close-up
+- `b34c591` bump the version (FFF_BUILD and the 3 visible version strings)
+- `9305678` add the Combo close-up camera switch to Settings > Display (saved and kept across new games)
+- `fe090d1` handoff log entry (local, not published)
+- `0f60f3b` Aoi swings once per hit on doubles and triples (a re-sequenced cut pose per hit, her burst behind her sword)
+- `2cd38ef` handoff entry covers the Aoi swing fix
+- `a11fb19` stacked Energy cards flare and step the Spirit meter per card; stacked Guard cards stamp a shield ring per card (no zoom)
+- `b9d4032` signature specials: names come in word by word (stamp, brush stroke, thud per word, about 0.4 s) and the final blow gets a 2.4x close-up with a 200 ms freeze, flash and a music dip (in-engine field finishers only)
+- `076bb3c` Aoi per-hit strikes, 0.20s gaps, sword trail, retimed combo audio
+- `f95c717` enemy close-up is boss-only (cuFor: story.boss; your own side always); regular enemies keep the normal animation
+- `75271de` 4-6 hit cards (Kazan Rush 4, Hundred-Fist Barrage 6) get one beat, burst and flinch per hit inside the same clip window
+- `36289c7` fix signature name word gap (spacer class collided with the overworld .wsp sprite class)
+- `6a76de4` signature final blow: slow-motion approach (last 0.30 s of the lead-in at half speed) so the 2.4x push-in runs about 1.2 s with the freeze at its peak; music dip covers it; audio cues after the window move out with it
+- `2d5789e` Chapter 1 and 2 mini-bosses (mb_*, mb2_*) get the enemy close-up like bosses; regular enemies and Chapter 3 harbor minis stay excluded
+- `94e0716` partner double names come in word by word, split between Ryo (fire orange) and Aoi (cyan)
+- `9c4b05f` partner doubles showpiece: tag-in camera (push on one, whip to the other), split-screen beat, slow-motion final blow with a 280 ms freeze and music dip, fire + cyan burst (respects cam setting / reduced motion / fast-forward)
+- `395d82b` close-up gate also covers the named story fighters that are not flagged mini: Hall Monitor Saeki, Ban Shigure, Punk Tetsu, Kagero, Preceptor Hakuen
+- `b0a8ed2` rush director (speed ramp, per-punch hitstop, tight camera, warped sound clock) + Ryo's Hundred Fist Barrage: every punch felt, then the slow-mo final blow
+- `cc49496` Aoi's Hundred Petal Cut: tight blade rush, every cut felt, then the slow-mo final blow
+- `b68dff0` Aoi's Five-Step Cut: a camera beat per cut (push/shift, trail, flinch, short freeze, x1-x5 counter), then the slow-mo final blow
+- `f9785ff` Ryo's Detention Slip: Spirit Gun camera (fingertip close-ups, charge glow, bounce to the slip, pull-out to the blast, slow-mo and a long freeze)
+- `9680a11` fix the partner-double hit counter (it used the finisher module's screen scale, which the doubles module does not have)
+- `180e131` Spring Tide: Ryo's JoJo-style rush (speed ramp, per-punch hitstop/flinch/echo), a stagger beat, then Aoi's 150 felt cuts and the slow-mo final blow; split-screen dropped for this double only
+- `b6d4809` final hit of every signature/double: the target holds its existing hurt pose and red hit-flash through the slow-mo zoom and the freeze (softer warm flash while held), then recovers/KOs normally
+- `cb730b0` fix enemy doubles/triples drawing Aoi's swing frames and cyan blade trail (the Aoi-only swing was keyed on 'not Ryo'); enemies now attack with their own sprite
+Open issues:
+- Enemies have no attack-pose art (battle sheets only have idle/walk/run/hurt/kneel/down). Ernest chose to skip drawing them (2026-11-23); they use the lunge.
+- No boss or mini-boss has a signature special in the game (Gouki's big move is Disciplinary Barrage, already close-up).
+- Harmless `kfocus` marker left in the rush/spirit-gun camera code.
+- A hover tooltip on the double-move button seen in recordings is the browser's, already in the game, not on touch.
+New rules (Ernest, 2026-11-23): no push until all moves are done and pass; then one push plus a HANDOFF entry; publish only after Ernest's OK.
 
 ### 2026-11-23 — main assistant — v6.5.58 (commit 35573d5) — LIVE
 State of the game at handoff start.
