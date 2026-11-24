@@ -11,7 +11,7 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
-### 2026-11-23 — executor (Grok Bot) — v6.5.59 (final commit: see "Published" line) — LIVE after Ernest's OK
+### 2026-11-23 — executor (Grok Bot) — v6.5.59 (commit b0627a2) — LIVE after Ernest's OK
 Versions: `window.FFF_BUILD="v6559"`, title `.vtag` "v6.5.59", `#ver` text "v6.5.59" (bumped in b34c591, checked consistent before publish).
 Everything below is approved by Ernest and published in one push on top of 70dbe47 (v6.5.58 base).
 What shipped:
