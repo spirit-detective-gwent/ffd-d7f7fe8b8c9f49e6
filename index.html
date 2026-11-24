@@ -7983,13 +7983,13 @@ function comboAnim(si, n, hits) {
   var cx = hz ? d.x - dir * d.w * 0.42 : (a.x + d.x) / 2, cy = hz ? d.y : d.y - dir * d.h * 0.42, col = (si === 0 ? ST.me : ST.foe) === 'ryo' ? '#ffb040' : '#7fefff';
   var rush = n >= 2 && !!body.animate, base = rush ? travel : 0, gap = T.gap, t0 = (rush ? T.dash : T.first) / sp, anims = [], timers = [], ipcs = [], landed = 0, t00 = nowG();
   ST.ct = []; function mark(k) { ST.ct.push({ k: k, t: Math.round(nowG() - t00), a: AU.now() }); ev('combo:' + k + ':' + si); }
-  if (!ryo) STRIKE_AOI.forEach(function (q) { CI.sheet(q[0]); }); /* v6.5.59 */ att.classList.add('lunge'); mark(rush ? 'rush' : 'inplace'); var cu = cuFor(si) ? cuIn(a, d, dir, hz, n === 3 ? 'TRIPLE COMBO' : 'DOUBLE COMBO') : null /* v6.5.59 */; if (ryo) fistOnFig(fig, 2, si); // v4.33: double / triple = both fists burn
+  if (chOfSide(si) === 'aoi') STRIKE_AOI.forEach(function (q) { CI.sheet(q[0]); }); /* v6.5.59: Aoi's own swing frames, only for Aoi (enemies keep their own card clips) */ att.classList.add('lunge'); mark(rush ? 'rush' : 'inplace'); var cu = cuFor(si) ? cuIn(a, d, dir, hz, n === 3 ? 'TRIPLE COMBO' : 'DOUBLE COMBO') : null /* v6.5.59 */; if (ryo) fistOnFig(fig, 2, si); // v4.33: double / triple = both fists burn
   if (ryo) { ST.cs = { k: ck, at: AU.now() + t0, off: COMBO_HIT0[ck] || 0, gap: gap }; AU.play(ck, { gain: COMBO_GAIN_RYO, delay: t0, off: COMBO_HIT0[ck] || 0 }); } else if (COMBO_GAIN_AOI[ck]) AU.play(ck, { gain: COMBO_GAIN_AOI[ck], delay: Math.max(0, t0 - COMBO_LEAD_AOI) }); else AU.play(ck, { gain: 0.9, delay: t0 });
   if (rush && !ST.ff) anims.push(body.animate([{ transform: 'none' }, { transform: TRA() + '(' + (-dir * 6) + 'px)', offset: 0.25 }, { transform: TRA() + '(' + dir * base + 'px)' }], { duration: t0 * 1000, easing: 'cubic-bezier(.45,0,.85,.55)', fill: 'forwards' }));
   function punch(i) { // the jab out from wherever the body is (home for a double, the contact point for a triple) and back
     var h = hits[i]; ev('anim:start:' + h.part.card.id);
     var clip = CI.boardClip(h.part.card.clip), lead = Math.min(gap * 0.9, 0.12), mul = clip ? Math.max(1, clip.impact / (lead * sp)) : 1;
-    if (!ST.ff) { if (!ryo && aoiSwing(fig, h.part.card, i, 0.05, gap)) { aoiTrail(cx, cy, i); /* v6.5.59 */ } else if (clip && CI.ok(CI.sheet(h.part.card.clip))) figAnim(fig, h.part.card, null, mul, true); // no fallback whoosh/hit: the combo sound is the hits
+    if (!ST.ff) { if (chOfSide(si) === 'aoi' && aoiSwing(fig, h.part.card, i, 0.05, gap)) { aoiTrail(cx, cy, i); /* v6.5.59 */ } else if (clip && CI.ok(CI.sheet(h.part.card.clip))) figAnim(fig, h.part.card, null, mul, true); // no fallback whoosh/hit: the combo sound is the hits
       if (body.animate) anims.push(body.animate([{ transform: TRA() + '(' + dir * base + 'px) ' }, { transform: TRA() + '(' + dir * (base + jab) + 'px)', offset: 0.45 }, { transform: TRA() + '(' + dir * base + 'px) ' }], { duration: gap * 1000 * 0.95, easing: 'ease-out', fill: 'forwards' })); }
   }
   function land(i) {
