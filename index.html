@@ -38778,6 +38778,106 @@ var GINKO = (function () {
     var sp0 = PAINT.sento; PAINT.sento = function (g) { sp0(g); try { dressSento(g); } catch (eD) { ev('world:nq:err:dress:sento:' + (eD && eD.message)); } };
     [[210, 1225, 252, 1275], [250, 1062, 470, 1108], [520, 950, 580, 1000], [935, 975, 995, 1020], [1270, 960, 1310, 1010], [1100, 1286, 1260, 1340], [2070, 1230, 2180, 1300], [1650, 1130, 1745, 1180], [1095, 755, 1150, 800], [825, 735, 862, 795], [690, 495, 750, 545], [100, 425, 170, 562], [536, 690, 612, 790], [96, 120, 172, 310]].forEach(function (b) { S_BLOCK.push(b); });
   })();
+  /* ---- the staff side and upstairs ---- */
+  (function () { var H = DZ.h;
+    function dressU(g) { var R = H.rng(91);
+      /* U4 · stairwell: the cracked third stair, the wall phone, fuse box and wires, lost-and-found, tied newspapers */
+      H.wear(g, 90, 0, 1180, 300, 26, 61, '70,50,30'); H.wear(g, 90, 300, 1180, 820, 40, 62);
+      g.strokeStyle = 'rgba(20,14,10,.8)'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(130, 282); g.lineTo(160, 292); g.lineTo(178, 284); g.lineTo(210, 296); g.lineTo(240, 286); g.stroke(); H.tape(g, 230, 283, -0.3); H.tape(g, 120, 290, 0.4); tx(g, '!', 186, 268, 14, '#c0392b', 900);
+      g.strokeStyle = '#5a3a26'; g.lineWidth = 6; g.beginPath(); g.moveTo(276, 340); g.lineTo(276, 150); g.stroke(); g.lineWidth = 3; g.strokeStyle = INK; g.strokeRect(272, 150, 8, 190);
+      for (var st = 0; st < 7; st++) { g.fillStyle = 'rgba(255,255,255,.08)'; g.fillRect(150, 334 - st * 26, 70, 6); }
+      H.geta(g, 170, 404, 0.1); H.geta(g, 220, 400, -0.2);
+      H.paper(g, 300, 262, 54, 30, -0.05, 3, '#f4d9a0'); jp(g, '\u79c1\u5ba4', 300, 262, 11, '#7b2a22');
+      box(g, 620, 110, 46, 70, '#2a2b31', 6, 2.5); g.fillStyle = '#9aa1a8'; g.beginPath(); g.arc(643, 150, 14, 0, 7); g.fill(); g.fillStyle = '#2a2b31'; g.beginPath(); g.arc(643, 150, 5, 0, 7); g.fill(); box(g, 626, 96, 34, 14, '#2a2b31', 6, 2); g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(643, 180); g.quadraticCurveTo(660, 240, 630, 250); g.stroke(); H.paper(g, 700, 160, 40, 46, 0.1, 5);
+      box(g, 760, 70, 70, 90, '#8a8d94', 3, 2.5); box(g, 770, 82, 50, 66, '#5a5e66', 2, 1.5); for (var fz = 0; fz < 4; fz++) { g.fillStyle = fz === 2 ? '#c0392b' : '#f4efe2'; g.fillRect(776 + fz * 11, 96, 7, 16); } g.strokeStyle = '#1b1820'; g.lineWidth = 2; [[830, 90, 1180, 40], [830, 110, 1180, 70], [795, 70, 795, 0]].forEach(function (l) { g.beginPath(); g.moveTo(l[0], l[1]); g.quadraticCurveTo((l[0] + l[2]) / 2, Math.max(l[1], l[3]) + 30, l[2], l[3]); g.stroke(); });
+      g.strokeStyle = '#a27c56'; g.lineWidth = 4; g.beginPath(); g.moveTo(560, 300); g.lineTo(580, 190); g.stroke(); g.fillStyle = '#c9a06a'; g.beginPath(); g.moveTo(568, 300); g.lineTo(600, 300); g.lineTo(592, 262); g.closePath(); g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); box(g, 596, 280, 30, 20, '#3a6fa0', 3, 2);
+      H.sh(g, 265, 725, 75, 46); for (var np = 0; np < 4; np++) box(g, 266, 760 - np * 10, 72, 10, np % 2 ? '#d8d2c2' : '#e6e0d0', 2, 1.5); g.strokeStyle = '#a27c56'; g.lineWidth = 2; g.beginPath(); g.moveTo(302, 726); g.lineTo(302, 772); g.moveTo(266, 748); g.lineTo(338, 748); g.stroke();
+      H.cbox(g, 850, 730, 100, 58, '\u5fd8'); tx(g, 'LOST & FOUND', 922, 740, 7, '#5a3a26', 900); box(g, 870, 716, 26, 18, '#c0392b', 6, 2); H.bottle(g, 920, 736, '#3a6fa0', 18);
+      H.sh(g, 1080, 670, 50, 60); box(g, 1082, 680, 46, 50, '#6e4428', 4); ['#2a211c', '#7b2a22'].forEach(function (c, i) { g.strokeStyle = c; g.lineWidth = 5; g.beginPath(); g.moveTo(1094 + i * 16, 686); g.lineTo(1088 + i * 22, 640); g.stroke(); });
+      H.bulb(g, 640, 430, 70); H.pool(g, 640, 540, 300, 140, 'rgba(255,205,140,.14)'); H.vig(g, 90, 300, 1180, 820, 0.42);
+      /* U3 · storeroom: the gray coats' pallets, empty PARTS boxes, a safe, a barred window, tire marks */
+      H.wear(g, 1220, 0, 2310, 300, 30, 71, '20,20,24'); H.wear(g, 1220, 300, 2310, 820, 44, 72, '20,20,24');
+      g.save(); g.font = '900 120px ' + JPF; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(40,42,48,.45)'; g.fillText('\u7070', 2050, 150); g.restore(); for (var dp = 0; dp < 5; dp++) { g.fillStyle = 'rgba(40,42,48,.35)'; g.fillRect(2005 + dp * 22, 200, 4, 30 + (dp % 3) * 22); }
+      box(g, 1460, 40, 130, 80, '#2a2b31', 3, 3); g.fillStyle = '#3a4a78'; g.fillRect(1468, 48, 114, 64); g.fillStyle = '#9aa1a8'; for (var br2 = 1478; br2 < 1590; br2 += 22) g.fillRect(br2, 48, 5, 64); H.beams(g, [1440], 110, 700, 0.06);
+      box(g, 1780, 150, 60, 80, '#a27c56', 3, 2); H.paper(g, 1810, 196, 48, 60, 0, 8); g.fillStyle = '#9aa1a8'; g.fillRect(1798, 146, 24, 10);
+      for (var pc = 0; pc < 2; pc++) for (var pr = 0; pr < 3; pr++) H.crate(g, 2150 + pc * 76, 470 - pr * 62, 72, 58);
+      box(g, 2146, 520, 156, 10, '#a27c56', 2, 2);
+      H.cbox(g, 1450, 700, 110, 60, '\u90e8\u54c1'); H.cbox(g, 1462, 652, 86, 50, '\u90e8\u54c1'); g.fillStyle = '#4a3a2a'; g.fillRect(1470, 655, 70, 10); tx(g, 'EMPTY', 1505, 690, 9, '#7b2a22', 900);
+      g.strokeStyle = INK; g.lineWidth = 4; g.beginPath(); g.moveTo(1410, 800); g.lineTo(1430, 730); g.moveTo(1430, 800); g.lineTo(1450, 730); g.stroke(); box(g, 1404, 792, 54, 10, '#5a5e66', 2, 2); g.strokeStyle = 'rgba(20,20,24,.25)'; g.lineWidth = 8; g.beginPath(); g.moveTo(1430, 810); g.bezierCurveTo(1600, 790, 1800, 700, 2100, 560); g.stroke();
+      H.sh(g, 2120, 600, 80, 100, 0.3); box(g, 2120, 600, 80, 100, '#26262b', 6, 3); g.fillStyle = '#c9a032'; g.beginPath(); g.arc(2160, 640, 12, 0, 7); g.fill(); g.strokeStyle = INK; g.lineWidth = 2; g.stroke(); g.fillRect(2186, 640, 6, 18);
+      H.ash(g, 1920, 556); box(g, 2060, 548, 30, 14, '#c0392b', 3, 1.5); H.bulb(g, 2000, 500, 80, 'rgba(255,220,160,.4)'); H.pool(g, 2000, 640, 220, 100, 'rgba(255,215,150,.16)');
+      g.strokeStyle = '#a27c56'; g.lineWidth = 4; for (var rc = 0; rc < 4; rc++) { g.beginPath(); g.ellipse(1310, 790, 30 - rc * 6, 12 - rc * 2.4, 0, 0, 7); g.stroke(); }
+      H.vig(g, 1220, 300, 2310, 820, 0.5);
+      /* U1 · laundry: detergent shelf, the names notice, overflowing baskets, an ironing board, puddles and lint, a cool tube light */
+      H.wear(g, 90, 900, 1180, 1340, 30, 81, '60,80,90');
+      box(g, 140, 846, 200, 8, '#7a5236', 2, 2); ['\u6d17\u5264', '\u6d17\u5264', '\u6f02\u767d'].forEach(function (t, i) { box(g, 150 + i * 62, 852 - 40, 50, 40, ['#f2c230', '#3a6fa0', '#efe6d2'][i], 3, 2); jp(g, t, 175 + i * 62, 832, 12, i === 1 ? '#f4efe2' : '#2a211c'); });
+      H.paper(g, 470, 866, 80, 50, 0.04, 6); jp(g, '\u304a\u540d\u524d', 470, 852, 10, '#2a3f7a'); H.clock(g, 1060, 866, 22, 2.6, 1.0);
+      H.sh(g, 360, 1050, 92, 70); g.fillStyle = '#c9a06a'; g.beginPath(); g.ellipse(405, 1090, 44, 26, 0, 0, 7); g.fill(); g.lineWidth = 2.5; g.strokeStyle = INK; g.stroke(); H.towels(g, 405, 1090, 4, ['#f6f3ec', '#e3edf2', '#f2c4cf', '#f6f3ec']); g.fillStyle = '#f6f3ec'; g.beginPath(); g.ellipse(440, 1110, 16, 6, 0.6, 0, 7); g.fill(); g.stroke();
+      g.strokeStyle = INK; g.lineWidth = 3; g.beginPath(); g.moveTo(960, 1110); g.lineTo(1000, 1076); g.moveTo(1060, 1110); g.lineTo(1020, 1076); g.stroke(); g.beginPath(); g.moveTo(940, 1060); g.lineTo(1060, 1060); g.quadraticCurveTo(1090, 1070, 1060, 1082); g.lineTo(940, 1082); g.closePath(); g.fillStyle = '#e3edf2'; g.fill(); g.lineWidth = 2.5; g.stroke(); box(g, 1026, 1050, 34, 18, '#c9ccd2', 6, 2); H.wisp(g, 1043, 1050, 40, 0.5);
+      H.puddle(g, 210, 1100, 70, 16); H.puddle(g, 700, 1300, 60, 12); g.fillStyle = 'rgba(200,200,210,.5)'; for (var lt2 = 0; lt2 < 18; lt2++) { g.beginPath(); g.arc(120 + R() * 700, 1080 + R() * 230, 2 + R() * 2, 0, 7); g.fill(); }
+      g.strokeStyle = '#9aa1a8'; g.lineWidth = 10; g.beginPath(); g.moveTo(330, 990); g.quadraticCurveTo(360, 920, 340, 900); g.stroke(); H.steam(g, 340, 905, 50, 0.25);
+      box(g, 500, 900, 220, 10, '#e9eef2', 4, 2); H.glow(g, 610, 905, 120, 'rgba(210,240,255,.3)'); H.pool(g, 610, 1100, 320, 140, 'rgba(200,235,255,.12)'); H.vig(g, 90, 900, 1180, 1340, 0.38);
+      /* U2 · staff kitchen: ladles on a rail, menu tags, a dish rack, the mint fridge, beer crates, a TV on a crate, the cold miso pot */
+      H.wear(g, 1220, 900, 2310, 1340, 46, 91);
+      g.strokeStyle = '#5a5e66'; g.lineWidth = 3; g.beginPath(); g.moveTo(1250, 850); g.lineTo(1600, 850); g.stroke(); for (var ld = 0; ld < 7; ld++) { var lx = 1270 + ld * 48; g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(lx, 850); g.lineTo(lx, 868 + (ld % 2) * 6); g.stroke(); if (ld % 3 === 0) { g.beginPath(); g.arc(lx, 880, 10, 0, 7); g.fillStyle = '#9aa1a8'; g.fill(); g.stroke(); } else { g.beginPath(); g.ellipse(lx, 878 + (ld % 2) * 6, 6, 9, 0, 0, 7); g.fillStyle = '#c9a06a'; g.fill(); g.stroke(); } }
+      ['\u5473\u564c\u6c41', '\u304a\u306b\u304e\u308a', '\u713c\u9b5a', '\u8336'].forEach(function (t, i) { box(g, 1650 + i * 44, 838, 36, 56, '#efe2c4', 2, 2); g.save(); g.translate(1668 + i * 44, 866); g.font = '900 11px ' + JPF; g.fillStyle = '#2a211c'; g.textAlign = 'center'; for (var c = 0; c < t.length; c++) g.fillText(t[c], 0, -18 + c * 12); g.restore(); });
+      H.cal(g, 1880, 866, '1996', 0); box(g, 2150, 846, 90, 16, '#c9a06a', 2, 2); box(g, 2176, 826, 38, 22, '#efe6d2', 3, 2); g.fillStyle = '#c0392b'; g.fillRect(2190, 826, 10, 22);
+      H.sh(g, 1640, 930, 140, 80); box(g, 1640, 930, 140, 80, '#9aa1a8', 4); for (var bw = 0; bw < 5; bw++) { g.beginPath(); g.ellipse(1660 + bw * 25, 950, 11, 16, 0.2, 0, 7); g.fillStyle = bw % 2 ? '#f2e8d6' : '#3a6fa0'; g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); }
+      H.sh(g, 2232, 920, 72, 140, 0.3); box(g, 2232, 920, 72, 140, '#9fd6c2', 10, 3); g.strokeStyle = INK; g.lineWidth = 2.5; g.beginPath(); g.moveTo(2232, 980); g.lineTo(2304, 980); g.stroke(); box(g, 2292, 944, 6, 26, '#efe6d2', 3, 1.5); box(g, 2292, 996, 6, 30, '#efe6d2', 3, 1.5); H.paper(g, 2262, 1010, 30, 26, 0.2, 3, '#f4d9a0');
+      box(g, 1250, 1240, 100, 90, '#e0b23a', 4, 3); g.strokeStyle = 'rgba(40,30,20,.5)'; g.lineWidth = 2; g.strokeRect(1260, 1250, 80, 70); for (var bt2 = 0; bt2 < 6; bt2++) { g.fillStyle = '#7a4a1a'; g.beginPath(); g.arc(1270 + (bt2 % 3) * 30, 1262 + ((bt2 / 3) | 0) * 30, 9, 0, 7); g.fill(); } box(g, 1260, 1218, 80, 26, '#e0b23a', 4, 2.5);
+      box(g, 2210, 1250, 90, 50, '#a27c56', 3); H.tv(g, 2255, 1250, 0.9);
+      g.save(); g.beginPath(); g.ellipse(1932, 1166, 20, 10, 0, 0, 7); g.fillStyle = '#5a3a26'; g.fill(); g.lineWidth = 2.5; g.strokeStyle = INK; g.stroke(); box(g, 1912, 1150, 40, 18, '#7a4a2a', 6, 2.5); box(g, 1924, 1144, 16, 8, '#5a3a26', 3, 2); g.restore(); H.paper(g, 1932, 1206, 26, 14, 0, 1); jp(g, '\u51b7', 1932, 1206, 9, '#3a6fa0');
+      H.zab(g, 1870, 1284, '#7b2a22'); H.zab(g, 2170, 1284, '#2a3f7a'); H.zab(g, 2020, 1300, '#7b2a22');
+      g.beginPath(); g.ellipse(1290, 950, 30, 14, 0, 0, 7); g.fillStyle = '#9aa1a8'; g.fill(); g.lineWidth = 2.5; g.strokeStyle = INK; g.stroke(); box(g, 1500, 924, 48, 36, '#efe6d2', 10, 2.5); g.fillStyle = '#c0392b'; g.fillRect(1512, 940, 24, 4);
+      H.can(g, 1420, 1260, '#c9ccd2', 1); H.can(g, 1460, 1300, '#e0b23a', 1); H.butt(g, 1500, 1280, R); H.cards(g, 1640, 1290, 9);
+      H.bulb(g, 1400, 1040, 50); H.pool(g, 1400, 1140, 260, 110, 'rgba(255,205,140,.12)'); H.vig(g, 1220, 900, 2310, 1340, 0.38);
+    }
+    function dressK(g) { var R = H.rng(101);
+      /* K4 · drying deck: the bathhouse chimney, neighbours' roofs and wires, the moon, a rooftop tank, an old bench, rain puddles */
+      g.fillStyle = '#121729'; [[90, 210, 160, 90], [250, 236, 120, 64], [370, 200, 110, 100], [820, 222, 140, 78], [1060, 196, 120, 104]].forEach(function (r) { g.fillRect(r[0], r[1], r[2], r[3]); }); g.fillStyle = '#ffd27a'; [[120, 240], [280, 260], [400, 232], [850, 250], [1090, 230]].forEach(function (p) { g.fillRect(p[0], p[1], 10, 12); });
+      g.fillStyle = '#f4efe2'; g.beginPath(); g.arc(300, 70, 26, 0, 7); g.fill(); H.glow(g, 300, 70, 110, 'rgba(220,230,255,.25)'); g.fillStyle = '#121729'; g.beginPath(); g.arc(312, 64, 22, 0, 7); g.fill();
+      g.strokeStyle = 'rgba(10,10,20,.7)'; g.lineWidth = 2; [[90, 120, 1180, 150], [90, 140, 1180, 180]].forEach(function (l) { g.beginPath(); g.moveTo(l[0], l[1]); g.quadraticCurveTo(635, l[3] + 40, l[2], l[3]); g.stroke(); });
+      box(g, 940, 0, 70, 250, '#7b3a2e', 2, 3); for (var cb = 0; cb < 250; cb += 16) { g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(940, cb, 70, 2); } g.save(); g.font = '900 22px ' + JPF; g.fillStyle = '#f4efe2'; g.textAlign = 'center'; '\u72d0\u306e\u6e6f'.split('').forEach(function (c, i) { g.fillText(c, 975, 60 + i * 30); }); g.restore(); [[990, -10, 70], [1040, -30, 60], [1100, -40, 50]].forEach(function (s) { H.steam(g, s[0], s[1] + 40, s[2], 0.22); });
+      H.wear(g, 90, 300, 1180, 820, 30, 111); H.puddle(g, 560, 740, 80, 18); H.puddle(g, 860, 560, 60, 14); H.puddle(g, 300, 600, 50, 12);
+      H.sh(g, 1000, 320, 160, 100, 0.3); box(g, 1000, 320, 160, 100, '#9aa1a8', 14, 3); g.strokeStyle = 'rgba(40,40,50,.4)'; g.lineWidth = 2; for (var tk = 0; tk < 4; tk++) { g.beginPath(); g.moveTo(1000, 340 + tk * 20); g.lineTo(1160, 340 + tk * 20); g.stroke(); } H.rust(g, 1040, 330, 80); jp(g, '\u6c34', 1080, 370, 20, '#3b3c43');
+      H.sh(g, 140, 740, 160, 40); box(g, 140, 740, 160, 22, '#8a6440', 3); box(g, 150, 760, 12, 20, '#5a3a26', 2, 2); box(g, 278, 760, 12, 20, '#5a3a26', 2, 2); H.can(g, 200, 744, '#e0b23a'); H.ash(g, 250, 750);
+      g.fillStyle = '#c9a06a'; g.beginPath(); g.ellipse(900, 760, 26, 14, 0, 0, 7); g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); for (var pg = 0; pg < 8; pg++) { g.fillStyle = ['#c0392b', '#3a6fa0', '#e0b23a'][pg % 3]; g.fillRect(884 + (pg % 4) * 9, 750 + ((pg / 4) | 0) * 8, 5, 8); }
+      [400, 560, 720, 880, 1040].forEach(function (x, i) { g.fillStyle = '#efe6d2'; g.fillRect(x, 456, 4, 10); g.fillRect(x + 40, 616, 4, 10); });
+      H.pool(g, 640, 340, 420, 120, 'rgba(255,190,110,.10)'); H.pool(g, 640, 600, 500, 200, 'rgba(150,170,230,.10)'); H.vig(g, 90, 300, 1180, 820, 0.42);
+      /* K3 · altar room: shoji, the tokonoma scroll, an andon lamp, offerings and incense, a cushion before his father */
+      H.shoji(g, 1240, 40, 340, 250); H.glow(g, 1410, 165, 160, 'rgba(200,210,255,.12)');
+      box(g, 1990, 30, 300, 270, '#4a3424', 3, 3); box(g, 2090, 46, 100, 220, '#efe6d2', 3, 2.5); g.fillStyle = '#5a3a26'; g.fillRect(2084, 42, 112, 8); g.fillRect(2084, 262, 112, 8); jp(g, '\u6e6f', 2140, 120, 44, '#2a211c'); jp(g, '\u5fc3', 2140, 190, 30, '#7b2a22');
+      H.sh(g, 2210, 320, 70, 70, 0.25); box(g, 2220, 360, 50, 40, '#3a5a3a', 8, 2.5); g.strokeStyle = '#3c5f2f'; g.lineWidth = 3; [[2230, 360, 2214, 320], [2245, 360, 2250, 310], [2258, 360, 2280, 330]].forEach(function (l) { g.beginPath(); g.moveTo(l[0], l[1]); g.lineTo(l[2], l[3]); g.stroke(); }); g.fillStyle = '#c0392b'; g.beginPath(); g.arc(2250, 312, 7, 0, 7); g.fill();
+      H.sh(g, 1272, 730, 56, 60, 0.25); box(g, 1272, 730, 56, 60, '#f4e2b0', 4, 3, '#5a3a26'); g.strokeStyle = '#5a3a26'; g.lineWidth = 2; g.beginPath(); g.moveTo(1300, 730); g.lineTo(1300, 790); g.moveTo(1272, 760); g.lineTo(1328, 760); g.stroke(); H.glow(g, 1300, 760, 170, 'rgba(255,200,120,.32)');
+      [[2168, 600], [2252, 600]].forEach(function (p) { g.fillStyle = '#f08a2a'; g.beginPath(); g.arc(p[0], p[1], 8, 0, 7); g.arc(p[0] + 12, p[1] + 2, 8, 0, 7); g.fill(); g.lineWidth = 1.5; g.strokeStyle = INK; g.stroke(); }); box(g, 2196, 728, 20, 14, '#c9a032', 6, 2); H.wisp(g, 2232, 718, 60, 0.45);
+      H.zab(g, 2060, 730, '#5a2a52'); H.wear(g, 1220, 300, 2310, 820, 16, 121, '90,70,30');
+      H.vig(g, 1220, 300, 2310, 820, 0.4);
+      /* K2 · trophy corridor: the red runner, hand-print boards, a trophy case, his shikona banner, a dead plant */
+      g.fillStyle = '#8f2a2a'; g.fillRect(1230, 1120, 1070, 80); g.strokeStyle = '#e0b23a'; g.lineWidth = 3; g.strokeRect(1236, 1126, 1058, 68); H.wear(g, 1230, 1120, 2300, 1200, 20, 131, '30,10,10');
+      for (var hp = 0; hp < 8; hp++) { var hx = 1270 + hp * 130; H.frame(g, hx, 836, 60, 56, function (x, y, w, h) { H.hand(g, x + w / 2, y + h / 2 + 2, 1.15); }); }
+      H.sh(g, 1300, 1270, 310, 66, 0.25); box(g, 1300, 1270, 310, 66, '#5a3a26', 4, 3); box(g, 1310, 1252, 290, 40, 'rgba(200,230,240,.35)', 4, 2); [[1340, '#e0b23a'], [1400, '#c9ccd2'], [1460, '#e0b23a'], [1520, '#b87333'], [1570, '#c9ccd2']].forEach(function (t) { box(g, t[0] - 10, 1256, 20, 28, t[1], 6, 2); box(g, t[0] - 14, 1282, 28, 8, '#2a211c', 2, 1.5); });
+      H.nobori(g, 2270, 930, 1180, '\u72d0\u5c71\u5927\u95a2', '#2a3f7a');
+      H.sh(g, 1680, 1280, 44, 40); box(g, 1680, 1290, 40, 36, '#a0582e', 4, 2.5); g.strokeStyle = '#6a5a3a'; g.lineWidth = 3; [[1690, 1290, 1676, 1250], [1700, 1290, 1706, 1244], [1710, 1290, 1730, 1262]].forEach(function (l) { g.beginPath(); g.moveTo(l[0], l[1]); g.lineTo(l[2], l[3]); g.stroke(); }); g.fillStyle = '#8a7a4a'; g.beginPath(); g.ellipse(1720, 1320, 8, 3, 0.4, 0, 7); g.fill();
+      g.fillStyle = 'rgba(220,220,230,.16)'; for (var ds = 0; ds < 4; ds++) g.fillRect(1260 + ds * 260, 936, 160, 6);
+      H.bulb(g, 1500, 1030, 40); H.bulb(g, 2000, 1030, 40); H.pool(g, 1500, 1150, 240, 90, 'rgba(255,205,140,.12)'); H.pool(g, 2000, 1150, 240, 90, 'rgba(255,205,140,.12)'); H.vig(g, 1220, 900, 2310, 1340, 0.4);
+      /* K1 · Gōda's room: his huge yukata on the wall, the TV, outsized geta, a knee brace and pain patches, iron training geta, sumo magazines */
+      g.strokeStyle = '#5a3a26'; g.lineWidth = 4; g.beginPath(); g.moveTo(436, 842); g.lineTo(624, 842); g.stroke(); g.beginPath(); g.moveTo(450, 846); g.lineTo(610, 846); g.lineTo(630, 900); g.lineTo(600, 1010); g.lineTo(460, 1010); g.lineTo(430, 900); g.closePath(); g.fillStyle = '#2a3f7a'; g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke(); g.strokeStyle = '#f4efe2'; g.lineWidth = 3; g.beginPath(); g.moveTo(500, 846); g.lineTo(530, 940); g.lineTo(560, 846); g.stroke(); g.fillStyle = 'rgba(244,239,226,.8)'; for (var fx = 0; fx < 5; fx++) { g.beginPath(); g.arc(470 + (fx % 3) * 50, 930 + ((fx / 3) | 0) * 40, 6, 0, 7); g.fill(); } box(g, 460, 960, 140, 14, '#e0b23a', 3, 2);
+      box(g, 622, 950, 80, 36, '#6e4428', 3); H.tv(g, 662, 950, 0.85);
+      H.geta(g, 500, 1300, 0.15, 1); H.geta(g, 380, 1240, -0.3, 1); box(g, 330, 1266, 40, 26, '#3b3c43', 4, 2.5); box(g, 380, 1286, 40, 26, '#3b3c43', 4, 2.5);
+      box(g, 440, 1060, 50, 26, '#efe6d2', 4, 2); jp(g, '\u6e7f\u5e03', 465, 1073, 10, '#c0392b'); g.fillStyle = '#26262b'; g.beginPath(); g.ellipse(520, 1090, 26, 12, 0.3, 0, 7); g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); g.strokeStyle = '#c9ccd2'; g.lineWidth = 2; g.beginPath(); g.moveTo(500, 1090); g.lineTo(540, 1090); g.stroke();
+      for (var mg = 0; mg < 5; mg++) box(g, 104 + (mg % 2) * 3, 1166 - mg * 9, 64, 10, ['#c0392b', '#f4efe2', '#2a3f7a', '#e0b23a', '#f4efe2'][mg], 2, 1.5); tx(g, '\u76f8\u64b2', 136, 1130, 9, '#c0392b', 900);
+      g.fillStyle = '#efe6d2'; g.beginPath(); g.ellipse(940, 1150, 18, 10, 0, 0, 7); g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); g.strokeStyle = '#5a3a26'; g.beginPath(); g.moveTo(924, 1140); g.lineTo(960, 1128); g.moveTo(926, 1146); g.lineTo(962, 1134); g.stroke();
+      H.wear(g, 90, 900, 1180, 1340, 22, 141, '90,70,30');
+      H.bulb(g, 640, 1060, 60); H.pool(g, 640, 1180, 280, 120, 'rgba(255,200,130,.14)'); H.vig(g, 90, 900, 1180, 1340, 0.52);
+    }
+    var pu0 = PAINT.sentoU, pk0 = PAINT.sentoK;
+    PAINT.sentoU = function (g) { pu0(g); try { dressU(g); } catch (eD) { ev('world:nq:err:dress:sentoU:' + (eD && eD.message)); } };
+    PAINT.sentoK = function (g) { pk0(g); try { dressK(g); } catch (eD) { ev('world:nq:err:dress:sentoK:' + (eD && eD.message)); } };
+    [[265, 725, 340, 775], [850, 715, 950, 790], [1080, 670, 1130, 730], [2140, 320, 2305, 532], [1450, 648, 1562, 762], [2120, 600, 2200, 700], [360, 1050, 452, 1120], [940, 1050, 1080, 1100], [1640, 930, 1780, 1010], [2230, 920, 2305, 1062], [1250, 1216, 1352, 1332], [2208, 1200, 2302, 1302]].forEach(function (b) { UB.push(b); });
+    [[1000, 315, 1162, 425], [140, 738, 302, 782], [876, 744, 928, 778], [2208, 318, 2292, 402], [1270, 728, 1330, 792], [1296, 1250, 1612, 1338], [2245, 925, 2308, 1185], [1676, 1276, 1724, 1330], [620, 916, 704, 990], [100, 1120, 172, 1180]].forEach(function (b) { KB.push(b); });
+    /* two of Gōda's bath boys at work (the laundry, the storeroom): posed, not looking for a fight */
+    var wp0 = wingPop; wingPop = function (k) { wp0(k); try { if (k === 'sentoU') { [[220, 1112], [2230, 580]].forEach(function (p) { var a = npc('c2_hustler', p[0], p[1], -Math.PI / 2); a.nqAmb = 1; WN.npc.push(a); }); } } catch (eA) {} }; NQ.wingPop = wingPop;
+  })();
   /* ================= the hotel front: a glass lobby instead of the shop shelves ================= */
   function facHotel() { var c = cv(460, 80), g = c.getContext('2d'); g.fillStyle = '#2a2b31'; g.fillRect(0, 0, 460, 80);
     var gl = g.createLinearGradient(0, 0, 0, 80); gl.addColorStop(0, '#f6e2b8'); gl.addColorStop(1, '#d9b98a'); g.fillStyle = gl; g.fillRect(4, 4, 452, 74);
