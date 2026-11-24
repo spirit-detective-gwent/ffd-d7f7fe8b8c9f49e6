@@ -11,7 +11,7 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
-### 2026-11-24 — executor (Grok Bot) — v6.5.60 (branch v6560-nails, published to main) — LIVE after Ernest's OK
+### 2026-11-24 — executor (Grok Bot) — v6.5.60 (commit 4374579) — LIVE after Ernest's OK
 Versions: `window.FFF_BUILD="v6560"`, title `.vtag` "v6.5.60", `#ver` text "v6.5.60" (bumped in 14a796c).
 Everything below is approved by Ernest and published in one push on top of d3c83e4 (v6.5.59 base). Fast-forward, nothing on main to merge.
 What shipped:
