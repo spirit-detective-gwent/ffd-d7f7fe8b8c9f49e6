@@ -38492,7 +38492,7 @@ var GINKO = (function () {
   };
   function wingDef(k, n, extra) { var D = roomDef(k, n, 'c2night', Object.assign({ open: W_OPEN, 'in': [440, 1290, 3], back: [440, 1290, 3] }, extra)); D.w = WW; D.h = WH; D.nqWing = 1; D.spots = D.spots.filter(function (s) { return s.id !== 'exit'; }); D.spots.unshift({ id: 'nq_w_back_' + k, r: [380, 1340, 500, 1400], at: [440, 1370], face: 0, lab: 'Back' }); return D; }
   var UB = [[100, 330, 520, 420], [620, 620, 860, 720], [100, 960, 330, 1060], [560, 1180, 900, 1260], [1240, 930, 1600, 1010], [1900, 1150, 2140, 1240], [1280, 330, 1720, 420], [1900, 560, 2100, 700], [1240, 600, 1380, 760], [900, 330, 1160, 400]];
-  var KB = [[100, 330, 360, 420], [560, 560, 860, 700], [1240, 930, 1420, 1010], [1500, 930, 1680, 1010], [1760, 930, 1940, 1010], [2020, 930, 2200, 1010], [1600, 330, 1960, 420], [2120, 600, 2300, 760], [100, 960, 420, 1100], [700, 1100, 1000, 1220]];
+  var KB = [[100, 330, 360, 420], [860, 940, 1160, 1080], [1240, 930, 1420, 1010], [1500, 930, 1680, 1010], [1760, 930, 1940, 1010], [2020, 930, 2200, 1010], [1600, 330, 1960, 420], [2120, 600, 2300, 760], [100, 960, 420, 1100], [700, 1100, 1000, 1220]];
   wingDef('sentoU', 'Kitsune-no-Yu \u00b7 Staff Side', { block: UB, spots: [
     { id: 'nq_lore_towels', r: [560, 1140, 900, 1180], at: [730, 1290], face: 0, lab: 'Look' },
     { id: 'nq_tome', r: [1880, 1110, 2160, 1150], at: [2020, 1290], face: 0, lab: 'Talk' },
@@ -38500,7 +38500,7 @@ var GINKO = (function () {
     { id: 'nq_lore_banzuke', r: [300, 230, 520, 300], at: [420, 470], face: 0, lab: 'Look' },
     { id: 'nq_w_up', r: [100, 300, 260, 330], at: [180, 460], face: 0, lab: 'Upstairs' }] });
   wingDef('sentoK', 'Kitsune-no-Yu \u00b7 Upstairs', { block: KB, spots: [
-    { id: 'nq_lore_mirror', r: [560, 520, 860, 560], at: [710, 780], face: 0, lab: 'Look' },
+    { id: 'nq_lore_mirror', r: [860, 900, 1160, 940], at: [1010, 1160], face: 0, lab: 'Look' },
     { id: 'nq_lore_kesho', r: [1600, 230, 1960, 300], at: [1780, 480], face: 0, lab: 'Look' },
     { id: 'nq_lore_altar', r: [2120, 560, 2300, 600], at: [2060, 680], face: 1, lab: 'Look' },
     { id: 'nq_lore_deck', r: [500, 230, 800, 300], at: [650, 470], face: 0, lab: 'Look' },
@@ -38633,7 +38633,7 @@ var GINKO = (function () {
     }, function (g) {
       /* K1 his tatami room; K2 the trophy corridor of photos */
       tiles(g, 90, 900, 1090, 440, '#c9b884', '#bfae7a', 110); g.strokeStyle = 'rgba(60,40,20,.35)'; g.lineWidth = 3; for (var tx2 = 90; tx2 < 1180; tx2 += 220) { g.beginPath(); g.moveTo(tx2, 900); g.lineTo(tx2, 1340); g.stroke(); }
-      box(g, 560, 560, 300, 140, '#5a3a26', 6); box(g, 600, 470, 90, 110, '#cfe3ea', 8, 3); box(g, 720, 570, 60, 20, '#8a6440', 3, 2); box(g, 800, 572, 30, 22, '#c9a032', 5, 2); /* the low mirror, comb, oil tin */
+      box(g, 860, 940, 300, 140, '#5a3a26', 6); box(g, 900, 850, 90, 110, '#cfe3ea', 8, 3); box(g, 1020, 950, 60, 20, '#8a6440', 3, 2); box(g, 1100, 952, 30, 22, '#c9a032', 5, 2); /* the low mirror, comb, oil tin */
       box(g, 100, 960, 320, 140, '#efe6d2', 10); box(g, 110, 970, 300, 40, '#2a3f7a', 8, 2); /* a rolled futon */
       box(g, 700, 1100, 300, 120, '#6e4428', 6); box(g, 790, 1120, 40, 30, '#f2e8d6', 10, 2); box(g, 870, 1126, 34, 24, '#f2e8d6', 8, 2); /* one cup, one bowl */
       boards(g, 1220, 900, 1090, 440, '#7a5a3c', '#83613f', 36);
