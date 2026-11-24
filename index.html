@@ -37701,7 +37701,7 @@ var GINKO = (function () {
     mapImg(function (img) {
       var k0 = BLK[keys[0]], ov = document.createElement('div'); ov.id = 'nqsting';
       var cw = 720, ch = 420, c = document.createElement('canvas'); c.width = cw; c.height = ch; ov.appendChild(c);
-      var ban = document.createElement('div'); ban.className = 'nqsban'; ban.innerHTML = '<b>' + esc(keys.map(function (k) { return BLK[k].n; }).join(' + ')) + '</b><i>NAILS\u2019 TURF</i>'; ov.appendChild(ban);
+      var ban = document.createElement('div'); ban.className = 'nqsban'; var bt = keys.map(function (k) { return BLK[k].n; }).join(' + '); ban.innerHTML = '<b' + (bt.length > 22 ? ' style="font-size:.72em"' : '') + '>' + esc(bt) + '</b><i>NAILS\u2019 TURF</i>'; ov.appendChild(ban);
       document.body.appendChild(ov);
       var g = c.getContext('2d'), sc = img ? img.naturalWidth / C2W.w : 0.2;
       /* frame: the union of the blocks, padded, kept at the canvas aspect */
@@ -37733,7 +37733,7 @@ var GINKO = (function () {
   NQ.sting = sting;
   /* the phone map: won blocks wear Nails red */
   if (typeof c2Map === 'function') { var mapN0 = c2Map; c2Map = function () { var h = mapN0.apply(this, arguments); try { if (on() && /class="pmap c2map"/.test(h)) { var w = won(), add = '';
-      Object.keys(w).forEach(function (kk) { var b = BLK[kk]; if (!b) return; var r = b.r; add += '<i class="nqwon" style="left:' + (r[0] / C2W.w * 100).toFixed(2) + '%;top:' + (r[1] / C2W.h * 100).toFixed(2) + '%;width:' + ((r[2] - r[0]) / C2W.w * 100).toFixed(2) + '%;height:' + ((r[3] - r[1]) / C2W.h * 100).toFixed(2) + '%"><b>' + esc(b.n.replace(/^THE /, '')) + '</b></i>'; });
+      Object.keys(w).forEach(function (kk) { var b = BLK[kk]; if (!b) return; var r = b.r; add += '<i class="nqwon" style="left:' + (r[0] / C2W.w * 100).toFixed(2) + '%;top:' + (r[1] / C2W.h * 100).toFixed(2) + '%;width:' + ((r[2] - r[0]) / C2W.w * 100).toFixed(2) + '%;height:' + ((r[3] - r[1]) / C2W.h * 100).toFixed(2) + '%">' + (b.big ? '<b>' + esc(b.n.replace(/^THE /, '')) + '</b>' : '') + '</i>'; });
       if (add) h = h.replace(/(<div class="pmap c2map"><img[^>]*>)/, '$1' + add); } } catch (e) {} return h; }; }
   /* ================= the flow: crews, beats, fights ================= */
   function whenFree(fn, tries) { tries = tries || 0; if (!busy() && !document.getElementById('nqsting') && !(typeof W.c2busy !== 'undefined' && W.c2busy)) { try { fn(); } catch (e) { ev('world:nq:err:free:' + (e && e.message)); } return; } if (tries < 120) later(250, function () { whenFree(fn, tries + 1); }); }
