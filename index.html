@@ -19262,7 +19262,7 @@ function c2QDetail(id, o) { if (typeof c2RecoverScout === 'function') c2RecoverS
 /* ---------- the Ch.2 map (plain map, pulsing pings only) + hub floor plans ---------- */
 function c2Ping(t, X, Y) { var loud = typeof v640PingLoud === 'function' ? v640PingLoud(t) : true; if (loud) setTimeout(function () { ev('world:ping:map:' + t.qid); }, 0); return '<i class="mk ' + (loud ? 'ping' : 'quiet') + ' ' + (t.kind === 'main' ? 'main' : 'side') + '" data-q="' + t.qid + '" style="left:' + X.toFixed(2) + '%;top:' + Y.toFixed(2) + '%"><b></b><span>' + (t.kind === 'main' ? 'Next: ' : 'Side: ') + t.lab + '</span></i>'; }
 function c2Map() { var k = c2Room(), T = pingOn() ? c2Targets(true) : [], t = T[0], on = !!t;
-  if (C2HUB[k] || C2LM[k]) { var H = C2HUB[k] || Object.assign({ w: 1280, h: 960 }, C2LM[k], INT['c2_' + k]), h = '<div class="pmap c2plan"><svg viewBox="0 0 ' + H.w + ' ' + H.h + '" preserveAspectRatio="xMidYMid meet" aria-label="' + H.n + ' floor plan"><rect class="fl" x="' + H.open[0][0] + '" y="' + H.open[0][1] + '" width="' + (H.open[0][2] - H.open[0][0]) + '" height="' + (H.open[0][3] - H.open[0][1]) + '" rx="10"/>';
+  if (C2HUB[k] || C2LM[k]) { var H = C2HUB[k] || Object.assign({ w: 1280, h: 960 }, C2LM[k], INT['c2_' + k]), h = '<div class="pmap c2plan"><svg viewBox="0 0 ' + H.w + ' ' + H.h + '" preserveAspectRatio="xMidYMid meet" aria-label="' + H.n + ' floor plan">' + (k === 'arcade' ? H.open : [H.open[0]]).map(function (o) { return '<rect class="fl" x="' + o[0] + '" y="' + o[1] + '" width="' + (o[2] - o[0]) + '" height="' + (o[3] - o[1]) + '" rx="10"/>'; }).join('');
     H.block.forEach(function (r) { h += '<rect class="ob" x="' + r[0] + '" y="' + r[1] + '" width="' + (r[2] - r[0]) + '" height="' + (r[3] - r[1]) + '" rx="6"/>'; });
     H.spots.forEach(function (s) { if (s.id === 'exit') h += '<rect class="ex" x="' + s.r[0] + '" y="' + (H.h - 70) + '" width="' + (s.r[2] - s.r[0]) + '" height="40" rx="8"/>'; else if (!(s.id === 'bench' && typeof chN === 'function' && chN() === 2)) h += '<text x="' + ((s.r[0] + s.r[2]) / 2) + '" y="' + Math.max(60, (s.r[1] + s.r[3]) / 2) + '">' + (C2_PLAN_N[s.id] || '') + '</text>'; });
     h += '<circle class="you" cx="' + Math.round(W.ryo.x) + '" cy="' + Math.round(W.ryo.y) + '" r="26"/></svg>';
@@ -35064,7 +35064,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
   function rich(id) {
     var s = st(), q = S().q[id], done = q === 9, out = [];
     if (id === QM) { out.push({ lab: 'Follow Flip to the Ginko Arcade', state: done ? 'ok' : 'cur', sec: 'Now', hint: 'Follow him. He\u2019ll wait if you drop behind.' }); }
-    if (id === QT) { out.push({ lab: 'Collect the tin at Kissa Gekko', state: (q | 0) >= 1 || done ? 'ok' : 'cur', sec: 'The job', hint: 'Flip walks you there. He watches.' }); out.push({ lab: 'Take the tin to Nails', state: done ? 'ok' : (q | 0) >= 1 || s === 'turn' || s === 'paid' ? 'cur' : 'pend', hint: s === 'turn' ? 'Nails is at the toll booth.' : ((q | 0) >= 1 || s === 'paid' ? 'Back to the Ginko Arcade.' : '') }); }
+    if (id === QT) { out.push({ lab: 'Collect the tin at Kissa Gekko', state: (q | 0) >= 1 || done ? 'ok' : 'cur', sec: 'The job', hint: 'Flip walks you there. He watches.' }); out.push({ lab: 'Take the tin to Nails', state: done ? 'ok' : (q | 0) >= 1 || s === 'turn' || s === 'paid' ? 'cur' : 'pend', hint: s === 'turn' ? 'Nails is at his desk by the entrance.' : ((q | 0) >= 1 || s === 'paid' ? 'Back to the Ginko Arcade.' : '') }); }
     if (id === QL) { var L = look(); out.push({ lab: 'Get behind the lookouts', state: done ? 'ok' : 'cur', sec: L.lab, hint: 'Walk, don\u2019t run. Come up behind them.' }); }
     return out;
   }
@@ -35141,6 +35141,348 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
   root.FFF_13U = { CONTEST: CONTEST, contestAt: inContest, contestSync: contestSync, st: st, go: go, tgt: tgt, safe: safe, look: look, LOOK: LOOK, GK: GK, GK_DOOR: GK_DOOR, ESC: function () { return ESC; }, T: T, GKC: function () { return GKC; }, AR: AR, rivalA: rivalA, alleyOn: alleyOn };
   ev('world:13u:ready');
   } catch (eAll) { try { ev('world:13u:err:init:' + (eAll && eAll.message)); } catch (e2) {} }
+})();
+
+/* ===== v6560-ginko (t89u + scope note): Nails' Ginko Shotengai rebuilt as a big covered shopping street.
+ * Room grows from 1280x960 to 3600x960: the old room is now the front entrance hall (every Nails story coordinate is unchanged:
+ * the meet, the tin turn-in, Sabu), then a long walk east past 24 shuttered stalls to the toll booth, the seal and the boss spot.
+ * The picture is drawn in-engine (GINKO.paint) once on entry into one offscreen-sized canvas, no per-frame cost, freed on exit.
+ * Stall hook: FFF_GINKO.stalls (id/row/kind/label/x/w), FFF_GINKO.isOpen(id), FFF_GINKO.setOpen(id, on): saved in c2S().ginko,
+ * the art repaints with that shutter rolled up. No shops yet. */
+(function () {
+  try {
+  if (typeof INT === 'undefined' || !INT.c2_arcade || typeof C2LM === 'undefined' || !C2LM.arcade) return;
+/* GINKO_PAINT_BEGIN */
+var GINKO = (function () {
+  var GW_ = 3600, GH_ = 960, TOP = 175, SOUTH = 770, HALL = 1185, EAST = 3505;
+  var INK = '#2a211c', INK2 = 'rgba(42,33,28,.55)';
+  var JP = "'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans CJK JP','Noto Serif CJK JP','Yu Gothic',sans-serif";
+  var LAT = "800 {s}px system-ui,-apple-system,'Segoe UI',sans-serif";
+  /* the stalls: one record per shutter; open = later (territory), all shut for now */
+  var KINDS = {
+    tea: ['TEA', '\u8336', '#2f6b4f', ['#6f9a52', '#c9b98a', '#3f6d3b']], wagashi: ['WAGASHI', '\u548c\u83d3\u5b50', '#8e3b52', ['#f2c4cf', '#9ec27a', '#f4ead2']],
+    books: ['BOOKS', '\u672c', '#3c4f7a', ['#b8473c', '#e1c27a', '#4a6d9a']], records: ['RECORDS', '\u30ec\u30b3\u30fc\u30c9', '#1f2a36', ['#222', '#d24c3f', '#e8d27a']],
+    pharmacy: ['PHARMACY', '\u85ac', '#2b7a82', ['#f4f1e8', '#d9534f', '#7fc3c8']], toys: ['TOYS', '\u304a\u3082\u3061\u3083', '#c0582c', ['#f2c94c', '#4c9be8', '#e85a7a']],
+    flowers: ['FLOWERS', '\u82b1', '#6b8e3a', ['#e86a8a', '#f4d35e', '#ffffff']], tofu: ['TOFU', '\u8c46\u8150', '#56606b', ['#f6f2e6', '#e4dcc6', '#9aa7b0']],
+    shoes: ['SHOES', '\u9774', '#6d4a32', ['#3b2a20', '#b0703f', '#e9e1d2']], hardware: ['HARDWARE', '\u91d1\u7269', '#4a4f57', ['#b9c0c8', '#d1a543', '#6d747c']],
+    ramen: ['RAMEN', '\u30e9\u30fc\u30e1\u30f3', '#a3282a', ['#f2d28a', '#c8442f', '#2b2b2b']], pens: ['PENS', '\u6587\u5177', '#5a3f7a', ['#4c9be8', '#e85a5a', '#2f2f2f']],
+    fish: ['FISH', '\u9b5a', '#1f5f8a', ['#c9d6df', '#e07a5f', '#5b8fb9']], rice: ['RICE', '\u7c73', '#9a7a3a', ['#f4ecd8', '#d8c79a', '#8a6b3a']],
+    sake: ['SAKE', '\u9152', '#2c3e50', ['#e8e2cf', '#6b4b2a', '#2e7d5b']], bakery: ['BAKERY', '\u30d1\u30f3', '#b5732f', ['#d9a05b', '#f0d9a8', '#8a5a2b']],
+    fruit: ['FRUIT', '\u679c\u7269', '#c0392b', ['#e74c3c', '#f39c12', '#7cb342']], clothes: ['CLOTHES', '\u670d', '#6c5b7b', ['#c06c84', '#355c7d', '#f8b195']],
+    bikes: ['BIKES', '\u81ea\u8ee2\u8eca', '#3d6b6b', ['#d35454', '#4f7cac', '#222']], clocks: ['CLOCKS', '\u6642\u8a08', '#7a5c2e', ['#e8d9a8', '#4a3a28', '#c9a24a']],
+    knives: ['KNIVES', '\u5203\u7269', '#3a3a44', ['#d8dde2', '#7a5230', '#aab2bb']], tailor: ['TAILOR', '\u4ed5\u7acb', '#4b3b5a', ['#e9d8a6', '#94618e', '#495867']],
+    pickles: ['PICKLES', '\u6f2c\u7269', '#6a7f2a', ['#b5c45b', '#e0c341', '#a8432f']], snacks: ['SNACKS', '\u99c4\u83d3\u5b50', '#d1495b', ['#edae49', '#00798c', '#f4a0b5']],
+    cleaners: ['CLEANERS', '\u30af\u30ea\u30fc\u30cb\u30f3\u30b0', '#3f7cac', ['#f2f2f2', '#9bc1e0', '#555']], keys: ['KEYS', '\u5408\u9375', '#7d6b3a', ['#d1a543', '#9aa1a8', '#333']],
+    tobacco: ['TOBACCO', '\u305f\u3070\u3053', '#8a3b2a', ['#f2e3c6', '#c0392b', '#333']], lottery: ['LOTTERY', '\u5b9d\u304f\u3058', '#b8860b', ['#ffd166', '#ef476f', '#06d6a0']]
+  };
+  var STALLS = [], NK = ['tea', 'wagashi', 'books', 'records', 'pharmacy', 'toys', 'flowers', 'tofu', 'shoes', 'hardware', 'ramen', 'pens'],
+    SK = ['fish', 'rice', 'sake', 'bakery', 'fruit', 'clothes', 'bikes', 'clocks', 'knives', 'tailor', 'pickles', 'snacks'];
+  var SX0 = 1210, SW = 156;
+  [['h1', 'cleaners', 110], ['h2', 'keys', 285], ['h3', 'tobacco', 838], ['h4', 'lottery', 1012]].forEach(function (a) { STALLS.push({ id: a[0], row: 'h', kind: a[1], x: a[2], w: 160 }); });
+  NK.forEach(function (k, i) { STALLS.push({ id: 'n' + (i + 1), row: 'n', kind: k, x: SX0 + i * SW, w: SW - 8 }); });
+  SK.forEach(function (k, i) { STALLS.push({ id: 's' + (i + 1), row: 's', kind: k, x: SX0 + i * SW, w: SW - 8 }); });
+  STALLS.forEach(function (s) { var K = KINDS[s.kind]; s.label = K[0]; s.jp = K[1]; s.open = 0; });
+
+  function rng(seed) { var s = seed >>> 0; return function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
+  function shade(hex, k) { var n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    var f = function (c) { return Math.max(0, Math.min(255, Math.round(k < 0 ? c * (1 + k) : c + (255 - c) * k))); };
+    return 'rgb(' + f(r) + ',' + f(g) + ',' + f(b) + ')'; }
+  function paint(cv, openOf) {
+    var g = cv.getContext('2d'); cv.width = GW_; cv.height = GH_;
+    var R = rng(4217);
+    function rect(x, y, w, h, f, s, lw) { if (f) { g.fillStyle = f; g.fillRect(x, y, w, h); } if (s) { g.lineWidth = lw || 3; g.strokeStyle = s; g.strokeRect(x + (lw || 3) / 2, y + (lw || 3) / 2, w - (lw || 3), h - (lw || 3)); } }
+    function rr(x, y, w, h, r) { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+    function box(x, y, w, h, f, r, lw) { rr(x, y, w, h, r || 4); g.fillStyle = f; g.fill(); g.lineWidth = lw || 3; g.strokeStyle = INK; g.stroke(); }
+    function line(x0, y0, x1, y1, c, lw) { g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.strokeStyle = c; g.lineWidth = lw || 2; g.stroke(); }
+    function txt(t, x, y, px, c, font, al) { g.font = font ? font.replace('{s}', px) : LAT.replace('{s}', px); g.fillStyle = c; g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillText(t, x, y); }
+    function jp(t, x, y, px, c) { g.font = '900 ' + px + 'px ' + JP; g.fillStyle = c; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(t, x, y); }
+    function shadow(x, y, w, h, a) { g.save(); g.fillStyle = 'rgba(25,14,8,' + (a || 0.3) + ')'; g.filter = 'blur(6px)'; rr(x, y, w, h, 10); g.fill(); g.restore(); }
+    function glow(x, y, r, c, a) { var gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, c.replace('A', a)); gr.addColorStop(1, c.replace('A', 0)); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); }
+
+    /* ---------- 0. base ---------- */
+    g.fillStyle = '#17131a'; g.fillRect(0, 0, GW_, GH_);
+
+    /* ---------- 1. floors ---------- */
+    /* hall: warm terrazzo */
+    g.fillStyle = '#c9b89a'; g.fillRect(95, TOP, HALL - 95, 878 - TOP);
+    for (var i = 0; i < 1400; i++) { g.fillStyle = ['#b7a386', '#d9cbb0', '#a8957a', '#e3d6bd', '#8f7e66'][i % 5]; var px = 95 + R() * (HALL - 95), py = TOP + R() * (878 - TOP); g.fillRect(px, py, 2 + R() * 3, 2 + R() * 2); }
+    g.strokeStyle = 'rgba(90,70,50,.35)'; g.lineWidth = 2;
+    for (var gx = 95; gx < HALL; gx += 120) line(gx, TOP, gx, 878, 'rgba(120,96,70,.35)', 2);
+    for (var gy = TOP; gy < 878; gy += 120) line(95, gy, HALL, gy, 'rgba(120,96,70,.35)', 2);
+    /* hall mosaic: the fox-ring emblem of the street association */
+    (function () { var cx = 640, cy = 600; g.save();
+      g.beginPath(); g.arc(cx, cy, 150, 0, 7); g.fillStyle = '#7d2f2a'; g.fill(); g.lineWidth = 4; g.strokeStyle = INK2; g.stroke();
+      g.beginPath(); g.arc(cx, cy, 130, 0, 7); g.fillStyle = '#d8c7a2'; g.fill();
+      for (var k = 0; k < 24; k++) { var a = k / 24 * Math.PI * 2; g.beginPath(); g.moveTo(cx + Math.cos(a) * 112, cy + Math.sin(a) * 112); g.lineTo(cx + Math.cos(a + 0.13) * 130, cy + Math.sin(a + 0.13) * 130); g.lineTo(cx + Math.cos(a - 0.13) * 130, cy + Math.sin(a - 0.13) * 130); g.closePath(); g.fillStyle = k % 2 ? '#b8862f' : '#7d2f2a'; g.fill(); }
+      g.beginPath(); g.arc(cx, cy, 100, 0, 7); g.fillStyle = '#2f4a5a'; g.fill();
+      /* silver fox head */
+      g.beginPath(); g.moveTo(cx - 52, cy - 50); g.lineTo(cx - 22, cy - 20); g.lineTo(cx + 22, cy - 20); g.lineTo(cx + 52, cy - 50); g.lineTo(cx + 40, cy + 5); g.lineTo(cx, cy + 58); g.lineTo(cx - 40, cy + 5); g.closePath();
+      g.fillStyle = '#d9dde2'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#3d4650'; g.stroke();
+      g.beginPath(); g.moveTo(cx - 24, cy + 2); g.lineTo(cx - 8, cy + 8); g.moveTo(cx + 24, cy + 2); g.lineTo(cx + 8, cy + 8); g.stroke();
+      g.beginPath(); g.arc(cx, cy + 50, 6, 0, 7); g.fillStyle = '#3d4650'; g.fill();
+      g.restore(); })();
+    /* street: granite pavers + a patterned centre band + tactile strip */
+    g.fillStyle = '#9d968c'; g.fillRect(HALL, TOP, EAST - HALL, SOUTH - TOP);
+    var row = 0;
+    for (var py2 = TOP; py2 < SOUTH; py2 += 42, row++) {
+      if (py2 >= 400 && py2 < 568) continue;
+      for (var px2 = HALL - (row % 2) * 34; px2 < EAST; px2 += 68) {
+        var t = R(); g.fillStyle = t < 0.33 ? '#a59e93' : t < 0.66 ? '#968f85' : '#aaa398'; g.fillRect(px2 + 2, py2 + 2, 64, 38);
+        if (R() < 0.05) { g.fillStyle = 'rgba(60,50,45,.18)'; g.beginPath(); g.ellipse(px2 + 20 + R() * 30, py2 + 12 + R() * 16, 8 + R() * 10, 4 + R() * 5, 0, 0, 7); g.fill(); }
+      } }
+    /* centre band: big slabs, red/cream diamond inlay */
+    for (var bx = HALL; bx < EAST; bx += 84) {
+      for (var by = 400; by < 568; by += 84) { g.fillStyle = ((bx - HALL) / 84 + (by - 400) / 84) % 2 ? '#b3a796' : '#a89b88'; g.fillRect(bx + 2, by + 2, 80, 80);
+        g.beginPath(); g.moveTo(bx + 42, by + 14); g.lineTo(bx + 70, by + 42); g.lineTo(bx + 42, by + 70); g.lineTo(bx + 14, by + 42); g.closePath(); g.fillStyle = ((bx - HALL) / 84) % 2 ? '#8e4b3e' : '#c8b58f'; g.fill(); } }
+    rect(HALL, 398, EAST - HALL, 4, '#6d6458'); rect(HALL, 566, EAST - HALL, 4, '#6d6458');
+    /* tactile guide strip */
+    for (var tx = HALL + 30; tx < EAST - 60; tx += 30) { rect(tx, 576, 28, 28, '#d9ad2e'); g.fillStyle = '#b88f1d'; for (var d = 0; d < 9; d++) { g.beginPath(); g.arc(tx + 6 + (d % 3) * 8, 582 + Math.floor(d / 3) * 8, 2.2, 0, 7); g.fill(); } }
+    /* floor stencil: the toll */
+    g.save(); g.translate(1330, 690); g.rotate(-0.04); g.globalAlpha = 0.55; txt('TOLL \u00a5100 / STEP', 0, 0, 30, '#e8e3d6', "900 {s}px 'Arial Black',system-ui,sans-serif"); g.restore();
+    g.save(); g.translate(2420, 300); g.rotate(0.05); g.globalAlpha = 0.5; txt('PAY  UP', 0, 0, 34, '#e86a9a', "900 {s}px 'Arial Black',system-ui,sans-serif"); g.restore();
+    /* scattered flyers */
+    for (var f = 0; f < 26; f++) { g.save(); g.translate(HALL + 60 + R() * (EAST - HALL - 200), TOP + 40 + R() * (SOUTH - TOP - 80)); g.rotate(R() * 6.28); rect(-10, -7, 20, 14, ['#efe6d0', '#f2c4cf', '#e8d27a'][f % 3], 'rgba(42,33,28,.4)', 1.5); g.restore(); }
+
+    /* ---------- 2. roof light + truss shadows (the covered street) ---------- */
+    g.save(); g.beginPath(); g.rect(HALL, TOP, EAST - HALL, SOUTH - TOP); g.rect(95, TOP, HALL - 95, 878 - TOP); g.clip();
+    for (var sx = 1080; sx < EAST + 200; sx += 300) { g.beginPath(); g.moveTo(sx, TOP); g.lineTo(sx + 26, TOP); g.lineTo(sx - 64, 878); g.lineTo(sx - 90, 878); g.closePath(); g.fillStyle = 'rgba(30,22,30,.22)'; g.fill(); }
+    for (var sx2 = 1200; sx2 < EAST; sx2 += 300) { g.beginPath(); g.moveTo(sx2 + 60, TOP); g.lineTo(sx2 + 200, TOP); g.lineTo(sx2 + 120, SOUTH); g.lineTo(sx2 - 20, SOUTH); g.closePath(); g.fillStyle = 'rgba(170,200,230,.07)'; g.fill(); }
+    g.restore();
+
+    /* ---------- 3. north facade (hall + street) ---------- */
+    /* roof strip: glass panes between steel ribs */
+    var rg = g.createLinearGradient(0, 0, 0, 36); rg.addColorStop(0, '#1d2a3a'); rg.addColorStop(1, '#2f4257'); g.fillStyle = rg; g.fillRect(95, 0, EAST - 95, 36);
+    for (var rx = 95; rx < EAST; rx += 60) { line(rx + 10, 34, rx + 40, 4, 'rgba(190,220,255,.18)', 3); }
+    for (var rx2 = 95; rx2 < EAST; rx2 += 150) rect(rx2, 0, 8, 36, '#4c4f57');
+    rect(95, 32, EAST - 95, 8, '#3a3d45'); line(95, 40, EAST, 40, INK, 3);
+    /* facade wall */
+    g.fillStyle = '#5a4a42'; g.fillRect(95, 40, EAST - 95, TOP - 40);
+    /* a stall front (shut / open) */
+    function stallN(s) { var K = KINDS[s.kind], x = s.x, w = s.w, op = openOf(s.id);
+      /* sign board */
+      box(x + 14, 44, w - 28, 30, K[2], 4); rect(x + 17, 47, w - 34, 5, 'rgba(255,255,255,.18)');
+      jp(K[1], x + 32 + (K[1].length > 2 ? 6 : 0), 59, K[1].length > 3 ? 10 : 15, '#f6ecd6'); txt(K[0], x + w / 2 + 16, 60, K[0].length > 7 ? 10 : 12, '#f6ecd6');
+      /* awning valance */
+      for (var a = 0; a < w; a += 18) { g.fillStyle = (a / 18) % 2 ? shade(K[2], 0.45) : '#efe4cc'; g.beginPath(); g.moveTo(x + a, 76); g.lineTo(x + Math.min(w, a + 18), 76); g.lineTo(x + Math.min(w, a + 18), 86); g.arc(x + a + 9, 86, 9, 0, Math.PI); g.closePath(); g.fill(); }
+      line(x, 76, x + w, 76, INK, 3);
+      if (!op) {
+        var sg = g.createLinearGradient(0, 92, 0, 166); sg.addColorStop(0, '#a3abb5'); sg.addColorStop(1, '#6f7884'); g.fillStyle = sg; g.fillRect(x + 6, 92, w - 12, 72);
+        for (var yy = 96; yy < 160; yy += 6) { line(x + 6, yy, x + w - 6, yy, 'rgba(40,46,56,.35)', 1.5); line(x + 6, yy + 2, x + w - 6, yy + 2, 'rgba(255,255,255,.14)', 1); }
+        rect(x + 6, 156, w - 12, 8, '#59616c'); rect(x + w / 2 - 9, 154, 18, 6, '#c9a24a', INK, 1.5);
+        g.strokeStyle = INK; g.lineWidth = 3; g.strokeRect(x + 6, 92, w - 12, 72);
+        /* padlock + Nails' tag on some */
+        box(x + w / 2 - 6, 160, 12, 10, '#d1a543', 2, 2);
+        if (R() < 0.6) { g.save(); g.globalAlpha = 0.8; g.strokeStyle = ['#e85a9a', '#5ad1a4', '#f2f2f2', '#f2c94c'][Math.floor(R() * 4)]; g.lineWidth = 4; g.lineCap = 'round'; g.beginPath(); var ox = x + 20 + R() * (w - 80), oy = 112 + R() * 20; g.moveTo(ox, oy);
+          for (var q = 0; q < 6; q++) g.quadraticCurveTo(ox + q * 9 + 6, oy + (q % 2 ? -14 : 12), ox + q * 9 + 10, oy + (R() - 0.5) * 8); g.stroke(); g.restore(); }
+        if (R() < 0.35) { g.save(); g.translate(x + w / 2, 128); g.rotate(-0.1); rect(-26, -10, 52, 20, '#efe6d0', 'rgba(42,33,28,.6)', 1.5); txt('CLOSED', 0, 1, 10, '#8a2a2a'); g.restore(); }
+      } else {
+        /* rolled-up shutter box, warm-lit shop */
+        rect(x + 4, 86, w - 8, 12, '#7c8590', INK, 2);
+        var ig = g.createLinearGradient(0, 98, 0, 166); ig.addColorStop(0, '#f6d99a'); ig.addColorStop(1, '#c48a4a'); g.fillStyle = ig; g.fillRect(x + 6, 98, w - 12, 66);
+        rect(x + 10, 108, w - 20, 4, '#7a4f2a'); rect(x + 10, 128, w - 20, 4, '#7a4f2a');
+        for (var gi = 0; gi < 10; gi++) { g.fillStyle = K[3][gi % 3]; rr(x + 14 + (gi % 5) * ((w - 32) / 5), gi < 5 ? 100 : 120, 14, 8, 2); g.fill(); }
+        box(x + 4, 140, w - 8, 26, '#8a5a34', 3); rect(x + 8, 143, w - 16, 4, 'rgba(255,255,255,.2)');
+        for (var gj = 0; gj < 6; gj++) { g.fillStyle = K[3][gj % 3]; g.beginPath(); g.arc(x + 18 + gj * ((w - 36) / 5), 138, 7, 0, 7); g.fill(); g.lineWidth = 2; g.strokeStyle = INK2; g.stroke(); }
+        glow(x + w / 2, 175, 110, 'rgba(255,200,120,A)', 0.35);
+      }
+      rect(x + 2, 164, w - 4, 11, '#3f342e');
+    }
+    /* street north row */
+    STALLS.forEach(function (s) { if (s.row === 'n' || s.row === 'h') stallN(s); });
+    /* hall: the association office Nails took over */
+    (function () { var x = 470, w = 340;
+      box(x, 44, w, 40, '#22303e', 4); rect(x + 4, 48, w - 8, 6, 'rgba(255,255,255,.12)');
+      jp('\u9280\u72d0\u5546\u5e97\u8857', x + w / 2, 60, 18, '#e9d9a6'); txt('GINKO SH\u014cTENGAI  \u00b7  ASSOCIATION', x + w / 2, 77, 10, '#cfd7de');
+      rect(x + 6, 88, w - 12, 78, '#3b4652'); g.lineWidth = 3; g.strokeStyle = INK; g.strokeRect(x + 6, 88, w - 12, 78);
+      /* frosted windows, one light off */
+      for (var k = 0; k < 3; k++) { var wx = x + 20 + k * 104; var fg = g.createLinearGradient(0, 96, 0, 156); fg.addColorStop(0, k === 1 ? '#6d7a86' : '#c9d6dc'); fg.addColorStop(1, k === 1 ? '#4d5862' : '#93a6b0'); g.fillStyle = fg; g.fillRect(wx, 96, 92, 58); g.strokeStyle = INK; g.lineWidth = 2.5; g.strokeRect(wx, 96, 92, 58); line(wx + 46, 96, wx + 46, 154, INK, 2); }
+      /* spray-painted over the sign */
+      g.save(); g.translate(x + w / 2, 128); g.rotate(-0.06); txt('TOLL', 0, 0, 40, 'rgba(232,90,154,.92)', "900 {s}px 'Arial Black',system-ui,sans-serif"); g.restore();
+      rect(x + 2, 164, w - 4, 11, '#3f342e'); })();
+    /* the street mouth between hall and street: big hanging gate sign */
+    (function () { var x = HALL - 10; rect(x - 6, 0, 32, TOP, '#3b3e46', INK, 3); box(x - 70, 4, 160, 34, '#7d2f2a', 5); jp('\u9280\u72d0\u901a\u308a', x + 10, 21, 16, '#f2dfa6'); })();
+    /* steel pillars along the facade */
+    function pillar(x, y0, y1) { var pg = g.createLinearGradient(x - 11, 0, x + 11, 0); pg.addColorStop(0, '#3a3d45'); pg.addColorStop(0.45, '#7d828c'); pg.addColorStop(1, '#2d3036'); g.fillStyle = pg; g.fillRect(x - 11, y0, 22, y1 - y0); g.lineWidth = 3; g.strokeStyle = INK; g.strokeRect(x - 11, y0, 22, y1 - y0); rect(x - 15, y1 - 10, 30, 10, '#2b2d33', INK, 2); }
+    for (var pxn = SX0 - 6; pxn <= SX0 + 12 * SW; pxn += SW * 2) pillar(pxn, 40, TOP + 18);
+    pillar(HALL + 6, 40, TOP + 18);
+
+    /* ---------- 4. the far end: Nails' toll booth + the barred gate ---------- */
+    (function () {
+      var bx0 = 3180, bw = 220;
+      /* east wall + the far gate (shutter down, chained) */
+      g.fillStyle = '#4a3d37'; g.fillRect(EAST, 0, GW_ - EAST, GH_); line(EAST, 40, EAST, 960, INK, 4);
+      var eg = g.createLinearGradient(EAST + 8, 0, GW_ - 10, 0); eg.addColorStop(0, '#8d96a1'); eg.addColorStop(1, '#5e6670'); g.fillStyle = eg; g.fillRect(EAST + 10, 230, 60, 470);
+      for (var yy = 236; yy < 700; yy += 8) line(EAST + 10, yy, EAST + 70, yy, 'rgba(30,36,44,.35)', 1.5);
+      g.lineWidth = 3; g.strokeStyle = INK; g.strokeRect(EAST + 10, 230, 60, 470);
+      for (var c = 0; c < 10; c++) { g.beginPath(); g.ellipse(EAST + 40, 420 + c * 11, 7, 4, c % 2 ? 0 : 1.57, 0, 7); g.strokeStyle = '#c9cdd2'; g.lineWidth = 2.5; g.stroke(); }
+      box(EAST + 30, 530, 20, 18, '#d1a543', 3, 2);
+      /* facade behind the booth */
+      rect(3100, 40, EAST - 3100, TOP - 40, '#4a3c35');
+      box(3110, 48, 60, 110, '#6b2b27', 3); jp('\u901a\u884c\u6599', 3140, 103, 14, '#f2dfa6'); g.save(); g.translate(3140, 103); g.restore();
+      /* the booth: a tin-roofed kiosk sticking out into the street */
+      shadow(bx0 - 30, 250, bw + 80, 150, 0.42);
+      box(bx0, 60, bw, 250, '#596169', 4);
+      rect(bx0 + 4, 64, bw - 8, 14, '#7a838c');
+      /* corrugated tin roof */
+      g.fillStyle = '#8c949c'; g.beginPath(); g.moveTo(bx0 - 16, 40); g.lineTo(bx0 + bw + 16, 40); g.lineTo(bx0 + bw + 24, 92); g.lineTo(bx0 - 24, 92); g.closePath(); g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke();
+      for (var t2 = bx0 - 14; t2 < bx0 + bw + 16; t2 += 12) line(t2, 42, t2 + (t2 - (bx0 + bw / 2)) * 0.07, 90, 'rgba(40,46,56,.35)', 2);
+      rect(bx0 - 24, 88, bw + 48, 8, '#5d646c', INK, 2);
+      /* the window: shutter down, light behind leaks out the slit */
+      rect(bx0 + 24, 116, bw - 48, 92, '#2a2f36', INK, 3);
+      var wg = g.createLinearGradient(0, 120, 0, 204); wg.addColorStop(0, '#a3abb5'); wg.addColorStop(1, '#6f7884'); g.fillStyle = wg; g.fillRect(bx0 + 28, 120, bw - 56, 80);
+      for (var y3 = 124; y3 < 200; y3 += 6) line(bx0 + 28, y3, bx0 + bw - 28, y3, 'rgba(40,46,56,.4)', 1.5);
+      rect(bx0 + 28, 200, bw - 56, 5, '#ffcf7a'); glow(bx0 + bw / 2, 206, 70, 'rgba(255,190,100,A)', 0.35);
+      /* counter ledge + sign */
+      box(bx0 - 6, 214, bw + 12, 22, '#6d4a32', 3); rect(bx0 - 2, 217, bw + 4, 4, 'rgba(255,255,255,.18)');
+      box(bx0 + 60, 238, 100, 26, '#e9dfc6', 3, 2); txt('TOLL \u00b7 \u00a5100', bx0 + 110, 252, 13, '#8a2a2a');
+      rect(bx0 + 8, 266, bw - 16, 44, '#4b5259'); line(bx0 + 8, 266, bx0 + bw - 8, 266, INK, 2);
+      /* cash tray + ledger on the ledge */
+      box(bx0 + 20, 206, 34, 12, '#b9c0c8', 2, 2); box(bx0 + 166, 204, 30, 14, '#7d2f2a', 2, 2);
+      /* booth lamp */
+      line(bx0 + bw - 20, 96, bw + bx0 - 20, 110, INK, 2); g.beginPath(); g.arc(bx0 + bw - 20, 114, 8, 0, Math.PI); g.fillStyle = '#ffd88a'; g.fill(); g.stroke();
+      /* gacha machine he leans on */
+      gacha(3412, 252, '#c0392b', '#4cc3e8');
+      /* striped boom gate across the far end */
+      line(3486, 300, 3486, 720, INK, 13); for (var b2 = 300; b2 < 720; b2 += 30) line(3486, b2, 3486, b2 + 15, '#e74c3c', 8); for (var b3 = 315; b3 < 720; b3 += 30) line(3486, b3, 3486, b3 + 15, '#f2efe6', 8);
+      box(3470, 280, 32, 36, '#c9a24a', 4); box(3470, 714, 32, 20, '#3b3e46', 3);
+      /* half-shadow pool where Nails holds the booth */
+      g.save(); var sp = g.createRadialGradient(3330, 340, 20, 3330, 340, 230); sp.addColorStop(0, 'rgba(10,6,14,.42)'); sp.addColorStop(1, 'rgba(10,6,14,0)'); g.fillStyle = sp; g.fillRect(3100, 175, 405, 400); g.restore();
+    })();
+    function gacha(x, y, body, dome) { shadow(x - 6, y + 58, 60, 24, 0.35);
+      box(x, y + 30, 48, 48, body, 5); rect(x + 4, y + 34, 40, 6, 'rgba(255,255,255,.22)');
+      g.beginPath(); g.arc(x + 24, y + 26, 21, Math.PI, 0); g.lineTo(x + 45, y + 32); g.lineTo(x + 3, y + 32); g.closePath(); g.fillStyle = dome; g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke();
+      ['#f2c94c', '#e85a7a', '#7cd17c', '#f2f2f2', '#4c9be8'].forEach(function (c, i) { g.beginPath(); g.arc(x + 12 + i * 6, y + 22 + (i % 2) * 6, 5, 0, 7); g.fillStyle = c; g.fill(); g.lineWidth = 1.5; g.strokeStyle = INK2; g.stroke(); });
+      g.beginPath(); g.arc(x + 14, y + 12, 4, 0, 7); g.fillStyle = 'rgba(255,255,255,.7)'; g.fill();
+      box(x + 14, y + 44, 20, 12, '#efe6d0', 2, 2); g.beginPath(); g.arc(x + 24, y + 50, 4, 0, 7); g.fillStyle = '#7d828c'; g.fill();
+      rect(x + 12, y + 62, 24, 8, '#2a211c'); }
+
+    /* ---------- 5. hall + street props ---------- */
+    /* Nails' desk in front of the office: steel desk, ledger, cash box, lamp */
+    (function () { shadow(530, 240, 230, 40, 0.35); box(540, 196, 200, 56, '#596169', 4); rect(544, 200, 192, 8, '#7d868f'); rect(548, 230, 184, 22, '#4b5259'); line(548, 230, 732, 230, INK, 2);
+      box(560, 184, 60, 16, '#efe6d0', 2, 2); line(590, 184, 590, 200, INK2, 2); box(640, 182, 40, 18, '#6d7480', 2, 2); rect(646, 186, 28, 4, '#c9a24a');
+      line(712, 196, 716, 168, INK, 3); g.beginPath(); g.moveTo(704, 168); g.lineTo(730, 168); g.lineTo(724, 158); g.lineTo(710, 158); g.closePath(); g.fillStyle = '#3e7c59'; g.fill(); g.stroke(); glow(716, 190, 60, 'rgba(255,220,140,A)', 0.4);
+      g.save(); var sp = g.createRadialGradient(640, 290, 10, 640, 290, 140); sp.addColorStop(0, 'rgba(10,6,14,.38)'); sp.addColorStop(1, 'rgba(10,6,14,0)'); g.fillStyle = sp; g.fillRect(480, 200, 320, 200); g.restore(); })();
+    gacha(750, 196, '#2f6bd1', '#f2c94c');
+    /* west wall: gacha bank (three) */
+    g.fillStyle = '#4a3d37'; g.fillRect(0, 0, 95, 960); line(95, 40, 95, 878, INK, 4);
+    rect(12, 230, 70, 120, '#c9b48a', INK, 3); for (var nb = 0; nb < 6; nb++) rect(20 + (nb % 2) * 30, 240 + Math.floor(nb / 2) * 36, 24, 28, ['#efe6d0', '#f2c4cf', '#d8e6ef'][nb % 3], INK2, 1.5);
+    txt('NOTICE', 47, 222, 10, '#e9dfc6');
+    gacha(104, 594, '#e74c3c', '#f2f2f2'); gacha(104, 664, '#2f6bd1', '#f2c94c'); gacha(104, 734, '#f2c94c', '#7cd17c');
+    /* takoyaki yatai under a tarp */
+    (function () { var x = 180, y = 360; shadow(x - 10, y + 90, 184, 36, 0.35);
+      g.save(); g.fillStyle = 'rgba(12,8,14,.45)'; g.fillRect(190, 300, 140, 56); g.restore();
+      box(x, y, 164, 92, '#a33a2e', 5); rect(x + 4, y + 4, 156, 10, 'rgba(255,255,255,.18)');
+      g.beginPath(); g.moveTo(x - 8, y - 6); g.quadraticCurveTo(x + 40, y + 30, x + 82, y + 4); g.quadraticCurveTo(x + 130, y - 20, x + 172, y + 10); g.lineTo(x + 166, y + 64); g.quadraticCurveTo(x + 100, y + 44, x + 40, y + 70); g.lineTo(x - 4, y + 52); g.closePath(); g.fillStyle = '#3d6f8c'; g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke();
+      line(x + 20, y + 10, x + 30, y + 58, 'rgba(255,255,255,.2)', 3); line(x + 110, y + 4, x + 118, y + 50, 'rgba(255,255,255,.2)', 3);
+      box(x + 40, y + 76, 84, 16, '#efe6d0', 2, 2); txt('TAKOYAKI', x + 82, y + 84, 10, '#a33a2e');
+      [[x + 20, y + 96], [x + 144, y + 96]].forEach(function (w) { g.beginPath(); g.arc(w[0], w[1], 11, 0, 7); g.fillStyle = '#2b2d33'; g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke(); g.beginPath(); g.arc(w[0], w[1], 4, 0, 7); g.fillStyle = '#7d828c'; g.fill(); }); })();
+    /* oden cart */
+    (function () { var x = 934, y = 498; shadow(x - 8, y + 88, 188, 34, 0.35);
+      box(x, y + 18, 172, 76, '#6d4a32', 4); for (var p = 0; p < 6; p++) line(x + 10 + p * 28, y + 22, x + 10 + p * 28, y + 90, 'rgba(42,33,28,.35)', 2);
+      box(x - 6, y, 184, 22, '#22325c', 4); txt('\u304a\u3067\u3093  ODEN', x + 86, y + 11, 12, '#f2e8cf', "800 {s}px " + JP);
+      box(x + 30, y + 30, 112, 36, '#b9c0c8', 4); for (var o = 0; o < 6; o++) { g.beginPath(); g.arc(x + 46 + o * 16, y + 48, 6, 0, 7); g.fillStyle = ['#e8c88a', '#f2f2f2', '#b0703f'][o % 3]; g.fill(); }
+      g.beginPath(); g.arc(x + 60, y - 6, 11, 0, 7); g.fillStyle = '#d9483b'; g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); line(x + 60, y - 18, x + 60, y - 30, INK, 2);
+      [[x + 20, y + 98], [x + 152, y + 98]].forEach(function (w) { g.beginPath(); g.arc(w[0], w[1], 11, 0, 7); g.fillStyle = '#2b2d33'; g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke(); }); })();
+    /* beer crates, stacked (hall NE corner) */
+    function crates(x, y, n, hide) { if (hide) { g.save(); g.fillStyle = 'rgba(12,8,14,.45)'; g.fillRect(hide[0], hide[1], hide[2] - hide[0], hide[3] - hide[1]); g.restore(); }
+      shadow(x - 6, y + 112, 132, 30, 0.35);
+      for (var c = 0; c < n; c++) { var cx = x + (c % 2) * 60, cy = y + 70 - Math.floor(c / 2) * 48 - (c % 2) * 6; box(cx, cy, 58, 56, c % 3 === 1 ? '#c0392b' : '#d1a543', 3); rect(cx + 4, cy + 4, 50, 6, 'rgba(255,255,255,.22)'); for (var k = 0; k < 3; k++) rect(cx + 8 + k * 16, cy + 18, 10, 26, 'rgba(42,33,28,.35)'); } }
+    crates(1052, 150, 5, [1040, 285, 1180, 335]);
+    /* street props */
+    crates(1900, 160, 4, [1890, 290, 2010, 330]);
+    (function () { /* tarp-covered cart mid street, south side */ var x = 2560, y = 610; g.save(); g.fillStyle = 'rgba(12,8,14,.45)'; g.fillRect(2570, 560, 140, 46); g.restore(); shadow(x - 8, y + 70, 180, 30, 0.35);
+      g.beginPath(); g.moveTo(x, y + 6); g.quadraticCurveTo(x + 80, y - 18, x + 164, y + 4); g.lineTo(x + 170, y + 76); g.quadraticCurveTo(x + 84, y + 64, x - 4, y + 80); g.closePath(); g.fillStyle = '#4f6b3a'; g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke();
+      line(x + 40, y, x + 34, y + 74, 'rgba(255,255,255,.18)', 3); line(x + 120, y - 2, x + 128, y + 70, 'rgba(255,255,255,.18)', 3); line(x - 2, y + 30, x + 168, y + 34, '#c9a24a', 3); })();
+    /* sandwich boards + a bike against a pillar + potted plants */
+    function board(x, y, t, c) { shadow(x - 4, y + 44, 48, 12, 0.3); box(x, y, 40, 48, c, 3); rect(x + 5, y + 6, 30, 30, '#2b2d33'); txt(t, x + 20, y + 21, 9, '#f2efe6'); }
+    board(1470, 190, 'SALE', '#8a5a34'); board(2200, 190, '\u00a5300', '#6d4a32'); board(2880, 190, 'OPEN?', '#8a5a34');
+    function bike(x, y) { g.lineWidth = 3; g.strokeStyle = INK; [[x, y], [x + 56, y]].forEach(function (w) { g.beginPath(); g.arc(w[0], w[1], 15, 0, 7); g.stroke(); g.beginPath(); g.arc(w[0], w[1], 3, 0, 7); g.fillStyle = INK; g.fill(); });
+      g.beginPath(); g.moveTo(x, y); g.lineTo(x + 22, y - 22); g.lineTo(x + 46, y - 22); g.lineTo(x + 56, y); g.moveTo(x + 22, y - 22); g.lineTo(x + 30, y); g.lineTo(x + 46, y - 22); g.strokeStyle = '#c0392b'; g.lineWidth = 4; g.stroke(); line(x + 18, y - 28, x + 28, y - 28, INK, 4); line(x + 46, y - 22, x + 50, y - 32, INK, 3); box(x + 44, y - 36, 22, 10, '#8a8f96', 2, 2); }
+    bike(2390, 742); bike(1620, 742);
+    function plant(x, y) { shadow(x - 4, y + 22, 40, 12, 0.3); box(x, y, 32, 28, '#b0603a', 4); for (var l = 0; l < 7; l++) { g.beginPath(); g.ellipse(x + 16 + Math.cos(l) * 10, y - 6 + Math.sin(l * 2) * 6, 9, 6, l, 0, 7); g.fillStyle = l % 2 ? '#4f8a3a' : '#6aa84f'; g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); } }
+    plant(1232, 196); plant(3056, 196);
+
+    /* ---------- 6. south side: the facing stall row (awnings seen from the street) ---------- */
+    g.fillStyle = '#3b302b'; g.fillRect(HALL, SOUTH, EAST - HALL, GH_ - SOUTH);
+    STALLS.forEach(function (s) { if (s.row !== 's') return; var K = KINDS[s.kind], x = s.x, w = s.w, op = openOf(s.id);
+      /* tin awning roof */
+      var ag = g.createLinearGradient(0, SOUTH + 30, 0, GH_); ag.addColorStop(0, shade(K[2], 0.15)); ag.addColorStop(1, shade(K[2], -0.45)); g.fillStyle = ag; g.fillRect(x, SOUTH + 30, w, GH_ - SOUTH - 30);
+      for (var cx = x + 6; cx < x + w; cx += 12) line(cx, SOUTH + 32, cx, GH_, 'rgba(0,0,0,.2)', 2);
+      g.lineWidth = 3; g.strokeStyle = INK; g.strokeRect(x, SOUTH + 30, w, GH_ - SOUTH - 30);
+      /* valance + name, facing the street */
+      box(x - 2, SOUTH + 2, w + 4, 30, '#efe4cc', 3); rect(x + 2, SOUTH + 6, w - 4, 6, shade(K[2], 0.3));
+      jp(K[1], x + 22 + (K[1].length > 2 ? 6 : 0), SOUTH + 20, K[1].length > 3 ? 10 : 14, K[2]); txt(K[0], x + w / 2 + 14, SOUTH + 21, K[0].length > 7 ? 10 : 12, K[2]);
+      if (op) { glow(x + w / 2, SOUTH - 10, 100, 'rgba(255,200,120,A)', 0.3); for (var gi = 0; gi < 5; gi++) { g.fillStyle = K[3][gi % 3]; g.beginPath(); g.arc(x + 20 + gi * ((w - 40) / 4), SOUTH - 10, 8, 0, 7); g.fill(); g.lineWidth = 2; g.strokeStyle = INK2; g.stroke(); } }
+      else { rect(x + 8, SOUTH - 6, w - 16, 8, '#6f7884', INK, 2); } });
+    for (var pxs = SX0 - 6; pxs <= SX0 + 12 * SW; pxs += SW * 2) { rect(pxs - 13, SOUTH - 16, 26, 22, '#2b2d33', INK, 2); g.beginPath(); g.arc(pxs, SOUTH - 8, 9, 0, 7); g.fillStyle = '#7d828c'; g.fill(); }
+    /* hall bottom wall + entrance (unchanged door) */
+    g.fillStyle = '#4a3d37'; g.fillRect(0, 878, HALL, GH_ - 878); g.fillRect(HALL, SOUTH, 12, GH_ - SOUTH);
+    rect(0, 878, HALL + 12, 14, '#6b5a50'); line(95, 878, HALL, 878, INK, 4);
+    rect(575, 870, 130, 90, '#1b171c'); rect(568, 862, 10, 98, '#c9b89a', INK, 2); rect(702, 862, 10, 98, '#c9b89a', INK, 2);
+    box(590, 830, 100, 34, '#5a3a3a', 4); for (var mt = 0; mt < 5; mt++) line(598 + mt * 20, 836, 598 + mt * 20, 858, 'rgba(255,255,255,.12)', 2);
+    box(540, 892, 200, 30, '#7d2f2a', 4); jp('\u3088\u3046\u3053\u305d', 640, 908, 14, '#f2dfa6');
+
+    /* ---------- 7. lanterns + light (the last pass) ---------- */
+    g.save(); g.globalCompositeOperation = 'multiply'; var vg = g.createLinearGradient(0, TOP, 0, 878); vg.addColorStop(0, 'rgba(200,190,215,1)'); vg.addColorStop(0.5, 'rgba(235,228,240,1)'); vg.addColorStop(1, 'rgba(190,182,205,1)'); g.fillStyle = vg; g.fillRect(95, TOP, EAST - 95, 878 - TOP); g.restore();
+    function lantern(x, y, col, ch) { line(x, y - 22, x, y - 12, INK, 2);
+      g.save(); g.globalCompositeOperation = 'lighter'; glow(x, y + 4, 90, 'rgba(255,140,70,A)', 0.22); g.restore();
+      rect(x - 10, y - 14, 20, 5, '#2b2320'); g.beginPath(); g.ellipse(x, y + 4, 15, 18, 0, 0, 7); g.fillStyle = col; g.fill(); g.lineWidth = 2.5; g.strokeStyle = INK; g.stroke();
+      for (var k = -1; k <= 1; k++) { g.beginPath(); g.ellipse(x, y + 4 + k * 7, 15 - Math.abs(k) * 2, 1.2, 0, 0, 7); g.strokeStyle = 'rgba(42,33,28,.45)'; g.lineWidth = 1.5; g.stroke(); }
+      g.beginPath(); g.ellipse(x - 5, y - 2, 4, 7, -0.3, 0, 7); g.fillStyle = 'rgba(255,230,180,.55)'; g.fill();
+      if (ch) jp(ch, x + 1, y + 6, 11, '#2a211c');
+      rect(x - 7, y + 20, 14, 5, '#2b2320'); line(x, y + 25, x, y + 31, '#c9a24a', 2); }
+    for (var ln = 0; ln <= 12; ln++) lantern(SX0 - 4 + ln * SW, 102, ln % 3 === 2 ? '#f2e6c8' : '#e2483a', ln % 2 ? '\u796d' : '');
+    [190, 444, 836, 1090].forEach(function (x) { lantern(x, 102, '#e2483a', '\u796d'); });
+    for (var ls = 0; ls <= 12; ls++) if (ls % 2) lantern(SX0 - 4 + ls * SW, SOUTH + 48, '#e2483a', '');
+    /* the floor pools of the street lamps hung on the girders (warm, cheap, baked) */
+    g.save(); g.globalCompositeOperation = 'lighter'; for (var lp = 1270; lp < EAST; lp += 300) glow(lp, 480, 210, 'rgba(255,190,120,A)', 0.07); glow(640, 520, 360, 'rgba(255,200,140,A)', 0.06); g.restore();
+    /* hanging vertical banners on every other girder */
+    for (var hb = 0; hb < 7; hb++) { var bxh = SX0 - 6 + hb * SW * 2; box(bxh - 14, 30, 28, 60, ['#7d2f2a', '#22325c', '#3e7c59'][hb % 3], 3); jp(['\u5927', '\u58f2', '\u51fa'][hb % 3], bxh, 50, 14, '#f2dfa6'); jp('\u2605', bxh, 72, 10, '#f2dfa6'); }
+    return cv;
+  }
+  return { W: GW_, H: GH_, STALLS: STALLS, KINDS: KINDS, paint: paint };
+})();
+/* GINKO_PAINT_END */
+  var L = C2LM.arcade, D = INT.c2_arcade, GWd = GINKO.W, GHd = GINKO.H;
+  var BLK = [
+    /* entrance hall (the old room): Nails' desk, his gacha, the yatai, the gacha bank, crates, the oden cart */
+    [540, 196, 740, 254], [748, 226, 800, 274], [180, 360, 344, 470], [100, 600, 160, 812], [1050, 150, 1170, 286], [934, 498, 1106, 610],
+    /* the street: crates, tarp cart, sandwich boards, plants, bikes */
+    [1898, 180, 2020, 288], [2556, 600, 2734, 690], [1468, 196, 1512, 240], [2198, 196, 2242, 240], [2878, 196, 2922, 240], [1230, 186, 1266, 226], [3054, 186, 3090, 226],
+    [1600, 715, 1695, 765], [2370, 715, 2465, 765],
+    /* the far end: toll booth, its gacha, the boom gate */
+    [3170, 175, 3406, 314], [3408, 278, 3464, 334], [3466, 280, 3505, 770]];
+  for (var px = 1204; px <= 1210 + 12 * 156; px += 312) { BLK.push([px - 16, 175, px + 16, 196]); BLK.push([px - 14, 752, px + 14, 770]); }
+  BLK.push([1176, 175, 1206, 196]);
+  L.block = BLK; L.hide = [[1040, 290, 1180, 335], [190, 300, 330, 356], [1890, 290, 2010, 330], [2570, 560, 2710, 598]];
+  L.bat = [3372, 372]; L.T = [3330, 520]; L.S = [3150, 560]; L.seal = [3290, 170]; L.sealAt = [3290, 345];
+  var GPOS = [[2000, 470, 170], [2720, 470, 150]];
+  L.guards = (L.guards || []).map(function (g, i) { var p = GPOS[i] || GPOS[0]; return [g[0], p[0], p[1], p[2]]; });
+  L.note = 'The covered Ginko shopping street. Every stall is shuttered; the toll booth is at the far end.';
+  D.w = GWd; D.h = GHd; D.open = [[95, 175, 1185, 878], [1185, 175, 3505, 770], [585, 870, 695, 948]]; D.base = BLK; D.block = BLK; D.G = null;
+
+  /* ---------- stall state hook ---------- */
+  function gS() { var S = c2S(); if (!S.ginko || typeof S.ginko !== 'object') S.ginko = {}; return S.ginko; }
+  function isOpen(id) { try { return !!gS()[id]; } catch (e) { return false; } }
+  var CV = null, SIG = '', KEY = function () { return D.src + '?v=' + BUILD; };
+  function sig() { return GINKO.STALLS.map(function (s) { return isOpen(s.id) ? 1 : 0; }).join(''); }
+  function art() { var s = sig(); if (!CV || SIG !== s) { if (!CV) CV = document.createElement('canvas'); GINKO.paint(CV, isOpen); SIG = s; CV.complete = true; CV.naturalWidth = GWd; CV.naturalHeight = GHd; } return CV; }
+  function show() { var m = document.getElementById('wimap'); if (!m || m.dataset.int !== 'c2_arcade') return;
+    var c = art(); c.id = 'ginkoArt'; c.style.cssText = 'position:absolute;left:0;top:0;width:' + GWd + 'px;height:' + GHd + 'px;pointer-events:none;z-index:0';
+    if (c.parentNode !== m) m.insertBefore(c, m.firstChild); m.style.backgroundImage = 'none';
+    try { if (typeof SWC === 'object') SWC[KEY()] = c; } catch (eS) {} }
+  function drop() { var c = document.getElementById('ginkoArt'); if (c) c.remove(); try { if (typeof SWC === 'object' && SWC[KEY()] === CV) delete SWC[KEY()]; } catch (eS) {}
+    if (CV) { CV.width = 0; CV.height = 0; CV = null; SIG = ''; } }
+  var intGoG = intGo;
+  intGo = function (id) { var r = intGoG.apply(this, arguments); try { if (id === 'c2_arcade') show(); else drop(); } catch (e) { ev('world:ginko:err:' + (e && e.message)); } return r; };
+  var intExitG = intExit;
+  intExit = function () { try { drop(); } catch (e) {} return intExitG.apply(this, arguments); };
+  GINKO.STALLS.forEach(function (s) { Object.defineProperty(s, 'open', { get: function () { return isOpen(s.id); }, enumerable: true, configurable: true }); });
+  root.FFF_GINKO = { W: GWd, H: GHd, stalls: GINKO.STALLS, kinds: GINKO.KINDS, isOpen: isOpen,
+    setOpen: function (id, on) { gS()[id] = on ? 1 : 0; if (!on) delete gS()[id]; save(); try { var m = document.getElementById('wimap'); if (m && m.dataset.int === 'c2_arcade') show(); } catch (e) {} ev('world:ginko:stall:' + id + ':' + (on ? 1 : 0)); return isOpen(id); },
+    paint: function (cv, f) { return GINKO.paint(cv, f || isOpen); } };
+  ev('world:ginko:ready');
+  } catch (eAll) { try { ev('world:ginko:err:init:' + (eAll && eAll.message)); } catch (e2) {} }
 })();
 
 /* v6.5.51 (t3039u–t3050u): Ch2 vendors, popups, ginger, recipe flow,
