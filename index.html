@@ -5968,7 +5968,7 @@ function drawFoeBody(x, F, T, ox, oy, rot, hurt) {
     if (im) {
       var fh = T.height * 0.94, hs = fh / 192;
       x.save(); x.translate(T.left + T.width / 2 + ox, T.top + T.height + oy); if (rot) x.rotate(rot);
-      x.drawImage(im, -62 * hs, -186 * hs, 124 * hs, 192 * hs); x.restore(); return;
+      x.drawImage(im, -62 * hs, -186 * hs, 124 * hs, 192 * hs); if (root.FIN_HURT && performance.now() < root.FIN_HURT.until) { var rw = Math.ceil(124 * hs), rh = Math.ceil(192 * hs), rc = tinted(im, rw, rh, 'rgba(255,50,50,0.45)'); x.drawImage(rc, 0, 0, rw, rh, -62 * hs, -186 * hs, rw, rh); } x.restore(); return;
     }
   }
   copyFig(x, F.cv('foe'), T, ox, oy, rot || 0, hurt ? 'rgba(255,220,190,0.35)' : null, 1);
@@ -6276,11 +6276,11 @@ function drawFieldDS(x, st, t, dt, s0) {
   x.restore(); drawParts(x, st.parts, dt, u);
   if ((n === 'bind' || n === 'burst') && A > 0) { x.save(); x.setTransform(SCR, 0, 0, SCR, 0, 0); x.globalAlpha = A * (n === 'burst' ? 1 - p : Math.min(1, p * 3)); x.font = 'italic 900 ' + Math.round(Math.min(40, W * 0.09)) + 'px system-ui,sans-serif'; x.textAlign = 'right'; x.lineWidth = 4; x.strokeStyle = '#081a33'; var tx = W - 18, ty = Math.max(90, H * 0.2); x.strokeText('BOUND', tx, ty); x.fillStyle = '#bfe2ff'; x.fillText('BOUND', tx, ty); x.restore(); }
   if (n === 'stick' && p < 0.3) { x.fillStyle = 'rgba(220,240,255,' + 0.35 * (1 - p / 0.3) + ')'; x.fillRect(0, 0, W, H); }
-  if (n === 'burst' && p < 0.25) { x.fillStyle = 'rgba(235,245,255,' + 0.55 * (1 - p * 4) + ')'; x.fillRect(0, 0, W, H); }
+  if (n === 'burst' && p < 0.25) { x.fillStyle = 'rgba(235,245,255,' + 0.55 * (1 - p * 4) * (root.FIN_HURT ? 0.35 : 1) + ')'; x.fillRect(0, 0, W, H); }
   if (st.pose !== fr) { st.pose = fr; ev('fin:bk:' + fr); } banner(x, W, H, st.sub, A);
 }
 /* copyFig: shared fighter blit used by every on-field finisher. */
-function copyFig(x, cv, r, ox, oy, rot, tint, alpha) { if (!cv || !r || !r.width || !cv.width) return; x.save(); x.globalAlpha = alpha == null ? 1 : alpha; x.translate(r.left + r.width / 2 + ox, r.top + r.height + oy); x.rotate(rot || 0);
+function copyFig(x, cv, r, ox, oy, rot, tint, alpha) { if (!cv || !r || !r.width || !cv.width) return; var HU = root.FIN_HURT; if (HU && cv === HU.cv && performance.now() < HU.until) tint = 'rgba(255,50,50,0.45)'; /* v6.5.59: the final hit: the target shows its hurt pose and stays red through the slow-mo and the freeze */ x.save(); x.globalAlpha = alpha == null ? 1 : alpha; x.translate(r.left + r.width / 2 + ox, r.top + r.height + oy); x.rotate(rot || 0);
   x.drawImage(cv, -r.width / 2, -r.height, r.width, r.height);
   if (tint) { var c = tinted(cv, r.width, r.height, tint); x.drawImage(c, 0, 0, Math.ceil(r.width), Math.ceil(r.height), -r.width / 2, -r.height, Math.ceil(r.width), Math.ceil(r.height)); } x.restore(); }
 /* ---- v4.14: Ryo's board model seen from BEHIND on the field (assets/clips/ryo_back, tools/make_ryo_back.py) ----
@@ -6322,7 +6322,7 @@ function bkDraw(x, F, L, name, X, Y, alpha, tint, rot) { var b = F.back, c = L.f
 function fistFire(x, st, X, Y, u, dt, a) { x.save(); x.globalCompositeOperation = 'lighter'; glow(x, X, Y, 22 * u * (1 + 0.15 * Math.sin(st.t0 = (st.t0 || 0) + dt * 40)), 0.8 * a, '255,140,30'); glow(x, X, Y, 9 * u, 0.95 * a, '255,230,150'); x.restore();
   for (var i = 0; i < 40 * dt * a; i++) st.parts.push({ x: X + rnd(-5, 5) * u, y: Y + rnd(-5, 5) * u, vx: rnd(-30, 30) * u, vy: rnd(-120, -40) * u, l: rnd(0.15, 0.4), a: 0, f: 1 }); }
 var OFF2 = null;
-function softFig(x, cv, r, ox, oy, tint, soft) { if (!soft) { copyFig(x, cv, r, ox, oy, 0, tint, 1); return; } if (!cv || !r || !r.width || !cv.width) return;
+function softFig(x, cv, r, ox, oy, tint, soft) { var HU = root.FIN_HURT; if (HU && cv === HU.cv && performance.now() < HU.until) tint = 'rgba(255,50,50,0.45)'; if (!soft) { copyFig(x, cv, r, ox, oy, 0, tint, 1); return; } if (!cv || !r || !r.width || !cv.width) return;
   if (!OFF2) OFF2 = document.createElement('canvas'); var w = Math.ceil(r.width), hh = Math.ceil(r.height); OFF2.width = w; OFF2.height = hh; var o = OFF2.getContext('2d');
   o.clearRect(0, 0, w, hh); o.drawImage(cv, 0, 0, w, hh); if (tint) { o.globalCompositeOperation = 'source-atop'; o.fillStyle = tint; o.fillRect(0, 0, w, hh); }
   o.globalCompositeOperation = 'destination-in'; var g = o.createLinearGradient(0, hh * 0.8, 0, hh); g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(1, 'rgba(0,0,0,0)'); o.fillStyle = g; o.fillRect(0, 0, w, hh);
@@ -7918,7 +7918,7 @@ root.cuFinal = {
     var F = c.F, Zf = c.Zf || CF.Z, bb = b || { z: 1, fx: F.x, fy: F.y, ax: F.x, ay: F.y }; /* v6.5.59: blends from the rush camera (b) into the final push */
     var zz = bb.z + (Zf - bb.z) * k, fx = bb.fx + (F.x - bb.fx) * k, fy = bb.fy + (F.y - bb.fy) * k, Sx = bb.ax + (F.x + (W / 2 - F.x) * 0.7 - bb.ax) * k, Sy = bb.ay + (F.y + (H * 0.42 - F.y) * 0.7 - bb.ay) * k;
     x.translate(Sx, Sy); x.scale(zz, zz); x.translate(-fx, -fy); },
-  flash: function (x, W, H, c) { if (!c.tb) return; var z = performance.now() - c.tb; if (z < 120) { x.fillStyle = 'rgba(255,248,230,' + 0.8 * (1 - z / 120) + ')'; x.fillRect(0, 0, W, H); } }
+  flash: function (x, W, H, c) { if (!c.tb) return; var z = performance.now() - c.tb, HU = root.FIN_HURT, hu = HU && performance.now() < HU.until; if (z < 120) { x.fillStyle = hu ? 'rgba(255,190,170,' + 0.3 * (1 - z / 120) + ')' : 'rgba(255,248,230,' + 0.8 * (1 - z / 120) + ')'; x.fillRect(0, 0, W, H); } } /* v6.5.59: a softer, warmer flash while the target's red hurt frame is held, so the red shows through the freeze */
 };
 function cuPt(x, y) { return CU.on ? { x: CU.S.x + CU.Z * (x - CU.F.x), y: CU.S.y + CU.Z * (y - CU.F.y) } : { x: x, y: y }; }
 function cuIn(a, d, dir, hz, label) {
@@ -8067,6 +8067,10 @@ async function impactPhase(fx, after) {
   await Promise.all(ps);
 }
 var GATHER = { ryo: 'ryo_taunt', aoi: 'aoi_aura' };
+/* v6.5.59: the final hit of a finisher / double: the target's existing hurt pose and red hit-flash are held through the slow-mo zoom and the freeze, then it recovers normally */
+function cuHurtHold(side, ms) { var f = figOf(side); if (!f || ST.ff) return; var end = performance.now() + ms; root.FIN_HURT = { cv: f.c, until: end }; ev('hurt:final:' + side);
+  (function k() { if (performance.now() >= end || ST.ff) { f.hurtLock = 0; if (root.FIN_HURT && root.FIN_HURT.cv === f.c) root.FIN_HURT = null; return; } f.hit = 1; f.hurtLock = 1; if ((f.poseT || 0) < 0.85) f.poseT = 0.85; root.requestAnimationFrame(k); })(); }
+root.cuHurtHold = cuHurtHold;
 function hurtOf(si) { if (chOfSide(si) === 'aoi') return 'hurt_f_aoi'; var c = CH[si === 0 ? ST.me : ST.foe]; return c.vox ? 'bx_' + c.vox + '_hurt' : c.voice === 'f' ? 'hurt_f' : 'hurt_m'; } // v4.1: male bullies + Gouki have their own recorded voices
 async function refreshPhase(si) {
   var chId = si === 0 ? ST.me : ST.foe, fig = figOf(si); ev('refresh:' + si);
@@ -8204,7 +8208,7 @@ async function doPlay(si, mv) {
     /* v4.21: the board side of the finishing blow, fired by the finisher on the frame the blow shows (or at a skip): the foe's
      * hurt sound, the damage number, the HP bar, the board recoil, sparks and the shake, all at once (was: after the move ended) */
     var d = geo(1 - si), col = chId === 'ryo' ? '#ffb040' : '#7fefff', ip2 = null, hitDone = false;
-    function boardHit(sk) { if (hitDone) return; hitDone = true; document.body.classList.add('sigtop'); if (si === 0) rbl('sigSlam');
+    function boardHit(sk) { if (hitDone) return; hitDone = true; document.body.classList.add('sigtop'); if (si === 0) rbl('sigSlam'); if (!sk) cuHurtHold(1 - si, card.id === 'r_ds' ? 740 : 520);
       AU.play(hurtOf(1 - si), { gain: 0.8 }); if (root.FIN) FIN.mark('hurt');
       ip2 = impactPhase(Object.assign({}, fx, { noHurt: 1, sigEnd: 1 }), after); if (root.FIN) FIN.mark('dmg');
       recoil(1 - si, chId === 'aoi' ? 'slash' : 'punch'); sparks(d.x, d.y, col, 18); setTimeout(function () { if (!ST.ff) sparks(d.x + (Math.random() - 0.5) * 30, d.y - 10, col, 9); }, 120 / spd2); stageShake();
@@ -40455,7 +40459,7 @@ function paint(x, st, S, dt) {
   if (S.hits) { x.save(); if (st.scrTxt) x.setTransform(st.dpr, 0, 0, st.dpr, 0, 0); x.globalAlpha = A; var fs = Math.round(Math.min(44, st.W * 0.1) * (st.lastPop !== S.hits ? 1.15 : 1)); st.lastPop = S.hits;
     x.font = 'italic 900 ' + fs + 'px system-ui,sans-serif'; x.textAlign = 'right'; x.lineWidth = 4; x.strokeStyle = S.hcs || '#2a0c00'; var tx = st.W - 18, ty = Math.max(90, st.H * 0.2);
     x.strokeText(S.hits + ' HITS', tx, ty); x.fillStyle = S.hc || '#ffb347'; x.fillText(S.hits + ' HITS', tx, ty); x.restore(); }
-  if (S.flash > 0) { x.fillStyle = 'rgba(' + (S.fcol || '255,245,225') + ',' + S.flash + ')'; x.fillRect(0, 0, st.W, st.H); }
+  if (S.flash > 0) { x.fillStyle = 'rgba(' + (S.fcol || '255,245,225') + ',' + S.flash * (root.FIN_HURT ? 0.35 : 1) + ')'; x.fillRect(0, 0, st.W, st.H); }
   if (st.pose !== S.key) { st.pose = S.key; ev('dbl:bk:' + S.key); }
 }
 function runTo(q, x0, y0, x1, y1, t, rate) { var e = K().ease(q), gh = []; for (var g = 1; g <= 2; g++) { var e2 = K().ease(q - g * 0.14); gh.push([x0 + (x1 - x0) * e2, y0 + (y1 - y0) * e2, Math.floor(t * (rate || 14)) % 2 ? 'run1' : 'run2']); }
@@ -40665,9 +40669,9 @@ function showDraw(x, st, M, t, dt, F, G, ts, CM, TF, FZ) {
   M.draw(x, st, t, dt, F, G);
   if (st.tfw) { var e = since / 1000, u = G.u || 1; if (!st.burst) { st.burst = 1; var kk = K(); kk.sparkBurst(st.parts, foe.x, foe.y, 40, u, '255,150,40'); kk.sparkBurst(st.parts, foe.x, foe.y, 40, u, '120,240,255'); }
     x.save(); x.globalCompositeOperation = 'lighter'; [['255,150,40', 1], ['110,240,255', 0.72]].forEach(function (q) { var r2 = h * (0.12 + 0.75 * Math.min(1, e * 3) * q[1]) * (1 + 0.4 * (q[1] < 1)); x.strokeStyle = 'rgba(' + q[0] + ',' + Math.max(0, 0.9 - e * 1.4) + ')'; x.lineWidth = Math.max(2, 10 * u * Math.max(0.1, 1 - e * 2.2)); x.beginPath(); x.arc(foe.x, foe.y, r2, 0, 6.283); x.stroke(); });
-    var g = x.createRadialGradient(foe.x, foe.y, 0, foe.x, foe.y, h * 0.5); g.addColorStop(0, 'rgba(255,245,230,' + Math.max(0, 0.9 - e * 2) + ')'); g.addColorStop(0.45, 'rgba(255,150,40,' + Math.max(0, 0.4 - e) + ')'); g.addColorStop(1, 'rgba(60,220,240,0)'); x.fillStyle = g; x.beginPath(); x.arc(foe.x, foe.y, h * 0.5, 0, 6.283); x.fill(); x.restore(); }
+    var g = x.createRadialGradient(foe.x, foe.y, 0, foe.x, foe.y, h * 0.5); g.addColorStop(0, 'rgba(255,245,230,' + Math.max(0, 0.9 - e * 2) * (root.FIN_HURT ? 0.45 : 1) + ')'); g.addColorStop(0.45, 'rgba(255,150,40,' + Math.max(0, 0.4 - e) + ')'); g.addColorStop(1, 'rgba(60,220,240,0)'); x.fillStyle = g; x.beginPath(); x.arc(foe.x, foe.y, h * 0.5, 0, 6.283); x.fill(); x.restore(); }
   x.restore();
-  if (st.tfw && since < 120) { x.fillStyle = 'rgba(255,248,230,' + 0.8 * (1 - since / 120) + ')'; x.fillRect(0, 0, W, H); }
+  if (st.tfw && since < 120) { x.fillStyle = root.FIN_HURT ? 'rgba(255,190,170,' + 0.3 * (1 - since / 120) + ')' : 'rgba(255,248,230,' + 0.8 * (1 - since / 120) + ')'; x.fillRect(0, 0, W, H); }
 }
 /* v6.5.59 Spring Tide: the rush director. Ryo's 100 punches ramp up in speed, Aoi's 150 cuts ramp up after the stagger; every hit has a short hitstop and a kick; warp() keeps the pre-scheduled sounds on the hits. */
 function mkStDir(M, TF, FZ) {
@@ -40695,7 +40699,7 @@ function play(kind, opt) {
   var hits = M.hits.map(function (h) { return Object.assign({ done: false }, h); });
   PV.name(M.name); ev('dbl:start:' + kind);
   function HIT(h) { return opt.hit ? opt.hit(h.who, h.kind, h.k) : PV.hit(h.dmg, h.kind); } // v4.25: in a card battle the board's own hit (engine damage) lands here
-  function fire(h, t) { h.done = true; if (SHOW && h.t === TF && !st.tfw) { st.tfw = lastTs; ev('dbl:cam:final'); } var e = { k: h.k, who: h.who, at: +h.t.toFixed(3), t: +t.toFixed(3), frame: fn, dmg: h.dmg }; e.sndFrame = fn; h.snd(snd, t); if (h.dmg) { HIT(h); e.dmgFrame = fn; } e.ms = +(root.performance.now()).toFixed(1); log.hits.push(e); ev('dbl:blow:' + h.k); }
+  function fire(h, t) { h.done = true; if (CM && h.t === TF && root.cuHurtHold && h.dmg) root.cuHurtHold(1, 560); if (SHOW && h.t === TF && !st.tfw) { st.tfw = lastTs; ev('dbl:cam:final'); } var e = { k: h.k, who: h.who, at: +h.t.toFixed(3), t: +t.toFixed(3), frame: fn, dmg: h.dmg }; e.sndFrame = fn; h.snd(snd, t); if (h.dmg) { HIT(h); e.dmgFrame = fn; } e.ms = +(root.performance.now()).toFixed(1); log.hits.push(e); ev('dbl:blow:' + h.k); }
   function end(sk) { if (done) return; done = true; if (st.mus === 1) { st.mus = 2; root.cuMusic(false); } if (sk) { snd.stop(); hits.forEach(function (h) { if (!h.done && h.dmg) { h.done = true; HIT(h); } }); }
     if (opt.keep && !sk) { ev('dbl:keep:' + kind); CUR = { cv: cv, pv: PV, kind: kind }; res({ skipped: false, kept: 1 }); return; }
     x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, cv.width, cv.height); PV.end(); ev('dbl:end:' + kind + (sk ? ':skipped' : '')); CUR = null; res({ skipped: !!sk }); }
