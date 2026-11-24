@@ -37575,15 +37575,15 @@ function camPan(to, o, done) {
   var VO = NQ.VO = {};
   /* Kitsune Udon: the shutter goes up */
   VO.udon = V3([['nq_udon', 'They’re gone? Three nights those boys stood on my flower bed.']], {
-    fierce: [['ryo', 'They won’t stand anywhere for a while.', { hype: 1 }], ['aoi', 'Kazan.He means they won’t be back on this corner.']],
+    fierce: [['ryo', 'They won’t stand anywhere for a while.', { hype: 1 }], ['aoi', 'Kazan. He means they won’t be back on this corner.']],
     strategic: [['aoi', 'They won’t be back. Their crew just lost the corner, and they know it.'], ['ryo', 'Next time they’ll pick a softer flower bed.']],
     balanced: [['ryo', 'Sorry about the flowers.'], ['aoi', 'They won’t be back on this corner. We made sure.']]
-  }, [['nq_udon', 'Then the shutter stays up. Kitsune Udon is open.'], ['nq_udon', 'Nails’ kids eat at Nails’ price.Twenty off.']].concat([]));
+  }, [['nq_udon', 'Then the shutter stays up. Kitsune Udon is open.'], ['nq_udon', 'Nails’ kids eat at Nails’ price. Twenty off.']].concat([]));
   VO.udon.fierce = VO.udon.fierce.concat([['ryo', 'Twenty off? Then I’m eating twice.', { hype: 1 }], ['nq_udon', 'You’ll pay twice, then. Machi next door has the bay open again too.']]);
   VO.udon.strategic = VO.udon.strategic.concat([['ryo', 'Twenty off, every night. That’s rent money.'], ['nq_udon', 'It’s noodles, boy. Machi next door has the bay open again too.']]);
   VO.udon.balanced = VO.udon.balanced.concat([['ryo', 'Twenty off… is that a lot?', { hype: 1 }], ['nq_udon', 'It’s noodles. Don’t push it. Machi next door has the bay open again too.']]);
   /* Flip on the phone: Hold the West Street */
-  VO.flip = V3([['n13flip', '(on the phone)Corner’s red. Nails saw.'], ['n13flip', 'Gōda keeps pushing up the west side street.Two waves, then his heavies. Push back.'], ['n13flip', 'I’ll be at the south end when it counts.']], {
+  VO.flip = V3([['n13flip', '{quiet}(on the phone){/quiet} Corner’s red. Nails saw.'], ['n13flip', 'Gōda keeps pushing up the west side street. Two waves, then his heavies. Push back.'], ['n13flip', 'I’ll be at the south end when it counts.']], {
     fierce: [['ryo', 'Two waves. Fine. I’ll take the heavies.'], ['aoi', 'We take the north end first. Together.']],
     strategic: [['aoi', 'North end first. Thin them before the heavies come down.'], ['ryo', 'And Flip shows up right when it’s easy. Convenient.']],
     balanced: [['aoi', 'The west side street. North end first.'], ['ryo', 'People live on that street. Let’s keep it standing.']]
@@ -37609,7 +37609,7 @@ function camPan(to, o, done) {
     fierce: [['ryo', '{shout}Which door.{/shout}', { hype: 1 }]],
     strategic: [['ryo', 'Which door? You’ve got paint on your sleeve and nowhere to run.']],
     balanced: [['ryo', 'Which door? Easy. Nobody’s hitting you again.']]
-  }, [['c2_hustler', 'The bathhouse. By the station. Ask for Kaneda.He’ll ask for your teeth.']]);
+  }, [['c2_hustler', 'The bathhouse. By the station. Ask for Kaneda. He’ll ask for your teeth.']]);
   /* Ms. Kanda at the hotel desk */
   VO.clerk = V3([['nq_clerk', 'You’re the two who cleared the door. The guests told me.'], ['nq_clerk', 'Kanda. Front desk, nine years. Gōda’s boys were here every night this month.'], ['aoi', 'Where do they go when they’re not here?'], ['nq_clerk', 'They tag the west wall every night. Right across the plaza. Like they own it.']], {
     fierce: [['ryo', 'Then we take the wall back.', { hype: 1 }]],
@@ -37622,7 +37622,7 @@ function camPan(to, o, done) {
     strategic: [['ryo', 'Two guards, one door, and you’re the only one who’s been hit before.'], ['c2_doorman', '{slow}Observant.{/slow} Doesn’t open the door.']],
     balanced: [['ryo', 'There are old people sitting on buckets out here. In the cold.'], ['c2_doorman', 'I know. I walk past them every night.']]
   }, [['aoi', 'Kaneda. The door man.'], ['@bond', 'c2nq_door']]);
-  VO.doorWon = V3([['c2_doorman', '…Fine.You knocked.'], ['c2_doorman', 'Gōda’ll see you. Bathhouse. All the way to the back.']], {
+  VO.doorWon = V3([['c2_doorman', '…Fine. You knocked.'], ['c2_doorman', 'Gōda’ll see you. Bathhouse. All the way to the back.']], {
     fierce: [['ryo', 'He’d better.'], ['aoi', 'The boiler room. That’s where the seal is.']],
     strategic: [['aoi', 'The boiler room. That’s where the seal is.'], ['ryo', 'And nobody uses the front of a bathhouse to hide anything.']],
     balanced: [['ryo', 'Get some sleep, Kaneda.'], ['c2_doorman', '…'], ['aoi', 'The boiler room. That’s where the seal is.']]
@@ -37637,8 +37637,8 @@ function camPan(to, o, done) {
     fierce: [['ryo', 'We’ve seen the banzuke. Move.', { hype: 1 }]],
     strategic: [['ryo', 'We’ve seen the banzuke. We know whose house it is.']],
     balanced: [['ryo', 'We’ve seen the banzuke. We’re not here to wreck his house.']]
-  }, [['c2_doorman', '…Then you know he’s not going to let you through.Neither am I.']]);
-  VO.guardKWon = V3([['c2_doorman', '…Boss carried this whole alley on his back once. On TV. You were babies.'], ['c2_doorman', 'He’s not a bad man.He’s a tired one.']], {
+  }, [['c2_doorman', '…Then you know he’s not going to let you through. Neither am I.']]);
+  VO.guardKWon = V3([['c2_doorman', '…Boss carried this whole alley on his back once. On TV. You were babies.'], ['c2_doorman', 'He’s not a bad man. He’s a tired one.']], {
     fierce: [['ryo', 'Tired doesn’t get you a pass.'], ['aoi', 'It gets him a conversation. Come on.']],
     strategic: [['aoi', 'Then let’s see him rest.']],
     balanced: [['aoi', 'Then let’s see him rest.'], ['ryo', 'Yeah.']]
@@ -37659,8 +37659,8 @@ function camPan(to, o, done) {
       strategic: [['aoi', 'Dated this week. All of them.'], ['ryo', 'So the lockout isn’t about them. Something else.']],
       balanced: [['ryo', 'He still washes their towels.'], ['aoi', 'Every week. For people he won’t let in.']] },
     loan: { fierce: [['aoi', 'Collection. That’s the Hustlers’ street money.'], ['ryo', '{shout}He sold his basement{/shout} to the gray coats for a boiler.', { hype: 1 }]],
-      strategic: [['aoi', 'Repayment by storage and by collection.The crates, and the Hustlers.'], ['ryo', 'A boiler on paper. The gray coats got the better deal.']],
-      balanced: [['aoi', 'Collection. That’s the Hustlers’ street money.'], ['ryo', 'He sold the gray coats his basement for a boiler.For the bath.']] },
+      strategic: [['aoi', 'Repayment by storage and by collection. The crates, and the Hustlers.'], ['ryo', 'A boiler on paper. The gray coats got the better deal.']],
+      balanced: [['aoi', 'Collection. That’s the Hustlers’ street money.'], ['ryo', 'He sold the gray coats his basement for a boiler. For the bath.']] },
     banzuke: { fierce: [['ryo', 'Ōzeki. That’s one step under yokozuna.'], ['aoi', 'The bath man was the second-best wrestler in Japan.']],
       strategic: [['ryo', 'Ōzeki. One step under yokozuna.'], ['aoi', 'So he won’t go down easy. Heavy guard, heavy hands.']],
       balanced: [['ryo', 'Ōzeki. That’s one step under yokozuna.'], ['aoi', 'Somebody touches this glass every day.']] },
@@ -37695,10 +37695,10 @@ function camPan(to, o, done) {
     balanced: [['aoi', 'Club Kitsune. The door that wouldn’t let us in.'], ['ryo', 'It will now.', { hype: 1 }]]
   });
   /* the big sting: the station quarter and Kissa Gekko turn red */
-  VO.bigSting = V3([['aoi', 'The whole station quarter.And Gekko’s block.']], {
+  VO.bigSting = V3([['aoi', 'The whole station quarter. And Gekko’s block.']], {
     fierce: [['ryo', 'Nails’ red, all the way to the Kissa.', { hype: 1 }], ['aoi', 'Don’t let it go to your head. Gekko will want to talk.']],
     strategic: [['ryo', 'Nails’ red, all the way to the Kissa.'], ['aoi', 'Which makes us the next target. Gekko will want to talk. And the bathhouse counter’s open.']],
-    balanced: [['ryo', 'Nails’ red, all the way to the Kissa.'], ['aoi', 'Gekko will want to talk. And the bath’s open.Tonight the old folks get in.']]
+    balanced: [['ryo', 'Nails’ red, all the way to the Kissa.'], ['aoi', 'Gekko will want to talk. And the bath’s open. Tonight the old folks get in.']]
   });
   /* Kaneda's door: a real call (force / angle / talk). Every answer still ends in the fight; the grade and the banter follow the
    * locked path (matrix: locked path -> answer). */
