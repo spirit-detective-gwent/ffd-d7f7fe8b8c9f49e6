@@ -37841,7 +37841,7 @@ var GINKO = (function () {
   c2Back = function (win, st0) { var r = back0.apply(this, arguments); try { var c = st0 && st0.ctx; if (on() && c && c.nqk) nqBack(win && !st0.escaped, c); } catch (e) { ev('world:nq:err:back:' + (e && e.message)); } return r; };
   function crewDown(k) { var s = S(), c = C2CREW.find(function (x) { return x.k === k; }), n = c ? c.ids.length : (k === 'nq_w2' ? 3 : 2); for (var i = 0; i < n; i++) if (!s.f[k + '_' + i]) return false; return true; }
   function nqBack(win, c) {
-    var s = S(); if (!win) return; (c.dgks || []).forEach(function (k) { if (/^nq_/.test(k)) s.f[k] = 1; }); sv();
+    var s = S(); if (!win) { if (c.nqk === 'nq_d' || c.nqk === 'nq_x') whenFree(function () { beatReset(true); }); return; } (c.dgks || []).forEach(function (k) { if (/^nq_/.test(k)) s.f[k] = 1; }); sv();
     var k = c.nqk; ev('world:nq:won:' + k);
     if (k === 'nq_w1' && crewDown(k)) whenFree(function () { setStg('west', 'w2'); crewSync(); say([['aoi', 'Second push coming up the street. Three this time.']]); });
     if (k === 'nq_w2' && crewDown(k)) whenFree(function () { setStg('west', 'clash'); crewSync(); say([['aoi', 'His heavies are at the south end. Flip said he\u2019d bring two.']]); });
@@ -37863,7 +37863,7 @@ var GINKO = (function () {
     NPC.clash.forEach(function (h) { face(h, r.x, r.y); });
     var n = 0, fin = function () { if (++n < 3) return; [CL.flip].concat(CL.pk).forEach(function (q) { face(q, 1790, 2550); }); lockIn(false);
       talk([['n13flip', 'Told you. South end, when it counts.'], [H, 'Nails sends schoolkids now?'], ['ryo', 'Nails sent us. We brought friends.', { hype: 1 }], ['aoi', 'Three on three. Nobody runs.']], function () {
-        var hs = NPC.clash; fight([H, H, H], false, { dg: 'c2', dgk: 'nq_x_0', dgks: ['nq_x_0', 'nq_x_1', 'nq_x_2'], nqk: 'nq_x', toughHp: typeof C2HP3 === 'number' ? C2HP3 : undefined, c2pos: hs.map(function (h) { return [H, h.x, h.y]; }) }); }); };
+        var hs = NPC.clash; CL.f = 1; fight([H, H, H], false, { dg: 'c2', dgk: 'nq_x_0', dgks: ['nq_x_0', 'nq_x_1', 'nq_x_2'], nqk: 'nq_x', toughHp: typeof C2HP3 === 'number' ? C2HP3 : undefined, c2pos: hs.map(function (h) { return [H, h.x, h.y]; }) }); }); };
     move(CL.flip, [[r.x - 70, r.y + 10]], 210, fin); move(CL.pk[0], [[r.x - 120, r.y - 4]], 210, fin); move(CL.pk[1], [[r.x + 100, r.y + 4]], 210, fin);
   }
   function clashWon() {
@@ -37883,15 +37883,31 @@ var GINKO = (function () {
     DM.k = npc('c2_doorman', 330, 884, Math.PI / 2); DM.g = [npc(H, 284, 906, Math.PI / 2), npc(H, 376, 906, Math.PI / 2)];
     move(DM.k, [[330, 918]], 90, function () { face(DM.k, r.x, r.y); lockIn(false);
       talk([['c2_doorman', 'Members, family, and people G\u014dda owes money. You\u2019re none of those.'], ['ryo', 'We\u2019re the ones scrubbing his tags off the wall.'], ['c2_doorman', 'Then you\u2019re the reason I\u2019m working tonight.'], ['aoi', 'Kaneda. The door man.']], function () {
-        fight([H, H, H], false, { dg: 'c2', dgk: 'nq_d_0', dgks: ['nq_d_0', 'nq_d_1', 'nq_d_2'], nqk: 'nq_d', toughHp: typeof C2HP3 === 'number' ? C2HP3 + 6 : undefined, c2pos: [[H, DM.k.x, DM.k.y], [H, DM.g[0].x, DM.g[0].y], [H, DM.g[1].x, DM.g[1].y]] }); }); });
+        DM.f = 1; fight(['c2_doorman', H, H], false, { dg: 'c2', dgk: 'nq_d_0', dgks: ['nq_d_0', 'nq_d_1', 'nq_d_2'], nqk: 'nq_d', c2pos: [['c2_doorman', DM.k.x, DM.k.y], [H, DM.g[0].x, DM.g[0].y], [H, DM.g[1].x, DM.g[1].y]] }); }); });
   }
   function doorWon() {
+    if (!DM || !DM.k || !DM.k.el || !DM.k.el.isConnected) { if (DM) { kill(DM.k); (DM.g || []).forEach(kill); } DM = { k: npc('c2_doorman', 330, 930, Math.PI / 2), g: [] }; }
     var e = E(); e.baseOpen_bat = 1; e.guardGone_sento = 1; sv();
     DM.g.forEach(function (g) { kill(g); }); try { var bg = window.c2DoorGuard && window.c2DoorGuard('sento'); if (bg && bg.el) bg.el.remove(); if (window.c2GuardLeave) window.c2GuardLeave('sento', 'nq'); } catch (e1) {}
     talk([['c2_doorman', '\u2026Fine. You knocked.'], ['c2_doorman', 'G\u014dda\u2019ll see you. Bathhouse. All the way to the back.'], ['aoi', 'The boiler room. That\u2019s where the seal is.']], function () {
       move(DM.k, [[150, 930]], 100, function () { kill(DM.k); DM = null; }); qClose('door'); setStg('seal', 'open'); qOpen('seal'); try { qBanner('KITSUNE-NO-YU', 'The door is open.', Q.seal.n); } catch (e2) {} });
   }
   NQ.clashBeat = clashBeat; NQ.doorBeat = doorBeat;
+  /* a beat cut short (a lost fight, a wake-up at the clinic, a reload mid-scene) never leaves the street stuck: the scene NPCs go and the beat can fire again */
+  function beatReset(force) {
+    if (DM && (force || !DM.f)) { kill(DM.k); (DM.g || []).forEach(kill); DM = null; try { var bg = window.c2DoorGuard && window.c2DoorGuard('sento'); if (bg && bg.el) bg.el.style.visibility = ''; } catch (e) {} }
+    if (CL && (force || !CL.f)) { kill(CL.flip); (CL.pk || []).forEach(kill); CL = null; }
+    try { lockIn(false); } catch (e2) {} }
+  /* and the chain itself is re-derived on each town visit, so an interrupted hand-off (quest closed, next one not yet opened) heals */
+  function chainRepair() { var n = NS(), w = won(), ch = 0;
+    if (n.udon && !qOn('west') && !qDone('west')) { w.udon = 1; setStg('west', stg('west') || 'w1'); qOpen('west'); ch = 1; }
+    if (qDone('west')) { w.west = 1; if (!E().vend_x2st) { E().vend_x2st = 1; ch = 1; } ginko('Q2', 'dagashi'); if (!qOn('cold') && !qDone('cold')) { setStg('cold', 0); qOpen('cold'); ch = 1; } }
+    if (qDone('cold')) { w.hotel = 1; ginko('Q3', 'drugstore'); if (!qOn('paint') && !qDone('paint')) { setStg('paint', 0); qOpen('paint'); ch = 1; } }
+    if (qDone('paint')) { w.wall = 1; ginko('Q4', 'used-book'); if (!qOn('door') && !qDone('door')) { qOpen('door'); ch = 1; } }
+    if (qDone('door')) { var e = E(); e.baseOpen_bat = 1; e.guardGone_sento = 1; if (!qOn('seal') && !qDone('seal') && !e.seal_sento) { setStg('seal', 'open'); qOpen('seal'); ch = 1; } }
+    if (n.sealDone && !n.bigSting) { w.nw = 1; w.kissa = 1; ginko('Q6', 'gacha'); }
+    if (ch) { sv(); ev('world:nq:repair'); } }
+  NQ.beatReset = beatReset; NQ.chainRepair = chainRepair;
   /* the sento: closed to the Nails run until the door is won; Goda names Tetsu after the seal */
   if (typeof c2LmOpen === 'function') { var lmo0 = c2LmOpen; c2LmOpen = function (k) { if (nailsRun() && k === 'sento') return qDone('door') || !!E().seal_sento; return lmo0.apply(this, arguments); }; }
   if (typeof c2BossOut === 'function') { var bo0 = c2BossOut; c2BossOut = function (k) { if (nailsRun() && k === 'sento') { E().ckNamed = 1; NS().named = 1; sv();
@@ -37902,17 +37918,24 @@ var GINKO = (function () {
       sting(['nw', 'kissa'], function () { ginko('Q6', 'gacha'); try { var C = root.FFF_13U; if (C && C.contestSync) C.contestSync(); } catch (eC) {}
         talk([['aoi', 'The whole station quarter. And Gekko\u2019s block.'], ['ryo', 'Nails\u2019 red, all the way to the Kissa.'], ['aoi', 'Gekko will want to talk. And the bathhouse counter\u2019s open now.']]); }); } }
   /* the frame: proximity beats (cheap distance checks) */
-  function flowTick() { NQ.ft = (NQ.ft | 0) + 1;
+  function flowTick() {
     if (!inTown() || busy() || document.getElementById('nqsting')) return; var r = W.ryo; if (!r) return;
     if (st13() === 'done' && !NS().udon && nailsRun() && dist(r, 950, 3360) < 520) { udonBeat(); return; }
     if (qOn('west') && stg('west') === 'clash' && NPC.clash.length && dist(r, 1790, 2550) < 190) { clashBeat(); return; }
     if (qOn('door') && dist(r, 330, 905) < 190) { doorBeat(); return; }
   }
   /* ================= the cast (aliases of existing cel sheets, own names) ================= */
+  /* Kaneda, Gōda's door man: his own cel look (tools/yk SPEC.kaneda, baked to world/c2_doormanY_*.webp), map + fight, and his own card-battle entry */
+  function kaneda() { var id = 'c2_doorman';
+    ['walk', 'run', 'hurt', 'kn', 'lie', 'map', 'fig', 'fig_hurt', 'fig_down'].forEach(function (sh) { IMG[id + '_' + sh] = wUrl('c2_doormanY_' + sh); if (SHC['c2_punk_' + sh] != null) SHC[id + '_' + sh] = SHC['c2_punk_' + sh]; if (typeof SHR !== 'undefined' && SHR['c2_punk_' + sh] != null) SHR[id + '_' + sh] = SHR['c2_punk_' + sh]; });
+    SHC[id + '_walk'] = SHC[id + '_run'] = 8; BW_IDS[id] = 1; C2K[id] = 1.24; NM[id] = 'Kaneda'; PT[id] = id + '_fig';
+    try { var CH = root.CARD_DATA && root.CARD_DATA.chars; if (CH && !CH[id]) CH[id] = { story: 1, voice: 'm', school: 'Kitsune-Ch\u016b\u014d Streets', name: 'Kaneda', title: 'Door Man \u00b7 Kitsune-no-Yu', color: '#2b4a8a', color2: '#0c1222',
+      tag: 'Heavy-Guard Bruiser: shells up behind Guard 5\u20136, then body hooks; a low-kick chain when you leave an opening. Pierce the shell.', quote: 'Members, family, and people G\u014dda owes money.', hp: 44, gcap: 6,
+      deck: { c_shell: 1, c_bguard: 1, c_bhook: 2, c_lowk: 1, c_flurry: 1, b_punch: 1 }, fig: id + '_fig', art: id + '_fig', alt: id + '_fig' }; if (CH && CH[id] && !CH[id + 'g']) CH[id + 'g'] = Object.assign({}, CH[id], { hp: 48 }); /* group fights ask for the 'g' twin */ } catch (eC) {} }
   function alias(id, src, k, nm) { ['map', 'walk', 'fig', 'run', 'hurt', 'kn', 'lie', 'fig_hurt', 'fig_down'].forEach(function (sh) { if (IMG[src + '_' + sh]) IMG[id + '_' + sh] = IMG[src + '_' + sh]; });
     if (SHC[src + '_walk']) SHC[id + '_walk'] = SHC[src + '_walk']; if (BW_IDS[src]) BW_IDS[id] = 1; C2K[id] = k; NM[id] = nm; PT[id] = PT[src] || (src + '_fig'); }
   alias('nq_udon', 'npc_ramen', 1.12, 'Oda-san'); alias('nq_mech', 'npc3_ferry', 1.08, 'Machi'); alias('nq_clerk', 'npc3_stall', 1.02, 'Ms. Kanda');
-  alias('nq_bandai', 'npc3_net', 1.06, 'Old Sato'); alias('c2_doorman', 'c2_hustler', 1.45, 'Kaneda');
+  alias('nq_bandai', 'npc3_net', 1.06, 'Old Sato'); kaneda();
   alias('nq_guest0', 'npc_courier', 1.02, 'Hotel Guest'); alias('nq_guest1', 'npc_attendant', 1.1, 'Hotel Guest'); alias('nq_guest2', 'npc_clerk', 1.04, 'Hotel Guest');
   alias('nq_dagashi', 'npc_clerk', 1.04, 'Grandma Fumi'); alias('nq_drug', 'npc_attendant', 1.1, 'Pharmacist Ono'); alias('nq_books', 'npc3_net', 1.06, 'Mr. Hon'); alias('nq_gacha', 'npc3_kid', 1.0, 'Gacha Kid');
   /* ================= the new rooms, drawn in-engine once per entry ================= */
@@ -38179,6 +38202,52 @@ var GINKO = (function () {
     })();
   }
   NQ.bookFx = bookFx;
+  /* the gacha corner: a capsule-opening beat (crank, drop, wobble, pop) before the card reveal; one short rAF, gone after */
+  if (typeof dropSpot === 'function') { var drop0 = dropSpot; dropSpot = function (ids, from, done) { var it = NQ.capIt; NQ.capIt = null; if (it) { var a = arguments, self = this; try { return capFx(it, function () { drop0.apply(self, a); }); } catch (e) {} } return drop0.apply(this, arguments); }; }
+  if (typeof shopBuy === 'function') { var buy1 = shopBuy; shopBuy = function (id, iid) { var P = SHOPS[id], it = P && P.items.find(function (q) { return q.id === iid; }); NQ.capIt = (id === 'nq_gk4' && it && it.k === 'card') ? it : null; try { return buy1.apply(this, arguments); } finally { NQ.capIt = null; } }; }
+  function capFx(it, done) {
+    var ov = document.createElement('div'); ov.id = 'nqcap'; var cw = 520, ch = 460, c = document.createElement('canvas'); c.width = cw; c.height = ch; ov.appendChild(c); document.body.appendChild(ov);
+    var g = c.getContext('2d'), t0 = performance.now(), T = 2000, gold = it.rar === 'uncommon', fin = 0, ticks = -1, popped = 0, bounced = 0;
+    var top = gold ? '#f2b630' : ['#e8413a', '#3a7bd8', '#3fb36a'][(Math.random() * 3) | 0], bot = '#f6efe2';
+    var mx = 150, my = 70, GL = [[-34, 60, '#e8413a'], [8, 46, '#3a7bd8'], [40, 70, '#f2b630'], [-12, 86, '#3fb36a'], [24, 96, '#e8413a'], [-40, 100, '#f2b630'], [50, 104, '#3a7bd8']];
+    function end() { if (fin) return; fin = 1; ov.classList.add('out'); later(220, function () { ov.remove(); }); done && done(); }
+    ov.addEventListener('pointerdown', function () { if (performance.now() - t0 > 400) end(); });
+    function capsule(x, y, r, open, rot) { g.save(); g.translate(x, y); g.rotate(rot || 0);
+      g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(0, r + 8, r * 0.9, 7, 0, 0, 7); g.fill();
+      g.beginPath(); g.arc(0, 0, r, 0, Math.PI); g.closePath(); g.fillStyle = bot; g.fill(); g.lineWidth = 4; g.strokeStyle = INK; g.stroke();
+      g.save(); g.translate(-open * r * 1.9, -open * r * 1.5); g.rotate(-open * 2.1); g.beginPath(); g.arc(0, 0, r, Math.PI, 0); g.closePath(); g.fillStyle = top; g.fill(); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(-r * 0.38, -r * 0.5, r * 0.22, r * 0.12, -0.6, 0, 7); g.fill(); g.restore();
+      g.restore(); }
+    sfx('deal');
+    (function fr() { if (fin) return;
+      var t = performance.now() - t0, cx = cw / 2; g.clearRect(0, 0, cw, ch);
+      /* the machine: red body, glass dome of capsules, the crank, the chute */
+      var fade = t > 900 ? Math.max(0, 1 - (t - 900) / 300) : 1;
+      if (fade > 0) { g.save(); g.globalAlpha = fade;
+        box(g, cx - 90, my + 140, 180, 170, '#d6302a', 10, 5); box(g, cx - 100, my + 300, 200, 24, '#8a1c18', 6, 4);
+        g.beginPath(); g.arc(cx, my + 80, 92, 0, 7); g.fillStyle = 'rgba(200,230,255,.35)'; g.fill(); g.lineWidth = 5; g.strokeStyle = INK; g.stroke();
+        GL.forEach(function (q, i) { var jig = t < 600 ? Math.sin(t / 50 + i) * 3 : 0; g.beginPath(); g.arc(cx + q[0] + jig, my + q[1] + 10, 17, 0, 7); g.fillStyle = q[2]; g.fill(); g.lineWidth = 3; g.stroke(); });
+        g.fillStyle = 'rgba(255,255,255,.5)'; g.beginPath(); g.ellipse(cx - 46, my + 36, 18, 10, -0.7, 0, 7); g.fill();
+        box(g, cx - 40, my + 180, 80, 28, '#fff3d6', 5, 3); jp(g, '\u30ac\u30c1\u30e3', cx, my + 195, 18, '#d6302a');
+        g.beginPath(); g.arc(cx, my + 245, 26, 0, 7); g.fillStyle = '#f2b630'; g.fill(); g.lineWidth = 4; g.stroke();
+        var ca = Math.min(1, t / 600) * Math.PI * 2; g.save(); g.translate(cx, my + 245); g.rotate(ca); g.fillStyle = '#fff6ec'; g.fillRect(-24, -6, 48, 12); g.strokeRect(-24, -6, 48, 12); g.restore();
+        box(g, cx + 50, my + 276, 36, 30, '#2a211c', 6, 3);
+        g.restore(); }
+      var tk = Math.min(4, (t / 150) | 0); if (tk !== ticks && t < 620) { ticks = tk; sfx('tick', { gain: 0.3 }); }
+      /* the capsule: out of the chute, a bounce to centre, a wobble, then it pops */
+      if (t > 560) { var u = Math.min(1, (t - 560) / 420), x = cx + 68 + (0 - 68) * u, base = 300, y = my + 300 + (base - my - 300) * u - Math.abs(Math.sin(u * Math.PI * 2)) * 70 * (1 - u);
+        if (u >= 1 && !bounced) { bounced = 1; sfx('place'); }
+        var sc = t > 980 ? Math.min(1.5, 1 + (t - 980) / 500) : 0.6 + 0.4 * u, wob = t > 1000 && t < 1360 ? Math.sin((t - 1000) / 28) * 0.28 * (1 - (t - 1000) / 360) : 0, op = t > 1360 ? Math.min(1, (t - 1360) / 200) : 0;
+        if (op > 0) { if (!popped) { popped = 1; sfx('buff'); }
+          var gr = g.createRadialGradient(x, y - 30, 0, x, y - 30, 230); gr.addColorStop(0, gold ? 'rgba(255,215,90,' + 0.85 * op + ')' : 'rgba(255,245,215,' + 0.7 * op + ')'); gr.addColorStop(1, 'rgba(255,220,140,0)'); g.fillStyle = gr; g.fillRect(0, 0, cw, ch);
+          for (var r2 = 0; r2 < 12; r2++) { var a2 = r2 / 12 * Math.PI * 2 + t / 900; g.strokeStyle = gold ? 'rgba(255,220,90,' + 0.7 * op + ')' : 'rgba(255,248,225,' + 0.6 * op + ')'; g.lineWidth = 4; g.beginPath(); g.moveTo(x + Math.cos(a2) * 70, y - 30 + Math.sin(a2) * 60); g.lineTo(x + Math.cos(a2) * (140 + 40 * op), y - 30 + Math.sin(a2) * (120 + 30 * op)); g.stroke(); }
+          /* the folded card rising out of the shell */
+          g.save(); g.translate(x + 6 * op, y - 30 - 96 * op); g.rotate(0.1 - 0.16 * op); g.scale(0.7 + 0.5 * op, 0.7 + 0.5 * op); box(g, -30, -42, 60, 84, gold ? '#2a1a08' : '#1d2540', 6, 4, INK); g.strokeStyle = gold ? '#f2b630' : '#e8e0c8'; g.lineWidth = 3; g.strokeRect(-22, -34, 44, 68); jp(g, '\u72d0', 0, 0, 26, gold ? '#f2b630' : '#fff6ec'); g.restore(); }
+        capsule(x, y, 34 * sc, op, wob + (1 - u) * 3); }
+      if (t < T) requestAnimationFrame(fr); else end();
+    })();
+  }
+  NQ.capFx = capFx;
   /* the bathhouse counter (after the seal) */
   var SENTO_MENU = [{ id: 'soak', n: 'Hot soak', jp: '\u6e6f', hp: 40, both: 15, base: 12, cost: 9 }, { id: 'cmilk', n: 'Coffee milk', jp: '\u73c8\u7432\u725b\u4e73', spOnly: 25, base: 4, cost: 3 }, { id: 'fmilk', n: 'Fruit milk', jp: '\u30d5\u30eb\u30fc\u30c4\u725b\u4e73', hp: 15, base: 4, cost: 3 }];
   function sentoMenu() { counterMenu({ who: 'nq_bandai', name: 'Old Sato', line: 'Water\u2019s hot again. First time in a year.', items: SENTO_MENU, nails: true, buy: function (it, c) { payYen(c); ev('world:nq:sento:buy:' + it.id); if (it.id === 'soak') { soakFx(function () { applyVit(it); later(200, sentoMenu); }); return; } applyVit(it); try { actPlay('drink', W.ryo); } catch (e) {} sfx('pl_heal', { gain: 0.45 }); later(700, sentoMenu); } }); }
@@ -38362,7 +38431,7 @@ var GINKO = (function () {
   /* ================= pop + frame ================= */
   var pop0 = c2Pop;
   c2Pop = function () { var r = pop0.apply(this, arguments); try { if (!on()) return r; var k = room();
-      if (k === 'town') { facades2(); laneProps(); if (nailsRun()) shutterOn(); crewSync(); }
+      if (k === 'town') { facades2(); laneProps(); if (nailsRun()) { beatReset(false); chainRepair(); shutterOn(); } crewSync(); }
       else if (k === 'sento') sentoPop(); else if (INT[C2R[k]] && INT[C2R[k]].nq) roomPop(k);
     } catch (e) { ev('world:nq:err:pop:' + (e && e.message)); } return r; };
   var frN0 = c2Frame;
@@ -38376,8 +38445,8 @@ var GINKO = (function () {
       '.nqsban b{display:block;font:900 22px/1.1 system-ui,sans-serif;color:#fff6ec;letter-spacing:.06em;text-shadow:3px 3px 0 #2a211c}.nqsban i{display:inline-block;margin-top:6px;padding:4px 14px;background:#d6243a;color:#fff;font:900 italic 20px/1 system-ui,sans-serif;letter-spacing:.12em;border:3px solid #2a211c;box-shadow:3px 3px 0 #2a211c}' +
       '@keyframes nqIn{from{opacity:0}to{opacity:1}}' +
       '.pmap .nqwon{position:absolute;pointer-events:none;border:2px solid rgba(255,240,240,.9);border-radius:3px;background:rgba(214,36,58,.42)}.pmap .nqwon b{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap;font:700 8px/1 Georgia,serif;color:#fff;text-shadow:0 1px 2px #000}' +
-      '#nqeat,#nqbook{position:fixed;inset:0;z-index:99985;display:flex;align-items:center;justify-content:center;background:rgba(10,8,12,.55);animation:nqIn .18s ease-out;transition:opacity .25s}#nqeat.out,#nqbook.out{opacity:0}' +
-      '#nqeat canvas{width:min(94vw,640px);height:auto;border:5px solid #2a211c;border-radius:12px;transform:rotate(-1.5deg);box-shadow:0 0 0 4px #fff6ec,0 20px 40px rgba(0,0,0,.6)}#nqbook canvas{width:min(92vw,560px);height:auto}' +
+      '#nqeat,#nqbook,#nqcap{position:fixed;inset:0;z-index:99985;display:flex;align-items:center;justify-content:center;background:rgba(10,8,12,.55);animation:nqIn .18s ease-out;transition:opacity .25s}#nqeat.out,#nqbook.out,#nqcap.out{opacity:0}' +
+      '#nqeat canvas{width:min(94vw,640px);height:auto;border:5px solid #2a211c;border-radius:12px;transform:rotate(-1.5deg);box-shadow:0 0 0 4px #fff6ec,0 20px 40px rgba(0,0,0,.6)}#nqbook canvas{width:min(92vw,560px);height:auto}#nqcap canvas{width:min(90vw,520px);height:auto}' +
       '#nqsoak{position:fixed;inset:0;z-index:99985;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(255,255,255,.75),rgba(200,225,235,.92));animation:nqIn .3s ease-out;transition:opacity .3s}#nqsoak.out{opacity:0}#nqsoak b{font-size:72px;color:#c0392b}#nqsoak i{font:900 italic 22px system-ui,sans-serif;color:#2a211c}' +
       '#nqlore{position:fixed;left:0;right:0;top:12%;z-index:99970;pointer-events:none;transition:opacity .25s}#nqlore.out{opacity:0}' +
       '#nqlore .nql1{margin-left:-4%;width:86%;background:#d6243a;transform:skewY(-4deg) translateX(-110%);animation:nqSl .32s cubic-bezier(.2,1,.3,1) forwards;border:4px solid #0d0b0e;box-shadow:6px 6px 0 #0d0b0e}' +

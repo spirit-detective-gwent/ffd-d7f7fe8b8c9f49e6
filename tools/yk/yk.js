@@ -57,7 +57,10 @@
   /* ---- glyphs for the back embroidery: 天 上 天 下 (tenjō tenge), strokes in a 10x10 box ---- */
   var GLY = { ten: [[2.5, 1.6, 7.5, 1.6], [1, 4.4, 9, 4.4], [5, 1.6, 5, 4.4, 1.4, 9.2], [5, 4.4, 8.8, 9.2]],
     jo: [[5, 0.8, 5, 8.6], [5, 4.6, 8.2, 4.6], [1, 8.8, 9, 8.8]],
-    ge: [[1, 1.4, 9, 1.4], [5, 1.4, 5, 9.2], [5.6, 4.2, 7.8, 6]] };
+    ge: [[1, 1.4, 9, 1.4], [5, 1.4, 5, 9.2], [5.6, 4.2, 7.8, 6]],
+    /* 湯 (yu, hot water): the bathhouse crest Gōda's crew wear */
+    yu: [[1.1, 1.2, 2.1, 2.0], [0.7, 4.0, 1.7, 4.8], [0.8, 9.0, 2.2, 6.4], [4.2, 0.8, 4.2, 3.6], [4.2, 0.8, 8.6, 0.8, 8.6, 3.6], [4.2, 2.2, 8.6, 2.2], [4.2, 3.6, 8.6, 3.6],
+      [3.2, 4.9, 9.2, 4.9], [4.6, 6.2, 9.0, 6.2, 8.5, 9.3, 7.5, 8.8], [6.0, 6.2, 4.0, 9.3], [7.5, 6.2, 5.7, 9.3]] };
   function glyph(x, k, cx, cy, s, col, w) { var G = GLY[k]; x.lineCap = 'round'; x.lineJoin = 'round';
     [[INK, w + 1.6], [col, w]].forEach(function (p) { x.strokeStyle = 'rgb(' + p[0].join(',') + ')'; x.lineWidth = p[1];
       G.forEach(function (st) { x.beginPath(); for (var i = 0; i < st.length; i += 2) { var px = cx + (st[i] - 5) * s / 10, py = cy + (st[i + 1] - 5) * s / 10; if (i) x.lineTo(px, py); else x.moveTo(px, py); } x.stroke(); }); }); }
@@ -249,16 +252,19 @@
         panel([[pl, hem - 1], [cx - gap, hem - 1], [iL, tail], [bL, tail + 2 * sc]], co, -1); panel([[cx + gap, hem - 1], [prr, hem - 1], [bR, tail + 2 * sc], [iR, tail]], co, 1);
         if (lin) { [[cx - gap, -1], [cx + gap, 1]].forEach(function (s) { x.beginPath(); x.moveTo(s[0], hem); x.lineTo(s[0] - s[1] * 2.2 * sc, hem); x.lineTo((s[1] < 0 ? iL : iR) - s[1] * 2.6 * sc, tail - 1); x.lineTo((s[1] < 0 ? iL : iR), tail - 1); x.closePath(); x.fillStyle = rgb(lin.b); x.fill(); }); }
         if (emb) { x.strokeStyle = rgb(emb); x.lineWidth = 1.3 * sc; [[pl + 3 * sc, -1], [prr - 3 * sc, 1]].forEach(function (s) { x.beginPath(); x.moveTo(s[0], tail - 3 * sc); x.lineTo(s[0] + s[1] * fl2 * 0.6, tail - 3 * sc); x.stroke(); });
-          var gs = Math.min(9 * sc, (tail - hem) / 2.6); if (gs > 4) { glyph(x, 'ten', pl + (cx - gap - pl) * 0.45 - fl2 * 0.3, hem + gs * 0.9, gs, emb, 1.1 * sc); glyph(x, 'ge', prr - (prr - cx - gap) * 0.45 + fl2 * 0.3, hem + gs * 0.9, gs, emb, 1.1 * sc); } } }
+          var gs = Math.min(9 * sc, (tail - hem) / 2.6); if (gs > 4) { var KF = (spec.kanji && spec.kanji.front) || ['ten', 'ge']; if (KF[0]) glyph(x, KF[0], pl + (cx - gap - pl) * 0.45 - fl2 * 0.3, hem + gs * 0.9, gs, emb, 1.1 * sc); if (KF[1]) glyph(x, KF[1], prr - (prr - cx - gap) * 0.45 + fl2 * 0.3, hem + gs * 0.9, gs, emb, 1.1 * sc); } } }
       else if (face === 'back') { panel([[pl - 1, hem - 1], [prr + 1, hem - 1], [prr + fl2, tail + 2 * sc], [cx + 1, tail + 1 * sc], [cx - 1, tail + 1 * sc], [pl - fl2, tail + 2 * sc]], co, 1);
         x.strokeStyle = rgb(INK); x.lineWidth = 1.4 * sc; x.beginPath(); x.moveTo(cx, hem + (tail - hem) * 0.45); x.lineTo(cx, tail); x.stroke(); }
       else { var back = face === 'left' ? 1 : -1, bx = back > 0 ? prr : pl, fx2 = back > 0 ? pl : prr;
         panel([[fx2 - back * 1, hem - 1], [bx + back * 2 * sc, hem - 1], [bx + back * (fl2 + 4 * sc), tail + 1 * sc], [fx2 - back * 3 * sc, tail + 2 * sc]], co, back);
         if (lin) { x.beginPath(); x.moveTo(fx2 - back, hem); x.lineTo(fx2 + back * 2.6 * sc, hem); x.lineTo(fx2 - back * 0.4 * sc, tail); x.lineTo(fx2 - back * 3 * sc, tail + 1); x.closePath(); x.fillStyle = rgb(lin.b); x.fill(); x.strokeStyle = rgb(INK); x.lineWidth = 1.2 * sc; x.stroke(); }
-        if (emb) { var gs2 = Math.min(9 * sc, (tail - hem) / 2.4); if (gs2 > 4) glyph(x, 'jo', (pl + prr) / 2 + back * 3 * sc, hem + (tail - hem) * 0.5, gs2, emb, 1.1 * sc); } } }
+        if (emb) { var gs2 = Math.min(9 * sc, (tail - hem) / 2.4); if (gs2 > 4) glyph(x, (spec.kanji && spec.kanji.side) || 'jo', (pl + prr) / 2 + back * 3 * sc, hem + (tail - hem) * 0.5, gs2, emb, 1.1 * sc); } } }
     /* ---- 7. back embroidery 天上天下 ---- */
     if (emb && face === 'back' && spec.coatLen) { var top = y0 + H * 0.26, bot = Math.max(hem + 4, tail - (tail - hem) * 0.3), gs3 = Math.min((x1 - x0) * 0.3, (bot - top) / 4.3);
-      ['ten', 'jo', 'ten', 'ge'].forEach(function (g, n3) { glyph(x, g, cx, top + gs3 * 0.6 + n3 * gs3 * 1.08, gs3, emb, Math.max(1.2, 1.5 * sc)); }); }
+      var KB = (spec.kanji && spec.kanji.back) || ['ten', 'jo', 'ten', 'ge'];
+      if (KB.length === 1) { /* one big crest in a circle, the sento way */ var gb = Math.min((x1 - x0) * 0.38, (bot - top) * 0.52), cyb = top + (bot - top) * 0.42;
+        x.lineWidth = Math.max(1.6, 2 * sc); x.strokeStyle = rgb(emb); x.beginPath(); x.arc(cx, cyb, gb * 0.72, 0, 7); x.stroke(); glyph(x, KB[0], cx, cyb, gb, emb, Math.max(1.3, 1.7 * sc)); }
+      else KB.forEach(function (g, n3) { glyph(x, g, cx, top + gs3 * 0.6 + n3 * gs3 * 1.08, gs3, emb, Math.max(1.2, 1.5 * sc)); }); }
     if (emb && face === 'front' && spec.coatLen && shirt) { x.strokeStyle = rgb(emb); x.lineWidth = 1.1 * sc; [[shirt.l - 2, -1], [shirt.r + 2, 1]].forEach(function (s) { x.beginPath(); x.moveTo(s[0], shirt.t + 2); x.lineTo(s[0] + s[1] * 1, hem - 2); x.stroke(); }); }
     /* hands back on top */
     var hc = document.createElement('canvas'); hc.width = w; hc.height = h; var hcx2 = hc.getContext('2d', { willReadFrequently: true }), hid = hcx2.createImageData(w, h), hd = hid.data, od = id.data;
@@ -296,6 +302,10 @@
   };
   /* the gray-coat men by the Lantern Alley informant: long charcoal-gray coat, dark slacks, slicked black hair, tinted shades. No kanji. */
   SPEC.gray = { base: 'punk', glove: 1, pal: { 4: tri('#55585f'), 6: tri('#2a2b31'), 7: tri('#3b3c43') }, coat: '#6c6f76', coatLen: 0.8, emb: null, lining: '#3f4148', bag: 2, hair: 'pomp', hairCol: '#16161a', shades: 1 };
+  /* Kaneda, Gōda's door man at Kitsune-no-Yu: built heavy (less than Flip), an indigo sento long coat with the white 湯 crest in a ring on the back
+   * and 湯 on both front panels, a white towel tied as a hachimaki, black punch perm, sarashi, charcoal bontan. No shades: he wants you to see him look. */
+  SPEC.kaneda = { base: 'punk', glove: 1, bulk: 0.5, bagSide: 0.4, pal: { 3: tri('#1a1714'), 4: tri('#22345e'), 6: tri('#33302e'), 7: tri('#efe9dc') }, coat: '#22345e', coatLen: 0.82, emb: '#f2ede0', lining: '#9a2a24', bag: 11,
+    shirt: 'sarashi', hair: 'perm', hairCol: '#1a1714', band: '#f2ede0', kanji: { back: ['yu'], front: ['yu', null], side: 'yu' } };
   /* the West Street stall's two accessories, worn over the yankii look: tinted shades / a leopard hachimaki with leopard coat lining */
   SPEC.ryoS = Object.assign({}, SPEC.ryo, { shades: 1, shadeQ: 0.0 }); SPEC.aoiS = Object.assign({}, SPEC.aoi, { shades: 1 });
   SPEC.ryoL = Object.assign({}, SPEC.ryo, { band: '#d6a046', bandDot: null, bandLeo: 1, lining: '#d6a046' }); SPEC.aoiL = Object.assign({}, SPEC.aoi, { band: '#d6a046', bandLeo: 1, lining: '#d6a046' });

@@ -24,6 +24,8 @@ for k,sp in P.items():
   J[k+'_fig_down']=dict(spec=sp,src='ext/c2_punk_fig_down.webp',cols=1,rows=1,faces=['right'],rot=1)
 for sfx,src,c,r in [('walk','c2_punk_walk',8,4),('map','c2_punk_map',1,1)]:
   J['c2_gray_'+sfx]=dict(spec='gray',src='ext/'+src+'.webp',cols=c,rows=r,cw=208,ch=272) if c>1 else dict(spec='gray',src='ext/'+src+'.webp',cols=1,rows=1,faces=['front'])
+for k,src,c,r,ex in [('walk','c2_punk_walk',8,4,{}),('run','c2_punk_run',8,4,{}),('hurt','c2_punk_hurt',4,4,{}),('kn','c2_punk_kn',4,4,{}),('map','c2_punk_map',1,1,dict(faces=['front'])),('fig','c2_punk_fig',1,1,dict(faces=['front'])),('fig_hurt','c2_punk_fig_hurt',1,1,dict(faces=['front'])),('lie','c2_punk_lie',2,1,dict(faces=['left'],rot=-1)),('fig_down','c2_punk_fig_down',1,1,dict(faces=['right'],rot=1))]:
+  J['c2_doormanY_'+k]=dict(spec='kaneda',src='ext/'+src+'.webp',cols=c,rows=r,**(dict(cw=208,ch=272) if c*r>2 else {}),**ex)  # Kaneda, Goda's door man
 for k,j in J.items():
   if k.startswith('of_') and any(k.endswith(s) for s in ['_amb','_ambv','_gym','_jog']): j['opts']={'coatMaxW':60}
 json.dump(J,open('jobs.json','w'),indent=0); print(len(J))
