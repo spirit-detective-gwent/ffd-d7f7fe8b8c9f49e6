@@ -43178,6 +43178,248 @@ function room(story) {
 root.FFF_C2BT = { ROOMS: ROOMS, KEY: KEY, has: has, still: still, fx: drawFx, reset: reset, room: room, W: WD, H: HT };
 root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
 })(window);
+/* v6.5.61 FFF_C2AMB: luminescent Ch2 overworld (grade + bloom cached per room; motes / steam / rain / lantern / neon
+ * ride the existing c2Frame loop). One overlay canvas. No new rAF. Reduced motion: still grade only. Roof is skipped. */
+(function (root) {
+  if (root.FFF_C2AMB) return;
+  var cv, cx, still, stillKey = '', vw = 0, vh = 0, dpr = 1, st = null, t = 0, SP = {};
+  function spr(col, r) {
+    var c = document.createElement('canvas'); c.width = c.height = r * 2;
+    var g = c.getContext('2d'), rg = g.createRadialGradient(r, r, 0, r, r, r);
+    rg.addColorStop(0, 'rgba(' + col + ',1)'); rg.addColorStop(0.4, 'rgba(' + col + ',.35)'); rg.addColorStop(1, 'rgba(' + col + ',0)');
+    g.fillStyle = rg; g.fillRect(0, 0, r * 2, r * 2); return c;
+  }
+  function S(col, r) { var k = col + ':' + r; return SP[k] || (SP[k] = spr(col, r)); }
+  function rmOn() {
+    try { if (root.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return true; } catch (e) {}
+    try { if (root.ST && ST.set && ST.set.rm) return true; } catch (e2) {}
+    return false;
+  }
+  var GRADE = {
+    town:   { top: 'rgba(255,200,150,.28)', bot: 'rgba(60,70,170,.32)', rain: 32, motes: 12, outdoor: 1 },
+    gym:    { top: 'rgba(255,190,140,.32)', bot: 'rgba(70,60,160,.30)', rain: 0, motes: 14,
+              lamps: [[640, 180, '255,214,140', 80, 0.42, 'lamp'], [200, 200, '255,214,140', 60, 0.32, 'lamp'], [1080, 200, '255,214,140', 60, 0.32, 'lamp'], [740, 700, '255,210,140', 64, 0.26, 'lamp']] },
+    clinic: { top: 'rgba(200,230,180,.28)', bot: 'rgba(50,70,90,.28)', rain: 0, motes: 10,
+              lamps: [[575, 200, '220,255,190', 70, 0.35, 'lamp'], [790, 300, '255,220,150', 55, 0.3, 'lamp']] },
+    sento:  { top: 'rgba(255,170,110,.34)', bot: 'rgba(80,40,90,.28)', rain: 0, motes: 10, steamN: 3,
+              lamps: [[400, 400, '255,150,60', 90, 0.45, 'fire'], [700, 500, '255,220,150', 60, 0.35, 'lamp']], embers: [400, 430] },
+    sentoU: { top: 'rgba(255,180,130,.30)', bot: 'rgba(70,50,80,.28)', rain: 0, motes: 10, steamN: 3,
+              lamps: [[360, 280, '255,200,140', 70, 0.4, 'lamp']] },
+    sentoK: { top: 'rgba(255,200,140,.28)', bot: 'rgba(60,50,90,.28)', rain: 0, motes: 12,
+              lamps: [[400, 240, '255,220,150', 70, 0.4, 'lamp']] },
+    arcade: { top: 'rgba(80,200,255,.22)', bot: 'rgba(40,20,80,.32)', rain: 0, motes: 10,
+              lamps: [[400, 220, '80,220,255', 70, 0.35, 'neon'], [700, 300, '255,80,160', 60, 0.3, 'neon']], neon: [[400, 180, 50, '80,220,255'], [700, 260, 40, '255,80,160']] },
+    game:   { top: 'rgba(80,200,255,.22)', bot: 'rgba(40,20,80,.32)', rain: 0, motes: 10,
+              lamps: [[400, 220, '80,220,255', 70, 0.35, 'neon']], neon: [[400, 180, 50, '80,220,255']] },
+    depot:  { top: 'rgba(200,210,230,.22)', bot: 'rgba(40,50,80,.32)', rain: 0, motes: 8,
+              lamps: [[500, 260, '255,214,140', 70, 0.4, 'lamp'], [200, 400, '255,214,140', 55, 0.3, 'lamp']] },
+    hotel:  { top: 'rgba(255,200,150,.26)', bot: 'rgba(50,50,90,.28)', rain: 0, motes: 10,
+              lamps: [[400, 200, '255,214,140', 70, 0.38, 'lamp']] },
+    udon:   { top: 'rgba(255,190,140,.30)', bot: 'rgba(70,50,80,.28)', rain: 0, motes: 10, steamN: 2,
+              lamps: [[360, 260, '255,210,140', 70, 0.38, 'lamp']] },
+    club:   { top: 'rgba(180,80,200,.18)', bot: 'rgba(20,10,40,.28)', rain: 0, motes: 8,
+              lamps: [[500, 240, '255,80,180', 70, 0.28, 'neon']], neon: [[500, 200, 50, '255,80,180']] },
+    ckback: { top: 'rgba(180,80,200,.16)', bot: 'rgba(20,10,40,.26)', rain: 0, motes: 6 },
+    gekko:  { top: 'rgba(180,140,80,.18)', bot: 'rgba(40,30,60,.22)', rain: 0, motes: 8,
+              lamps: [[400, 200, '255,200,120', 60, 0.28, 'lamp']] },
+    motors: { top: 'rgba(200,210,230,.20)', bot: 'rgba(40,50,80,.28)', rain: 0, motes: 8,
+              lamps: [[400, 240, '255,214,140', 60, 0.32, 'lamp']] }
+  };
+  GRADE.arcade = GRADE.arcade; GRADE.game = GRADE.game;
+
+  function hide() { if (cv) cv.style.display = 'none'; }
+
+  function ensure() {
+    var host = document.getElementById('wv'); if (!host) return null;
+    if (!cv) { cv = document.createElement('canvas'); cv.id = 'c2amb'; cv.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:40;'; }
+    if (cv.parentNode !== host) host.appendChild(cv);
+    var w = host.clientWidth || 360, h = host.clientHeight || 640, d = Math.min(1.5, root.devicePixelRatio || 1);
+    if (cv.width !== Math.ceil(w * d) || cv.height !== Math.ceil(h * d) || dpr !== d) {
+      dpr = d; vw = w; vh = h; cv.width = Math.ceil(w * d); cv.height = Math.ceil(h * d);
+      cx = cv.getContext('2d'); stillKey = '';
+    }
+    return cx;
+  }
+
+  function bakeStill(g) {
+    still = document.createElement('canvas'); still.width = cv.width; still.height = cv.height;
+    var b = still.getContext('2d'); b.setTransform(dpr, 0, 0, dpr, 0, 0);
+    b.globalCompositeOperation = 'soft-light';
+    var lg = b.createLinearGradient(0, 0, 0, vh); lg.addColorStop(0, g.top); lg.addColorStop(1, g.bot);
+    b.fillStyle = lg; b.fillRect(0, 0, vw, vh);
+    /* a cheap bloom plate: a few soft light pools baked into the still (not a live map snapshot) */
+    b.globalCompositeOperation = 'screen'; b.globalAlpha = 0.22; b.filter = 'blur(16px)';
+    var pools = (g.lamps || []).slice(0, 6);
+    pools.forEach(function (L) {
+      var r = (L[3] || 60) * 1.6; b.drawImage(S(L[2], 64), L[0] - r, L[1] - r, r * 2, r * 2);
+    });
+    b.filter = 'none'; b.globalAlpha = 1;
+    b.globalCompositeOperation = 'source-over';
+    var v = b.createRadialGradient(vw / 2, vh / 2, Math.min(vw, vh) * 0.32, vw / 2, vh / 2, Math.max(vw, vh) * 0.82);
+    v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(6,4,16,.40)');
+    b.fillStyle = v; b.fillRect(0, 0, vw, vh);
+  }
+
+  function toScr(x, y) {
+    var W = root.WORLD_API && WORLD_API.W; if (!W || !W.cam) return null;
+    var S = W.S || 1; return { x: (x - W.cam.x) * S, y: (y - W.cam.y) * S };
+  }
+
+  function propLights(rm) {
+    var out = [], W = root.WORLD_API && WORLD_API.W, i, p, base, typ, col, r, a;
+    if (rm === 'town' && W && W.c2pall) {
+      for (i = 0; i < W.c2pall.length; i++) {
+        p = W.c2pall[i]; if (p.off) continue;
+        base = ((p.e && p.e.dataset && p.e.dataset.p) || '').replace(/_\d+$/, '');
+        if (base === 'lamp' || base === 'lstr') { typ = 'lamp'; col = '255,214,140'; r = 55; a = 0.48; }
+        else if (base === 'chochin') { typ = 'lantern'; col = '255,90,70'; r = 38; a = 0.5; }
+        else if (base === 'vsign' || base === 'hsign') { typ = 'neon'; col = '120,220,255'; r = 42; a = 0.28; }
+        else continue;
+        out.push({ x: p.x + (p.w || 0) / 2, y: p.y + (p.h || 0) * 0.28, col: col, r: r, a: a, typ: typ, world: 1 });
+      }
+    }
+    if (rm === 'town' && typeof V640_POLE !== 'undefined' && V640_POLE) {
+      out.push({ x: V640_POLE[0], y: V640_POLE[1] - 48, col: '255,70,50', r: 50, a: 0.55, typ: 'lantern', world: 1, sway: 1 });
+      out.push({ x: V640_POLE[0] - 72, y: V640_POLE[1] - 56, col: '255,240,220', r: 44, a: 0.45, typ: 'lantern', world: 1, sway: 1 });
+      out.push({ x: V640_POLE[0] + 84, y: V640_POLE[1] - 86, col: '255,90,60', r: 46, a: 0.48, typ: 'lantern', world: 1, sway: 1 });
+    }
+    if (rm === 'town' && typeof C2W !== 'undefined' && C2W && C2W.doors && C2W.doors.gym && C2W.doors.gym.at) {
+      var g = C2W.doors.gym.at;
+      out.push({ x: g[0], y: g[1] - 90, col: '255,214,140', r: 72, a: 0.4, typ: 'lamp', world: 1 });
+      out.push({ x: g[0] - 110, y: g[1] - 160, col: '255,210,140', r: 50, a: 0.26, typ: 'win', world: 1 });
+      out.push({ x: g[0] + 110, y: g[1] - 160, col: '255,210,140', r: 50, a: 0.26, typ: 'win', world: 1 });
+    }
+    var gdef = GRADE[rm];
+    if (gdef && gdef.lamps) {
+      gdef.lamps.forEach(function (L) { out.push({ x: L[0], y: L[1], col: L[2], r: L[3], a: L[4], typ: L[5] || 'lamp', world: 0 }); });
+    }
+    /* keep the 8 closest to the view centre so we stay inside the cost plan */
+    if (out.length > 8) {
+      var mid = toScr(0, 0), W2 = root.WORLD_API && WORLD_API.W, cx0 = (W2 && W2.cam ? W2.cam.x + (vw / (W2.S || 1)) / 2 : 0), cy0 = (W2 && W2.cam ? W2.cam.y + (vh / (W2.S || 1)) / 2 : 0);
+      out.sort(function (A, B) {
+        var ax = A.world ? A.x : cx0, ay = A.world ? A.y : cy0, bx = B.world ? B.x : cx0, by = B.world ? B.y : cy0;
+        return (ax - cx0) * (ax - cx0) + (ay - cy0) * (ay - cy0) - ((bx - cx0) * (bx - cx0) + (by - cy0) * (by - cy0));
+      });
+      out = out.slice(0, 8);
+    }
+    return out;
+  }
+
+  function steamOf(rm) {
+    var out = [], W = root.WORLD_API && WORLD_API.W, i, p, base;
+    if (rm === 'town' && W && W.c2pall) {
+      for (i = 0; i < W.c2pall.length; i++) {
+        p = W.c2pall[i]; if (p.off) continue;
+        base = ((p.e && p.e.dataset && p.e.dataset.p) || '').replace(/_\d+$/, '');
+        if (base === 'steam') out.push({ x: p.x + (p.w || 0) / 2, y: p.y, world: 1 });
+      }
+    }
+    var n = (GRADE[rm] && GRADE[rm].steamN) || 0;
+    if (n) { out.push({ x: vw * 0.28, y: vh * 0.42, world: 0 }); if (n > 1) out.push({ x: vw * 0.7, y: vh * 0.36, world: 0 }); if (n > 2) out.push({ x: vw * 0.5, y: vh * 0.28, world: 0 }); }
+    return out.slice(0, 4);
+  }
+
+  function resetParts(g, rm) {
+    var i, m = g.motes || 0, r = g.rain || 0;
+    st = { m: [], r: [], s: [], e: [], lights: propLights(rm), steam: steamOf(rm), neon: (g.neon || []).slice(), embers: g.embers || null };
+    for (i = 0; i < m; i++) st.m.push({ x: Math.random() * vw, y: Math.random() * vh, ph: Math.random() * 6, r: 4 + Math.random() * 6, vy: -(5 + Math.random() * 10) });
+    for (i = 0; i < r; i++) st.r.push({ x: Math.random() * (vw + 40) - 20, y: Math.random() * vh, v: 700 + Math.random() * 320, l: 16 + Math.random() * 16 });
+    st.steam.forEach(function (p) { for (var j = 0; j < 2; j++) st.s.push({ o: p, life: Math.random() * 3, max: 2.2 + Math.random() }); });
+    if (st.embers) for (i = 0; i < 10; i++) st.e.push({ life: Math.random() * 2, max: 1.2 + Math.random() * 1.4, x: 0, y: 0, vx: 0, vy: 0 });
+  }
+
+  function posOf(p) {
+    if (p.world) return toScr(p.x, p.y);
+    return { x: p.x, y: p.y };
+  }
+
+  function tick(dt) {
+    if (dt > 0.05) dt = 0.05;
+    var on = false;
+    try { on = typeof c2On === 'function' && c2On(); } catch (e) {}
+    if (!on) { hide(); return; }
+    var world = document.getElementById('world');
+    if (!world || !world.classList.contains('on') || !world.classList.contains('c2')) { hide(); return; }
+    var game = document.getElementById('game');
+    if (game && game.classList.contains('on')) { hide(); return; }
+    var gctx = ensure(); if (!gctx) return;
+    var rm = 'town';
+    try { rm = (typeof c2Room === 'function' && c2Room()) || 'town'; } catch (e2) {}
+    if (rm === 'roof') { hide(); return; }
+    var g = GRADE[rm] || GRADE.town;
+    cv.style.display = '';
+    var key = rm + 'x' + vw + 'x' + vh;
+    if (stillKey !== key) { stillKey = key; bakeStill(g); resetParts(g, rm); }
+    /* refresh world lights occasionally so walked-into props light up */
+    if (!tick._lt || performance.now() - tick._lt > 400) { tick._lt = performance.now(); if (st) { st.lights = propLights(rm); st.steam = steamOf(rm); } }
+
+    t += dt;
+    gctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    gctx.clearRect(0, 0, vw, vh);
+    gctx.globalCompositeOperation = 'source-over'; gctx.globalAlpha = 1;
+    if (still) gctx.drawImage(still, 0, 0, vw, vh);
+    if (rmOn() || !st) { gctx.globalAlpha = 1; return; }
+
+    var i, p, q, sc, f, dx, r2, onN;
+    gctx.globalCompositeOperation = 'lighter';
+    for (i = 0; i < st.lights.length; i++) {
+      p = st.lights[i]; sc = posOf(p); if (!sc) continue;
+      if (sc.x < -120 || sc.y < -120 || sc.x > vw + 120 || sc.y > vh + 120) continue;
+      f = p.typ === 'fire' ? 0.72 + 0.28 * Math.sin(t * 9 + i) * Math.sin(t * 5.1) : p.typ === 'lantern' ? 0.85 + 0.15 * Math.sin(t * 1.6 + i * 1.3) : p.typ === 'neon' ? 1 : 0.92 + 0.08 * Math.sin(t * 0.9 + i);
+      dx = (p.sway && p.typ === 'lantern') ? Math.sin(t * 1.2 + i) * 3 : 0;
+      gctx.globalAlpha = Math.min(1, p.a * f * 1.5);
+      r2 = p.r; gctx.drawImage(S(p.col, 64), sc.x - r2 + dx, sc.y - r2, r2 * 2, r2 * 2);
+    }
+    for (i = 0; i < st.neon.length; i++) {
+      p = st.neon[i]; onN = (Math.sin(t * 23 + i * 7) > -0.95) && !(((t * 1.1 + i) % 5) > 4.8);
+      gctx.globalAlpha = onN ? 0.38 : 0.06; r2 = p[2];
+      gctx.drawImage(S(p[3], 64), p[0] - r2, p[1] - r2 * 0.5, r2 * 2, r2);
+    }
+    for (i = 0; i < st.m.length; i++) {
+      p = st.m[i]; p.y += p.vy * dt; p.x += Math.sin(t + p.ph) * 8 * dt;
+      if (p.y < -10) { p.y = vh + 8; p.x = Math.random() * vw; }
+      gctx.globalAlpha = 0.28 + 0.32 * Math.sin(t * 2.3 + p.ph);
+      gctx.drawImage(S('255,236,190', 16), p.x - p.r, p.y - p.r, p.r * 2, p.r * 2);
+    }
+    if (st.embers && st.e) {
+      for (i = 0; i < st.e.length; i++) {
+        p = st.e[i]; p.life += dt;
+        if (p.life > p.max || !p.x) { p.life = 0; p.x = st.embers[0] + (Math.random() - 0.5) * 50; p.y = st.embers[1]; p.vx = (Math.random() - 0.5) * 45; p.vy = -(36 + Math.random() * 60); }
+        p.x += (p.vx + Math.sin(t * 3 + i) * 14) * dt; p.y += p.vy * dt;
+        gctx.globalAlpha = 1 - p.life / p.max;
+        gctx.drawImage(S('255,150,50', 8), p.x - 5, p.y - 5, 10, 10);
+      }
+    }
+    gctx.globalCompositeOperation = 'source-over';
+    for (i = 0; i < st.s.length; i++) {
+      p = st.s[i]; p.life += dt; if (p.life > p.max) p.life = 0;
+      q = p.life / p.max; r2 = 10 + q * 36; sc = posOf(p.o); if (!sc) continue;
+      gctx.globalAlpha = Math.min(1, q * 4) * (1 - q) * 0.4;
+      gctx.drawImage(S('245,245,240', 32), sc.x - r2 + Math.sin(t + i) * 8 * q, sc.y - q * 90 - r2, r2 * 2, r2 * 2);
+    }
+    gctx.globalAlpha = 1;
+    if (st.r.length) {
+      gctx.strokeStyle = 'rgba(200,215,255,.30)'; gctx.lineWidth = 1.5; gctx.beginPath();
+      for (i = 0; i < st.r.length; i++) {
+        p = st.r[i]; p.y += p.v * dt; p.x += p.v * 0.1 * dt;
+        if (p.y > vh + 20) { p.y = -30; p.x = Math.random() * (vw + 40) - 20; }
+        gctx.moveTo(p.x, p.y); gctx.lineTo(p.x - p.l * 0.1, p.y - p.l);
+      }
+      gctx.stroke();
+    }
+    gctx.globalAlpha = 1;
+  }
+
+  function hook() {
+    if (typeof c2Frame === 'function' && !c2Frame._c2amb) {
+      var fr0 = c2Frame;
+      c2Frame = function (dt) { fr0.apply(this, arguments); try { tick(dt || 0.016); } catch (eA) {} };
+      c2Frame._c2amb = 1;
+    }
+  }
+  hook();
+  root.FFF_C2AMB = { tick: tick, hook: hook };
+})(window);
 /* C2BG_END */
 </script>
 <script>
