@@ -92,7 +92,7 @@
       var d0 = tx.getImageData(0, 0, w, h).data, ya = h, yb = 0, xa = w, xb = 0;
       for (var yy = 0; yy < h; yy++) for (var xx = 0; xx < w; xx++) if (d0[(yy * w + xx) * 4 + 3] > 60) { if (yy < ya) ya = yy; if (yy > yb) yb = yy; if (xx < xa) xa = xx; if (xx > xb) xb = xx; }
       var cxm = (xa + xb) / 2, HH = Math.max(1, yb - ya); x.imageSmoothingEnabled = true;
-      for (var ry = 0; ry < h; ry++) { var q = (ry - ya) / HH, p = q < 0.17 ? 0.12 : q < 0.24 ? 0.12 + (q - 0.17) / 0.07 * 0.88 : q < 0.5 ? 1 - (q - 0.24) * 0.6 : sideF ? Math.max(0.1, 0.84 - (q - 0.5) * 3.2) : q < 0.9 ? 0.84 - (q - 0.5) * 0.9 : 0.48;
+      for (var ry = 0; ry < h; ry++) { var q = (ry - ya) / HH, p = spec.sumo ? (q < 0.16 ? 0.1 : q < 0.26 ? 0.1 + (q - 0.16) / 0.1 * 0.7 : q < 0.66 ? 0.8 + 0.42 * Math.sin(Math.PI * (q - 0.26) / 0.4) : sideF ? Math.max(0.1, 0.8 - (q - 0.66) * 2.4) : Math.max(0.42, 0.8 - (q - 0.66) * 1.1)) : q < 0.17 ? 0.12 : q < 0.24 ? 0.12 + (q - 0.17) / 0.07 * 0.88 : q < 0.5 ? 1 - (q - 0.24) * 0.6 : sideF ? Math.max(0.1, 0.84 - (q - 0.5) * 3.2) : q < 0.9 ? 0.84 - (q - 0.5) * 0.9 : 0.48;
         var s = 1 + spec.bulk * p, nw = w * s; x.drawImage(t0, 0, ry, w, 1, cxm - cxm * s, ry, nw, 1); }
       src = cv; sx = 0; sy = 0; cv = document.createElement('canvas'); cv.width = w; cv.height = h; x = cv.getContext('2d', { willReadFrequently: true }); }
     x.drawImage(src, sx, sy, w, h, 0, 0, w, h);
@@ -339,7 +339,7 @@
     shirt: 'irezumi', hara: 0.6, haraCol: '#efe9dc', bag: 3, geta: { wood: '#a87a46', strap: '#1d1b22' }, hair: 'slick', hairCol: '#1a1714', band: '#f2ede0' };
   /* Gōda Daizō: the old ōzeki. Built like a wall, an ōichō top-knot, a boiler-keeper's brown hanten over a bare chest, a black haramaki where the mawashi was,
    * a blue-striped tenugui over one shoulder, big geta */
-  SPEC.goda = { base: 'punk', glove: 1, bulk: 1.0, bagSide: 0.5, pal: { 3: tri('#141216'), 4: tri('#6b3b22'), 5: tri('#e9b98c'), 6: tri('#3a3530') }, happi: { eri: '#2a211c', hemCol: '#2a211c' }, crest: { k: 'yu', col: '#e9dcc0', ink: '#6b3b22' },
+  SPEC.goda = { base: 'punk', glove: 1, bulk: 1.5, sumo: 1, bagSide: 0.5, pal: { 3: tri('#141216'), 4: tri('#6b3b22'), 5: tri('#e9b98c'), 6: tri('#3a3530') }, happi: { eri: '#2a211c', hemCol: '#2a211c' }, crest: { k: 'yu', col: '#e9dcc0', ink: '#6b3b22' },
     shirt: 'bare', hara: 0.55, haraCol: '#22202a', bag: 6, geta: { wood: '#9a6a3a', strap: '#efe9dc' }, hair: 'slick', hairCol: '#141216', mage: 'oicho', towel: '#f4f1ea' };
   /* the West Street stall's two accessories, worn over the yankii look: tinted shades / a leopard hachimaki with leopard coat lining */
   SPEC.ryoS = Object.assign({}, SPEC.ryo, { shades: 1, shadeQ: 0.0 }); SPEC.aoiS = Object.assign({}, SPEC.aoi, { shades: 1 });
