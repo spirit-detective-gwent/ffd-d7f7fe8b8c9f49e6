@@ -35147,7 +35147,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
  * Room grows from 1280x960 to 3600x960: the old room is now the front entrance hall (every Nails story coordinate is unchanged:
  * the meet, the tin turn-in, Sabu), then a long walk east past 24 shuttered stalls to the toll booth, the seal and the boss spot.
  * The picture is drawn in-engine (GINKO.paint) once on entry into one offscreen-sized canvas, no per-frame cost, freed on exit.
- * Stall hook: FFF_GINKO.stalls (id/row/kind/label/x/w), FFF_GINKO.isOpen(id), FFF_GINKO.setOpen(id, on): saved in c2S().ginko,
+ * Stall hook: FFF_GINKO.stalls (id/row/kind/label/x/w), FFF_GINKO.isOpen(id), FFF_GINKO.setOpen(id, on), FFF_GINKO.slot("Q2"/"Q3"/"Q4"/"Q6") = the reserved dagashi / drugstore / used books / gacha stalls (n1-n4); saved in c2S().ginko,
  * the art repaints with that shutter rolled up. No shops yet. */
 (function () {
   try {
@@ -35172,16 +35172,20 @@ var GINKO = (function () {
     bikes: ['BIKES', '\u81ea\u8ee2\u8eca', '#3d6b6b', ['#d35454', '#4f7cac', '#222']], clocks: ['CLOCKS', '\u6642\u8a08', '#7a5c2e', ['#e8d9a8', '#4a3a28', '#c9a24a']],
     knives: ['KNIVES', '\u5203\u7269', '#3a3a44', ['#d8dde2', '#7a5230', '#aab2bb']], tailor: ['TAILOR', '\u4ed5\u7acb', '#4b3b5a', ['#e9d8a6', '#94618e', '#495867']],
     pickles: ['PICKLES', '\u6f2c\u7269', '#6a7f2a', ['#b5c45b', '#e0c341', '#a8432f']], snacks: ['SNACKS', '\u99c4\u83d3\u5b50', '#d1495b', ['#edae49', '#00798c', '#f4a0b5']],
+    dagashi: ['DAGASHI', '\u99c4\u83d3\u5b50', '#d1495b', ['#edae49', '#00798c', '#f4a0b5']], drugstore: ['DRUGSTORE', '\u30c9\u30e9\u30c3\u30b0', '#2b7a82', ['#f4f1e8', '#d9534f', '#7fc3c8']],
+    usedbooks: ['USED BOOKS', '\u53e4\u672c', '#3c4f7a', ['#b8473c', '#e1c27a', '#4a6d9a']], gacha: ['GACHA', '\u30ac\u30c1\u30e3', '#c0582c', ['#f2c94c', '#4c9be8', '#e85a7a']],
     cleaners: ['CLEANERS', '\u30af\u30ea\u30fc\u30cb\u30f3\u30b0', '#3f7cac', ['#f2f2f2', '#9bc1e0', '#555']], keys: ['KEYS', '\u5408\u9375', '#7d6b3a', ['#d1a543', '#9aa1a8', '#333']],
     tobacco: ['TOBACCO', '\u305f\u3070\u3053', '#8a3b2a', ['#f2e3c6', '#c0392b', '#333']], lottery: ['LOTTERY', '\u5b9d\u304f\u3058', '#b8860b', ['#ffd166', '#ef476f', '#06d6a0']]
   };
-  var STALLS = [], NK = ['tea', 'wagashi', 'books', 'records', 'pharmacy', 'toys', 'flowers', 'tofu', 'shoes', 'hardware', 'ramen', 'pens'],
-    SK = ['fish', 'rice', 'sake', 'bakery', 'fruit', 'clothes', 'bikes', 'clocks', 'knives', 'tailor', 'pickles', 'snacks'];
+  var STALLS = [], NK = ['dagashi', 'drugstore', 'usedbooks', 'gacha', 'tea', 'wagashi', 'records', 'flowers', 'tofu', 'shoes', 'hardware', 'ramen'],
+    SK = ['fish', 'rice', 'sake', 'bakery', 'fruit', 'clothes', 'bikes', 'clocks', 'knives', 'tailor', 'pickles', 'toys'];
+  /* reserved slots for the next build (Nails' street quests): first four stalls past the hall, north side */
+  var SLOT = { n1: 'Q2', n2: 'Q3', n3: 'Q4', n4: 'Q6' };
   var SX0 = 1210, SW = 156;
   [['h1', 'cleaners', 110], ['h2', 'keys', 285], ['h3', 'tobacco', 838], ['h4', 'lottery', 1012]].forEach(function (a) { STALLS.push({ id: a[0], row: 'h', kind: a[1], x: a[2], w: 160 }); });
   NK.forEach(function (k, i) { STALLS.push({ id: 'n' + (i + 1), row: 'n', kind: k, x: SX0 + i * SW, w: SW - 8 }); });
   SK.forEach(function (k, i) { STALLS.push({ id: 's' + (i + 1), row: 's', kind: k, x: SX0 + i * SW, w: SW - 8 }); });
-  STALLS.forEach(function (s) { var K = KINDS[s.kind]; s.label = K[0]; s.jp = K[1]; s.open = 0; });
+  STALLS.forEach(function (s) { var K = KINDS[s.kind]; s.label = K[0]; s.jp = K[1]; s.open = 0; s.slot = SLOT[s.id] || null; });
 
   function rng(seed) { var s = seed >>> 0; return function () { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; }; }
   function shade(hex, k) { var n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
@@ -35480,6 +35484,7 @@ var GINKO = (function () {
   GINKO.STALLS.forEach(function (s) { Object.defineProperty(s, 'open', { get: function () { return isOpen(s.id); }, enumerable: true, configurable: true }); });
   root.FFF_GINKO = { W: GWd, H: GHd, stalls: GINKO.STALLS, kinds: GINKO.KINDS, isOpen: isOpen,
     setOpen: function (id, on) { gS()[id] = on ? 1 : 0; if (!on) delete gS()[id]; save(); try { var m = document.getElementById('wimap'); if (m && m.dataset.int === 'c2_arcade') show(); } catch (e) {} ev('world:ginko:stall:' + id + ':' + (on ? 1 : 0)); return isOpen(id); },
+    slot: function (q) { for (var i = 0; i < GINKO.STALLS.length; i++) if (GINKO.STALLS[i].slot === q) return GINKO.STALLS[i]; return null; },
     paint: function (cv, f) { return GINKO.paint(cv, f || isOpen); } };
   ev('world:ginko:ready');
   } catch (eAll) { try { ev('world:ginko:err:init:' + (eAll && eAll.message)); } catch (e2) {} }
