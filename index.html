@@ -13542,7 +13542,7 @@ var SCENES = {
     ['ryo', 'Wish I knew. It hasn\u2019t told me.'], ['', '<p class="dim">A flicker of fox fire runs over Ryo\u2019s knuckles, then fades.</p>']],
   m4: [['aoi', 'Before that one went down, the spirit in him said something.{p} {slow}“The walls are coming down. We were promised.”{/slow}'],
     ['ryo', 'Promised? By who?'],
-    ['aoi', 'Shrines don’t crack by themselves.{p} {slow}Someone is breaking them on purpose.{/slow}'],
+    ['aoi', 'Shrines don’t crack by themselves.{p} {slow}Someone is breaking them on purpose.{/slow}', { cam: 'bars+push', z: 1.5, ms: 2000 }], /* v6.5.61 story camera */
     ['ryo', 'Then we find out who. And I hit him first.', { hype: 1 }], ['aoi', 'Carefully. Whoever it is, they\u2019re not from this school.']],
   // v4.5: why the mini-bosses first, why the grind; small hints nobody answers yet
   why: [['aoi', 'Feel that? The air went a little lighter when that bully dropped.'], /* v4.37c: no second spirits-knocked-loose explanation */
@@ -13558,31 +13558,31 @@ var SCENES = {
   gouki: {
     fierce: [
       ['', '<p class="dim">Gouki stays on his knees. Clear eyes. Breathing. Beaten, not broken.</p>', { kneel: 1 }],
-      ['gouki', '{slow}Nobody possessed me.{/slow}{p=500} I made a deal.', { kneel: 1 }],
+      ['gouki', '{slow}Nobody possessed me.{/slow}{p=500} I made a deal.', { kneel: 1, cam: 'bars+push', z: 1.6, ms: 2400 }],
       ['gouki', 'A gray coat opened my eyes. He\u2019d make me unbeatable if I freed the shrine.', { kneel: 1 }],
       ['aoi', '{slow}You weren’t possessed?{/slow}{p=600} Wait.{p} Who is he?'],
       ['gouki', 'He said you\u2019d come. He went on to the central district, past the school.', { kneel: 1 }],
-      ['ryo', '{slow}You knew.{/slow}{p} You hurt them {shout}knowing{/shout}.', { hype: 1 }],
+      ['ryo', '{slow}You knew.{/slow}{p} You hurt them {shout}knowing{/shout}.', { hype: 1, cam: 'shake', onShout: 1 }],
       ['aoi', 'He stays breathing. Fight me on that and we have another problem.'],
       ['gouki', 'Do it. I\u2019m not running.', { kneel: 1 }],
       ['ryo', 'Central district. Don\u2019t mistake me walking away for forgiving him.', { hype: 1 }]],
     balanced: [
       ['', '<p class="dim">Gouki stays on his knees. Clear eyes. Breathing. Beaten, not broken.</p>', { kneel: 1 }],
-      ['gouki', '{slow}Nobody possessed me.{/slow}{p=500} I made a deal.', { kneel: 1 }],
+      ['gouki', '{slow}Nobody possessed me.{/slow}{p=500} I made a deal.', { kneel: 1, cam: 'bars+push', z: 1.6, ms: 2400 }],
       ['gouki', 'A gray coat opened my eyes. He\u2019d make me unbeatable if I freed the shrine.', { kneel: 1 }],
       ['aoi', '{slow}You weren’t possessed?{/slow}{p=600} Wait.{p} Who is he?'],
       ['gouki', 'He said you\u2019d come. He went on to the central district, past the school.', { kneel: 1 }],
-      ['ryo', '{slow}You knew.{/slow}{p} You hurt them {shout}knowing{/shout}.', { hype: 1 }],
+      ['ryo', '{slow}You knew.{/slow}{p} You hurt them {shout}knowing{/shout}.', { hype: 1, cam: 'shake', onShout: 1 }],
       ['aoi', 'Wardens take him. {slow}You don\u2019t have to keep everyone safe with your own hands.{/slow}'],
       ['gouki', 'Do it. I\u2019m not running.', { kneel: 1 }],
       ['ryo', 'Central district. I\u2019m still watching what he does before we go.']],
     strategic: [
       ['', '<p class="dim">Gouki stays on his knees. Clear eyes. Breathing. Beaten, not broken.</p>', { kneel: 1 }],
-      ['gouki', '{slow}Nobody possessed me.{/slow}{p=500} I made a deal.', { kneel: 1 }],
+      ['gouki', '{slow}Nobody possessed me.{/slow}{p=500} I made a deal.', { kneel: 1, cam: 'bars+push', z: 1.6, ms: 2400 }],
       ['gouki', 'A gray coat opened my eyes. He\u2019d make me unbeatable if I freed the shrine.', { kneel: 1 }],
       ['aoi', '{slow}You weren’t possessed?{/slow}{p=600} Wait.{p} Who is he?'],
       ['gouki', 'He said you\u2019d come. He went on to the central district, past the school.', { kneel: 1 }],
-      ['ryo', '{slow}You knew.{/slow}{p} You hurt them {shout}knowing{/shout}.', { hype: 1 }],
+      ['ryo', '{slow}You knew.{/slow}{p} You hurt them {shout}knowing{/shout}.', { hype: 1, cam: 'shake', onShout: 1 }],
       ['aoi', '{brisk}Wardens can hold him. We follow the lead he gave us.{/brisk}'],
       ['gouki', 'Do it. I\u2019m not running.', { kneel: 1 }],
       ['ryo', 'Central district. We\u2019ll look for the gray coat there.']]
@@ -13598,7 +13598,7 @@ var SCENES = {
     ['ryo', 'Then stop talking and move. Central district.'],
     ['aoi', 'I set the pace. For once, don\u2019t turn that into a fight.'],
     ['ryo', 'Keep moving, Hayase. I\u2019m coming. That\u2019s all I\u2019m promising.'],
-    ['', '<p class="dim">Ryo and Aoi run out through the school gate, toward the lights of the central district.</p>']]
+    ['', '<p class="dim">Ryo and Aoi run out through the school gate, toward the lights of the central district.</p>', { cam: 'bars+pull', z: 1.45, ms: 3400 }]]
 }; /* v4.65: family send-off + short Ryo/Aoi banter */
 /* v4.5 typewriter: every scene line types out letter by letter (Settings: story text speed slow / medium / fast / instant) with a
  * soft recorded blip every 2nd-3rd letter. Tap while it types = show the whole line; tap again = next line. The speaker's
@@ -19558,7 +19558,7 @@ C2SC.turf_alley = [['c2_hustler', 'Gray coat\u2019s gonna\u2026 skin us\u2026'],
 C2SC.talis = [['', '<p class="dim">Wedged in the bridge grate: a gray paper talisman, cracked down the middle. It is warm.</p>'],
   ['aoi', '{slow}A Warden seal…{/slow}{p} turned inside out. Old chalk over the ink.'], ['aoi', 'Four lines burned in, all tied to Central Tower. The freight depot.'], ['aoi', 'The Sh\u014dtengai arcade. The Neon Game Center. The bathhouse by the station.'],
   ['ryo', 'And the fifth line points straight up.{p} The Tower roof.', { hype: 1 }], ['aoi', 'Whoever cracked this is waiting up there. Back to Genji first.']];
-C2SC.report2 = [['kurogane', 'A cracked Warden seal.{p} {slow}Haven’t seen one since your grandfather’s day.{/slow}'], ['kurogane', 'Four landmarks, four locks. Old chalk on every one.'],
+C2SC.report2 = [['kurogane', 'A cracked Warden seal.{p} {slow}Haven’t seen one since your grandfather’s day.{/slow}', { cam: 'push', z: 1.45, ms: 2200 }], ['kurogane', 'Four landmarks, four locks. Old chalk on every one.'],
   ['kurogane', '{slow}And a man on the Tower roof, pulling the strings.{/slow}'], ['ryo', '{brisk}Then we climb.{/brisk}', { hype: 1 }], ['aoi', 'One lock at a time, Kazan.']];
 C2Q.cq2_turf = { n: 'Crew Turf', steps: ['Break the Suit wall on the Neon Strip', 'Break the B\u014ds\u014dzoku blockade on the Canal Bridge', 'Break the Hustler ambush on Bath Row', 'Recover the Cracked Gray Talisman (Canal Bridge)', 'Show Genji the talisman'] };
 C2QLOC.cq2_turf = ['turf', 'Kitsune-Ch\u016b\u014d \u00b7 three crew turfs'];
@@ -29267,9 +29267,9 @@ v640Enforcer = function () {
     fight(['enforcer'], false, { dg: 'c2', dgk: 'enforcer', flv: 5, enfDoom: 1, enfThr: C2S_BAN.thr[Math.min(2, n)], enfX: 0, enfTry: n + 1 }); }); };
 /* his teaching line after each loss (on the map, before Aoi hauls you to the gym); Genji's lessons pay them off */
 var C2S_BANL = {
-  1: [['enforcer', 'Name\u2019s Ban. Remember who put you down.'], ['enforcer', 'You telegraph that punch. I saw it from Lucky 7.']],
-  2: [['enforcer', 'Two of you, and you still swing alone.'], ['enforcer', 'Kazan. You fight like I used to. Not a compliment.']],
-  3: [['enforcer', 'You eat every hit whole. A fight isn\u2019t one punch.'], ['', '<p class="dim">Ban is breathing hard. He wipes his mouth.</p>'], ['enforcer', '{slow}Come back when you\u2019ve got a crew behind you.{/slow}']] };
+  1: [['enforcer', '{slow}Name\u2019s Ban.{/slow}{p=600} Remember who put you down.', { cam: 'bars+push', z: 1.65, ms: 2600 }], ['enforcer', 'You telegraph that punch. I saw it from Lucky 7.', { cam: 'hold' }]], /* v6.5.61: slow push-in on Ban, held (future arch-rival) */
+  2: [['enforcer', 'Two of you, and you still swing alone.', { cam: 'bars+push', z: 1.6, ms: 2400 }], ['enforcer', 'Kazan.{p=500} {slow}You fight like I used to.{/slow}{p} Not a compliment.', { cam: 'hold' }]],
+  3: [['enforcer', 'You eat every hit whole. A fight isn\u2019t one punch.', { cam: 'bars+push', z: 1.6, ms: 2400 }], ['', '<p class="dim">Ban is breathing hard. He wipes his mouth.</p>'], ['enforcer', '{slow}Come back when you\u2019ve got a crew behind you.{/slow}', { cam: 'hold' }]] };
 var c2sWake0 = c2GymWake;
 c2GymWake = function () { var n = W.c2sBanLoss | 0; W.c2sBanLoss = 0;
   if (!c2sOn() || !n || !C2S_BANL[n]) { c2sWake0(); return; }
@@ -29308,7 +29308,7 @@ c2RecoverScout = function () { if (!c2sOn()) return c2sRecover0.apply(this, argu
 c2TellLines = function () { if (!c2sOn()) return c2sTell0 ? c2sTell0() : []; return []; };
 function c2sReport() { var S = c2S(); ev('world:c2:report:gray');
   var L = [['ryo', 'Four bosses. A man in a gray coat visited each one.'], ['kurogane', 'Gray coat.{p} {slow}Then those seals are his.{/slow}'], ['kurogane', 'Take the four seals and you take his trail.'],
-    ['aoi', 'And the crews?'], ['kurogane', 'Neutral, for now. Stand with one crew, the other three come for you.'], ['kurogane', 'Win a border fight for a crew. They\u2019ll offer a hand.'], ['kurogane', 'Or go alone. Harder road. Your call.']]
+    ['aoi', 'And the crews?'], ['kurogane', 'Neutral, for now. Stand with one crew, the other three come for you.', { cam: 'bars+pull', z: 1.5, ms: 3600 }], ['kurogane', 'Win a border fight for a crew. They\u2019ll offer a hand.'], ['kurogane', 'Or go alone. Harder road. Your call.']]
     .concat(c2sTail({ fierce: [['ryo', 'Alone sounds fine to me.']], strategic: [['aoi', 'A crew means backup. And enemies. We choose carefully.']], balanced: [['aoi', 'Whoever we stand with, the shops come first.']] }));
   scene(null, L, function () { S.e.c2sRep = 1; S.e.roam = 1; S.e.called = 1; save(); if (c2QA() === CQ.scout) c2QDone(CQ.scout);
     setTimeout(function () { c2QStart(CQ.locks); c2sLocksSync(); try { c2SqUnlock(); } catch (e1) {} save(); ev('world:c2:locks:start'); W.dlg = false; }, 900); }); }
@@ -37450,9 +37450,13 @@ var GINKO = (function () {
   function spr(who) {
     if (!who || typeof who !== 'string' || who.charAt(0) === '@' || who.charAt(0) === '{') return who === '{LEAD}' || who === '{PARTNER}' ? W.ryo : null;
     if (who === 'ryo') return W.ryo; if (who === 'aoi') return W.aoi; if (who === 'gouki' && typeof gkSpr === 'function') return gkSpr();
+    if (W.c2n) { for (var k in W.c2n) { var s = W.c2n[k]; if (s && s.el && s.el.parentNode && (s.el.dataset.who === who || s.el.dataset.npc === who || s.el.dataset.mb === who)) return s; } }
     var v = wv(); if (!v) return null; var el = v.querySelector('[data-npc="' + who + '"],[data-who="' + who + '"],[data-mb="' + who + '"]');
-    if (!el && W.c2n) { for (var k in W.c2n) { var s = W.c2n[k]; if (s && s.el && s.el.parentNode && (s.el.dataset.who === who || s.el.dataset.mb === who)) return s; } }
-    return el ? { el: el } : null; }
+    return el ? (el.__spr || { el: el }) : null; }
+  /* a heavy push also turns the world camera onto the target (W.camFocus, the camera's own lerp; restored after) */
+  function focus(me, p) { if (!me || me.x == null || W.pan || typeof g38CamAt !== 'function') return p; if (!S.cfSet) { S.cf0 = W.camFocus || null; S.cfSet = true; } W.camFocus = [me];
+    var ct = g38CamAt(); if (!ct || !p) return p; return [p[0] - (ct[0] - W.cam.x) * W.S, p[1] - (ct[1] - W.cam.y) * W.S]; }
+  function unfocus() { if (S.cfSet) { W.camFocus = S.cf0; S.cf0 = null; S.cfSet = false; } }
   /* a sprite's upper body in #wv's own (unscaled) pixels; null when it is off screen */
   function pt(s) { var v = wv(); if (!v || !s || !s.el || !s.el.parentNode || !s.el.getBoundingClientRect) return null; var P = (v.parentNode || v).getBoundingClientRect(), e = s.el.getBoundingClientRect(), c = cur();
     if (!e.width || e.right < P.left || e.left > P.right || e.bottom < P.top || e.top > P.bottom) return null;
@@ -37465,7 +37469,7 @@ var GINKO = (function () {
     stop(); v.style.transformOrigin = '0 0';
     S.an = v.animate([{ scale: c.z, translate: c.x + 'px ' + c.y + 'px' }, { scale: Z, translate: tx + 'px ' + ty + 'px' }], { duration: ms, easing: ease || 'cubic-bezier(.25,.6,.25,1)', fill: 'forwards' });
     S.on = true; arm(); return true; }
-  function reset(ms) { var v = wv(); clearTimeout(S.wd); if (!v || !S.on) { stop(); return; } var c = cur(); stop(); S.on = false;
+  function reset(ms) { var v = wv(); clearTimeout(S.wd); unfocus(); if (!v || !S.on) { stop(); return; } var c = cur(); stop(); S.on = false;
     if (!v.animate || ms <= 0 || (c.z === 1 && !c.x && !c.y)) { v.style.transformOrigin = ''; return; }
     var a = v.animate([{ scale: c.z, translate: c.x + 'px ' + c.y + 'px' }, { scale: 1, translate: '0px 0px' }], { duration: ms, easing: 'cubic-bezier(.4,0,.2,1)' }); S.an = a;
     a.onfinish = function () { if (S.an === a) { S.an = null; v.style.transformOrigin = ''; } }; }
@@ -37474,14 +37478,16 @@ var GINKO = (function () {
   /* one scene line: called by scene() before the line types */
   function line(id, ln, i, L) {
     S.line++; S.shoutShake = false; var who = ln && ln[0], o = (ln && ln[2]) || {}, cam = o.cam ? String(o.cam).split('+') : [], has = function (k) { return cam.indexOf(k) >= 0; };
-    if (!who || who.charAt(0) === '@') { if (who && who.charAt(0) === '@') reset(400); return; }
+    if (who && who.charAt(0) === '@') { reset(400); return; }
+    if (!who && !cam.length) return; /* narration holds the frame unless it carries a move (then it aims at o.at, default Ryo) */
     if (has('bars')) bars(1); if (has('nobars')) bars(0);
     if (has('shake')) { if (o.onShout) S.shoutShake = true; else setTimeout(function () { try { if (!still()) wShake(); } catch (e) {} }, o.shakeAt || 60); }
-    var me = spr(o.at || who), p = pt(me);
+    var me = spr(o.at || who || 'ryo'), p = pt(me);
     if (typeof ev === 'function' && cam.length) ev('world:scam:' + cam.join('+') + ':' + (id || 'talk') + ':' + (i + 1));
     if (still()) { S.prev = who; return; }
     if (has('hold')) { arm(); S.prev = who; return; }
-    if (has('push') && p) { to(o.z || 1.55, p, o.ms || 1600, 0.45, 'cubic-bezier(.3,.05,.2,1)'); S.prev = who; return; }
+    unfocus();
+    if (has('push') && p) { p = focus(me, p); to(o.z || 1.55, p, o.ms || 1600, 0.45, 'cubic-bezier(.3,.05,.2,1)'); S.prev = who; return; }
     if (has('pull') && p) { var Z0 = o.z || 1.5, v = wv(); stop(); var W0 = v.clientWidth, H0 = v.clientHeight, tx = Math.max(W0 * (1 - Z0), Math.min(0, W0 / 2 * 0.3 + p[0] * 0.7 - Z0 * p[0])), ty = Math.max(H0 * (1 - Z0), Math.min(0, H0 * 0.42 * 0.3 + p[1] * 0.7 - Z0 * p[1]));
       v.style.transformOrigin = '0 0'; S.an = v.animate([{ scale: Z0, translate: tx + 'px ' + ty + 'px' }, { scale: o.z1 || 1, translate: '0px 0px' }], { duration: o.ms || 2800, easing: 'cubic-bezier(.2,.5,.15,1)', fill: 'forwards' }); S.on = true; arm(); S.prev = who; return; }
     if (has('frame') || !cam.length) {
@@ -37489,7 +37495,7 @@ var GINKO = (function () {
       if (p || q) to(has('frame') ? (o.z || 1.12) : 1.06, mid(q, p, q && p ? 0.62 : 0), has('frame') ? 1300 : 3600, 0.2, 'cubic-bezier(.33,.1,.25,1)');
     }
     S.prev = who; }
-  function end() { S.prev = null; S.shoutShake = false; if (S.bars) bars(0); reset(650); }
+  function end() { unfocus(); S.prev = null; S.shoutShake = false; if (S.bars) bars(0); reset(650); }
   function shout() { if (S.shoutShake) { S.shoutShake = false; try { if (!still()) wShake(); } catch (e) {} } }
   root.FFF_SCAM = { line: line, end: end, reset: reset, shout: shout, st: S };
 })();
@@ -38551,8 +38557,8 @@ function camPan(to, o, done) {
   (function () { if (typeof C2SC !== 'object') return; var A0 = C2SC.lm_sento, B0 = C2SC.lm_sento_out;
     var A1 = [['mb2_sento', '{slow}Coal chute. Nobody\u2019s come down that since my father.{/slow}'], ['ryo', 'We saw the banzuke. The apron. The letters on the altar.'], ['mb2_sento', 'Then you read my mail. Kids today.'],
       ['aoi', 'You locked them out because the boiler could blow. And you took the gray coats\u2019 money for a new one.'], ['mb2_sento', 'Parts never come. The crates do. The Hustlers collect. Every winter, \u201cnext winter.\u201d'],
-      ['ryo', 'Tome-baa says the miso\u2019s gone cold too.'], ['mb2_sento', '\u2026{slow}The seal keeps the fire lit, boy. Break it and this alley has no bath at all.{/slow}'], ['mb2_sento', 'An \u014czeki doesn\u2019t step out of the ring. Come.']];
-    var B1 = [['mb2_sento', '\u2026Thirty years since anyone put me on the clay.'], ['mb2_sento', 'Go on. Open it. Let the old folks in. I\u2019ll keep the fire the honest way.'], ['aoi', 'Then the gray coats lose their basement.'], ['ryo', 'Hot bath\u2019s on the alley tonight. Not on the gray coats.']];
+      ['ryo', 'Tome-baa says the miso\u2019s gone cold too.'], ['mb2_sento', '\u2026{p=500}{slow}The seal keeps the fire lit, boy.{/slow}{p=600} Break it and this alley has no bath at all.', { cam: 'bars+push', z: 1.6, ms: 2400 }], ['mb2_sento', 'An \u014czeki doesn\u2019t step out of the ring. Come.']];
+    var B1 = [['mb2_sento', '\u2026{p=600}{slow}Thirty years since anyone put me on the clay.{/slow}', { cam: 'bars+pull', z: 1.35, ms: 3600 }], ['mb2_sento', 'Go on. Open it. Let the old folks in. I\u2019ll keep the fire the honest way.'], ['aoi', 'Then the gray coats lose their basement.'], ['ryo', 'Hot bath\u2019s on the alley tonight. Not on the gray coats.']];
     try { Object.defineProperty(C2SC, 'lm_sento', { configurable: true, get: function () { return nailsRun() ? A1 : A0; }, set: function (v) { A0 = v; } });
       Object.defineProperty(C2SC, 'lm_sento_out', { configurable: true, get: function () { return nailsRun() ? B1 : B0; }, set: function (v) { B0 = v; } }); } catch (e) {} })();
   /* ================= Kitsune-no-Yu, the back of the house: two more wings so the walk to Gōda is a real dungeon =================
