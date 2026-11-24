@@ -37270,14 +37270,15 @@ var GINKO = (function () {
         ['X2', 'X4'].forEach(function (b) { if (seen[b] && out.indexOf(b) < 0) out.push(b); });
         return out;
       }
-      if (typeof G38T !== 'undefined' && G38T.BORDER) out = Object.keys(G38T.BORDER);
+      /* v6.5.60: nothing outside that window. Before Ryo steps out of the gym with the Four Corners job, after a
+         side is picked, or once both brawls were seen, the town is quiet (it used to fall back to every border, all chapter). */
       return out;
     }
     function ambTick(dt) {
       if (typeof chN === 'function' && chN() !== 2) return;
       if (typeof c2Room === 'function' && c2Room() !== 'town') return;
       if (!W || !W.ryo || typeof G38T === 'undefined' || !G38T.BORDER) return;
-      if (W.dgFight || W.cut) return;
+      if (W.dgFight || W.cut || W.busy || W.dlg || W.paused) return;
       if (typeof AU === 'undefined' || typeof AU.play !== 'function') return;
       var S = typeof c2S === 'function' ? c2S() : null;
       var e = (S && S.e) || {};
