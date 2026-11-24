@@ -37488,7 +37488,7 @@ var GINKO = (function () {
   /* the art */
   var WD = 'world/';
   function reg(id, k, nm, sheets) { sheets.forEach(function (sh) { IMG[id + '_' + sh] = WD + id + '_' + sh + '.webp'; }); BW_IDS[id] = 1; SHC[id + '_walk'] = 8; C2K[id] = k; NM[id] = nm; if (!PT[id]) PT[id] = 'c2_hustler_fig'; }
-  reg('c2_gray', 1.1, 'Gray Coat', ['walk', 'map']);
+  reg('c2_gray', 1.1, 'Gray Coat', ['walk', 'map', 'fig']); PT.c2_gray = 'c2_gray_fig'; /* his own portrait, not a Hustler's */
   /* ================= the street layout (planned four-corner layout, user-approved) =================
    * bathhouse door: Fox Mart slot by the station (330,880). Herbalist: the old Kitsune-no-Yu building (380,2640).
    * Fox Mart: the old Kampo building (4470), no interior. Facades are painted in-engine once into small canvases. */
