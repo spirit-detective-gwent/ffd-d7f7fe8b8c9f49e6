@@ -11,6 +11,24 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
+### 2026-11-24 — executor (Grok Bot) — v6.5.60 (branch v6560-nails, published to main) — LIVE after Ernest's OK
+Versions: `window.FFF_BUILD="v6560"`, title `.vtag` "v6.5.60", `#ver` text "v6.5.60" (bumped in 14a796c).
+Everything below is approved by Ernest and published in one push on top of d3c83e4 (v6.5.59 base). Fast-forward, nothing on main to merge.
+What shipped:
+- Nails questline (Punk route, NQ module, source in `/workspace/nails-art/nq/*.js`, built by `nq/build.py` into index.html, `root.FFF_NQ`): udon corner → Hold the West Street → Cold Water (Kitsune Hotel door) → Wet Paint (west wall tag crews) → The Door Man (Kaneda) → Gōda's Seal in the boiler room → Gōda names Tetsu, club path opens. Journal steps/pins (`d_quest.js`), self-repairing beats (`chainRepair`, `whenFree` never drops a beat, crew counts derived from beaten flags).
+- New interiors: Kitsune Udon, Machi Motors, Kitsune Hotel desk (c2_nq_udon/motors/hotel) with Nails' price (20% off) counters, Ginko stall openings n1–n4 (dagashi, drugstore, used books, gacha + capsule-opening beat).
+- Kitsune-no-Yu bathhouse: 13 rooms (bath side A genkan, B changing, C bath hall, D steam corridor, E boiler; staff side U1 laundry, U2 staff kitchen, U3 storeroom, U4 stairwell; upstairs K1 Gōda's room, K2 trophy corridor, K3 altar, K4 drying deck), lore beats per room (ōzeki Kitsuneyama, the knee, father's letter vs the city's CONDEMNED letter, THE LOAN with the gray coats), key/stair/chute gates, fog veils, all dressed in-engine once per entry (`k_dress.js`, `PAINT.sento/sentoU/sentoK`), every tub/large prop solid (collision walk-tested in all rooms + udon/motors/hotel).
+- Gōda's crew looks (cel, painted by `FFF_YK` / tools in nails-art `yk.js` + `jobs.py` + `bake.py`): Gōda sumo-sized with top-knot and planted standing pose, Kaneda, bath-house Hustlers (happi, irezumi, haramaki, geta), gray coats (+ own dialogue portrait `world/c2_gray_fig.webp`), 3 Punk variants, bulky Flip.
+- Ryo/Aoi yankii overworld outfits (overworld only) sold at the West Street stall (850/800/900 yen).
+- Layout: informant + his two gray coats and Ban's lantern post moved to Lantern Alley (informant stays all chapter, by decision), herbalist into the old yakitori building (KAMPO noren/neon), bathhouse in the Fox Mart slot by the station, Fox Mart sign + awning.
+- Block-win sting v2 (zoom, ink flood with hot edge, hanko slam, crest flare, brushed block name, turf tally); Kissa Gekko + station quarter turn red only at Gōda's seal.
+- Ambush surprise stings (front / back / Alley Cat tiers; Alley Cat reworked as quiet flashiness with slow-mo + freeze); fight waits for the sting.
+- Hundred Fist Barrage: rush camera centered on the foe, fists land on chest/chin.
+- Ginko Shotengai rebuilt as the big covered shopping street (stall slots reserved, `FFF_GINKO`).
+- Fixes: distant brawl punches (v6.5.55 brawl ambience `heardList`) played all chapter after leaving Genji's (bug was on live too) — now only in the Four Corners hearing window, outdoors, no dialog; herbalist no-gang zone follows her new building, quest location text says west end; gray coats no longer show a Hustler portrait.
+Checks before publish: real-battle six-quest chain to the seal (no errors/stuck steps), Ch1/Ch2 smoke, room-by-room audio audit (no stray SFX/loops), perf_check origin/main vs HEAD OVERALL PASS (all spots 60 fps; long walk ch2 1% low 57.2 vs 51.0; x4 battle 56.95 vs 57.65).
+Not in git (dev only): `index_fffonly.html`, `page.canvas.tsx.txt`.
+
 ### 2026-11-23 — executor (Grok Bot) — v6.5.59 (commit b0627a2) — LIVE after Ernest's OK
 Versions: `window.FFF_BUILD="v6559"`, title `.vtag` "v6.5.59", `#ver` text "v6.5.59" (bumped in b34c591, checked consistent before publish).
 Everything below is approved by Ernest and published in one push on top of 70dbe47 (v6.5.58 base).
