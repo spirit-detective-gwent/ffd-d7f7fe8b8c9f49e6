@@ -294,6 +294,8 @@
     /* Aoi: sukeban. White long coat with cyan 天上天下 over sarashi, ankle-length navy pleated skirt */
     aoi: { base: 'aoi', pal: { 4: tri('#e9ecef'), 6: tri('#1d2540') }, coat: '#e9ecef', coatLen: 0.55, emb: '#2fc8e0', lining: '#2fc8e0', skirt: '#1d2540', hemMax: 0.66 }
   };
+  /* the gray-coat men by the Lantern Alley informant: long charcoal-gray coat, dark slacks, slicked black hair, tinted shades. No kanji. */
+  SPEC.gray = { base: 'punk', glove: 1, pal: { 4: tri('#55585f'), 6: tri('#2a2b31'), 7: tri('#3b3c43') }, coat: '#6c6f76', coatLen: 0.8, emb: null, lining: '#3f4148', bag: 2, hair: 'pomp', hairCol: '#16161a', shades: 1 };
   /* the West Street stall's two accessories, worn over the yankii look: tinted shades / a leopard hachimaki with leopard coat lining */
   SPEC.ryoS = Object.assign({}, SPEC.ryo, { shades: 1, shadeQ: 0.0 }); SPEC.aoiS = Object.assign({}, SPEC.aoi, { shades: 1 });
   SPEC.ryoL = Object.assign({}, SPEC.ryo, { band: '#d6a046', bandDot: null, bandLeo: 1, lining: '#d6a046' }); SPEC.aoiL = Object.assign({}, SPEC.aoi, { band: '#d6a046', bandLeo: 1, lining: '#d6a046' });
