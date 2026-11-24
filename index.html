@@ -37788,7 +37788,7 @@ var GINKO = (function () {
       Object.keys(w).forEach(function (kk) { var b = BLK[kk]; if (!b) return; var r = b.r; add += '<i class="nqwon" style="left:' + (r[0] / C2W.w * 100).toFixed(2) + '%;top:' + (r[1] / C2W.h * 100).toFixed(2) + '%;width:' + ((r[2] - r[0]) / C2W.w * 100).toFixed(2) + '%;height:' + ((r[3] - r[1]) / C2W.h * 100).toFixed(2) + '%">' + (b.big ? '<b>' + esc(b.n.replace(/^THE /, '')) + '</b>' : '') + '</i>'; });
       if (add) h = h.replace(/(<div class="pmap c2map"><img[^>]*>)/, '$1' + add); } } catch (e) {} return h; }; }
   /* ================= the flow: crews, beats, fights ================= */
-  function whenFree(fn, tries) { tries = tries || 0; if (!busy() && !document.getElementById('nqsting') && !(typeof W.c2busy !== 'undefined' && W.c2busy)) { try { fn(); } catch (e) { ev('world:nq:err:free:' + (e && e.message)); } return; } if (tries < 120) later(250, function () { whenFree(fn, tries + 1); }); }
+  function whenFree(fn, tries) { tries = tries || 0; if (!busy() && !document.getElementById('nqsting') && !(typeof W.c2busy !== 'undefined' && W.c2busy)) { try { fn(); } catch (e) { ev('world:nq:err:free:' + (e && e.message)); } return; } later(tries < 120 ? 250 : 1000, function () { whenFree(fn, tries + 1); }); } /* never drops a beat: a long-open dialog only delays it */
   function dist(a, x, y) { return a ? Math.hypot(a.x - x, a.y - y) : 1e9; }
   function ginko(q, nm) { try { var G = root.FFF_GINKO, s = G && G.slot(q); if (s && !G.isOpen(s.id)) { G.setOpen(s.id, 1); later(600, function () { toast('Ginko Sh\u014dtengai: the ' + nm + ' stall is open.'); }); } } catch (e) {} }
   NQ.ginko = ginko;
@@ -37891,19 +37891,22 @@ var GINKO = (function () {
   if (typeof fight === 'function') { var fightN = fight; fight = function (grp, boss, ctx) { try { if (ctx && on()) { var ks = ctx.dgks || [ctx.dgk]; ks.forEach(function (k) { var m = /^(nq_[a-z]\d?)_\d+$/.exec(String(k || '')); if (m) ctx.nqk = ctx.nqk || m[1]; }); if (ctx.nqk) ev('world:nq:fight:' + ctx.nqk); } } catch (e) {} return fightN.apply(this, arguments); }; }
   var back0 = c2Back;
   c2Back = function (win, st0) { var r = back0.apply(this, arguments); try { var c = st0 && st0.ctx; if (on() && c && c.nqk) nqBack(win && !st0.escaped, c); } catch (e) { ev('world:nq:err:back:' + (e && e.message)); } return r; };
+  function crewsDown(p) { return [0, 1, 2].filter(function (i) { return crewDown(p + i); }).length; }
   function crewDown(k) { var s = S(), c = C2CREW.find(function (x) { return x.k === k; }), n = c ? c.ids.length : (k === 'nq_w2' ? 3 : 2); for (var i = 0; i < n; i++) if (!s.f[k + '_' + i]) return false; return true; }
+  function paintFin() { if (NS().paintFin) return; NS().paintFin = 1; sv();
+      talk([[H, 'Hah\u2026 you think the wall matters?'], [H, 'G\u014dda\u2019s man at the door decides who gets in. Not me. Not you.'], ['ryo', 'Which door?'], [H, 'The bathhouse. By the station. Ask for Kaneda. He\u2019ll ask for your teeth.']], function () {
+        qClose('paint'); won().wall = 1; sv(); wallPaint(); sting('wall', function () { ginko('Q4', 'used-book'); qOpen('door'); try { qBanner('NEW JOB', Q.door.n, Q.door.giver); } catch (e) {} }); }); }
   function nqBack(win, c) {
     var s = S(); if (!win) { if (c.nqk === 'nq_d' || c.nqk === 'nq_x') whenFree(function () { beatReset(true); }); return; } (c.dgks || []).forEach(function (k) { if (/^nq_/.test(k)) s.f[k] = 1; }); sv();
     var k = c.nqk; ev('world:nq:won:' + k);
     if (k === 'nq_w1' && crewDown(k)) whenFree(function () { setStg('west', 'w2'); crewSync(); say([['aoi', 'Second push coming up the street. Three this time.']]); });
     if (k === 'nq_w2' && crewDown(k)) whenFree(function () { setStg('west', 'clash'); crewSync(); say([['aoi', 'His heavies are at the south end. Flip said he\u2019d bring two.']]); });
-    if (/^nq_c\d$/.test(k) && crewDown(k)) whenFree(function () { var n = (stg('cold') | 0) + 1, i = +k.slice(4), g = NPC.guests.filter(function (q) { return q.nqGuest === i; })[0]; setStg('cold', n);
+    if (/^nq_c\d$/.test(k) && crewDown(k)) whenFree(function () { var n = crewsDown('nq_c'), i = +k.slice(4), g = NPC.guests.filter(function (q) { return q.nqGuest === i; })[0]; if (n <= (stg('cold') | 0)) return; setStg('cold', n);
       if (g) { talk([[g.nqid, ['Th-thank you. I just wanted my key.', 'They wanted a \u201cdoor fee.\u201d For a hotel door!', 'I\u2019ll tell the desk who helped.'][i]]], function () { move(g, [[HOTEL_DOOR.at[0], 900], [HOTEL_DOOR.at[0], 850]], 120, function () { kill(g); }); }); }
       if (n >= 3) later(400, function () { whenFree(function () { qStep('cold', 1); say([['aoi', 'Door\u2019s clear. Let\u2019s hear the front desk.']]); }); }); });
-    if (/^nq_p\d$/.test(k) && crewDown(k)) whenFree(function () { var n = (stg('paint') | 0) + 1; setStg('paint', n); var tg = WALLC['tag' + k.slice(4)]; if (tg && tg.parentNode) tg.remove();
+    if (/^nq_p\d$/.test(k) && crewDown(k)) whenFree(function () { var n = crewsDown('nq_p'); if (n <= (stg('paint') | 0)) return; setStg('paint', n); var tg = WALLC['tag' + k.slice(4)]; if (tg && tg.parentNode) tg.remove();
       if (n < 3) { say([['aoi', n === 1 ? 'Paint\u2019s still wet. Two more crews.' : 'One more crew. South end of the wall.']]); return; }
-      talk([[H, 'Hah\u2026 you think the wall matters?'], [H, 'G\u014dda\u2019s man at the door decides who gets in. Not me. Not you.'], ['ryo', 'Which door?'], [H, 'The bathhouse. By the station. Ask for Kaneda. He\u2019ll ask for your teeth.']], function () {
-        qClose('paint'); won().wall = 1; sv(); wallPaint(); sting('wall', function () { ginko('Q4', 'used-book'); qOpen('door'); try { qBanner('NEW JOB', Q.door.n, Q.door.giver); } catch (e) {} }); }); });
+      paintFin(); });
     if (k === 'nq_u' || k === 'nq_k') whenFree(function () { wingWon(k); });
     if (k === 'nq_x') whenFree(clashWon);
     if (k === 'nq_d') whenFree(doorWon);
@@ -37955,6 +37958,8 @@ var GINKO = (function () {
   function chainRepair() { var n = NS(), w = won(), ch = 0;
     if (n.udon && !qOn('west') && !qDone('west')) { w.udon = 1; setStg('west', stg('west') || 'w1'); qOpen('west'); ch = 1; }
     if (qDone('west')) { w.west = 1; if (!E().vend_x2st) { E().vend_x2st = 1; ch = 1; } ginko('Q2', 'dagashi'); if (!qOn('cold') && !qDone('cold')) { setStg('cold', 0); qOpen('cold'); ch = 1; } }
+    if (qOn('cold') && (stg('cold') | 0) < 3 && crewsDown('nq_c') === 3) { setStg('cold', 3); qStep('cold', 1); ch = 1; }
+    if (qOn('paint') && crewsDown('nq_p') === 3 && !NS().paintFin) { setStg('paint', 3); whenFree(paintFin); ch = 1; }
     if (qDone('cold')) { w.hotel = 1; ginko('Q3', 'drugstore'); if (!qOn('paint') && !qDone('paint')) { setStg('paint', 0); qOpen('paint'); ch = 1; } }
     if (qDone('paint')) { w.wall = 1; ginko('Q4', 'used-book'); if (!qOn('door') && !qDone('door')) { qOpen('door'); ch = 1; } }
     if (qDone('door')) { var e = E(); e.baseOpen_bat = 1; e.guardGone_sento = 1; if (!qOn('seal') && !qDone('seal') && !e.seal_sento) { setStg('seal', 'open'); qOpen('seal'); ch = 1; } }
