@@ -37497,6 +37497,9 @@ var GINKO = (function () {
     (C2W.bld || []).forEach(function (b) { if (b.id === 'nw') { b.n = 'KITSUNE-NO-YU'; b.door = [330, 92]; } if (b.id === 'yakitori') b.n = 'TSUKIKAGE KAMPO'; if (b.id === 'clinic') { b.n = 'FOX MART'; b.door = null; } });
     try { if (C2LM.sento) C2LM.sento.note = 'The station\u2019s old sent\u014d, Kitsune-no-Yu. G\u014dda\u2019s house. The boiler-room door wears the seal.'; } catch (e) {}
     try { if (typeof C2LMZ !== 'undefined') C2LMZ.sento = 'Station plaza (west)'; } catch (e) {}
+    /* the plaza tree in front of the bathhouse door steps aside (art + its trunk block) */
+    try { (C2W.props.place || []).forEach(function (q) { if (q[0] === 'tree' && q[1] === 300 && q[2] === 1000) q[1] = 190; });
+      (C2W.pblocks || []).forEach(function (b) { if (b[0] === 286 && b[1] === 984) { b[0] = 176; b[2] = 204; } }); } catch (e) {}
     delete INT.c2_town.G;
   }
   layoutMove();
@@ -37535,7 +37538,27 @@ var GINKO = (function () {
     /* canvases are reused (moved back into the layer on each town pop): no repaint */
     propEl(FAC.sento, 146, 696, 700); propEl(FAC.kampo, 319, 2495, 2530); propEl(FAC.mart, 4406, 2492, 2530);
   }
-  NQ.facades = facades;
+  /* the baked atlas props follow the move: KAMPO noren + neon to the herbalist, YU neon to the station bathhouse, Fox Mart gets its own painted sign + awning */
+  function facMartV() { var c = cv(56, 236), g = c.getContext('2d');
+    box(g, 6, 4, 44, 228, '#16231c', 4); box(g, 11, 10, 34, 216, '#1f7a3a', 3);
+    g.fillStyle = 'rgba(234,246,228,.18)'; g.fillRect(14, 13, 6, 210);
+    'FOXMART'.split('').forEach(function (ch, i) { tx(g, ch, 28, 30 + i * 29 + (i > 2 ? 6 : 0), 22, '#eaf6e4', 900); });
+    return c; }
+  function facAwn() { var c = cv(136, 40), g = c.getContext('2d');
+    for (var i = 0; i < 8; i++) { g.fillStyle = i % 2 ? '#eef2ea' : '#1f7a3a'; g.beginPath(); g.moveTo(4 + i * 16, 4); g.lineTo(20 + i * 16, 4); g.lineTo(20 + i * 16, 30); g.quadraticCurveTo(12 + i * 16, 38, 4 + i * 16, 30); g.closePath(); g.fill(); }
+    g.strokeStyle = INK; g.lineWidth = 3; g.strokeRect(4, 3, 128, 3); g.lineWidth = 2; for (var j = 0; j <= 8; j++) { g.beginPath(); g.moveTo(4 + j * 16, 4); g.lineTo(4 + j * 16, 30); g.stroke(); }
+    return c; }
+  function propAt(key) { return layer.querySelector('i.c2prop[data-p="' + key + '"]'); }
+  function propMove(key, x, y) { var e = propAt(key), A = C2W.props && C2W.props.atlas[key]; if (!e || !A) return; e.style.left = (x - A[4]) + 'px'; e.style.top = (y - A[5]) + 'px'; e.style.zIndex = 100 + Math.round(y);
+    (W.c2pall || []).forEach(function (p) { if (p.e === e) { p.x = x - A[4]; p.y = y - A[5]; p.off = undefined; } }); }
+  function propSwap() {
+    propMove('noren_4', -4000, -4000);
+    propMove('noren_5', 380, 2526); propMove('vsign_8', 564, 2468); propMove('vsign_7', 524, 700);
+    if (!FAC.martV) { FAC.martV = facMartV(); FAC.awn = facAwn(); }
+    propEl(FAC.martV, 4628, 2232, 2468); propEl(FAC.awn, 4402, 2448, 2526);
+  }
+  function facades2() { facades(); if (on() && inTown()) propSwap(); }
+  NQ.facades = facades2;
   /* ================= Lantern Alley: the informant's two gray-coat men, Ban's lantern post, the one way east ================= */
   var INF = [4850, 2690], GRAYS = [[4792, 2650, Math.PI], [4800, 2734, Math.PI]], POLE = (typeof V640_POLE !== 'undefined' && V640_POLE) || [3300, 2668];
   var LN = { grays: [] };
@@ -38319,7 +38342,7 @@ var GINKO = (function () {
     g.fillStyle = 'rgba(255,230,180,.35)'; g.beginPath(); g.arc(230, 80, 40, Math.PI, 0); g.fill();
     return c; }
   var facades0 = facades; facades = function () { facades0(); if (!on() || !inTown()) return; if (!FAC.hotel) FAC.hotel = facHotel(); propEl(FAC.hotel, 1660, 741, 760); };
-  NQ.facades = facades;
+  NQ.facades = facades2;
   /* the gray coats: Talk tags */
   GRAYS.forEach(function (p, i) { INT.c2_town.spots.push({ id: 'nq_gray' + i, r: [p[0] - 30, p[1] - 100, p[0] + 30, p[1] + 6], at: [p[0] - 60, p[1]], face: 0, lab: 'Talk' }); }); delete INT.c2_town.G;
   var tagOk0 = tagOk; tagOk = function (id, key) { var a = key.split(':')[1] || ''; if (/^nq_gray\d$/.test(a)) return infHere() && LN.grays.length > 0; return tagOk0(id, key); };
@@ -38327,7 +38350,7 @@ var GINKO = (function () {
   /* ================= pop + frame ================= */
   var pop0 = c2Pop;
   c2Pop = function () { var r = pop0.apply(this, arguments); try { if (!on()) return r; var k = room();
-      if (k === 'town') { facades(); laneProps(); if (nailsRun()) shutterOn(); crewSync(); }
+      if (k === 'town') { facades2(); laneProps(); if (nailsRun()) shutterOn(); crewSync(); }
       else if (k === 'sento') sentoPop(); else if (INT[C2R[k]] && INT[C2R[k]].nq) roomPop(k);
     } catch (e) { ev('world:nq:err:pop:' + (e && e.message)); } return r; };
   var frN0 = c2Frame;
