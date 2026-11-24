@@ -1,0 +1,15 @@
+<!doctype html><body style="margin:0"><script>document.write("<script src=yk.js?v="+Date.now()+"><\/script>")</script><script>
+var F4=['front','left','right','back'];
+function load(u){return new Promise(function(ok,no){var im=new Image();im.onload=function(){ok(im)};im.onerror=no;im.src=u;});}
+/* job: {spec, src, cols, rows, cw, ch, faces, rot, opts} -> webp data url */
+window.paintJob=async function(j){var im=await load(j.src), W=im.naturalWidth, H=im.naturalHeight, cw=j.cw||W/j.cols, ch=j.ch||H/j.rows;
+  var sp=Object.assign({},FFF_YK.SPEC[j.spec],j.opts||{}), out=document.createElement('canvas'); out.width=W; out.height=H; var o=out.getContext('2d');
+  for(var r=0;r<j.rows;r++)for(var c=0;c<j.cols;c++){var f=(j.faces||F4)[r]||'front', cv;
+    if(j.rot){ /* lying: stand the cell up, paint it as a side view, lay it back down */
+      var t=document.createElement('canvas'); t.width=ch; t.height=cw; var tx=t.getContext('2d'); tx.translate(ch/2,cw/2); tx.rotate(j.rot*Math.PI/2); tx.drawImage(im,c*cw,r*ch,cw,ch,-cw/2,-ch/2,cw,ch);
+      var p=FFF_YK.paintCell(t,0,0,ch,cw,sp,f); var b=document.createElement('canvas'); b.width=cw; b.height=ch; var bx=b.getContext('2d'); bx.translate(cw/2,ch/2); bx.rotate(-j.rot*Math.PI/2); bx.drawImage(p,-ch/2,-cw/2); cv=b; }
+    else cv=FFF_YK.paintCell(im,c*cw,r*ch,cw,ch,sp,f);
+    o.drawImage(cv,c*cw,r*ch);}
+  return out.toDataURL('image/webp',j.q||0.9);};
+window.READY=1;
+</script>
