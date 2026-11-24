@@ -29634,10 +29634,17 @@ c2GymWake = function () {
   bankoLieOn();
   setTimeout(function () {
     scene(null, bankoLines, function () {
-      bankoFade(function () { bankoLieOff(); bankoWake0(); }, function () {
-        ev('world:c2:ban:fade:done');
-        if (typeof sLock === 'function') sLock(0, 'banko');
-      });
+      /* v6.5.61: let the push ease out while they stay down, then fade; snap the zoom off in the black so the gym is not mid-ease */
+      var goFade = function () {
+        bankoFade(function () {
+          try { if (root.FFF_SCAM && FFF_SCAM.clear) FFF_SCAM.clear(); } catch (eC) {}
+          bankoLieOff(); bankoWake0();
+        }, function () {
+          ev('world:c2:ban:fade:done');
+          if (typeof sLock === 'function') sLock(0, 'banko');
+        });
+      };
+      try { if (root.FFF_SCAM && FFF_SCAM.after) FFF_SCAM.after(goFade); else goFade(); } catch (eF) { goFade(); }
     });
   }, 450);
 };
@@ -37456,7 +37463,8 @@ var GINKO = (function () {
  * speaker and partner, one slow WAAPI drift); heavy lines carry ln[2].cam = 'push' | 'pull' | 'hold' | 'shake' | 'bars' | 'frame'
  * (join with '+', e.g. 'bars+push'; 'nobars' drops the bars). One animation on #wv at a time (translate + scale, origin 0 0).
  * A push is held through the rest of that beat (and through @cin / lines with no new move); it eases back only when the
- * dialogue leaves the moment (a pull) or the scene ends — 1.5–2.5 s, ease-in-out, never an instant reset. Gated by
+ * dialogue leaves the moment (a pull) or the scene ends — 1.5–2.5 s, ease-in-out, never an instant reset.
+ * after(cb) fires when that ease finishes so a following fade can wait; clear() snaps the zoom off only while the screen is already black. Gated by
  * ambStingOK() (camera setting, phone portrait, reduced motion); instant text skips the zoom too. Bars always play.
  * No loops: a short watchdog timeout runs only while a move is held. */
 (function () {
@@ -37489,16 +37497,22 @@ var GINKO = (function () {
     stop(); v.style.transformOrigin = '0 0';
     S.an = v.animate([{ scale: c.z, translate: c.x + 'px ' + c.y + 'px' }, { scale: Z, translate: tx + 'px ' + ty + 'px' }], { duration: ms, easing: ease || 'cubic-bezier(.25,.6,.25,1)', fill: 'forwards' });
     S.on = true; arm(); return true; }
+  /* run every waiter once the current ease (or a no-op reset) has finished */
+  function ping() { var L = S.pend || []; S.pend = []; L.forEach(function (f) { try { f(); } catch (e) {} }); }
+  function after(cb) { if (!cb) return; if (!S.an) { cb(); return; } S.pend = (S.pend || []).concat([cb]); }
+  /* instant clear — only while the screen is already black (a fade mid-point), never as a visible reset */
+  function clear() { var v = wv(); clearTimeout(S.wd); unfocus(); stop(); S.on = false; S.heavy = false; if (S.bars) bars(0); clearStyle(v); ping(); }
   /* ease back to 1. Never instant: heavy beats take 1.5–2.5 s, light frames a bit less, skipped zoom still eases. */
-  function reset(ms) { var v = wv(); clearTimeout(S.wd); if (!v || !S.on) { unfocus(); stop(); S.heavy = false; return; }
+  function reset(ms, cb) { if (cb) S.pend = (S.pend || []).concat([cb]); var v = wv(); clearTimeout(S.wd); if (!v || !S.on) { unfocus(); stop(); S.heavy = false; ping(); return; }
     var c = cur(); stop(); unfocus(); S.on = false; S.heavy = false;
     var z = c.z, dur;
     if (still()) dur = Math.max(ms || 0, 800);
     else if (z >= 1.2) dur = (ms != null && ms >= 1500) ? ms : 2200;
     else dur = (ms != null && ms >= 800) ? ms : 1400;
-    if (!v.animate || (z <= 1.01 && !c.x && !c.y)) { clearStyle(v); return; }
+    if (!v.animate || (z <= 1.01 && !c.x && !c.y)) { clearStyle(v); ping(); return; }
     var a = v.animate([{ scale: c.z, translate: c.x + 'px ' + c.y + 'px' }, { scale: 1, translate: '0px 0px' }], { duration: dur, easing: 'cubic-bezier(.45,.05,.2,1)', fill: 'forwards' }); S.an = a;
-    a.onfinish = function () { if (S.an === a) { S.an = null; clearStyle(v); } }; }
+    var done = function () { if (S.an !== a && S.an) return; if (S.an === a) { S.an = null; clearStyle(v); } ping(); };
+    a.onfinish = done; setTimeout(done, dur + 80); }
   function mid(a, b, w) { return !a ? b : !b ? a : [a[0] + (b[0] - a[0]) * w, a[1] + (b[1] - a[1]) * w]; }
   function bars(on) { S.bars = !!on; try { cinBars(on ? 1 : 0); } catch (e) {} }
   /* one scene line: called by scene() before the line types */
@@ -37528,7 +37542,7 @@ var GINKO = (function () {
     if (keepBars) setTimeout(function () { if (S.bars) bars(0); }, 700);
     reset(S.heavy ? 2200 : undefined); }
   function shout() { if (S.shoutShake) { S.shoutShake = false; try { if (!still()) wShake(); } catch (e) {} } }
-  root.FFF_SCAM = { line: line, end: end, reset: reset, shout: shout, st: S };
+  root.FFF_SCAM = { line: line, end: end, reset: reset, after: after, clear: clear, shout: shout, st: S };
 })();
 /* v6.5.61: pan() generalised. camPan(to, o, done): ease the camera to a world point (or a function returning a camera
  * target), hold, ease back onto Ryo. o = { go, hold, back (s), k, tag, onArrive, onBack, onEnd, raw (to is already a camera point) }.
