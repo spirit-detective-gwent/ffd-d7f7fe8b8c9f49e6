@@ -71,6 +71,11 @@
     for (var dy = -1; dy <= 1; dy++) for (var dx = -1; dx <= 1; dx++) { var gx = cx + dx, gy = cy + dy, px = (gx + 0.2 + 0.6 * hash(gx, gy)) * g, py = (gy + 0.2 + 0.6 * hash(gy + 7, gx)) * g, d = Math.hypot(x - px, y - py) / g; if (d < best) { best = d; bi = hash(gx * 3, gy); } }
     var r = 0.24 + 0.1 * bi; if (best < r * 0.55) return 1; if (best < r) return bi > 0.35 ? 2 : 1; return 0; }
   var LEO = [[214, 160, 70], [122, 74, 30], [40, 24, 16]];
+  /* irezumi: indigo seigaiha waves with red peony blots, inked on the chest the open happi shows */
+  function irez(x, y, sc, face) { var g = 6 * sc, r = g, gy = Math.floor(y / (g * 0.5)), off = (gy % 2) * g, gx = Math.floor((x + off) / (g * 2)), cx = gx * g * 2 - off + g, cy = gy * g * 0.5 + g * 0.5, dd = Math.hypot(x - cx, y - cy);
+    var pb = hash(Math.floor(x / (g * 3)), Math.floor(y / (g * 3))); if (pb > 0.8) { var px = (Math.floor(x / (g * 3)) + 0.5) * g * 3, py = (Math.floor(y / (g * 3)) + 0.5) * g * 3, pd = Math.hypot(x - px, y - py) / (g * 1.3); if (pd < 1) return pd < 0.35 ? 3 : 2; }
+    if (y > cy) return 0; if (Math.abs(dd - r * 0.95) < 0.9 || Math.abs(dd - r * 0.55) < 0.8) return 1; return 0; }
+  var IREZ = [null, [36, 52, 110], [176, 44, 38], [226, 120, 70]];
 
   function paintCell(src, sx, sy, w, h, spec, face) {
     var cv = document.createElement('canvas'); cv.width = w; cv.height = h; var x = cv.getContext('2d', { willReadFrequently: true });
@@ -140,8 +145,15 @@
     [2, 3, 4, 5, 6, 7].forEach(function (k) { var a = []; for (var j = 0; j < N; j += 2) if (C[j] === k) a.push(L[j]); a.sort(function (p, q) { return p - q; }); med[k] = a.length ? a[a.length >> 1] : 128; });
     function put(j, t, rl) { if (spec.painted) { var f = Math.max(0.4, Math.min(1.45, rl)), up = f > 1 ? (f - 1) / 0.45 : 0; for (var q2 = 0; q2 < 3; q2++) d[j * 4 + q2] = Math.min(255, f <= 1 ? t.s[q2] + (t.b[q2] - t.s[q2]) * (f - 0.4) / 0.6 : t.b[q2] + (t.h[q2] - t.b[q2]) * up); return; }
       var c = rl > 1.12 ? t.h : rl > 0.8 ? t.b : t.s; d[j * 4] = c[0]; d[j * 4 + 1] = c[1]; d[j * 4 + 2] = c[2]; }
-    var sar = tri('#f1ece0'), skin = tri(spec.skin || '#f2c9a0');
+    var sar = tri('#f1ece0'), skin = tri(spec.skin || '#f2c9a0'), HARA = tri(spec.haraCol || '#d8c9a4'), sc0 = H / 230, dir2 = face === 'left' ? -1 : face === 'right' ? 1 : 0;
+    var shoeT = h; if (spec.geta) for (i = 0; i < N; i++) if (C[i] === 7 && (i / w | 0) > y0 + H * 0.8 && (i / w | 0) < shoeT) shoeT = i / w | 0;
     for (i = 0; i < N; i++) { var k = C[i]; if (!k || k === 1 || k === 8) continue; Y = i / w | 0; X = i % w; var rl = L[i] / med[k];
+      if (k === 5 && spec.hara && shirt && (Y - shirt.t) / Math.max(1, shirt.b - shirt.t) > spec.hara) { put(i, HARA, (X % 3 === 0) ? 0.72 : 1); continue; } /* haramaki: a ribbed belly band */
+      if (k === 5 && spec.shirt === 'irezumi' && shirt) { var qz = (Y - shirt.t) / Math.max(1, shirt.b - shirt.t); var iz = irez(X, Y, sc0, face); if (qz < 0.12 || !iz) put(i, skin, rl); else { var zc = IREZ[iz]; d[i * 4] = zc[0]; d[i * 4 + 1] = zc[1]; d[i * 4 + 2] = zc[2]; } continue; }
+      if (k === 7 && spec.geta && Y > shoeT) { var gq = (Y - shoeT) / Math.max(1, y1 - shoeT); if (gq < 0.3) put(i, tri(spec.geta.strap), rl); else if (gq > 0.82) put(i, tri('#3a2a1e'), 1); else put(i, tri(spec.geta.wood), (Y % 3 === 0) ? 0.86 : rl); continue; }
+      if (k === 4 && spec.happi && Y <= hem && Y > hem - H * 0.045) { put(i, tri(spec.happi.hemCol), (((X >> 2) + (Y >> 1)) % 4 === 0) ? 0.55 : 1); continue; } /* the happi's banded hem */
+      if (k === 4 && spec.happi && face === 'front' && shirt && Y > shirt.t - H * 0.02 && Y <= hem) { var ew = Math.max(2, (x1 - x0) * 0.075); if ((X < shirt.l && X >= shirt.l - ew) || (X > shirt.r && X <= shirt.r + ew)) { put(i, tri(spec.happi.eri), rl); continue; } } /* the white collar band (eri) */
+      if (k === 4 && spec.happi && sideF && Y > y0 + H * 0.2 && Y <= hem) { var ex4 = rowExt(Y, 4); if (ex4) { var fr4 = dir2 > 0 ? ex4[1] : ex4[0], ew2 = Math.max(2, (x1 - x0) * 0.09); if (Math.abs(X - fr4) < ew2) { put(i, tri(spec.happi.eri), rl); continue; } } }
       if (k === 5 && spec.shirt === 'sarashi' && shirt) { var q = (Y - shirt.t) / Math.max(1, shirt.b - shirt.t); if (q < 0.3) put(i, skin, rl); else put(i, sar, ((Y - shirt.t) % 4 === 0) ? 0.7 : 1); continue; }
       if (k === 5 && spec.shirt === 'leopard') { var lp = leo(X, Y, spec.leoSc || 1); if (lp) { var cc = LEO[lp]; d[i * 4] = cc[0]; d[i * 4 + 1] = cc[1]; d[i * 4 + 2] = cc[2]; } else put(i, tri('#d6a046'), rl); continue; }
       var t = P[k]; if (t) put(i, t, rl); }
@@ -215,6 +227,20 @@
           x.beginPath(); x.arc(jx, py, jr, Math.PI * 0.9, Math.PI * 2.25); x.lineWidth = 1.05 * sc; x.strokeStyle = rgb(ht.b); x.stroke(); x.beginPath(); x.arc(jx - jr * 0.2, py - jr * 0.35, jr * 0.28, 0, 7); x.fillStyle = rgb(ht.h); x.fill(); }
         x.restore(); permPath(); x.lineWidth = 2.2 * sc; x.strokeStyle = rgb(INK); x.stroke(); x.restore();
         if (!PROF) x.drawImage(fc, 0, 0); } }
+    /* ---- 3a. the top-knot: an ōichō ginkgo-leaf mage for an ōzeki, a plain chonmage otherwise ---- */
+    if (spec.mage && spec.hair && capTop) { var mk = sc * (spec.mage === 'oicho' ? 1.55 : 0.9), mx = capCx + (sideF ? -dir * skW * 0.1 : 0), my = capTop + 1 * sc;
+      x.save(); x.lineJoin = 'round'; x.lineWidth = 2 * sc; x.strokeStyle = rgb(INK);
+      if (sideF) { x.beginPath(); x.moveTo(mx - dir * 6 * mk, my + 3 * mk); x.quadraticCurveTo(mx - dir * 3 * mk, my - 8 * mk, mx + dir * 9 * mk, my - 4 * mk); x.quadraticCurveTo(mx + dir * 13 * mk, my - 1 * mk, mx + dir * 10 * mk, my + 2 * mk); x.quadraticCurveTo(mx + dir * 2 * mk, my - 2 * mk, mx - dir * 1 * mk, my + 4 * mk); x.closePath(); x.fillStyle = rgb(ht.b); x.fill(); x.stroke(); }
+      else { var fw2 = (face === 'back' ? 7 : 8) * mk, fh2 = 9 * mk; x.beginPath(); x.moveTo(mx, my + 2 * mk); x.quadraticCurveTo(mx - fw2 * 1.3, my - fh2 * 0.4, mx - fw2, my - fh2); x.quadraticCurveTo(mx, my - fh2 * 1.25, mx + fw2, my - fh2); x.quadraticCurveTo(mx + fw2 * 1.3, my - fh2 * 0.4, mx, my + 2 * mk); x.closePath(); x.fillStyle = rgb(ht.b); x.fill(); x.stroke();
+        x.lineWidth = 1.2 * sc; x.strokeStyle = rgb(ht.h); [-0.45, 0, 0.45].forEach(function (o) { x.beginPath(); x.moveTo(mx, my); x.lineTo(mx + o * fw2, my - fh2 * 0.9); x.stroke(); }); }
+      x.fillStyle = rgb(spec.mageTie || [240, 236, 226]); x.fillRect(mx - 2.5 * mk, my - 1 * mk, 5 * mk, 2.6 * mk); x.restore(); }
+    /* ---- 3b. a sento towel over one shoulder ---- */
+    if (spec.towel && face !== 'back') { var tY = chin + (hem - chin) * 0.0, tex = rowExt(Math.round(tY + 6 * sc), 4) || [x0, x1], tw = Math.max(4, (x1 - x0) * 0.1), tX = face === 'front' ? tex[0] + (tex[1] - tex[0]) * 0.2 : (dir > 0 ? tex[0] + tw * 0.4 : tex[1] - tw * 1.4), tL = (hem - tY) * (face === 'front' ? 0.82 : 0.6);
+      x.save(); x.beginPath(); x.moveTo(tX, tY); x.lineTo(tX + tw, tY - 1 * sc); x.lineTo(tX + tw * 1.05, tY + tL); x.lineTo(tX + tw * 0.1, tY + tL + 2 * sc); x.closePath(); x.fillStyle = rgb(hx(spec.towel)); x.fill(); x.lineWidth = 1.8 * sc; x.strokeStyle = rgb(INK); x.stroke();
+      x.strokeStyle = 'rgba(40,60,120,.55)'; x.lineWidth = 1.2 * sc; [0.78, 0.88].forEach(function (q) { x.beginPath(); x.moveTo(tX + tw * 0.08, tY + tL * q); x.lineTo(tX + tw * 1.02, tY + tL * q - 0.5); x.stroke(); }); x.restore(); }
+    /* ---- 3c. a crest on the back of a short happi (no coat tails to carry it) ---- */
+    if (spec.crest && face === 'back') { var cT = y0 + H * 0.24, cB = hem - H * 0.05, cG = Math.min((x1 - x0) * 0.42, (cB - cT) * 0.8), cCy = (cT + cB) / 2, cCx = (x0 + x1) / 2, ce = hx(spec.crest.col);
+      x.save(); x.beginPath(); x.arc(cCx, cCy, cG * 0.7, 0, 7); x.fillStyle = rgb(ce); x.fill(); x.lineWidth = Math.max(1.4, 1.6 * sc); x.strokeStyle = rgb(INK); x.stroke(); glyph(x, spec.crest.k, cCx, cCy, cG * 0.95, hx(spec.crest.ink || '#22345e'), Math.max(1.3, 1.8 * sc)); x.restore(); }
     /* ---- 3. headband (painted on the head pixels, so it wraps) ---- */
     if (spec.band) { var by = Math.round(spec.hair && capBot ? (face === 'front' ? faceTop - Math.max(3, Math.round(5 * sc)) + 1 : sideF && PROF ? ft + (chinH - ft) * 0.27 : capTop + (capBot - capTop) * 0.62) : face === 'back' ? y0 + 0.4 * hh : faceTop - (face === 'front' ? 0.02 : 0.14) * hh), bh = Math.max(3, Math.round(5 * sc)), bt = tri(spec.band);
       id = x.getImageData(0, 0, w, h); d = id.data;
@@ -304,8 +330,17 @@
   SPEC.gray = { base: 'punk', glove: 1, pal: { 4: tri('#55585f'), 6: tri('#2a2b31'), 7: tri('#3b3c43') }, coat: '#6c6f76', coatLen: 0.8, emb: null, lining: '#3f4148', bag: 2, hair: 'pomp', hairCol: '#16161a', shades: 1 };
   /* Kaneda, Gōda's door man at Kitsune-no-Yu: built heavy (less than Flip), an indigo sento long coat with the white 湯 crest in a ring on the back
    * and 湯 on both front panels, a white towel tied as a hachimaki, black punch perm, sarashi, charcoal bontan. No shades: he wants you to see him look. */
-  SPEC.kaneda = { base: 'punk', glove: 1, bulk: 0.5, bagSide: 0.4, pal: { 3: tri('#1a1714'), 4: tri('#22345e'), 6: tri('#33302e'), 7: tri('#efe9dc') }, coat: '#22345e', coatLen: 0.82, emb: '#f2ede0', lining: '#9a2a24', bag: 11,
-    shirt: 'sarashi', hair: 'perm', hairCol: '#1a1714', band: '#f2ede0', kanji: { back: ['yu'], front: ['yu', null], side: 'yu' } };
+  /* ---- Gōda's crew, the Kitsune-no-Yu bath boys: nothing like the Punks' long coats. Short indigo happi with a white collar band and a banded hem,
+   * the white 湯 crest on the back, the chest open on an irezumi of waves and peonies, a ribbed haramaki, dark momohiki, geta. Slicked-back hair. ---- */
+  SPEC.yuH = { base: 'punk', glove: 1, pal: { 3: tri('#16141a'), 4: tri('#2a3f7a'), 6: tri('#2a2830') }, happi: { eri: '#efe9dc', hemCol: '#efe9dc' }, crest: { k: 'yu', col: '#efe9dc', ink: '#2a3f7a' },
+    shirt: 'irezumi', hara: 0.62, haraCol: '#d8c9a4', bag: 2, geta: { wood: '#b98a52', strap: '#b8322a' }, hair: 'slick', hairCol: '#16141a', towel: null };
+  /* Kaneda, the door man: the same cut in black with a red collar band, a white towel tied round the head, built heavy */
+  SPEC.kaneda = { base: 'punk', glove: 1, bulk: 0.5, bagSide: 0.4, pal: { 3: tri('#1a1714'), 4: tri('#1d1b22'), 6: tri('#33302e') }, happi: { eri: '#b8322a', hemCol: '#b8322a' }, crest: { k: 'yu', col: '#efe9dc', ink: '#1d1b22' },
+    shirt: 'irezumi', hara: 0.6, haraCol: '#efe9dc', bag: 3, geta: { wood: '#a87a46', strap: '#1d1b22' }, hair: 'slick', hairCol: '#1a1714', band: '#f2ede0' };
+  /* Gōda Daizō: the old ōzeki. Built like a wall, an ōichō top-knot, a boiler-keeper's brown hanten over a bare chest, a black haramaki where the mawashi was,
+   * a blue-striped tenugui over one shoulder, big geta */
+  SPEC.goda = { base: 'punk', glove: 1, bulk: 1.0, bagSide: 0.5, pal: { 3: tri('#141216'), 4: tri('#6b3b22'), 5: tri('#e9b98c'), 6: tri('#3a3530') }, happi: { eri: '#2a211c', hemCol: '#2a211c' }, crest: { k: 'yu', col: '#e9dcc0', ink: '#6b3b22' },
+    shirt: 'bare', hara: 0.55, haraCol: '#22202a', bag: 6, geta: { wood: '#9a6a3a', strap: '#efe9dc' }, hair: 'slick', hairCol: '#141216', mage: 'oicho', towel: '#f4f1ea' };
   /* the West Street stall's two accessories, worn over the yankii look: tinted shades / a leopard hachimaki with leopard coat lining */
   SPEC.ryoS = Object.assign({}, SPEC.ryo, { shades: 1, shadeQ: 0.0 }); SPEC.aoiS = Object.assign({}, SPEC.aoi, { shades: 1 });
   SPEC.ryoL = Object.assign({}, SPEC.ryo, { band: '#d6a046', bandDot: null, bandLeo: 1, lining: '#d6a046' }); SPEC.aoiL = Object.assign({}, SPEC.aoi, { band: '#d6a046', bandLeo: 1, lining: '#d6a046' });

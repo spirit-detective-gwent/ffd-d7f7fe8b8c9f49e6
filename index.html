@@ -37852,6 +37852,7 @@ var GINKO = (function () {
       if (n < 3) { say([['aoi', n === 1 ? 'Paint\u2019s still wet. Two more crews.' : 'One more crew. South end of the wall.']]); return; }
       talk([[H, 'Hah\u2026 you think the wall matters?'], [H, 'G\u014dda\u2019s man at the door decides who gets in. Not me. Not you.'], ['ryo', 'Which door?'], [H, 'The bathhouse. By the station. Ask for Kaneda. He\u2019ll ask for your teeth.']], function () {
         qClose('paint'); won().wall = 1; sv(); wallPaint(); sting('wall', function () { ginko('Q4', 'used-book'); qOpen('door'); try { qBanner('NEW JOB', Q.door.n, Q.door.giver); } catch (e) {} }); }); });
+    if (k === 'nq_u' || k === 'nq_k') whenFree(function () { wingWon(k); });
     if (k === 'nq_x') whenFree(clashWon);
     if (k === 'nq_d') whenFree(doorWon);
   }
@@ -37928,10 +37929,16 @@ var GINKO = (function () {
   /* Kaneda, Gōda's door man: his own cel look (tools/yk SPEC.kaneda, baked to world/c2_doormanY_*.webp), map + fight, and his own card-battle entry */
   function kaneda() { var id = 'c2_doorman';
     ['walk', 'run', 'hurt', 'kn', 'lie', 'map', 'fig', 'fig_hurt', 'fig_down'].forEach(function (sh) { IMG[id + '_' + sh] = wUrl('c2_doormanY_' + sh); if (SHC['c2_punk_' + sh] != null) SHC[id + '_' + sh] = SHC['c2_punk_' + sh]; if (typeof SHR !== 'undefined' && SHR['c2_punk_' + sh] != null) SHR[id + '_' + sh] = SHR['c2_punk_' + sh]; });
+    IMG[id + '_idle'] = wUrl('c2_doormanY_idle'); SHC[id + '_idle'] = 4; if (typeof SHR !== 'undefined') SHR[id + '_idle'] = 4;
     SHC[id + '_walk'] = SHC[id + '_run'] = 8; BW_IDS[id] = 1; C2K[id] = 1.24; NM[id] = 'Kaneda'; PT[id] = id + '_fig';
     try { var CH = root.CARD_DATA && root.CARD_DATA.chars; if (CH && !CH[id]) CH[id] = { story: 1, voice: 'm', school: 'Kitsune-Ch\u016b\u014d Streets', name: 'Kaneda', title: 'Door Man \u00b7 Kitsune-no-Yu', color: '#2b4a8a', color2: '#0c1222',
       tag: 'Heavy-Guard Bruiser: shells up behind Guard 5\u20136, then body hooks; a low-kick chain when you leave an opening. Pierce the shell.', quote: 'Members, family, and people G\u014dda owes money.', hp: 44, gcap: 6,
       deck: { c_shell: 1, c_bguard: 1, c_bhook: 2, c_lowk: 1, c_flurry: 1, b_punch: 1 }, fig: id + '_fig', art: id + '_fig', alt: id + '_fig' }; if (CH && CH[id] && !CH[id + 'g']) CH[id + 'g'] = Object.assign({}, CH[id], { hp: 48 }); /* group fights ask for the 'g' twin */ } catch (eC) {} }
+  /* Gōda's crew get their own bath-house cel looks (tools/yk SPEC.yuH / SPEC.goda, baked to world/c2_hustlerY_*, world/mb2_sentoY_*): map, walk, run, hurt, kneel, down, fight figures */
+  function reskin(id, pre, k) { ['walk', 'run', 'hurt', 'kn', 'lie', 'map', 'fig', 'fig_hurt', 'fig_down'].forEach(function (sh) { IMG[id + '_' + sh] = wUrl(pre + '_' + sh); if (SHC['c2_punk_' + sh] != null) SHC[id + '_' + sh] = SHC['c2_punk_' + sh]; if (typeof SHR !== 'undefined' && SHR['c2_punk_' + sh] != null) SHR[id + '_' + sh] = SHR['c2_punk_' + sh]; });
+    IMG[id + '_idle'] = wUrl(pre + '_idle'); SHC[id + '_idle'] = 4; if (typeof SHR !== 'undefined') SHR[id + '_idle'] = 4; /* a breathing stand, four frames per facing */
+    SHC[id + '_walk'] = SHC[id + '_run'] = 8; BW_IDS[id] = 1; if (k) C2K[id] = k; PT[id] = id + '_fig'; }
+  try { reskin('c2_hustler', 'c2_hustlerY', C2K.c2_punk || null); reskin('mb2_sento', 'mb2_sentoY', 1.42); reskin('goda', 'mb2_sentoY', 1.42); } catch (eR) {}
   function alias(id, src, k, nm) { ['map', 'walk', 'fig', 'run', 'hurt', 'kn', 'lie', 'fig_hurt', 'fig_down'].forEach(function (sh) { if (IMG[src + '_' + sh]) IMG[id + '_' + sh] = IMG[src + '_' + sh]; });
     if (SHC[src + '_walk']) SHC[id + '_walk'] = SHC[src + '_walk']; if (BW_IDS[src]) BW_IDS[id] = 1; C2K[id] = k; NM[id] = nm; PT[id] = PT[src] || (src + '_fig'); }
   alias('nq_udon', 'npc_ramen', 1.12, 'Oda-san'); alias('nq_mech', 'npc3_ferry', 1.08, 'Machi'); alias('nq_clerk', 'npc3_stall', 1.02, 'Ms. Kanda');
@@ -38057,8 +38064,8 @@ var GINKO = (function () {
   };
   var RCV = null, RKEY = '';
   function roomShow() { var I = W.inside, D = I && INT[I.id]; if (!D || !D.nq) return; var k = D.c2, m = document.getElementById('wimap'); if (!m) return;
-    if (!RCV || RKEY !== k) { RCV = RCV || document.createElement('canvas'); RCV.width = RW; RCV.height = RH; var g = RCV.getContext('2d'); g.clearRect(0, 0, RW, RH); try { PAINT[k](g); } catch (e) { ev('world:nq:err:paint:' + k + ':' + (e && e.message)); } RKEY = k; RCV.complete = true; RCV.naturalWidth = RW; RCV.naturalHeight = RH; }
-    RCV.id = 'nqRoom'; RCV.style.cssText = 'position:absolute;left:0;top:0;width:' + RW + 'px;height:' + RH + 'px;pointer-events:none;z-index:0'; if (RCV.parentNode !== m) m.insertBefore(RCV, m.firstChild); m.style.backgroundImage = 'none';
+    if (!RCV || RKEY !== k) { RCV = RCV || document.createElement('canvas'); var rw = D.w || RW, rh = D.h || RH; RCV.width = rw; RCV.height = rh; var g = RCV.getContext('2d'); g.clearRect(0, 0, rw, rh); try { PAINT[k](g); } catch (e) { ev('world:nq:err:paint:' + k + ':' + (e && e.message)); } RKEY = k; RCV.complete = true; RCV.naturalWidth = D.w || RW; RCV.naturalHeight = D.h || RH; }
+    RCV.id = 'nqRoom'; RCV.style.cssText = 'position:absolute;left:0;top:0;width:' + (D.w || RW) + 'px;height:' + (D.h || RH) + 'px;pointer-events:none;z-index:0'; if (RCV.parentNode !== m) m.insertBefore(RCV, m.firstChild); m.style.backgroundImage = 'none';
     try { SWC[D.src + '?v=' + BUILD] = RCV; } catch (eS) {} }
   function roomDrop() { var c = document.getElementById('nqRoom'); if (c) c.remove(); if (RCV) { RCV.width = 0; RCV.height = 0; RCV = null; RKEY = ''; } }
   var intGoN = intGo; intGo = function (id) { var r = intGoN.apply(this, arguments); try { if (INT[id] && INT[id].nq) roomShow(); else roomDrop(); } catch (e) { ev('world:nq:err:room:' + (e && e.message)); } return r; };
@@ -38311,17 +38318,17 @@ var GINKO = (function () {
   }
   sentoSetup();
   var LORE = {
-    price: { cap: 'KITSUNE-NO-YU \u00b7 SINCE 1958', sub: 'The price board', lines: [['', '<p class="dim">Adults \u00a54. Children \u00a52. Under it, in brush ink: \u201cKeeper: G\u014dda Daiz\u014d. 1979.\u201d</p>'], ['aoi', 'He\u2019s kept this place since he was a teenager.'], ['ryo', 'Forty-some years of hot water.']] },
-    photo: { cap: 'G\u014cDA DAIZ\u014c \u00b7 1979', sub: 'A boy who kept the fire', lines: [['', '<p class="dim">A faded photo: a skinny kid with a coal shovel, grinning in front of the boiler. Old regulars crowd behind him.</p>'], ['ryo', 'That\u2019s him? He was smiling.'], ['aoi', 'Everybody in that picture is smiling.']] },
+    price: { cap: 'KITSUNE-NO-YU \u00b7 SINCE 1958', sub: 'A notice over the prices', lines: [['', '<p class="dim">Adults \u00a54. Children \u00a52. Pasted across it, fresh brush ink: \u201cCLOSED TO REGULARS UNTIL FURTHER NOTICE. \u2014 G.\u201d</p>'], ['aoi', 'He locked out the old folks. The ones who\u2019ve come here forty years.'], ['ryo', 'And kept the Hustlers.']] },
+    photo: { cap: 'WELCOME HOME \u00b7 1996', sub: 'A banner over the bath', lines: [['', '<p class="dim">A faded photo by the scale: a huge young man with a top-knot, a coal shovel on his shoulder, under a banner, \u201cWELCOME HOME, \u014cZEKI!\u201d The whole alley crowds round him, grinning.</p>'], ['ryo', 'Wait. Is that a sumo wrestler?'], ['aoi', 'In this bathhouse. Everybody in that picture is smiling.']] },
     ledger: { cap: 'THE LEDGER', sub: 'Names that owe', lines: [['', '<p class="dim">A ledger left open on the bench. Shop names down the alley, sums beside them. The last column says \u201cto G.\u201d</p>'], ['aoi', 'It started as bath fees. Now it\u2019s protection.'], ['ryo', 'Same handwriting the whole way down.']] },
     fuji: { cap: 'THE MOUNTAIN MURAL', sub: 'Repainted every spring', lines: [['', '<p class="dim">Mt. Fuji over blue water, the classic sent\u014d wall. A note taped at the edge: \u201cRepainted by G.D., spring.\u201d The paint is flaking.</p>'], ['aoi', 'He painted it himself. Every year.'], ['ryo', 'Not this year.']] },
     crate: { cap: 'THE GRAY CRATE', sub: 'Not bath supplies', lines: [['', '<p class="dim">A crate under a tarp by the tub. The same gray mark as the freight on the canal. Too heavy for towels.</p>'], ['aoi', 'The gray coat\u2019s goods. Stored where nobody looks.'], ['ryo', 'In a bathhouse full of old people.', { hype: 1 }]] },
-    valve: { cap: 'THE VALVE LOG', sub: 'Hotter for the late payers', lines: [['', '<p class="dim">A clipboard on the pipe: valve settings by date. Notes in the margin: \u201cLate. Hotter.\u201d \u201cLate again. Hotter.\u201d</p>'], ['ryo', '\u2026He boiled people who couldn\u2019t pay.'], ['aoi', 'That\u2019s the man now. Not the boy in the photo.']] },
+    valve: { cap: 'THE PRESSURE LOG', sub: 'Red-lined every night', lines: [['', '<p class="dim">A clipboard on the pipe: pressure by date, every night past the red line. A city tag is wired to the gauge: \u201cCONDEMNED.\u201d Somebody keeps writing \u201cstill holding\u201d underneath.</p>'], ['aoi', 'This boiler should be cold. He\u2019s still running it.'], ['ryo', 'For who? The bath\u2019s empty.']] },
     coat: { cap: 'TWO COATS', sub: 'One hook', lines: [['', '<p class="dim">A Hustler jacket hangs over an old boiler-keeper\u2019s coat, patched at the elbows. Both are his size.</p>'], ['aoi', 'He was the bath man before he was a gang boss.'], ['ryo', 'Then he gets to pick which one he wears tonight.']] }
   };
   function loreLook(k) { var L = LORE[k]; if (!L) return; var n = NS(); n.lore = n.lore || {}; var first = !n.lore[k]; n.lore[k] = 1; sv(); ev('world:nq:lore:' + k);
-    var ov = document.createElement('div'); ov.id = 'nqlore'; ov.innerHTML = '<div class="nql1"><b>' + esc(L.cap) + '</b></div><div class="nql2"><i>' + esc(L.sub) + '</i></div><em>' + Object.keys(n.lore).length + ' / 7</em>'; document.body.appendChild(ov); sfx('cutin', { gain: 0.5 });
-    later(1100, function () { talk(L.lines, function () { ov.classList.add('out'); later(260, function () { ov.remove(); }); if (first && Object.keys(n.lore).length === 7) say([['aoi', 'That\u2019s all of him. Now the boiler room.']]); }); }); }
+    var ov = document.createElement('div'); ov.id = 'nqlore'; ov.innerHTML = '<div class="nql1"><b>' + esc(L.cap) + '</b></div><div class="nql2"><i>' + esc(L.sub) + '</i></div><em>' + Object.keys(n.lore).length + ' / ' + Object.keys(LORE).length + '</em>'; document.body.appendChild(ov); sfx('cutin', { gain: 0.5 });
+    later(1100, function () { talk(L.lines, function () { ov.classList.add('out'); later(260, function () { ov.remove(); }); if (first && Object.keys(n.lore).length === Object.keys(LORE).length) say([['aoi', 'That\u2019s all of him. Now the boiler room.']]); }); }); }
   /* the painter */
   function sentoPaint(g) {
     g.fillStyle = '#17141b'; g.fillRect(0, 0, SW_, SH_);
@@ -38396,7 +38403,7 @@ var GINKO = (function () {
     try { SWC[SD.src + '?v=' + BUILD] = SCV; } catch (eS) {} try { veilShow(); } catch (eV) {} }
   /* Persona-style fog: the far rooms stay dark until you walk round to them (static divs, one cheap check per frame while inside) */
   var VEIL = [{ r: [1610, 290, 2320, 1345], open: function (x, y) { return x > 1480; } },
-    { r: [80, 290, 1600, 830], open: function (x, y) { return y < 830 && x < 1660; } }];
+    { r: [800, 290, 1600, 830], open: function (x, y) { return y < 830 && x < 1660 && x > 790; } }, { r: [80, 290, 800, 830], open: function (x, y) { return y < 830 && x < 790; } }];
   function veilShow() { var m = document.getElementById('wimap'); if (!m) return; var done = E().nqVeil || {};
     VEIL.forEach(function (v, i) { var d = document.getElementById('nqveil' + i); if (done[i]) { if (d) d.remove(); return; }
       if (!d) { d = document.createElement('div'); d.id = 'nqveil' + i; d.className = 'nqveil'; }
@@ -38406,11 +38413,183 @@ var GINKO = (function () {
     for (var i = 0; i < VEIL.length; i++) { if (e.nqVeil[i] || !VEIL[i].open(x, y)) continue; e.nqVeil[i] = 1; sv(); var d = document.getElementById('nqveil' + i);
       if (d) { d.style.opacity = '0'; setTimeout(function (dd) { return function () { dd.remove(); }; }(d), 950); } try { sfx('whoosh'); } catch (eS) {} } }
   NQ.veilTick = veilTick;
-  function sentoDrop() { ['nqveil0', 'nqveil1'].forEach(function (k) { var d = document.getElementById(k); if (d) d.remove(); }); var c = document.getElementById('nqSento'); if (c) c.remove(); if (SCV) { SCV.width = 0; SCV.height = 0; SCV = null; } }
+  function sentoDrop() { ['nqveil0', 'nqveil1', 'nqveil2'].forEach(function (k) { var d = document.getElementById(k); if (d) d.remove(); }); var c = document.getElementById('nqSento'); if (c) c.remove(); if (SCV) { SCV.width = 0; SCV.height = 0; SCV = null; } }
   var intGoS = intGo; intGo = function (id) { var r = intGoS.apply(this, arguments); try { if (id === 'c2_sento') sentoShow(); else sentoDrop(); } catch (e) {} return r; };
   var intExitS = intExit; intExit = function () { try { sentoDrop(); } catch (e) {} return intExitS.apply(this, arguments); };
   function sentoPop() { if (E().seal_sento) { W.c2n.nqb = npc('nq_bandai', 690, 925, Math.PI / 2); } }
   NQ.loreLook = loreLook; NQ.sentoShow = sentoShow;
+  /* the boiler-room meeting knows what you found on the way */
+  (function () { if (typeof C2SC !== 'object') return; var A0 = C2SC.lm_sento, B0 = C2SC.lm_sento_out;
+    var A1 = [['mb2_sento', '{slow}Coal chute. Nobody\u2019s come down that since my father.{/slow}'], ['ryo', 'We saw the banzuke. The apron. The letters on the altar.'], ['mb2_sento', 'Then you read my mail. Kids today.'],
+      ['aoi', 'You locked them out because the boiler could blow. And you took the gray coats\u2019 money for a new one.'], ['mb2_sento', 'Parts never come. The crates do. The Hustlers collect. Every winter, \u201cnext winter.\u201d'],
+      ['ryo', 'Tome-baa says the miso\u2019s gone cold too.'], ['mb2_sento', '\u2026{slow}The seal keeps the fire lit, boy. Break it and this alley has no bath at all.{/slow}'], ['mb2_sento', 'An \u014czeki doesn\u2019t step out of the ring. Come.']];
+    var B1 = [['mb2_sento', '\u2026Thirty years since anyone put me on the clay.'], ['mb2_sento', 'Go on. Open it. Let the old folks in. I\u2019ll keep the fire the honest way.'], ['aoi', 'Then the gray coats lose their basement.'], ['ryo', 'Hot bath\u2019s on the alley tonight. Not on the gray coats.']];
+    try { Object.defineProperty(C2SC, 'lm_sento', { configurable: true, get: function () { return nailsRun() ? A1 : A0; }, set: function (v) { A0 = v; } });
+      Object.defineProperty(C2SC, 'lm_sento_out', { configurable: true, get: function () { return nailsRun() ? B1 : B0; }, set: function (v) { B0 = v; } }); } catch (e) {} })();
+  /* ================= Kitsune-no-Yu, the back of the house: two more wings so the walk to Gōda is a real dungeon =================
+   * Bath side (c2_sento): genkan -> changing room -> bath hall -> steam corridor. The boiler-room door is chained from inside.
+   * Staff side (sentoU): laundry -> staff kitchen (Tome-baa, the key) -> storeroom -> stairwell (locked) -> upstairs.
+   * Upstairs (sentoK): his tatami room -> the trophy corridor (guarded) -> the family altar (the hatch key) -> the drying deck -> the coal chute
+   * down into the boiler room, where he waits. Each room gives one piece of who Gōda Daizō is. Painted once per entry, like the other rooms. */
+  var WW = 2400, WH = 1400;
+  var W_OPEN = [[90, 300, 1180, 820], [1220, 300, 2310, 820], [90, 900, 1180, 1340], [1220, 900, 2310, 1340], [1180, 1100, 1220, 1220], [1180, 420, 1220, 540], [1700, 820, 1820, 900], [380, 1340, 500, 1400]];
+  /* the locked gaps (a cheap per-frame check pushes Ryo back while they are shut) */
+  var GATES = {
+    sentoU: [{ r: [1170, 410, 1230, 550], k: 'uKey', say: [['aoi', 'Stair door. Locked from this side.'], ['ryo', 'Somebody in this place has a key.']] }],
+    sentoK: [{ r: [1690, 810, 1830, 910], k: 'kGuard', say: [['aoi', 'His boys are standing in the way.']], soft: 1 }, { r: [1170, 410, 1230, 550], k: 'kAltar', say: [['aoi', 'The deck door\u2019s padlocked. Brass. Old.'], ['ryo', 'Family stuff. Try the altar.']] }]
+  };
+  function wingDef(k, n, extra) { var D = roomDef(k, n, 'c2night', Object.assign({ open: W_OPEN, 'in': [440, 1290, 3], back: [440, 1290, 3] }, extra)); D.w = WW; D.h = WH; D.nqWing = 1; D.spots = D.spots.filter(function (s) { return s.id !== 'exit'; }); D.spots.unshift({ id: 'nq_w_back_' + k, r: [380, 1340, 500, 1400], at: [440, 1370], face: 0, lab: 'Back' }); return D; }
+  var UB = [[100, 330, 520, 420], [620, 620, 860, 720], [100, 960, 330, 1060], [560, 1180, 900, 1260], [1240, 930, 1600, 1010], [1900, 1150, 2140, 1240], [1280, 330, 1720, 420], [1900, 560, 2100, 700], [1240, 600, 1380, 760], [900, 330, 1160, 400]];
+  var KB = [[100, 330, 360, 420], [560, 560, 860, 700], [1240, 930, 1420, 1010], [1500, 930, 1680, 1010], [1760, 930, 1940, 1010], [2020, 930, 2200, 1010], [1600, 330, 1960, 420], [2120, 600, 2300, 760], [100, 960, 420, 1100], [700, 1100, 1000, 1220]];
+  wingDef('sentoU', 'Kitsune-no-Yu \u00b7 Staff Side', { block: UB, spots: [
+    { id: 'nq_lore_towels', r: [560, 1140, 900, 1180], at: [730, 1290], face: 0, lab: 'Look' },
+    { id: 'nq_tome', r: [1880, 1110, 2160, 1150], at: [2020, 1290], face: 0, lab: 'Talk' },
+    { id: 'nq_lore_loan', r: [1880, 520, 2120, 560], at: [2000, 760], face: 0, lab: 'Look' },
+    { id: 'nq_lore_banzuke', r: [300, 230, 520, 300], at: [420, 470], face: 0, lab: 'Look' },
+    { id: 'nq_w_up', r: [100, 300, 260, 330], at: [180, 460], face: 0, lab: 'Upstairs' }] });
+  wingDef('sentoK', 'Kitsune-no-Yu \u00b7 Upstairs', { block: KB, spots: [
+    { id: 'nq_lore_mirror', r: [560, 520, 860, 560], at: [710, 780], face: 0, lab: 'Look' },
+    { id: 'nq_lore_kesho', r: [1600, 230, 1960, 300], at: [1780, 480], face: 0, lab: 'Look' },
+    { id: 'nq_lore_altar', r: [2120, 560, 2300, 600], at: [2060, 680], face: 1, lab: 'Look' },
+    { id: 'nq_lore_deck', r: [500, 230, 800, 300], at: [650, 470], face: 0, lab: 'Look' },
+    { id: 'nq_w_chute', r: [100, 300, 300, 420], at: [330, 480], face: 2, lab: 'Coal chute' }] });
+  /* the bath side: a staff door in the steam corridor, the boiler-room doorway chained until you come down the chute */
+  SD.spots.push({ id: 'nq_w_staff', r: [1440, 290, 1560, 340], at: [1500, 420], face: 0, lab: 'Staff only' });
+  SD.spots.push({ id: 'nq_lore_chain', r: [800, 420, 830, 540], at: [880, 480], face: 2, lab: 'Look' });
+  GATES.sento = [{ r: [770, 410, 830, 550], k: 'chute', say: [['', '<p class="dim">The boiler-room door is chained shut from the other side. Through the crack: coal dust and an orange glow.</p>'], ['aoi', 'There\u2019s a staff door back in the steam corridor.']] }];
+  function gOpen(k) { var e = E(), w = e.nqW || {}; if (k === 'uKey') return !!w.uKey; if (k === 'kGuard') return !!(S().f.nq_k_0 && S().f.nq_k_1); if (k === 'kAltar') return !!w.kKey; if (k === 'chute') return !!w.chute || !!e.seal_sento; return true; }
+  var GSAY = 0;
+  function gateTick() { var k = room(), G = GATES[k]; if (!G || !W.ryo || busy()) return; var r = W.ryo;
+    for (var i = 0; i < G.length; i++) { var g = G[i], q = g.r; if (r.x < q[0] || r.x > q[2] || r.y < q[1] || r.y > q[3] || gOpen(g.k)) continue;
+      var cx = (q[0] + q[2]) / 2, cy = (q[1] + q[3]) / 2, wide = q[2] - q[0] > q[3] - q[1]; if (wide) r.y = r.y < cy ? q[1] - 4 : q[3] + 4; else r.x = r.x < cx ? q[0] - 4 : q[2] + 4; W.path = []; try { place(r, 0); } catch (eP) {}
+      var now = Date.now(); if (now - GSAY > 3500) { GSAY = now; if (g.say[0][0] === '') talk(g.say); else say(g.say); } return; } }
+  NQ.gateTick = gateTick;
+  /* the lore of the back of the house (adds to the bath side's seven) */
+  Object.assign(LORE, {
+    towels: { cap: 'THE REGULARS\u2019 TOWELS', sub: 'Washed this week', lines: [['', '<p class="dim">Shelves of white towels, each with a name stitched in blue thread. Mrs. Ueda. Old Hirata. The Saito twins. All washed, folded, dated this week.</p>'], ['ryo', 'He locked them out\u2026 and he still washes their towels?'], ['aoi', 'Every week. For people he won\u2019t let in.']] },
+    loan: { cap: 'THE LOAN', sub: 'A new boiler, on paper', lines: [['', '<p class="dim">A contract in a gray folder. \u201cBoiler parts, installation, and storage.\u201d Repayment: \u201cby storage of goods, and by collection.\u201d Signed: G\u014dda Daiz\u014d. The other signature is just a gray stamp.</p>'], ['aoi', 'Collection. That\u2019s the Hustlers\u2019 street money.'], ['ryo', 'He sold the gray coats his basement for a boiler.']] },
+    banzuke: { cap: 'BANZUKE \u00b7 1993', sub: 'East \u00b7 \u014czeki', lines: [['', '<p class="dim">A framed ranking sheet in dense brush script. Near the top, East side, second rank: \u201c\u014czeki KITSUNEYAMA Daiz\u014d.\u201d Someone has touched the glass over the name so often it\u2019s clean.</p>'], ['ryo', '\u014czeki. That\u2019s one step under yokozuna.'], ['aoi', 'The bath man was the second-best wrestler in Japan.']] },
+    mirror: { cap: 'THE COMB AND THE OIL', sub: 'Tied every morning', lines: [['', '<p class="dim">A low mirror, a wooden comb, a tin of binzuke oil, white paper cord. A thin futon rolled in the corner. One cup. One bowl.</p>'], ['aoi', 'He still ties his own top-knot. Thirty years after he retired.'], ['ryo', 'He lives up here. Alone.']] },
+    kesho: { cap: 'THE APRON', sub: 'White fox on gold', lines: [['', '<p class="dim">A kesh\u014d-mawashi behind glass: gold silk, a white fox in the steam. Beside it, the last bout photo. He\u2019s on one knee, the knee in a brace. \u201cRetired, 1996.\u201d</p>'], ['ryo', 'One bad knee and it\u2019s over.'], ['aoi', 'Then he came home to shovel coal.']] },
+    altar: { cap: 'KEEP THE WATER HOT', sub: 'Two letters on the altar', lines: [['', '<p class="dim">His father\u2019s photo, a cup of sake, a brass key. Under the incense, two letters. One in an old man\u2019s hand: \u201cDaiz\u014d. Keep the water hot for the street.\u201d One from the city: \u201cBOILER CONDEMNED. Close to the public by March.\u201d</p>'],
+      ['aoi', '\u2026He didn\u2019t lock the old folks out to hurt them.'], ['aoi', 'The boiler could go any night. And the crates came with the money for a new one.'], ['ryo', 'So he shut the door on everybody he was trying to keep warm.'], ['aoi', 'And bathes alone. Keeping the fire. Waiting for parts the gray coats never send.'], ['ryo', 'Take the key. We\u2019re going down to talk to him.', { hype: 1 }]] },
+    deck: { cap: 'THE DRYING DECK', sub: 'Lantern Alley, from above', lines: [['', '<p class="dim">Towels on the lines snap in the wind. Below, at the bathhouse door, a handful of old people sit on upturned buckets in the cold. Waiting. Like every night.</p>'], ['ryo', 'They\u2019re still waiting at the door.'], ['aoi', 'Then we open it for them.']] },
+    chain: { cap: 'THE BOILER-ROOM DOOR', sub: 'Chained from inside', lines: [['', '<p class="dim">Heavy chain through the handles, padlocked on the far side. Through the crack: coal dust and an orange glow.</p>'], ['aoi', 'He\u2019s in there. The long way round, then.']] }
+  });
+  NQ.LORE_N = function () { return Object.keys(LORE).length; };
+  /* the people: Tome-baa in the staff kitchen, bath boys guarding the kitchen and the trophy corridor */
+  var WN = { npc: [] };
+  function wingPop(k) { WN.npc.forEach(kill); WN.npc = []; var s = S(), w = E().nqW = E().nqW || {};
+    if (k === 'sentoU') { var tg = !(s.f.nq_u_0 && s.f.nq_u_1); if (tg) { WN.npc.push(gd(H, 1880, 1100, 'nq_u_0')); WN.npc.push(gd(H, 2160, 1100, 'nq_u_1')); }
+      var t = npc('nq_tome', 2020, 1110, Math.PI / 2); t.nqTome = 1; WN.npc.push(t); }
+    if (k === 'sentoK' && !(s.f.nq_k_0 && s.f.nq_k_1)) { WN.npc.push(gd(H, 1720, 860, 'nq_k_0')); WN.npc.push(gd('c2_doorman', 1800, 870, 'nq_k_1')); } }
+  function gd(id, x, y, key) { var g = npc(id, x, y, Math.PI / 2); g.nqGd = key; g.nqId = id; return g; }
+  var WF = 0;
+  function wingFightTick() { var k = room(); if ((k !== 'sentoU' && k !== 'sentoK') || busy() || WF || !W.ryo) return; var r = W.ryo, s = S();
+    var gs = WN.npc.filter(function (g) { return g.nqGd && !g.gone && !s.f[g.nqGd]; }); if (!gs.length) return;
+    var near = gs.some(function (g) { return Math.hypot(g.x - r.x, g.y - r.y) < 230; }); if (!near) return; WF = 1; lockIn(true); gs.forEach(function (g) { face(g, r.x, r.y); });
+    var L = k === 'sentoU' ? [[H, 'Staff only, kids. The old lady stays in the kitchen.'], ['aoi', 'You\u2019re keeping an old woman locked in a kitchen?'], [H, 'Boss says she stays out of the cold. We say she stays out of the way.']]
+      : [['c2_doorman', 'You again. Upstairs is the boss\u2019s house.'], ['ryo', 'We\u2019ve seen the banzuke. We know whose house it is.'], ['c2_doorman', '\u2026Then you know he\u2019s not going to let you through. Neither am I.']];
+    talk(L, function () { lockIn(false); var ids = gs.map(function (g) { return g.nqId; }), keys = gs.map(function (g) { return g.nqGd; }), nk = k === 'sentoU' ? 'nq_u' : 'nq_k';
+      fight(ids, false, { dg: 'c2', dgk: keys[0], dgks: keys, nqk: nk, c2pos: gs.map(function (g) { return [g.nqId, g.x, g.y]; }) }); setTimeout(function () { WF = 0; }, 1500); }); }
+  NQ.wingFightTick = wingFightTick;
+  /* after a won wing fight (nqBack calls wingWon) */
+  function wingWon(k) { WN.npc.forEach(function (g) { if (g.nqGd && S().f[g.nqGd]) kill(g); });
+    if (k === 'nq_u') say([['aoi', 'Kitchen\u2019s clear. Somebody\u2019s behind the noren.']]);
+    if (k === 'nq_k') talk([['c2_doorman', '\u2026Boss carried this whole alley on his back once. On TV. You were babies.'], ['c2_doorman', 'He\u2019s not a bad man. He\u2019s a tired one.'], ['aoi', 'Then let\u2019s see him rest.']]); }
+  NQ.wingWon = wingWon;
+  function tomeTalk() { var w = E().nqW = E().nqW || {}, s = S();
+    if (!(s.f.nq_u_0 && s.f.nq_u_1)) { talk([['nq_tome', 'Not now, dears. Not with those two at the door.']]); return; }
+    if (w.uKey) { talk([['nq_tome', ['Go on up. Mind the third stair.', 'Tell him Tome says the miso\u2019s gone cold too.', 'He was such a big baby. Cried at every bout he won.'][((w.tome = (w.tome | 0) + 1)) % 3]]]); return; }
+    talk([['nq_tome', 'Oh\u2026 you beat them? Good. Sit, sit. I sat that counter for fifty years.'], ['nq_tome', 'You want Dai-chan. G\u014dda. I wiped his nose when he was this high.'],
+      ['nq_tome', 'He went off to Tokyo, to the stable. Came back an \u014czeki. On television. The whole alley cried.'], ['nq_tome', 'Then his knee went, and his father went, the same winter. He came home and picked up the shovel.'],
+      ['ryo', 'Why did he lock everyone out?'], ['nq_tome', 'Ask him. He won\u2019t tell me. He only says, \u201cnot this winter, Tome.\u201d Every night.'], ['nq_tome', 'Here. The stair key. His room is upstairs. Be gentle with his things.'], ['aoi', 'We will.']],
+      function () { w.uKey = 1; sv(); try { sfx('pickup'); } catch (e) {} toast('Stair key: the staff stairwell is open.'); }); }
+  /* moving between the wings */
+  function goWing(k, at) { if (typeof intFade === 'function') intFade(function () { c2Go(k, at); }); else c2Go(k, at); }
+  function wingAct(a) {
+    if (a === 'nq_w_staff') { goWing('sentoU', [440, 1290, 3]); return true; }
+    if (a === 'nq_w_back_sentoU') { goWing('sento', [1500, 440, 2]); return true; }
+    if (a === 'nq_w_up') { if (!E().nqW || !E().nqW.uKey) { say([['aoi', 'Locked.']]); return true; } goWing('sentoK', [440, 1290, 3]); return true; }
+    if (a === 'nq_w_back_sentoK') { goWing('sentoU', [180, 480, 2]); return true; }
+    if (a === 'nq_w_chute') { var w = E().nqW = E().nqW || {}; if (!w.deck) { say([['aoi', 'A coal chute. Straight down to the boiler.'], ['ryo', 'Look around first.']]); return true; }
+      w.chute = 1; sv(); talk([['ryo', 'Down the chute?'], ['aoi', 'Down the chute.']], function () { try { sfx('whoosh'); } catch (e) {} goWing('sento', [300, 640, 1]); }); return true; }
+    if (a === 'nq_tome') { tomeTalk(); return true; }
+    return false; }
+  var act2 = c2ActC; c2ActC = function (k, a) { try { if (on() && /^nq_(w_|tome)/.test(a || '') && wingAct(a)) return true; } catch (e) { ev('world:nq:err:wing:' + (e && e.message)); } return act2.apply(this, arguments); };
+  /* the altar gives the hatch key; the deck lets you take the chute */
+  var lore0 = loreLook; loreLook = function (k) { var w = E().nqW = E().nqW || {}; if (k === 'altar' && !w.kKey) { w.kKey = 1; sv(); later(400, function () { toast('Brass key: the deck door is open.'); }); } if (k === 'deck') { w.deck = 1; sv(); } return lore0.apply(this, arguments); };
+  NQ.loreLook = loreLook;
+  alias('nq_tome', 'npc_clerk', 1.0, 'Tome-baa');
+  /* ---- the painters ---- */
+  function wingShell(g, floorTop, floorBot) { g.fillStyle = '#17141b'; g.fillRect(0, 0, WW, WH);
+    floorTop(g); floorBot(g);
+    function wallH(x0, x1, y) { g.fillStyle = '#e9dfc8'; g.fillRect(x0, y, x1 - x0, 70); g.fillStyle = '#3b2a22'; g.fillRect(x0, y, x1 - x0, 12); g.fillRect(x0, y + 62, x1 - x0, 8); for (var p = x0; p < x1; p += 60) { g.fillStyle = 'rgba(60,40,30,.25)'; g.fillRect(p, y + 12, 3, 50); } }
+    function wallV(x, y0, y1) { g.fillStyle = '#3b2a22'; g.fillRect(x, y0, 40, y1 - y0); g.fillStyle = '#4a352a'; g.fillRect(x + 6, y0, 28, y1 - y0); }
+    wallH(90, 1700, 830); wallH(1820, 2310, 830); [[1180, 300, 420], [1180, 540, 830], [1180, 900, 1100], [1180, 1220, 1340]].forEach(function (w) { wallV(w[0], w[1], w[2]); });
+    g.fillStyle = '#1b1820'; g.fillRect(0, 0, 90, WH); g.fillRect(WW - 90, 0, 90, WH); g.fillRect(0, 1340, 380, 60); g.fillRect(500, 1340, WW - 500, 60); g.strokeStyle = INK; g.lineWidth = 4; g.strokeRect(90, 2, WW - 180, 1338);
+    g.fillStyle = 'rgba(255,220,160,.10)'; g.fillRect(380, 1340, 120, 60); }
+  function noren2(g, x, y, c, t, vert) { for (var k = 0; k < 2; k++) { if (vert) { g.fillStyle = c; g.fillRect(x, y + 2 + k * 60, 40, 56); g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(x, y + 2 + k * 60, 40, 56); } else { g.fillStyle = c; g.fillRect(x + 2 + k * 60, y, 56, 60); g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(x + 2 + k * 60, y, 56, 60); } } jp(g, t, x + (vert ? 20 : 60), y + (vert ? 60 : 30), 18, '#f4efe2'); }
+  function chainX(g, x, y0, y1) { g.strokeStyle = '#9aa1a8'; g.lineWidth = 5; for (var y = y0; y < y1; y += 16) { g.beginPath(); g.ellipse(x, y, 6, 9, (y / 16) % 2 ? 0 : Math.PI / 2, 0, 7); g.stroke(); } box(g, x - 12, (y0 + y1) / 2 - 10, 24, 20, '#c9a032', 3, 2); }
+  PAINT.sentoU = function (g) {
+    wingShell(g, function (g) {
+      /* back walls: U4 stairwell plaster + the banzuke, U3 storeroom concrete */
+      plankWall(g, 90, 0, 1090, 300, '#6b5a48', '#74624f', 44); plankWall(g, 1220, 0, 1090, 300, '#55585f', '#5d6068', 40);
+      boards(g, 90, 300, 1090, 520, '#7a5a3c', '#83613f', 36); g.fillStyle = '#6a6c72'; g.fillRect(1220, 300, 1090, 520); for (var i = 0; i < 30; i++) { g.fillStyle = 'rgba(20,20,26,.12)'; g.beginPath(); g.ellipse(1260 + (i * 173) % 1040, 340 + (i * 89) % 460, 30, 10, 0, 0, 7); g.fill(); }
+      /* U4: the stairs going up (top left), the banzuke on the wall */
+      for (var st = 0; st < 7; st++) box(g, 100, 300 - st * 26 + 30, 170, 26, st % 2 ? '#8a6440' : '#936c47', 2, 2); g.fillStyle = 'rgba(0,0,0,.35)'; g.fillRect(100, 120, 170, 40); tx(g, '\u2191 2F', 185, 140, 16, '#f4efe2', 900);
+      box(g, 300, 60, 220, 170, '#efe6d2', 4, 4); g.fillStyle = '#2a211c'; for (var c = 0; c < 18; c++) for (var r2 = 0; r2 < 9; r2++) if ((c * 7 + r2 * 3) % 5) g.fillRect(312 + c * 11, 74 + r2 * 16, 7, 10 - (r2 % 3)); box(g, 296, 56, 228, 178, 'rgba(0,0,0,0)', 4, 5, '#5a3a26'); g.fillStyle = '#c0392b'; g.fillRect(392, 74, 34, 6); jp(g, '\u5927\u95a2', 409, 98, 15, '#7b2a22');
+      box(g, 620, 620, 240, 100, '#6e4428', 6); for (var sh = 0; sh < 4; sh++) box(g, 632 + sh * 56, 630, 48, 30, ['#efe6d2', '#d6c9a8', '#efe6d2', '#c9b48a'][sh], 3, 2); /* a shoe shelf */
+      box(g, 900, 330, 260, 70, '#5a3a26', 4); for (var bt = 0; bt < 6; bt++) box(g, 910 + bt * 41, 300, 34, 40, '#8a7a62', 3, 2); /* buckets on a shelf */
+      /* U3: gray crates under tarps, the gray folder on a desk */
+      box(g, 1280, 330, 440, 90, '#8e939c', 5); for (var cr = 0; cr < 4; cr++) { box(g, 1290 + cr * 108, 300, 100, 70, '#9aa1a8', 4); box(g, 1320 + cr * 108, 324, 40, 18, '#c9ccd2', 2, 2); tx(g, '\u25a0', 1340 + cr * 108, 334, 12, '#55585f', 900); }
+      box(g, 1240, 600, 140, 160, '#5a5e66', 6); g.fillStyle = '#4a4f57'; g.beginPath(); g.moveTo(1236, 610); g.lineTo(1384, 596); g.lineTo(1388, 700); g.lineTo(1240, 716); g.closePath(); g.fill(); g.stroke();
+      box(g, 1900, 560, 200, 140, '#6e4428', 5); box(g, 1930, 540, 90, 30, '#8a8d94', 3, 2); jp(g, '\u5951\u7d04', 1975, 556, 13, '#2a2b31'); g.fillStyle = '#efe6d2'; g.fillRect(2030, 560, 50, 36); g.strokeStyle = 'rgba(40,30,20,.5)'; g.lineWidth = 1.2; for (var ln = 0; ln < 5; ln++) { g.beginPath(); g.moveTo(2034, 566 + ln * 6); g.lineTo(2076, 566 + ln * 6); g.stroke(); }
+      glowAt(g, 2000, 620, 260, 'rgba(255,230,180,.10)');
+    }, function (g) {
+      /* U1 laundry: tiles + the washers + towel shelves; U2 staff kitchen: boards + stove, table, noren */
+      tiles(g, 90, 900, 1090, 440, '#cfd8dc', '#c2ccd1', 40); boards(g, 1220, 900, 1090, 440, '#9a7550', '#a27c56', 40);
+      for (var m = 0; m < 3; m++) { box(g, 100, 960 + m * 0, 70 + 0, 100, '#e9eef2', 8); } box(g, 100, 960, 230, 100, '#e9eef2', 8); [150, 260].forEach(function (x) { g.beginPath(); g.arc(x, 1010, 30, 0, 7); g.fillStyle = '#9ec7d8'; g.fill(); g.lineWidth = 4; g.strokeStyle = INK; g.stroke(); });
+      box(g, 560, 1180, 340, 80, '#7a5236', 4); for (var tw = 0; tw < 6; tw++) for (var tr = 0; tr < 2; tr++) { box(g, 570 + tw * 54, 1150 + tr * 0, 48, 32, '#f6f3ec', 4, 2); g.fillStyle = '#2a3f7a'; g.fillRect(578 + tw * 54, 1168, 32, 3); }
+      g.strokeStyle = '#5a3a26'; g.lineWidth = 3; g.beginPath(); g.moveTo(380, 940); g.lineTo(1120, 940); g.stroke(); for (var hg = 0; hg < 10; hg++) box(g, 400 + hg * 70, 940, 44, 70, hg % 3 ? '#f6f3ec' : '#dfe8ec', 3, 2);
+      plant(g, 1120, 1300, 0.9);
+      box(g, 1240, 930, 360, 80, '#5a3a26', 5); [1290, 1400, 1510].forEach(function (x) { g.beginPath(); g.arc(x, 960, 22, 0, 7); g.fillStyle = '#2a2b31'; g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke(); }); box(g, 1380, 920, 50, 30, '#9aa1a8', 4, 2); /* the stove, a kettle */
+      box(g, 1900, 1150, 240, 90, '#b08a5a', 6); box(g, 1960, 1160, 40, 30, '#f2e8d6', 10, 2); box(g, 2040, 1166, 30, 24, '#f2e8d6', 8, 2); /* the low table, a teapot, a cup */
+      noren2(g, 1960, 1040, '#7b2a22', '\u53a8', false); glowAt(g, 2020, 1180, 260, 'rgba(255,220,160,.14)');
+      /* the way back to the steam corridor */
+      noren2(g, 380, 1290, '#5a5e66', '\u84b8', false);
+    });
+  };
+  PAINT.sentoK = function (g) {
+    wingShell(g, function (g) {
+      /* K4 the drying deck (open sky + towels on lines), K3 the altar room */
+      var sky = g.createLinearGradient(0, 0, 0, 300); sky.addColorStop(0, '#1a2140'); sky.addColorStop(1, '#3a4a78'); g.fillStyle = sky; g.fillRect(90, 0, 1090, 300);
+      for (var lt = 0; lt < 14; lt++) { g.fillStyle = ['#ffd27a', '#ff9a5a', '#fff0c0'][lt % 3]; g.fillRect(120 + lt * 74, 200 + (lt % 3) * 18, 26, 34); g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(120 + lt * 74, 200 + (lt % 3) * 18, 26, 34); }
+      g.fillStyle = '#d6dbe4'; [[200, 40], [700, 70], [1000, 30]].forEach(function (s) { g.beginPath(); g.arc(s[0], s[1], 3, 0, 7); g.fill(); });
+      boards(g, 90, 300, 1090, 520, '#6a5a4a', '#73624f', 30);
+      g.strokeStyle = '#3b2a22'; g.lineWidth = 3; [460, 620].forEach(function (y) { g.beginPath(); g.moveTo(380, y); g.lineTo(1140, y); g.stroke(); for (var t = 0; t < 9; t++) { box(g, 400 + t * 82, y, 52, 70, t % 2 ? '#f6f3ec' : '#e3edf2', 3, 2); g.fillStyle = '#2a3f7a'; g.fillRect(404 + t * 82, y + 54, 44, 4); } });
+      box(g, 100, 330, 200, 90, '#3b3c43', 6); g.fillStyle = '#16141a'; g.fillRect(124, 346, 150, 56); tx(g, '\u77f3\u70ad', 200, 374, 16, '#9aa1a8', 900); /* the coal chute hatch */
+      box(g, 500, 240, 300, 60, '#5a3a26', 4); g.fillStyle = 'rgba(255,255,255,.06)'; g.fillRect(510, 248, 280, 44); /* the rail where you look down */
+      /* K3 the altar room: tatami, the butsudan, incense */
+      tiles(g, 1220, 300, 1090, 520, '#c9b884', '#bfae7a', 90); plankWall(g, 1220, 0, 1090, 300, '#7a5a3c', '#83613f', 50);
+      box(g, 2120, 600, 180, 160, '#2a1a12', 8, 4); box(g, 2140, 612, 140, 100, '#5a3a26', 6); box(g, 2180, 626, 60, 74, '#efe6d2', 3, 2); g.fillStyle = '#e0b23a'; g.fillRect(2160, 720, 100, 10); g.strokeStyle = 'rgba(230,230,240,.5)'; g.lineWidth = 2; g.beginPath(); g.moveTo(2210, 720); g.bezierCurveTo(2200, 690, 2224, 670, 2212, 640); g.stroke();
+      glowAt(g, 2200, 680, 220, 'rgba(255,190,120,.16)');
+      /* the trophy shelf in the corridor back wall (K2 runs across the bottom) */
+      box(g, 1600, 60, 360, 170, '#2a211c', 5); box(g, 1616, 74, 328, 142, '#e0b23a', 4); g.fillStyle = '#f6f3ec'; g.beginPath(); g.moveTo(1780, 96); g.lineTo(1820, 150); g.lineTo(1800, 196); g.lineTo(1760, 196); g.lineTo(1740, 150); g.closePath(); g.fill(); g.lineWidth = 3; g.strokeStyle = INK; g.stroke();
+      g.fillStyle = '#f6f3ec'; g.beginPath(); g.moveTo(1752, 110); g.lineTo(1762, 92); g.lineTo(1770, 112); g.fill(); g.beginPath(); g.moveTo(1790, 112); g.lineTo(1800, 92); g.lineTo(1808, 110); g.fill(); g.fillStyle = 'rgba(255,255,255,.35)'; for (var sm = 0; sm < 6; sm++) { g.beginPath(); g.arc(1650 + sm * 52, 200 - (sm % 2) * 20, 18, 0, 7); g.fill(); }
+      box(g, 1600, 330, 360, 90, '#5a3a26', 4); [[1640, 'gold'], [1720, '#c9ccd2'], [1800, '#e0b23a'], [1880, '#b87333']].forEach(function (t) { box(g, t[0] - 18, 300, 36, 44, t[1] === 'gold' ? '#e0b23a' : t[1], 6, 2); box(g, t[0] - 24, 340, 48, 10, '#2a211c', 2, 2); });
+    }, function (g) {
+      /* K1 his tatami room; K2 the trophy corridor of photos */
+      tiles(g, 90, 900, 1090, 440, '#c9b884', '#bfae7a', 110); g.strokeStyle = 'rgba(60,40,20,.35)'; g.lineWidth = 3; for (var tx2 = 90; tx2 < 1180; tx2 += 220) { g.beginPath(); g.moveTo(tx2, 900); g.lineTo(tx2, 1340); g.stroke(); }
+      box(g, 560, 560, 300, 140, '#5a3a26', 6); box(g, 600, 470, 90, 110, '#cfe3ea', 8, 3); box(g, 720, 570, 60, 20, '#8a6440', 3, 2); box(g, 800, 572, 30, 22, '#c9a032', 5, 2); /* the low mirror, comb, oil tin */
+      box(g, 100, 960, 320, 140, '#efe6d2', 10); box(g, 110, 970, 300, 40, '#2a3f7a', 8, 2); /* a rolled futon */
+      box(g, 700, 1100, 300, 120, '#6e4428', 6); box(g, 790, 1120, 40, 30, '#f2e8d6', 10, 2); box(g, 870, 1126, 34, 24, '#f2e8d6', 8, 2); /* one cup, one bowl */
+      boards(g, 1220, 900, 1090, 440, '#7a5a3c', '#83613f', 36);
+      for (var ph = 0; ph < 4; ph++) { var px = 1250 + ph * 260; box(g, px, 930, 180, 80, '#2a211c', 4); box(g, px + 10, 938, 160, 64, '#d8cdb4', 3, 2); g.fillStyle = '#3a2a1e'; g.beginPath(); g.ellipse(px + 70 + ph * 6, 978, 24, 22, 0, 0, 7); g.fill(); g.beginPath(); g.arc(px + 70 + ph * 6, 950, 10, 0, 7); g.fill(); tx(g, ['1988', '1991', '1993', '1996'][ph], px + 150, 990, 11, '#2a211c', 900); }
+      noren2(g, 380, 1290, '#5a5e66', '\u4e0b', false);
+    });
+  };
+  var wingPop0 = NQ.roomPopX; NQ.wingPop = wingPop;
   /* ================= the hotel front: a glass lobby instead of the shop shelves ================= */
   function facHotel() { var c = cv(460, 80), g = c.getContext('2d'); g.fillStyle = '#2a2b31'; g.fillRect(0, 0, 460, 80);
     var gl = g.createLinearGradient(0, 0, 0, 80); gl.addColorStop(0, '#f6e2b8'); gl.addColorStop(1, '#d9b98a'); g.fillStyle = gl; g.fillRect(4, 4, 452, 74);
@@ -38432,10 +38611,10 @@ var GINKO = (function () {
   var pop0 = c2Pop;
   c2Pop = function () { var r = pop0.apply(this, arguments); try { if (!on()) return r; var k = room();
       if (k === 'town') { facades2(); laneProps(); if (nailsRun()) { beatReset(false); chainRepair(); shutterOn(); } crewSync(); }
-      else if (k === 'sento') sentoPop(); else if (INT[C2R[k]] && INT[C2R[k]].nq) roomPop(k);
+      else if (k === 'sento') sentoPop(); else if (INT[C2R[k]] && INT[C2R[k]].nq) { roomPop(k); if (INT[C2R[k]].nqWing) wingPop(k); }
     } catch (e) { ev('world:nq:err:pop:' + (e && e.message)); } return r; };
   var frN0 = c2Frame;
-  c2Frame = function (dt) { frN0.apply(this, arguments); try { if (!on()) return; laneGate(); flowTick(); sealTick(); veilTick(); } catch (e) { if (!NQ.ferr) { NQ.ferr = 1; ev('world:nq:err:frame:' + (e && e.message)); } } };
+  c2Frame = function (dt) { frN0.apply(this, arguments); try { if (!on()) return; laneGate(); flowTick(); sealTick(); veilTick(); gateTick(); wingFightTick(); } catch (e) { if (!NQ.ferr) { NQ.ferr = 1; ev('world:nq:err:frame:' + (e && e.message)); } } };
   /* ================= styles ================= */
   (function css() { var s = document.createElement('style'); s.id = 'nqcss';
     s.textContent = '.nqprop{image-rendering:auto}' +
