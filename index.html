@@ -11980,7 +11980,7 @@ function fight(grp, boss, ctx) { if (typeof commentHide === 'function') commentH
 ST.inWorld = false; ev('world:fight:' + SAVE.act + ':' + foes.join(','));
   var foeNm = {}; foes.forEach(function (id) { var lab = heavyLabel(id, ctx); if (lab) foeNm[id] = lab; });
   var pst0 = gearPst({ combo: true, hp: SAVE.hp, max: MAXHP > ((CD.rules && CD.rules.hp) || 46) ? MAXHP : 0 /* v6.5.16 Conditioning */, spirit: SAVE.sp, deck: lo.deck, sig: lo.sig, sig2: lo.sig2, disc: boss || ctx.mini ? 2 : 1 /* v4.4 discards this fight */, cmax: lo.cmax, ctrPlus: lo.ctrPlus | 0, dgPlus: lo.dgPlus | 0, soda: sodaFx });
-  fightVsOpen(boss ? 'gouki' : (ctx.mini || ''), function () { swirl(function () { UI.startMatch(SAVE.act, { foes: foes, foeNm: foeNm, hp: ctx.toughHp || (n === 3 ? GROUP3_HP : 0), boss: boss, drop: yb + ye, soda: ye, sodaLeft: SAVE.sodaOn, mini: ctx.mini || null, koLine: ctx.mini ? koLine(ctx.mini) : '', partner: CNAME[other(SAVE.act)], pst: pst0 /* v4.18 gear */,
+  fightVsOpen(fightVsId(boss, ctx, grp), function () { swirl(function () { UI.startMatch(SAVE.act, { foes: foes, foeNm: foeNm, hp: ctx.toughHp || (n === 3 ? GROUP3_HP : 0), boss: boss, drop: yb + ye, soda: ye, sodaLeft: SAVE.sodaOn, mini: ctx.mini || null, koLine: ctx.mini ? koLine(ctx.mini) : '', partner: CNAME[other(SAVE.act)], pst: pst0 /* v4.18 gear */,
     esc: (ctx.ckDoom || ctx.enfDoom) ? 0 : ((ctx.c2spar || ctx.matspar) ? 1 : escChance(boss, ctx.mini)), grp: grp, ctx: ctx, bench: benchOf(boss, ctx), assist: typeof c2AssistOn === 'function' && c2AssistOn(ctx) ? 1 : 0, /* v4.24 tag-in; v4.56 dbl gated; v6.5.16: 'assist' = Sync Break learned (the save key stays c2les.assist). Every Ryo vs Aoi fight is a spar: Stop Sparring always ends it. */
     settle: function (win, st) { return settle(win, st); }, onEnd: function (win, st) { back(win, st); } }); }); });
 }
@@ -13855,12 +13855,15 @@ var SPL = {
   gouki_eyes: { kind: 'beat', p: ['gouki', 'calm'], c1: '#b98cff', c2: '#ff2d4d', bg: '#0a0610', band: [36, 126, 288, 94], ms: 700 },
   jin_eyes: { kind: 'beat', p: ['jin', 'angry'], c1: '#b6ff3c', c2: '#ff3fa4', bg: '#07140a', band: [18, 118, 324, 92], ms: 680 },
   vs_gouki: { kind: 'vs', vs: 'full', team: [['ryo', 'angry', '#ff9a3c', 196, 182], ['aoi', 'angry', '#6ec8ff', 188, 176]], p: ['gouki', 'angry', '#b98cff', 178, 168], c1: '#ffd23c', c2: '#ff2d4d', bg: '#0b0610', names: ['RYO', 'AOI', 'GOUKI'], ms: 1500 },
-  vs_jin: { kind: 'vs', vs: 'lite', team: [['ryo', 'angry', '#ff9a3c', 196, 182], ['aoi', 'angry', '#6ec8ff', 188, 176]], p: ['jin', 'angry', '#b6ff3c', 175, 168], c1: '#b6ff3c', c2: '#ff3fa4', bg: '#07100c', names: ['RYO', 'AOI', 'JIN'], ms: 820 }
+  vs_jin: { kind: 'vs', vs: 'lite', team: [['ryo', 'angry', '#ff9a3c', 196, 182], ['aoi', 'angry', '#6ec8ff', 188, 176]], p: ['jin', 'angry', '#b6ff3c', 175, 168], c1: '#b6ff3c', c2: '#ff3fa4', bg: '#07100c', names: ['RYO', 'AOI', 'JIN'], ms: 820 },
+  mizuno_reveal: { kind: 'reveal', p: ['mizuno', 'angry'], c1: '#e0c56e', c2: '#7a3cff', bg: '#0a0c14', word: 'CLOSED.', sub: 'MIZUNO', crop: [180, 228, 316], box: [0.10, 0.76], tilt: 3, dir: 1 },
+  mizuno_eyes: { kind: 'beat', p: ['mizuno', 'angry'], c1: '#e0c56e', c2: '#7a3cff', bg: '#0a0c14', band: [18, 97, 324, 92], ms: 700 },
+  vs_mizuno: { kind: 'vs', vs: 'lite', team: [['ryo', 'angry', '#ff9a3c', 196, 182], ['aoi', 'angry', '#6ec8ff', 188, 176]], p: ['mizuno', 'angry', '#e0c56e', 178, 168], c1: '#e0c56e', c2: '#7a3cff', bg: '#0a0c14', names: ['RYO', 'AOI', 'MIZUNO'], ms: 820 }
 };
 var SPL_ON = null;
-var BENT_REVEAL = { gouki: 'gouki_reveal' };
-var BENT_BEAT = { gouki: 'gouki_eyes', mb2_game: 'jin_eyes' };
-var BENT_VS = { gouki: 'vs_gouki', mb2_game: 'vs_jin' };
+var BENT_REVEAL = { gouki: 'gouki_reveal', mb_lib: 'mizuno_reveal' };
+var BENT_BEAT = { gouki: 'gouki_eyes', mb2_game: 'jin_eyes', mb_lib: 'mizuno_eyes' };
+var BENT_VS = { gouki: 'vs_gouki', mb2_game: 'vs_jin', mb_lib: 'vs_mizuno' };
 function splRng(s) { var h = 1779033703 ^ s.length; for (var i = 0; i < s.length; i++) { h = Math.imul(h ^ s.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); } return function () { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; }; }
 function splUrls(S) {
   if (S.team) return S.team.map(function (q) { return ptPaintUrl(q[0], q[1]); }).concat([ptPaintUrl(S.p[0], S.p[1])]);
@@ -14023,6 +14026,10 @@ function bentTurn(id, L) { /* the one line where the feeling turns; -1 if the sc
   if (hero) return lastB;
   if (/\{slow\}|\{shout\}/.test(String((L[lastB] && L[lastB][1]) || ''))) return lastB;
   return -1; }
+function fightVsId(boss, ctx, grp) {
+  if (boss) return 'gouki';
+  var id = (ctx && ctx.mini) || ((grp && grp[0]) || '');
+  return (BENT_VS && BENT_VS[id]) ? id : ''; }
 function fightVsOpen(id, done) {
   var key = BENT_VS[id];
   if (!key || root.FFF_NO_SPLASH || (SAVE.splVs && SAVE.splVs[id]) || typeof bossSplash !== 'function') { if (done) done(); return; }
