@@ -11022,7 +11022,7 @@ function chargeWalk(t, ch, go) {
       waddle(s, mv, Math.atan2(r.y - s.y, r.x - s.x)); });
     var d = Math.hypot(r.x - sx, r.y - sy), rdone = (d < 16 || !W.path || !W.path.length) && now - t0 > 250;
     if (rdone && !moving || now - t0 > lim) { ch.forEach(function (s) { s.runK = 0; waddle(s, 0, Math.atan2(r.y - s.y, r.x - s.x)); }); r.dir = dirTo(r, t.x, t.y); place(r, 0); ev('world:fastwalk:met');
-      setTimeout(function () { W.runUp = false; ev('world:runup:end'); go(); }, 180); return; } if (fwRaf) requestAnimationFrame(step); else setTimeout(step, 30);
+      setTimeout(function () { W.runUp = false; ev('world:runup:end'); go(); }, 180); return; } requestAnimationFrame(step); /* v6.5.63: was setTimeout 30ms unless W.fwRafNext */
   })();
   return true;
 }
@@ -11908,7 +11908,7 @@ function chargeUp(t, ch, go) { var r = W.ryo, mx = r.x + (t.x - r.x) * CHARGE_ME
       waddle(s, mv, Math.atan2(r.y - s.y, r.x - s.x)); });
     var d = Math.hypot(r.x - sx, r.y - sy), rdone = (d < 16 || !W.path || !W.path.length) && now - t0 > 250;
     if (rdone && !moving || now - t0 > lim) { ch.forEach(function (s) { s.runK = 0; waddle(s, 0, Math.atan2(r.y - s.y, r.x - s.x)); }); r.dir = dirTo(r, t.x, t.y); place(r, 0); ev('world:charge:met');
-      setTimeout(function () { W.runUp = false; ev('world:runup:end'); go(); }, 180); return; } setTimeout(step, 30); })();
+      setTimeout(function () { W.runUp = false; ev('world:runup:end'); go(); }, 180); return; } requestAnimationFrame(step); /* v6.5.63: was setTimeout 30ms */ })();
   return true; }
 /* v4.36 (Ernest): THE standard for scripted fights. o = { key, lines, grp: enemy ids, foe: the sprite Ryo runs up to,
  * focus: sprites the camera frames (the victim + the bully giving orders), ctx: fight ctx }.
@@ -31498,7 +31498,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
       s.x += dx / d * Math.min(sp, d); s.y += dy / d * Math.min(sp, d);
       if (typeof waddle === 'function') waddle(s, Math.min(sp, d), Math.atan2(dy, dx));
       if (typeof place === 'function') place(s, 0);
-      setTimeout(step, 30);
+      requestAnimationFrame(step); /* v6.5.63: was setTimeout 30ms */
     })();
   }
 
