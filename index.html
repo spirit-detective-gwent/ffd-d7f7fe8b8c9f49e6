@@ -26535,6 +26535,8 @@ ambCheck = function () {
     if (root.FFF_AMB_DRY) return;
     encounter(P, n); return; }
 };
+/* v6.5.62: surprise cover ambushes (Ch1 bushes / doorways) are off. Story, quest, and walk-up fights stay. */
+ambCheck = function () { return; };
 
 /* ---- 3) the nurse gate (before the first nurse visit) ---- */
 function g38GateBox() { var sw = W.vw / W.S, sh = W.vh / W.S, s0 = WD.start; return { x0: s0[0] - sw, x1: s0[0] + sw, y0: s0[1] - sh, sw: sw, sh: sh, sx: s0[0], sy: s0[1] }; }
