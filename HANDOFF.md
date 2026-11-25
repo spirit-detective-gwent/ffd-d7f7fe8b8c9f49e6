@@ -11,6 +11,19 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
+### 2026-11-24 — executor (Grok Bot) — v6.5.61 (commit 2d95937) — LIVE after Ernest's OK
+Versions: `window.FFF_BUILD="v6561"`, title `.vtag` "v6.5.61", `#ver` text "v6.5.61" (bumped in 2d95937).
+Approved by Ernest after the previews ("add everything from the previews and then it's finished"; "once you verify everything, you can release it to the live build and update our folder"). Fast-forward onto 62b3c59 (v6.5.60). Published SHA recorded after the live check.
+What shipped:
+- Story camera (`FFF_SCAM`): light frame on scene lines; push / pull / hold / shake / bars on `#wv` (one WAAPI animation, gated by the camera setting). Heavy beats hold the push, then ease out slowly (1.5–2.5s, no snap) when the scene leaves that moment — including Aoi "breaking them on purpose", Gouki's deal, Ryo's "knowing" shake, the school-gate and Four Corners pull-outs, Gōda's seal and defeat, and Ban Shigure's push-in after each loss. A push also turns the world camera onto its target.
+- Ambush stings hold the punch-in into the fight and settle behind the board; they no longer zoom out before the battle. A KO eases out slowly.
+- Nails path voice (Fierce / Strategic / Compassionate) plus Kaneda's door decision (`BOND_Q.c2nq_door`); pacing marks on the heavy NQ scenes; Gōda's "Thirty years" beat plays before the Tetsu reveal.
+- Ban Shigure losses: Ryo and Aoi stay down through Ban's lines and the camera push / hold / ease-out; the fade to Genji's gym waits until the ease finishes, and leftover zoom is cleared in the black. All three Lucky 7 losses still wake at the gym (loss 3 still starts Genji's first lesson).
+- Ch2 battle backdrops (`FFF_C2BT`): every Ch2 fight location except the roof gets a procedural cel room (cached still in `#bfxB`, lantern / steam / rain / neon on the existing bfx rAF). Kissa Gekko keeps its own cafe art. Reduced motion is still-only.
+- Luminescent Ch2 overworld (`FFF_C2AMB`): grade and bloom cached per room; motes, steam, rain, lanterns, and neon ride the existing `c2Frame` loop (one overlay canvas, no new loop). Roof is skipped; reduced motion is still-only.
+Checks before publish: backdrops and overworld ambience confirmed in-game at the key spots; Kaneda door on all 3 bond paths; Gōda boiler, street ambushes, club bouncer, gym spar, and a Ban Shigure loss (alley backdrop, fade, gym wake); `perf_check origin/main` vs HEAD OVERALL PASS (all key spots 60 fps, battle 60.0 vs 59.9, card-pick 59.9, long walks 59.9 / 59.8, x4 battle 57.7 vs 57.2, Ch2 draw items +1, soak heap slope 0.053 MB/battle).
+Not in git (dev only): `index_fffonly.html`, `page.canvas.tsx.txt`.
+
 ### 2026-11-24 — executor (Grok Bot) — v6.5.60 (commit 4374579) — LIVE after Ernest's OK
 Versions: `window.FFF_BUILD="v6560"`, title `.vtag` "v6.5.60", `#ver` text "v6.5.60" (bumped in 14a796c).
 Everything below is approved by Ernest and published in one push on top of d3c83e4 (v6.5.59 base). Fast-forward, nothing on main to merge.
