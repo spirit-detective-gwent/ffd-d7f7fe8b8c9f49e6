@@ -35010,7 +35010,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
   function escortEnd(kind) {
     var f = T.flip; ESC = null; if (f) f.n13hold = null; ev('world:13u:esc:end:' + kind);
     if (kind === 'meet') doorScene();
-    else if (kind === 'tin') { W.n13tinEsc = 0; safeOff(); flipLean(); var r = W.ryo; face(f, r.x, r.y); say(f, 'In we go.', 1600); }
+    else if (kind === 'tin') { W.n13tinEsc = 0; safeOff(); var r = W.ryo; face(f, r.x, r.y); say(f, 'In we go.', 1600); later(1800, function () { if (st() === 'tin' && T.flip === f && !ESC) flipLean(); }); } /* r2: he turns to say it, then settles back against the trunk (was left facing the camera, leaning) */
     else if (kind === 'back') arcadeDoorBack();
   }
   /* the door: two Punks on the arcade gate step aside for Flip */
