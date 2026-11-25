@@ -37565,16 +37565,16 @@ var GINKO = (function () {
 
 
 /* SCAM_BEGIN v6561-cam */
-/* v6.5.61 story camera (FFF_SCAM): Triangle Strategy style. Ordinary scene lines get a light frame (a ~6% push toward the
- * speaker and partner, one slow WAAPI drift); heavy lines carry ln[2].cam = 'push' | 'pull' | 'hold' | 'shake' | 'bars' | 'frame'
+/* v6.5.61 story camera (FFF_SCAM): Triangle Strategy style. Heavy lines carry ln[2].cam = 'push' | 'pull' | 'hold' | 'shake' | 'bars' | 'frame'
  * (join with '+', e.g. 'bars+push'; 'nobars' drops the bars). One animation on #wv at a time (translate + scale, origin 0 0).
  * A push is held through the rest of that beat (and through @cin / lines with no new move); it eases back only when the
  * dialogue leaves the moment (a pull) or the scene ends — 1.5–2.5 s, ease-in-out, never an instant reset.
  * after(cb) fires when that ease finishes so a following fade can wait; clear() snaps the zoom off only while the screen is already black. Gated by
  * ambStingOK() (camera setting, phone portrait, reduced motion); instant text skips the zoom too. Bars always play.
- * No loops: a short watchdog timeout runs only while a move is held. */
+ * No loops: a short watchdog timeout runs only while a move is held.
+ * v6.5.63: ordinary conversations get ONE gentle frame (scale 1.06) eased in at the start, held still through every line (no per-speaker pans), and eased out in 2.2 s only when the scene ends. A heavy push may start from that hold and a pull returns to it if the scene is still going. */
 (function () {
-  var S = { an: null, on: false, bars: false, wd: null, prev: null, shoutShake: false, line: 0, heavy: false };
+  var S = { an: null, on: false, bars: false, wd: null, prev: null, shoutShake: false, line: 0, heavy: false, soft: false, held: null };
   function wv() { return document.getElementById('wv'); }
   function still() { if (root.FFF_SCAM_OFF) return true; try { if (typeof twSpeed === 'function' && !twSpeed()) return true; } catch (e) {} try { return !ambStingOK(); } catch (e2) { return true; } }
   function num(v, d) { var n = parseFloat(v); return isNaN(n) ? d : n; }
@@ -37607,25 +37607,29 @@ var GINKO = (function () {
   function ping() { var L = S.pend || []; S.pend = []; L.forEach(function (f) { try { f(); } catch (e) {} }); }
   function after(cb) { if (!cb) return; if (!S.an) { cb(); return; } S.pend = (S.pend || []).concat([cb]); }
   /* instant clear — only while the screen is already black (a fade mid-point), never as a visible reset */
-  function clear() { var v = wv(); clearTimeout(S.wd); unfocus(); stop(); S.on = false; S.heavy = false; if (S.bars) bars(0); clearStyle(v); ping(); }
+  function clear() { var v = wv(); clearTimeout(S.wd); unfocus(); stop(); S.on = false; S.heavy = false; S.soft = false; S.held = null; if (S.bars) bars(0); clearStyle(v); ping(); }
   /* ease back to 1. Never instant: heavy beats take 1.5–2.5 s, light frames a bit less, skipped zoom still eases. */
-  function reset(ms, cb) { if (cb) S.pend = (S.pend || []).concat([cb]); var v = wv(); clearTimeout(S.wd); if (!v || !S.on) { unfocus(); stop(); S.heavy = false; ping(); return; }
-    var c = cur(); stop(); unfocus(); S.on = false; S.heavy = false;
+  function reset(ms, cb) { if (cb) S.pend = (S.pend || []).concat([cb]); var v = wv(); clearTimeout(S.wd); if (!v || !S.on) { unfocus(); stop(); S.heavy = false; S.soft = false; S.held = null; ping(); return; }
+    var c = cur(); stop(); unfocus(); S.on = false; S.heavy = false; S.soft = false; S.held = null;
     var z = c.z, dur;
     if (still()) dur = Math.max(ms || 0, 800);
     else if (z >= 1.2) dur = (ms != null && ms >= 1500) ? ms : 2200;
-    else dur = (ms != null && ms >= 800) ? ms : 1400;
+    else dur = (ms != null && ms >= 2000) ? ms : 2200; /* v6.5.63: light / soft hold eases out in 2.2 s */
     if (!v.animate || (z <= 1.01 && !c.x && !c.y)) { clearStyle(v); ping(); return; }
     var a = v.animate([{ scale: c.z, translate: c.x + 'px ' + c.y + 'px' }, { scale: 1, translate: '0px 0px' }], { duration: dur, easing: 'cubic-bezier(.45,.05,.2,1)', fill: 'forwards' }); S.an = a;
     var done = function () { if (S.an !== a && S.an) return; if (S.an === a) { S.an = null; clearStyle(v); } ping(); };
     a.onfinish = done; setTimeout(done, dur + 80); }
   function mid(a, b, w) { return !a ? b : !b ? a : [a[0] + (b[0] - a[0]) * w, a[1] + (b[1] - a[1]) * w]; }
+  /* a stable conversation aim: the lead and partner if both are on screen, else the speaker. Never retargeted per line. */
+  function aim(me) { var a = pt(W.ryo), b = pt(W.aoi), p = pt(me); return (a && b) ? mid(a, b, 0.5) : (p || a || b); }
+  function pose(Z, p, f) { var v = wv(); if (!v || !p) return null; var W0 = v.clientWidth, H0 = v.clientHeight, gx = p[0] + (W0 / 2 - p[0]) * (f || 0), gy = p[1] + (H0 * 0.42 - p[1]) * (f || 0), tx = gx - Z * p[0], ty = gy - Z * p[1];
+    return { z: Z, x: Math.max(W0 * (1 - Z), Math.min(0, tx)), y: Math.max(H0 * (1 - Z), Math.min(0, ty)) }; }
   function bars(on) { S.bars = !!on; try { cinBars(on ? 1 : 0); } catch (e) {} }
   /* one scene line: called by scene() before the line types */
   function line(id, ln, i, L) {
     S.line++; S.shoutShake = false; var who = ln && ln[0], o = (ln && ln[2]) || {}, cam = o.cam ? String(o.cam).split('+') : [], has = function (k) { return cam.indexOf(k) >= 0; };
-    /* @cin / @bond in the middle of a heavy beat stay held; a reset here used to snap the zoom out */
-    if (who && who.charAt(0) === '@') { if (!S.heavy) reset(); return; }
+    /* @cin / @bond in the middle of a heavy beat or the soft scene hold stay put; a reset here used to snap the zoom out */
+    if (who && who.charAt(0) === '@') { if (!S.heavy && !S.soft) reset(); return; }
     if (!who && !cam.length) return; /* narration holds the frame unless it carries a move (then it aims at o.at, default Ryo) */
     if (has('bars')) bars(1); if (has('nobars')) bars(0);
     if (has('shake')) { if (o.onShout) S.shoutShake = true; else setTimeout(function () { try { if (!still()) wShake(); } catch (e) {} }, o.shakeAt || 60); }
@@ -37634,14 +37638,22 @@ var GINKO = (function () {
     if (still()) { S.prev = who; return; }
     if (has('hold') || (S.heavy && !has('push') && !has('pull') && !has('frame'))) { arm(); S.prev = who; return; }
     if (has('push') && p) { p = focus(me, p); to(o.z || 1.55, p, o.ms || 1600, 0.45, 'cubic-bezier(.3,.05,.2,1)'); S.heavy = true; S.prev = who; return; }
-    if (has('pull') && p) { var v = wv(), c0 = cur(), Z0 = c0.z > 1.08 ? c0.z : (o.z || 1.5), W0 = v.clientWidth, H0 = v.clientHeight;
-      var tx = c0.z > 1.08 ? c0.x : Math.max(W0 * (1 - Z0), Math.min(0, W0 / 2 * 0.3 + p[0] * 0.7 - Z0 * p[0]));
-      var ty = c0.z > 1.08 ? c0.y : Math.max(H0 * (1 - Z0), Math.min(0, H0 * 0.42 * 0.3 + p[1] * 0.7 - Z0 * p[1]));
+    if (has('pull') && p) { var v = wv(), c0 = cur(), dest = (S.soft && S.held) ? S.held : { z: o.z1 || 1, x: 0, y: 0 };
+      var Z0 = c0.z, tx = c0.x, ty = c0.y;
+      if (!(c0.z > 1.08)) { var W0 = v.clientWidth, H0 = v.clientHeight, Zs = o.z || 1.5; Z0 = Zs; tx = Math.max(W0 * (1 - Zs), Math.min(0, W0 / 2 * 0.3 + p[0] * 0.7 - Zs * p[0])); ty = Math.max(H0 * (1 - Zs), Math.min(0, H0 * 0.42 * 0.3 + p[1] * 0.7 - Zs * p[1])); }
       stop(); v.style.transformOrigin = '0 0';
-      S.an = v.animate([{ scale: Z0, translate: tx + 'px ' + ty + 'px' }, { scale: o.z1 || 1, translate: '0px 0px' }], { duration: Math.max(o.ms || 0, 1800), easing: 'cubic-bezier(.45,.05,.2,1)', fill: 'forwards' }); S.on = true; S.heavy = false; arm(); S.prev = who; return; }
-    if (has('frame') || !cam.length) {
-      var ats = o.at2 ? [spr(o.at2)] : [spr(S.prev && S.prev !== who ? S.prev : (who === 'ryo' ? 'aoi' : 'ryo'))], q = pt(ats[0]);
-      if (p || q) to(has('frame') ? (o.z || 1.12) : 1.06, mid(q, p, q && p ? 0.62 : 0), has('frame') ? 1300 : 3600, 0.2, 'cubic-bezier(.33,.1,.25,1)');
+      S.an = v.animate([{ scale: Z0, translate: tx + 'px ' + ty + 'px' }, { scale: dest.z, translate: dest.x + 'px ' + dest.y + 'px' }], { duration: Math.max(o.ms || 0, 1800), easing: 'cubic-bezier(.45,.05,.2,1)', fill: 'forwards' });
+      S.on = true; S.heavy = false; if (!(S.soft && S.held)) { S.soft = false; S.held = null; } arm(); S.prev = who; return; }
+    /* v6.5.63: one gentle frame per ordinary scene, held still; explicit cam:'frame' still aims once and then holds */
+    if (has('frame')) {
+      var qf = o.at2 ? pt(spr(o.at2)) : p, pf = mid(qf, p, qf && p ? 0.62 : 0), zf = o.z || 1.12;
+      if (pf) { S.held = pose(zf, pf, 0.2); to(zf, pf, o.ms || 1300, 0.2, 'cubic-bezier(.33,.1,.25,1)'); S.soft = true; }
+      S.prev = who; return;
+    }
+    if (!cam.length) {
+      if (S.soft) { arm(); S.prev = who; return; } /* hold still — no per-line reframe */
+      var pa = aim(me);
+      if (pa) { S.held = pose(1.06, pa, 0.2); to(1.06, pa, 2400, 0.2, 'cubic-bezier(.33,.1,.25,1)'); S.soft = true; ev('world:scam:soft:' + (id || 'talk')); }
     }
     S.prev = who; }
   function end() { S.prev = null; S.shoutShake = false; var keepBars = S.bars && S.heavy; if (S.bars && !keepBars) bars(0);
