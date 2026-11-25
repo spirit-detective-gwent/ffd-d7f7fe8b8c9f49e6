@@ -13867,12 +13867,15 @@ var SPL = {
   vs_kurata: { kind: 'vs', vs: 'lite', team: [['ryo', 'angry', '#ff9a3c', 196, 182], ['aoi', 'angry', '#6ec8ff', 188, 176]], p: ['kurata', 'angry', '#b98cff', 176, 168], c1: '#b98cff', c2: '#ff3a4a', bg: '#0c0614', names: ['RYO', 'AOI', 'KURATA'], ms: 820 },
   bando_reveal: { kind: 'reveal', p: ['bando', 'angry'], c1: '#ff4d55', c2: '#9b6bff', bg: '#0c0812', word: 'LANE FEE.', sub: 'BANDO RIKIYA', crop: [180, 230, 316], box: [0.10, 0.76], tilt: 5, dir: -1 },
   bando_eyes: { kind: 'beat', p: ['bando', 'angry'], c1: '#ff4d55', c2: '#9b6bff', bg: '#0c0812', band: [18, 106, 324, 92], ms: 700 },
-  vs_bando: { kind: 'vs', vs: 'lite', team: [['ryo', 'angry', '#ff9a3c', 196, 182], ['aoi', 'angry', '#6ec8ff', 188, 176]], p: ['bando', 'angry', '#ff4d55', 176, 168], c1: '#ff4d55', c2: '#9b6bff', bg: '#0c0812', names: ['RYO', 'AOI', 'BANDO'], ms: 820 }
+  vs_bando: { kind: 'vs', vs: 'lite', team: [['ryo', 'angry', '#ff9a3c', 196, 182], ['aoi', 'angry', '#6ec8ff', 188, 176]], p: ['bando', 'angry', '#ff4d55', 176, 168], c1: '#ff4d55', c2: '#9b6bff', bg: '#0c0812', names: ['RYO', 'AOI', 'BANDO'], ms: 820 },
+  masa_reveal: { kind: 'reveal', p: ['masa', 'angry'], c1: '#ffcc22', c2: '#ff6a18', bg: '#120a04', word: 'OFF THE DOCK.', sub: 'FOREMAN MASA', crop: [180, 240, 320], box: [0.10, 0.76], tilt: 3, dir: 1 },
+  masa_eyes: { kind: 'beat', p: ['masa', 'angry'], c1: '#ffcc22', c2: '#ff6a18', bg: '#120a04', band: [18, 83, 324, 92], ms: 700 },
+  vs_masa: { kind: 'vs', vs: 'lite', team: [['ryo', 'angry', '#ff9a3c', 196, 182], ['aoi', 'angry', '#6ec8ff', 188, 176]], p: ['masa', 'angry', '#ffcc22', 180, 175], c1: '#ffcc22', c2: '#ff6a18', bg: '#120a04', names: ['RYO', 'AOI', 'MASA'], ms: 820 }
 };
 var SPL_ON = null;
-var BENT_REVEAL = { gouki: 'gouki_reveal', mb_lib: 'mizuno_reveal', mb_art: 'mai_reveal', mb_cafe: 'kurata_reveal', mb_field: 'bando_reveal' };
-var BENT_BEAT = { gouki: 'gouki_eyes', mb2_game: 'jin_eyes', mb_lib: 'mizuno_eyes', mb_art: 'mai_eyes', mb_cafe: 'kurata_eyes', mb_field: 'bando_eyes' };
-var BENT_VS = { gouki: 'vs_gouki', mb2_game: 'vs_jin', mb_lib: 'vs_mizuno', mb_art: 'vs_mai', mb_cafe: 'vs_kurata', mb_field: 'vs_bando' };
+var BENT_REVEAL = { gouki: 'gouki_reveal', mb_lib: 'mizuno_reveal', mb_art: 'mai_reveal', mb_cafe: 'kurata_reveal', mb_field: 'bando_reveal', mb2_depot: 'masa_reveal' };
+var BENT_BEAT = { gouki: 'gouki_eyes', mb2_game: 'jin_eyes', mb_lib: 'mizuno_eyes', mb_art: 'mai_eyes', mb_cafe: 'kurata_eyes', mb_field: 'bando_eyes', mb2_depot: 'masa_eyes' };
+var BENT_VS = { gouki: 'vs_gouki', mb2_game: 'vs_jin', mb_lib: 'vs_mizuno', mb_art: 'vs_mai', mb_cafe: 'vs_kurata', mb_field: 'vs_bando', mb2_depot: 'vs_masa' };
 function splRng(s) { var h = 1779033703 ^ s.length; for (var i = 0; i < s.length; i++) { h = Math.imul(h ^ s.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); } return function () { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; }; }
 function splUrls(S) {
   if (S.team) return S.team.map(function (q) { return ptPaintUrl(q[0], q[1]); }).concat([ptPaintUrl(S.p[0], S.p[1])]);
