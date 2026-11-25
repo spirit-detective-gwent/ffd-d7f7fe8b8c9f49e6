@@ -20430,7 +20430,7 @@ function c2ActC(k, a) {
   if (a === 'lk_tower') { if (c2LmOpen('roof')) { if (c2S().e.bossWon) { if (typeof sayKey === 'function') sayKey('c2', 'roof_quiet'); else toast('The rooftop shrine is quiet now. The elevator stays on the ground floor.'); return true; } c2Enter('roof'); return true; }
     AU.play('tick'); if (typeof comment === 'function') comment(c2Seals() ? sayFill(SAY.c2.tower_dark, { n: c2Seals() }) : SAY.c2.tower_four); else toast('Central Tower: the night elevator is dark. ' + (c2Seals() ? c2Seals() + ' of 4 seals broken.' : 'Four seal-holders still stand.')); return true; }
   return false; }
-function c2FrameC(dt, k) { if (C2LM[k]) { c2Tense(dt); var b = W.c2n && W.c2n.boss; if (b && !W.c2busy && !b.runK && W.ryo) { b.ft = (b.ft || 0) + dt; if (b.ft > 0.4) { b.ft = 0; waddle(b, 0, Math.atan2(W.ryo.y - b.y, W.ryo.x - b.x)); }
+function c2FrameC(dt, k) { if (C2LM[k]) { c2Tense(dt); var b = W.c2n && W.c2n.boss; if (b && !W.c2busy && !b.runK && W.ryo) { b.ft = (b.ft || 0) + dt; if (b.ft > 0.4) { b.ft = 0; if (!b.n13still) waddle(b, 0, Math.atan2(W.ryo.y - b.y, W.ryo.x - b.x)); /* v6.5.64: Nails's lesson scene keeps him facing straight (n13still) */ }
     var reach = k === 'roof' ? 150 : 140, d = Math.hypot(b.x - W.ryo.x, b.y - W.ryo.y);
     if (b.confHit) { if (d > reach + 80) b.confHit = 0; }
     else if (d <= reach && !W.dlg && !W.busy && !W.cut && !W.fading && (W.cool || 0) <= 0 && tagsLive() && (k !== 'roof' || c2S().e.roofMet)) { b.confHit = 1; if (k === 'roof') c2RoofCine(); else c2LmBoss(k); } } } }
@@ -34872,7 +34872,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
       if (d < 1.5) { i++; requestAnimationFrame(step); return; }
       s.x += dx / d * mv; s.y += dy / d * mv;
       if (s.walker) { s.actMove = 1; s.run = false; s.dir = faceDir(s.dir, dx, dy); animWalk(s, mv); if (s === W.ryo) trail(s.x, s.y); }
-      else { s.fa = Math.atan2(dy, dx); waddle(s, mv, s.fa); }
+      else { s.fa = s.n13fa != null ? s.n13fa : Math.atan2(dy, dx); waddle(s, mv, s.fa); } /* v6.5.64: n13fa = keep facing one way while walking (Nails backs up to his booth facing straight) */
       requestAnimationFrame(step);
     })();
   }
@@ -35537,7 +35537,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
   /* v6.5.64 GGD-27 failsafe: while the turn-in scene runs, a 3 s check. If nothing has happened for 15 s and no dialog or card is open,
    * the scene is stuck: clear every lock and effect, make sure Alley Cat is granted, put the quest on 'turn' and hand control back.
    * Only runs during the scene (no always-on loop); the card, the walk-up and every exit stand it down. */
-  function sabuGuardOff() { W.n13sabu = 0; clearTimeout(W.n13sg); W.n13sg = 0; }
+  function sabuGuardOff() { W.n13sabu = 0; clearTimeout(W.n13sg); W.n13sg = 0; try { var nn = AR.nails || (W.c2n && W.c2n.boss); if (nn) { nn.n13still = 0; nn.n13fa = null; } } catch (eN) {} }
   function sabuGuardOn() { sabuGuardOff(); W.n13sabu = 1; W.n13sabuT = performance.now(); W.n13sg = setTimeout(sabuGuardTick, 3000); }
   function sabuGuardTick() {
     W.n13sg = 0; if (!W.n13sabu) return;
@@ -35568,7 +35568,8 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
   function sabuScene() {
     var r = ryoSp(), a = aoiSp(), n = AR.nails || (W.c2n && W.c2n.boss); if (!n) { ev('world:13u:err:nonails'); } /* v6.5.64 GGD-27: Ryo is always Ryo's own sprite here, even when you play Aoi */
     lockIn(1); sabuGuardOn(); beat('in');
-    var sb = AR.sabu = npc(IMG.n13sb_walk ? 'n13sb' : 'c2_punk', 640, 410, -Math.PI / 2);
+    if (n) { n.n13still = 1; n.n13fa = null; } /* v6.5.64: Nails faces straight the whole scene; he never tracks Ryo and Aoi */
+    var sb = AR.sabu = npc(IMG.n13sb_walk ? 'n13sb' : 'c2_punk', 640, 530, -Math.PI / 2); /* v6.5.64: Sabu starts further out and steps up in front of Nails while the pair run for cover */
     if (n) { n.x = 640; n.y = 300; place(n, 0); waddle(n, 0, Math.PI / 2); n.el.style.filter = 'brightness(.75)'; }
     dim(1, '.42');
     r.x = 612; r.y = 820; place(r); if (a) { a.x = 668; a.y = 836; place(a); }
@@ -35635,8 +35636,11 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
                                 talk(SABU_GLOW[path()] || SABU_GLOW.balanced, function () {
                                   setFire(0, 'n13');
                                   sabuDemo(function () {
-                                    try { if (n && ryoSp()) c2Face(n, ryoSp().x, ryoSp().y); } catch (eN) {} /* Nails turns to look */
-                                    talk([['mb2_arcade', '{quiet}Hm. There it is.{/quiet}']].concat(SABU_DEMO[path()] || SABU_DEMO.balanced), function () {
+                                    /* v6.5.64: Nails turns his head to Ryo ONCE, on 'There it is' (said to Ryo), then faces straight again for the rest */
+                                    try { if (n && ryoSp()) waddle(n, 0, ryoSp().x < n.x ? Math.PI : 0); } catch (eN) {} /* a clean side-on look (a diagonal would not pass the facing hysteresis) */
+                                    talk([['mb2_arcade', '{quiet}Hm. There it is.{/quiet}']], function () {
+                                    try { if (n) waddle(n, 0, Math.PI / 2); } catch (eN2) {}
+                                    talk(SABU_DEMO[path()] || SABU_DEMO.balanced, function () {
                                       alleyCard(function () {
                                         /* t3089u: Nails stays at the booth; player walks up to turn in the tin */
                                         if (n) {
@@ -35649,12 +35653,13 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
                                         beat('walkup');
                                       });
                                     });
+                                    });
                                   });
                                 });
                               });
                             }, 1.0);
                           }
-                          if (n) move(n, [[640, 282]], 90, function () { waddle(n, 0, Math.PI / 2); n.el.style.filter = 'brightness(.62) saturate(.85)'; beat('nailsback'); afterNailsHome(); });
+                          if (n) { n.n13fa = Math.PI / 2; move(n, [[640, 282]], 90, function () { n.n13fa = null; waddle(n, 0, Math.PI / 2); n.el.style.filter = 'brightness(.62) saturate(.85)'; beat('nailsback'); afterNailsHome(); }); }
                           else afterNailsHome();
                         });
                       });
@@ -35666,6 +35671,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
           });
         }
         /* t3120u: further up/left, hidden behind the red takoyaki cart (cart ~182-337, 359-470). */
+        try { move(sb, [[640, 410]], 62, function () { try { waddle(sb, 0, -Math.PI / 2); } catch (eS) {} }); } catch (eM) {}
         c2Walk(r, 158, 430, RUN_SP, function () { hid++; maybeWatch(); });
         if (a) c2Walk(a, 178, 458, RUN_SP, function () { hid++; maybeWatch(); });
         cam([n, sb], function () { panDone = 1; maybeWatch(); }, 1.35);
