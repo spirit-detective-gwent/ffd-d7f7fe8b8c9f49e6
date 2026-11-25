@@ -668,6 +668,7 @@ body.cuc .sparks{z-index:19}
 #wdlg.scene .sh{display:flex;align-items:flex-end;gap:10px;margin:-4px 0 4px}
 #wdlg .pt2{flex:0 0 auto;width:58px;height:74px;background-size:contain;background-repeat:no-repeat;background-position:50% 100%;border-bottom:2px solid rgba(255,190,80,.5)}
 #wdlg .snm{font:900 italic calc(18px * var(--ts, 1)) "Arial Black",system-ui;color:#d5e4f2}
+#wintro{position:fixed;inset:0;z-index:240;display:flex;align-items:flex-end;justify-content:flex-start;color:#fff;font-family:"Arial Black",system-ui,sans-serif;overflow:hidden}#wintro .wash{position:absolute;inset:0;opacity:0}#wintro .card{position:relative;z-index:1;padding:8vh 6vw 11vh;max-width:70vw}#wintro .nm{font-size:clamp(34px,11vw,68px);line-height:.92;letter-spacing:-.03em;text-transform:uppercase;opacity:0;transform:translateX(-24px);text-shadow:0 4px 18px rgba(0,0,0,.75)}#wintro .sub{font-size:clamp(11px,3.2vw,15px);letter-spacing:.2em;text-transform:uppercase;opacity:0;margin-top:8px;color:#ffe9a8}#wintro .tag{font:italic 600 clamp(15px,4.2vw,22px) Georgia,serif;opacity:0;margin-top:12px;max-width:16em;text-shadow:0 2px 10px rgba(0,0,0,.6)}#wintro .bust{position:absolute;right:3vw;bottom:16vh;width:min(46vw,210px);aspect-ratio:3/4;background-size:cover;background-position:50% 18%;opacity:0;transform:scale(1.08) translateY(16px);filter:drop-shadow(0 10px 20px rgba(0,0,0,.65));pointer-events:none}#wintro .iskip{position:absolute;right:12px;top:12px;z-index:2;background:rgba(0,0,0,.35);color:#fff;border:1px solid rgba(255,255,255,.55);padding:7px 12px;font:700 11px system-ui;letter-spacing:.1em;text-transform:uppercase;border-radius:4px}#wintro.kb-ryo .wash{background:radial-gradient(75% 70% at 80% 40%,rgba(190,24,36,.48),rgba(28,0,4,.8))}#wintro.kb-aoi .wash{background:radial-gradient(75% 70% at 80% 40%,rgba(16,110,110,.48),rgba(0,16,20,.8))}#wintro.warm .wash{background:radial-gradient(80% 80% at 70% 30%,rgba(210,150,50,.32),rgba(18,8,0,.76))}#wintro.mgs .wash,#wintro.mgsbig .wash{background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,.7))}@media (prefers-reduced-motion:reduce){#wintro .wash,#wintro .nm,#wintro .sub,#wintro .tag,#wintro .bust{opacity:1;transform:none}}
 #wdlg.scene.pt-up{overflow:visible;padding:16px}#wdlg.scene.pt-up .tw{max-height:min(42vh,300px);overflow-y:auto;overscroll-behavior:contain}#wdlg.scene .sh.pt-hang{position:relative;margin:0 0 4px}#wdlg.scene .sh.pt-hang .pt2{position:absolute;left:0;bottom:calc(100% + 4px);width:112px;height:150px;border-bottom:0;background-size:cover;background-position:50% 18%;filter:drop-shadow(0 6px 12px rgba(0,0,0,.55));z-index:3;pointer-events:none}#wdlg.scene .sh.pt-hang .snm{position:relative}@media (prefers-reduced-motion:reduce){#wdlg.scene .sh.pt-hang .pt2{filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}}
 #wdlg .tw{min-height:3.2em}
 #wdlg .tw .twx[data-tw="quiet"]{font-size:.9em;font-style:italic;opacity:.7}
@@ -13657,7 +13658,7 @@ var MTALK = {
     aoi: ['Put the sticks down, Kurosawa-san. The rhythm in your head isn\u2019t yours.', 'Then come and make it stop.'] },
   mb_lib: { ryo: ['Fines? I\u2019ve never returned a book in my life. Not starting now.', 'Then you\u2019ll pay in full. Silence, please.'],
     aoi: ['Rule seventeen, Mizuno-kun: no fighting in the archive. You wrote it.', '\u2026Then we\u2019ll fight quietly.'] } };
-function miniDialog(m, o) { o = o || {}; /* v4.19 o.base: a base's boss: only his spoken line (no HP / spirit list); o.away: after Walk away */
+function miniDialog(m, o) { o = o || {}; if (o.base && !o._ic && m && CHAR_INTRO[m.id] && !icSeen(m.id) && !root.FFF_SKIP_INTRO) { charIntro(m.id, function () { miniDialog(m, Object.assign({}, o, { _ic: 1 })); }); return; } /* v4.19 o.base: a base's boss: only his spoken line (no HP / spirit list); o.away: after Walk away */
   var c = CD.chars[m.id] || {}, t = MTALK[m.id] || {}, me = SAVE.act, l = t[me] || ['Move.', 'Make me.'], ch = (me === 'aoi' && t.chalA) || m.chal; ev('world:mini:' + m.id); ev('world:mini:talk:' + m.id + ':' + me);
   scene(null, [[m.id, ch], [me, l[0], me === 'ryo' ? { hype: 1 } : null]], function () { // v4.10.1: Ryo's talk-back keeps its knuckle sparks; playing Aoi, he still backs her up
     dialog('<b>' + c.name + '</b><p class="q">\u201c' + l[1] + '\u201d</p>' + (me === 'aoi' ? ryoQ(RYO_MINI, RYO_MINI_P) : '') + (o.base ? '' : '<p class="dim">' + CNAME[me] + ': HP ' + SAVE.hp + '/' + MAXHP + ' \u00b7 spirit ' + SAVE.sp + '/' + SPMAX + '</p>' + (SAVE.hp < MAXHP * 0.6 ? '<p class="warn">\u26a0 You\u2019re hurt. The nurse\u2019s office (south) heals.</p>' : '')),
@@ -13700,6 +13701,70 @@ function ptSlam(kind) {
   if (p && p.animate) { try { p.getAnimations().forEach(function (a) { a.cancel(); }); } catch (e0) {} p.animate([{ transform: 'translateY(-10px) scale(1.06)' }, { transform: 'translate(' + px + 'px, 3px) scale(1)', offset: 0.4 }, { transform: 'translate(' + (-px) + 'px, 0) scale(1)', offset: 0.7 }, { transform: 'translate(0,0) scale(1)' }], { duration: dur, easing: 'cubic-bezier(.2,.8,.2,1)' }); }
   if (d && d.animate) { try { d.getAnimations().forEach(function (a) { if (a._ptSlam) a.cancel(); }); } catch (e1) {} var an = d.animate([{ marginLeft: '0px' }, { marginLeft: px + 'px', offset: 0.3 }, { marginLeft: (-px) + 'px', offset: 0.6 }, { marginLeft: '0px' }], { duration: dur, easing: 'ease-out' }); try { an._ptSlam = 1; } catch (e2) {} }
 }
+
+var CHAR_INTRO = {
+  ryo: { kind: 'kb-ryo', name: 'Ryo Kazan', sub: 'Fox Fire Fist', tag: 'The delinquent the fox chose.', who: 'ryo', mood: 'neutral' },
+  aoi: { kind: 'kb-aoi', name: 'Aoi Hayase', sub: 'Warden Heir', tag: 'The blade that keeps him honest.', who: 'aoi', mood: 'neutral' },
+  nurse: { kind: 'warm', name: 'Shiraishi-sensei', sub: 'School Nurse', tag: 'Sharp, careful, and braver than she thinks.', who: 'nurse', mood: 'neutral' },
+  kurogane: { kind: 'warm', name: 'Genji Kurogane', sub: 'Kurogane Boxing Gym', tag: 'A debt paid in rounds.', who: 'genji', mood: 'neutral' },
+  mb_lib: { kind: 'mgs', name: 'Mizuno', sub: 'Student Librarian', tag: 'The archive is closed.', who: 'mizuno', mood: 'calm' },
+  mb_art: { kind: 'mgs', name: 'Kurosawa Mai', sub: 'Art & Music Wing', tag: 'Get on the beat, or get out.', who: 'mai', mood: 'calm' },
+  mb_cafe: { kind: 'mgs', name: 'Kurata Tetsu', sub: 'Cafeteria', tag: 'Nobody leaves hungry.', who: 'kurata', mood: 'calm' },
+  mb_field: { kind: 'mgs', name: 'Bando Rikiya', sub: 'Sports Storehouse', tag: 'Lane fee is due.', who: 'bando', mood: 'calm' },
+  hall_mon: { kind: 'mgs', name: 'Saeki', sub: 'Hall Monitor', tag: 'The corridors belong to him.', who: 'saeki', mood: 'calm' },
+  enforcer: { kind: 'mgs', name: 'Ban Shigure', sub: 'Council Enforcer', tag: 'He does not ask twice.', who: 'shigure', mood: 'calm' },
+  mb2_arcade: { kind: 'mgs', name: 'Nails', sub: 'Kuroda', tag: 'This is his turf.', who: 'nails', mood: 'calm' },
+  mb2_game: { kind: 'mgs', name: 'High-Score Jin', sub: 'Game Center', tag: 'Don\u2019t touch another player\u2019s session.', who: 'jin', mood: 'calm' },
+  mb2_sento: { kind: 'mgs', name: 'G\u014dda Daiz\u014d', sub: 'Bath Row', tag: 'The water remembers.', who: 'goda', mood: 'calm' },
+  mb2_depot: { kind: 'mgs', name: 'Foreman Masa', sub: 'The Depot', tag: 'Off his dock, kid.', who: 'masa', mood: 'calm' },
+  c2_doorman: { kind: 'mgs', name: 'Kaneda', sub: 'Tower Doorman', tag: 'Nobody goes up without him.', who: 'kaneda', mood: 'calm' },
+  c2_boss: { kind: 'mgs', name: 'Kager\u014d', sub: 'The Gray Coat', tag: 'He has lived far too long.', who: 'kagero', mood: 'calm' },
+  gouki: { kind: 'mgsbig', name: 'Gouki Daimon', sub: 'Student Council President', tag: 'He asked for this.', who: 'gouki', mood: 'calm' }
+};
+function icSeen(id) { return !!(SAVE.icard && SAVE.icard[id]); }
+function icMark(id) { SAVE.icard = SAVE.icard || {}; SAVE.icard[id] = 1; try { save(); } catch (eM) {} }
+function icAnim(el, kfs, opts) { if (!el || !el.animate) { return { finished: Promise.resolve() }; } try { return el.animate(kfs, opts); } catch (eA) { return { finished: Promise.resolve() }; } }
+function charIntro(id, done, opt) {
+  opt = opt || {};
+  var C = CHAR_INTRO[id];
+  if (!C || (!opt.force && (icSeen(id) || root.FFF_SKIP_INTRO))) { if (done) done(); return; }
+  if (!opt.noSave) icMark(id);
+  ev('world:charintro:' + id);
+  var reduce = (typeof ptReduced === 'function' && ptReduced()), kind = C.kind, bust = (typeof ptPaintUrl === 'function' && ptPaintUrl(C.who, C.mood)) || '';
+  var o = document.createElement('div'); o.id = 'wintro'; o.className = 'wintro ' + kind; o.setAttribute('role', 'dialog'); o.setAttribute('aria-label', C.name);
+  o.innerHTML = '<div class="wash"></div><i class="bust"></i><div class="card"><div class="nm">' + C.name + '</div><div class="sub">' + C.sub + '</div><div class="tag">' + C.tag + '</div></div><button type="button" class="iskip">Skip</button>';
+  var bustEl = o.querySelector('.bust'); if (bust) bustEl.style.backgroundImage = 'url(' + bust + ')'; else bustEl.style.display = 'none';
+  document.body.appendChild(o);
+  try { if (typeof cinBars === 'function' && /^mgs/.test(kind)) cinBars(1); } catch (eB) {}
+  var closed = 0, to = [];
+  function later(fn, ms) { var n = setTimeout(fn, reduce ? 0 : ms); to.push(n); return n; }
+  function finish() {
+    if (closed++) return;
+    to.forEach(function (n) { clearTimeout(n); });
+    document.removeEventListener('pointerdown', onSkip, true);
+    ev('world:charintro:end:' + id);
+    var leave = icAnim(o, [{ opacity: 1 }, { opacity: 0 }], { duration: reduce ? 1 : 360, easing: 'ease', fill: 'forwards' });
+    function gone() { try { o.remove(); } catch (eR) {} try { if (typeof cinBars === 'function') cinBars(0); } catch (eC) {} if (done) done(); }
+    if (leave && leave.finished && leave.finished.then) leave.finished.then(gone, gone); else later(gone, reduce ? 0 : 360);
+  }
+  function onSkip(e) { if (e && e.target && e.target.closest && !e.target.closest('#wintro')) return; if (e) { e.preventDefault(); e.stopPropagation(); } finish(); }
+  o.querySelector('.iskip').addEventListener('click', function (e) { e.stopPropagation(); finish(); });
+  document.addEventListener('pointerdown', onSkip, true);
+  var wash = o.querySelector('.wash'), nm = o.querySelector('.nm'), sub = o.querySelector('.sub'), tag = o.querySelector('.tag');
+  if (reduce) { wash.style.opacity = 1; nm.style.opacity = 1; nm.style.transform = 'none'; sub.style.opacity = 1; tag.style.opacity = 1; bustEl.style.opacity = 1; bustEl.style.transform = 'none'; later(finish, 1400); return; }
+  var slam = kind === 'mgs' || kind === 'mgsbig';
+  icAnim(wash, [{ opacity: 0 }, { opacity: 1 }], { duration: 420, easing: 'ease-out', fill: 'forwards' });
+  later(function () {
+    icAnim(nm, [{ opacity: 0, transform: 'translateX(-40px) skewX(-8deg)' }, { opacity: 1, transform: 'translateX(4px) skewX(0deg)', offset: 0.7 }, { opacity: 1, transform: 'translateX(0)' }], { duration: slam ? 280 : 520, easing: 'cubic-bezier(.15,.9,.25,1)', fill: 'forwards' });
+    try { if (AU && AU.play) AU.play(slam ? 'hit' : 'fist', { gain: slam ? 0.85 : 0.65 }); } catch (eS) {}
+    if (slam) { try { o.animate([{ marginLeft: '0px' }, { marginLeft: '8px', offset: 0.3 }, { marginLeft: '-6px', offset: 0.6 }, { marginLeft: '0px' }], { duration: 280, easing: 'ease-out' }); } catch (eZ) {} }
+  }, kind === 'mgsbig' ? 900 : (slam ? 700 : 180));
+  later(function () { icAnim(sub, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'none' }], { duration: 360, easing: 'ease-out', fill: 'forwards' }); }, kind === 'mgsbig' ? 1200 : (slam ? 960 : 420));
+  later(function () { icAnim(tag, [{ opacity: 0 }, { opacity: 1 }], { duration: 420, easing: 'ease-out', fill: 'forwards' }); }, kind === 'mgsbig' ? 1500 : (slam ? 1180 : 640));
+  later(function () { icAnim(bustEl, [{ opacity: 0, transform: 'scale(1.1) translateY(18px)' }, { opacity: 1, transform: 'scale(1) translateY(0)' }], { duration: slam ? 340 : 560, easing: 'cubic-bezier(.15,.9,.25,1)', fill: 'forwards' }); }, kind === 'mgsbig' ? 700 : (slam ? 400 : 80));
+  later(finish, kind === 'mgsbig' ? 4200 : (slam ? 3200 : 2800));
+}
+
 /* v4.17: Mizuno (mb_lib) is an in-game character model (tools/make_mizuno.py), not an illustration: his art keys are mizuno_*,
  * and on the map he is a walker the same size as Ryo and Aoi. v4.52: Bando (mb_field) is the same cel pipeline (tools/v426). */
 var ARTK = { mb_lib: 'mizuno' }; function ak(id) { return ARTK[id] || id; }
@@ -14885,7 +14950,7 @@ function intro(i) { // v4.3: a short Ryo/Aoi scene first, then the how-to page (
   // v4.6: crawl -> courtyard scene -> the three scripted tutorial fights (scenes between) -> aftermath -> how-to.
   // Only on a new story or after Reset story (SAVE.intro is 0); a reload mid-way starts the opening again.
   var gen = W.scGen | 0;
-  if (!i) { stage(); crawl(function () { if (!scOk(gen)) return; aoiRunIn(function () { if (!scOk(gen)) return; scene('intro', null, function () { if (!scOk(gen)) return; /* v4.30.1: Crypto keeps playing through the scripted fights and the aftermath */ if (root.FFF_NO_TUT) { AU.music('map'); ev('world:intro:map'); unstage(); intro(3); } else if (SAVE.ngp) { ev('world:ngplus:tutask'); dialog('<b>New Game Plus</b><p>Replay the tutorial fights?</p>', [['Replay tutorial fights', function () { ev('world:ngplus:tutreplay'); tutorial(0); }, 'hot'], ['Skip to courtyard', function () { ev('world:ngplus:tutskip'); unstage(); scene('after', null, afterOpen); }]], null); /* v5.3.1: Replay first, so a mashed Space never skips */ } else tutorial(0); }); }); }); return; }
+  if (!i) { stage(); crawl(function () { if (!scOk(gen)) return; charIntro('ryo', function () { if (!scOk(gen)) return; aoiRunIn(function () { if (!scOk(gen)) return; charIntro('aoi', function () { if (!scOk(gen)) return; scene('intro', null, function () { if (!scOk(gen)) return; /* v4.30.1: Crypto keeps playing through the scripted fights and the aftermath */ if (root.FFF_NO_TUT) { AU.music('map'); ev('world:intro:map'); unstage(); intro(3); } else if (SAVE.ngp) { ev('world:ngplus:tutask'); dialog('<b>New Game Plus</b><p>Replay the tutorial fights?</p>', [['Replay tutorial fights', function () { ev('world:ngplus:tutreplay'); tutorial(0); }, 'hot'], ['Skip to courtyard', function () { ev('world:ngplus:tutskip'); unstage(); scene('after', null, afterOpen); }]], null); /* v5.3.1: Replay first, so a mashed Space never skips */ } else tutorial(0); }); }); }); }); }); return; }
   if (i === 3) { helpTip('howto', { modal: 1, btn: 'Let\u2019s go', done: function () { SAVE.intro = 1; save(); ev('world:intro:done'); } }); return; } // v4.14: the how-to is a Help Index tip
   dialog(INTRO[i], [['Let\u2019s go', function () { SAVE.intro = 1; save(); ev('world:intro:done'); }]], null); }
 /* v4.7 opening picture: Ryo alone at the end of the front-gate path, his back to the gate fence, the three courtyard bullies
@@ -15948,7 +16013,7 @@ function roomIn(mode) { mode = mode || {}; var D = INT.room, first = !nurseDone(
       W.runUp = true; W.dlg = false; W.cut = false; var t0 = performance.now(), ok = walkTo(tx[0], tx[1], true, false); if (ok === false) { W.ryo.x = tx[0]; W.ryo.y = tx[1]; fin(); return; }
       (function wait() { if ((!W.path || !W.path.length) && performance.now() - t0 > 300 || performance.now() - t0 > BED.walkMax) { W.path = []; W.dlg = true; fin(); return; } setTimeout(wait, 60); })(); }); }, 160); return; }
   if (first) { W.dlg = true; var p = findPath(W.ryo.x, W.ryo.y, D.stage[0], D.stage[1]); W.path = p || []; W.arrive = { intStage: 1 }; ev('world:room:walkin'); if (!W.path.length) arrived(); return; } // you walk in, then they see you
-  if (mode.post) { W.dlg = true; tell('nurse'); tell('gouki'); SAVE.sc.kn = 1; SAVE.sc.k_mb_lib = 1; save(); /* v4.14: she names Mizuno only */ scene('nurse2', null, function () { W.dlg = true; nurseHeal(true, function () { SAVE.sc.nurse = 1; save(); roomBoard(); scene('nurse4', [['@tip', 'bond']], function () { scene('nurse3', null, function () { (W.intDown || []).forEach(function (s) { s.el.classList.add('out'); }); setTimeout(function () { (W.intDown || []).forEach(function (s) { s.el.remove(); }); W.intDown = null; }, 900); W.dlg = false; ev('world:nurse:first:done'); if (cxAdd('nurse', 2)) cxNote(['nurse']); }); }); }); }); return; }
+  if (mode.post) { W.dlg = true; tell('nurse'); tell('gouki'); SAVE.sc.kn = 1; SAVE.sc.k_mb_lib = 1; save(); /* v4.14: she names Mizuno only */ charIntro('nurse', function () { scene('nurse2', null, function () { W.dlg = true; nurseHeal(true, function () { SAVE.sc.nurse = 1; save(); roomBoard(); scene('nurse4', [['@tip', 'bond']], function () { scene('nurse3', null, function () { (W.intDown || []).forEach(function (s) { s.el.classList.add('out'); }); setTimeout(function () { (W.intDown || []).forEach(function (s) { s.el.remove(); }); W.intDown = null; }, 900); W.dlg = false; ev('world:nurse:first:done'); if (cxAdd('nurse', 2)) cxNote(['nurse']); }); }); }); }); }); return; }
   if (qReady() && !mode.wake) { W.dlg = true; setTimeout(function () { qTurnIn(); }, Math.round(500 * cinK())); return; } /* v4.35: back with a quest done: hand it in */
   if (mode.restore) return; var bl = NURSE_TXT.back; var nline = bl[(SAVE.fights | 0) % bl.length]; if (typeof nurseSay === 'function') nurseSay(nline); else if (typeof comment === 'function') comment(['ryo', nline]);
 }
@@ -17046,7 +17111,7 @@ function libBossDoor(k, d) { var n = libUnp();
 function libBoss() { var S = libS(), first = !S.e.archive, m = MINIS.find(function (q) { return q.id === 'mb_lib'; }); W.path = []; W.ryo.v = 0; ev('world:lib:boss:auto:' + (first ? 1 : 0));
   if (first) { S.e.archive = 1; save(); }
   /* v4.43 (Ernest t1041u): camera-only: frame Ryo, Aoi and Mizuno together when the Archive opens (same pan lock as the cafeteria boss). Dialogue, timing, sprites, room and the auto-encounter stay as they were. */
-  libPend(function () { libBossCam(); var go = function () { W.libCamHold = 1; miniDialog(m, { base: 1, away: function () { W.libCamHold = 0; libBossCamOff(); if (libRoom() === 'archive' && !beaten('mb_lib')) libThrough('archive', 'gE'); } }); }; if (first) scene(null, LIB_SC.motive.concat(libBond('boss')), go); else go(); }); }
+  libPend(function () { libBossCam(); var go = function () { W.libCamHold = 1; miniDialog(m, { base: 1, away: function () { W.libCamHold = 0; libBossCamOff(); if (libRoom() === 'archive' && !beaten('mb_lib')) libThrough('archive', 'gE'); } }); }; if (first) charIntro('mb_lib', function () { scene(null, LIB_SC.motive.concat(libBond('boss')), go); }); else go(); }); }
 function libBossCam() { var mz = W.libN && W.libN.mizuno, pts = [W.ryo, W.aoi, mz].filter(Boolean); if (!pts.length) return;
   var xs = pts.map(function (q) { return q.x; }), ys = pts.map(function (q) { return q.y; });
   var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs), minY = Math.min.apply(null, ys) - SPH, maxY = Math.max.apply(null, ys);
@@ -17557,7 +17622,7 @@ function artBack(win, st) { var c = st && st.ctx; if (!c || !c.artev || !win || 
     ['ad1', 'ad2'].forEach(function (id) { var s = W.libN && W.libN[id]; if (s) { s.el.classList.add('out'); setTimeout(function () { s.el.remove(); }, 600); } }); scene(null, ART_SC.band2); }); return; }
   if (c.artev === 'hallb') { ev('world:art:back:hallb'); libPend(function () { scene(null, ART_SC.hallb2); }); } }
 function artBoss() { var S = artS(), first = !S.e.stage, m = MINIS.find(function (q) { return q.id === 'mb_art'; }); W.path = []; W.ryo.v = 0; ev('world:art:boss:auto:' + (first ? 1 : 0)); if (first) { S.e.stage = 1; save(); }
-  libPend(function () { var go = function () { miniDialog(m, { base: 1, away: function () { if (artRoom() === 'stage' && !beaten('mb_art')) artDoor('gS'); } }); }; if (first) scene(null, ART_SC.boss, go); else go(); }); }
+  libPend(function () { var go = function () { miniDialog(m, { base: 1, away: function () { if (artRoom() === 'stage' && !beaten('mb_art')) artDoor('gS'); } }); }; if (first) charIntro('mb_art', function () { scene(null, ART_SC.boss, go); }); else go(); }); }
 /* after the Mai fight (from back(), before her relay scene + the 3-way decision): the drums stop, she drops to her knees */
 function artPost(done) { W.dlg = true; AU.play('shatter', { gain: 0.8 }); wSparks(); ev('world:art:post');
   if (artRoom() === 'stage') { var o = W.libN && W.libN.mai, a = lw(ARTG.stage, ARTP.stage[0].at); if (o && o.el) o.el.remove(); var s = celKneel('mai', 0, 'lkneel'); if (s) { s.x = a[0]; s.y = a[1]; place(s, 0); W.libN.mai = s; ev('world:art:kneel'); } }
@@ -17824,7 +17889,7 @@ function cafArrive(k) { var S = cafS(), b = beaten('mb_cafe'); if (cafHide(k)) {
 function cafBoss() { var S = cafS(), first = !S.e.dining, m = MINIS.find(function (q) { return q.id === 'mb_cafe'; }), R = CAFG.dining; W.path = []; W.ryo.v = 0; ev('world:cafe:boss:auto:' + (first ? 1 : 0)); if (first) { S.e.dining = 1; save(); }
   libPend(function () { var k0 = lw(R, CAFP.dining[0].at), tc = camAt(k0[0], k0[1] + 60), a0 = [W.cam.x, W.cam.y], t = 0; W.dlg = true; W.pan = { scr: 1, run: function (dt) { t += dt; var e = ease(Math.min(1, t / 0.8)); W.cam.x = a0[0] + (tc[0] - a0[0]) * e; W.cam.y = a0[1] + (tc[1] - a0[1]) * e; } }; ev('world:cafe:boss:pan');
     var go = function () { W.pan = null; W.dlg = false; var up = lw(R, [640, 360]); walkTo(up[0], up[1], true, false); /* a short controlled walk-up, then the challenge */ setTimeout(function () { miniDialog(m, { base: 1, away: function () { if (cafRoom() === 'dining' && !beaten('mb_cafe')) cafDoor('gS'); } }); }, 700); };
-    setTimeout(function () { if (first) scene(null, cafBossLines(), go); else go(); }, 850); }); }
+    setTimeout(function () { if (first) charIntro('mb_cafe', function () { scene(null, cafBossLines(), go); }); else go(); }, 850); }); }
 function cafBack(win, st) { if (W.carry) cafDrop('fight'); }
 function cafPost(done) { W.dlg = true; AU.play('shatter', { gain: 0.8 }); wSparks(); ev('world:cafe:post');
   if (cafRoom() === 'dining') { var o = W.libN && W.libN.kurata, a = lw(CAFG.dining, CAFP.dining[0].at); if (o && o.el) o.el.remove(); var s = celKneel('kurata', 0, 'lkneel'); if (s) { s.x = a[0]; s.y = a[1]; place(s, 0); W.libN.kurata = s; ev('world:cafe:kneel'); } }
@@ -18190,7 +18255,7 @@ function fldBoss(o) { var S = fldS(), first = !S.e.boss, m = MINIS.find(function
     else { ban.x = a[0]; ban.y = a[1]; ban.runK = 0; place(ban, 0); waddle(ban, 0, Math.PI); } })();
   var run = function () { var k0 = lw(R, FLDP.track[0].at), tc = camAt(k0[0], k0[1] + 40), a0 = [W.cam.x, W.cam.y], t = 0; W.dlg = true; W.pan = { scr: 1, run: function (dt) { t += dt; var e = ease(Math.min(1, t / 0.75)); W.cam.x = a0[0] + (tc[0] - a0[0]) * e; W.cam.y = a0[1] + (tc[1] - a0[1]) * e; } }; ev('world:field:boss:pan');
     var go = function () { W.pan = null; W.dlg = true; fldLegs(W.ryo, [640, 420], 150, function () { W.dlg = false; ev('world:field:boss:ready'); miniDialog(m, { base: 1, away: function () { W.fldBossT = 0; if (fldRoom() === 'track' && !beaten('mb_field')) fldDoor('gS'); } }); }); };
-    setTimeout(function () { if (first) scene(null, FLD_SC.boss, go); else go(); }, 800); };
+    setTimeout(function () { if (first) charIntro('mb_field', function () { scene(null, FLD_SC.boss, go); }); else go(); }, 800); };
   if (o && o.direct) { ev('world:field:boss:direct'); run(); } else libPend(run); }
 function fldBack(win, st) { if (W.carry && String(W.carry).indexOf('h:') === 0) fldDrop('fight'); }
 function fldPost(done) { W.dlg = true; AU.play('shatter', { gain: 0.8 }); wSparks(); ev('world:field:post');
@@ -18434,7 +18499,7 @@ function gymBoss() { /* v4.64: finale only on Main Court after seals */
   if (SAVE.gouki || !gymOpen() || gymRoom() !== 'arena' || W.gymBossBusy) return;
   W.gymBossBusy = 1; W.path = []; W.ryo.v = 0; W.ryo.moving = false; ev('world:gym:boss');
   var go = function () { W.gymBossBusy = 0; gkFight(); };
-  libPend(function () { scene(null, GYM_SC.boss, go); }); }
+  libPend(function () { charIntro('gouki', function () { scene(null, GYM_SC.boss, go); }); }); }
 function gymPress() { var S = gymS(), n = gymDone(); if (n < 1) { if (typeof sayKey === 'function') sayKey('hint', 'seal_none'); else toast('No seals yet.'); return; }
   if (S.e.press && n >= 3) { if (typeof sayKey === 'function') sayKey('hint', 'seal_done'); else toast('All three seals are pressed. The arena gate is open.'); return; }
   AU.play('place', { gain: 0.7 }); ev('world:gym:press:' + n);
@@ -20422,7 +20487,7 @@ function c2SparGo(lesson) { if (lesson === 'charge') return; var r = W.ryo, a = 
       rdyOff(r); rdyOff(a); W.cut = false; var id = c2SparFoe(o); ev('world:c2:spar:fight:' + id + ':' + (lesson || '')); fight([id], false, { dg: 'c2', dgk: 'spar', c2spar: 1, c2lesson: lesson || '', flv: 5 }); }); }); }
 function c2SparBack(win, st) { var s = W.sparSnap; W.sparSnap = null; if (!s) return; Object.keys(s).forEach(function (k) { SAVE[k] = s[k]; }); W.g5busy = 0; ev('world:c2:spar:restore:' + SAVE.hp); }
 function c2SparAfter(win, st) { if (st && st.ctx && st.ctx.c2lesson && win && typeof c2LessonDone === 'function') { c2LessonDone(st.ctx.c2lesson); return; } if (st && st.ctx && st.ctx.c2lesson && !win) { W.c2lesBusy = 0; c2TrainHeal('loss:' + st.ctx.c2lesson); ev('world:c2:lesson:fail:' + st.ctx.c2lesson); } var o = other(SAVE.act), L = win ? [[o, o === 'aoi' ? 'Fine. You win this one. Don\u2019t get used to it.' : 'Okay, okay. That counter was real.'], ['kurogane', 'Good. Now do that to the gray coat.', { mood: 'neutral' }]] : [[o, o === 'aoi' ? 'Elbows, Ryo. You keep dropping them.' : 'Ha! Gotcha. Rematch whenever.', { hype: o === 'ryo' ? 1 : 0 }], ['kurogane', '{slow}Lost a round, kept your teeth.{/slow}{p} Again tomorrow.', { mood: 'neutral' }]];
-  setTimeout(function () { scene(null, L, function () { ev('world:c2:spar:end:' + (win ? 'win' : 'lose')); }); }, 500); }
+  setTimeout(function () { charIntro('kurogane', function () { scene(null, L, function () { ev('world:c2:spar:end:' + (win ? 'win' : 'lose')); }); }); }, 500); }
 
 /* ---------- 7. the Ch1 -> Ch2 crane pan (canvas, procedural) ---------- */
 var C2TRANS_CAP = '<b>Chapter Two</b><span>Kitsune-Ch\u016b\u014d \u00b7 The Central District</span>', C2TRANS_GATE = 'KITSUNE RIDGE HIGH', C2TRANS_SG = [['KITSUNE-CHUO', '#ff4fa0', 0.05, 3], ['GINKO SHOTENGAI', '#46e0ff', 0.52, 2], ['KARAOKE', '#ffd25a', 0.08, 1], ['CLUB KITSUNE', '#b07cff', 0.54, 0]]; /* v6.0: swapped per chapter */
