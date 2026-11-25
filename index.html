@@ -29380,11 +29380,11 @@ function opnTDPlay(r, T, who, flip, impact, done) { var KS = ambStingOK() ? 1.54
   function go() { if (ryo) ryoGo(); else aoiGo(); }
   function ryoGo() { var a = opnPose(r, 'ryo', flip), steps = [[1, 170, 'tap'], [0, Math.round(90 * KS), 'turn'], [0, Math.round(220 * KS), 0]], i = 0;
     (function st() { if (i >= steps.length) { lunge(); return; } var S = steps[i]; if (a) { a.row = a.map ? 0 : 1; opnFr(r, S[0]); } if (S[2] === 'tap') { try { AU.play('tap', { gain: 0.55 }); } catch (e) {} ev('world:opn:td:tap'); } else if (S[2] === 'turn') turn(); setTimeout(function () { i++; st(); }, S[1]); })(); }
-  function lunge() { opnPoseEnd(r); var a = opnPose(r, 'ryo', flip, 1), hb = a && !a.map; if (a) opnFr(r, hb ? 0 : 0); ev('world:opn:td:set'); try { AU.play('whoosh_c', { gain: 0.7 }); } catch (e) {} /* (Ernest 11:41) fuller wind-up */
-    setTimeout(function () { if (a) { if (hb) opnFr(r, 2); else { a.row = 0; opnFr(r, 2); } }
-      var fx = OPN.HB.fist, fist = opnFramePt(r, fx[0], fx[1], flip), want = s.x + (flip ? 11 : -11), dx = want - fist[0], x0 = r.x; /* lunge in until the fist meets his stomach */
+  function lunge() { opnPoseEnd(r); var STD = !!T.stand, a = opnPose(r, 'ryo', flip, STD ? 0 : 1), hb = !STD && a && !a.map; if (a) { if (STD) a.row = a.map ? 0 : 1; opnFr(r, 0); } /* v6.5.64: T.stand = the upright straight (his guard-frame lead long straight), no planted crouch */ ev('world:opn:td:set'); try { AU.play('whoosh_c', { gain: 0.7 }); } catch (e) {} /* (Ernest 11:41) fuller wind-up */
+    setTimeout(function () { if (a) { if (STD) { a.row = a.map ? 0 : 1; opnFr(r, 3); } else if (hb) opnFr(r, 2); else { a.row = 0; opnFr(r, 2); } }
+      var fx = STD ? OPN.FIST.ryo : OPN.HB.fist, fist = opnFramePt(r, fx[0], fx[1], flip), want = s.x + (flip ? 11 : -11), dx = want - fist[0], x0 = r.x; /* lunge in until the fist meets his stomach */
       tween(Math.round(70 * KS), function (k) { r.x = x0 + dx * (1 - (1 - k) * (1 - k)); place(r, 0); }, function () { hitR(a); }); }, Math.round(130 * KS)); }
-  function hitR(a) { var F = F0(), P = opnFramePt(r, OPN.HB.fist[0], OPN.HB.fist[1], flip), dir = flip ? Math.PI : 0, back = [s.x + (flip ? -10 : 10), P[1] - 4];
+  function hitR(a) { var F = F0(), FP = T.stand ? OPN.FIST.ryo : OPN.HB.fist, P = opnFramePt(r, FP[0], FP[1], flip), dir = flip ? Math.PI : 0, back = [s.x + (flip ? -10 : 10), P[1] - 4];
     opnDirect('opn_punch', 0.85); if (W.opnBoom) thud([['boom', 0, W.opnBoom]]); /* (Ernest 12:07/12:24) punch_06 exactly as his pick: straight to the output, no sfx-bus EQ / room send / speaker limiter, rate 1, full length */ impact(); opnRumble('ambRyoBack'); ev('world:opn:td:hit');
     opnFoeShow(q, 'fold', rowOf(), 4) || (function () { try { hurtPlay(s, q.id, rowOf(), 2); } catch (e) {} })(); /* after impact(): his own hurt flinch would repaint the sprite */
     if (F) { F.rings.push({ x: P[0], y: P[1], r0: 3, r1: 22, t: 0, dur: 0.18, col: '255,250,235', w: 3 });
@@ -35438,7 +35438,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
     }
     function strike() {
       if (fin || !SH) return; beat('demo:td');
-      var q = { id: 'c2_punk', s: s, fa: Math.PI, st: 'idle', sus: 0, key: 'n13shadow' }, T = { q: q, x0: r.x, y0: r.y, who: 'ryo', cheap: 0 };
+      var q = { id: 'c2_punk', s: s, fa: Math.PI, st: 'idle', sus: 0, key: 'n13shadow' }, T = { q: q, x0: r.x, y0: r.y, who: 'ryo', cheap: 0, stand: 1 };
       W.n13shOn = 1; W.ambOn = null;
       try { kneelOne(r, 0); } catch (eK) {}
       try { r.snk = 0; opnSnkPose(r, 0); } catch (eP) {}
@@ -35461,6 +35461,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
       if (fin || !SH) return; beat('demo:focus');
       try { c2Face(r, sx, sy); if (a) c2Face(a, sx, sy); } catch (e0) {}
       focusOn(); /* the screen goes dark: his focus */
+      try { opnRyoSheet(); } catch (eW) {} /* warm the upright punch sheet */
       /* v6.5.64: no kneel or meditation pose - he stays on his feet; only the screen dims */
       try { setFire(1, 'n13'); AU.play('tick'); } catch (eS) {}
       later(1500, form);
