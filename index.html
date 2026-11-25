@@ -12380,7 +12380,7 @@ var QTALK = {
   q_mb_art: [['@cin', 'students'], ['@done'], ['nurse', 'Three more of them, safe. Is anyone hurt?', { mood: 'neutral' }], ['ryo', 'Just tired. Mai\u2019s out cold on the stage.', { mood: 'neutral' }],
     ['aoi', 'She left a setlist. Cafeteria, lunch, twelve-thirty.', { mood: 'neutral' }], ['ryo', 'So the cafeteria\u2019s our next lead.', { mood: 'neutral' }], ['nurse', 'The cafeteria? I\u2019ve heard nothing odd from there.', { mood: 'neutral' }],
     ['aya', 'Mai kept saying the cafeteria would feed us. I didn\u2019t get it.', { mood: 'neutral' }], ['riku', 'If you go, don\u2019t eat anything. Just a feeling.', { mood: 'neutral' }],
-    ['nurse', 'Take these bandages. Come back the moment you\u2019re hurt.', { mood: 'sad' }], ['@quest', 'next']],
+    ['nurse', 'Take these bandages. Come back the moment you\u2019re hurt.', { mood: 'neutral' }], ['@quest', 'next']],
   /* v4.46 t1052u (Ernest AUTHORITATIVE): ONE new conversation, nurse office only, after cafeteria. Ryo+Aoi/nurse only.
    * No leads. Map: red Xs on 3 defeated corners (one-at-a-time), Gouki gym pin, SE circle. They THEORIZE (not certainty) corners may act as relays feeding the gym crowd.
    * Fourth corner tests the theory. Nurse: empty Sports Storehouse SE only; no relay knowledge. Hunch → storehouse.
@@ -13718,7 +13718,7 @@ var SCENES = {
     ["ryo", "The stone fox? At the shrine?", { mood: 'neutral' }],
     ["aoi", "That one. It was never just a statue. I’ll explain once we’re through this.", { mood: 'neutral' }],
     ["ryo", "You know my name?", { mood: 'neutral' }],
-    ["aoi", "Everyone knows yours. Stay behind me, please.", { mood: 'sad' }],
+    ["aoi", "Everyone knows yours. Stay behind me, please.", { mood: 'neutral' }],
     ["ryo", "Behind you? I don’t need protecting. I can take care of myself.", { mood: 'neutral' }],
     ["aoi", "Ryo, these aren’t normal…", { mood: 'neutral' }],
     ["ryo", "Doesn’t matter. Stay back, I’ve got this.", { mood: 'neutral' }],
@@ -14055,7 +14055,7 @@ var GK_FIN = {
     fierce: [
       ['', '<p class="dim">Gouki drops again. The seal flares in his fist.</p>', { kneel: 1 }],
       ['gouki', '{slow}Still standing. Still mine.{/slow}', { kneel: 0, mood: 'calm' }],
-      ['aoi', 'He keeps healing. {fast}Will you stop trying to shout your way through it?{/fast}', { mood: 'sad' }],
+      ['aoi', 'He keeps healing. {fast}Will you stop trying to shout your way through it?{/fast}', { mood: 'neutral' }],
       ['gouki', 'Solo strikes never outlast this.', { hype: 1, mood: 'calm' }]],
     balanced: [
       ['', '<p class="dim">Gouki drops again. The seal flares in his fist.</p>', { kneel: 1 }],
@@ -15549,7 +15549,7 @@ BOND_TXT.mini_mb_lib = { _mx: 1,
 BOND_TXT.mini_mb_cafe = { _mx: 1,
   fierce: {
     fierce: [
-    ['ryo', '{shout}Don’t eat that.{/shout}{p} Ever.', { hype: 1, mood: 'rage' }],
+    ['ryo', '{shout}Don’t eat that.{/shout}{p} Ever.', { hype: 1, mood: 'angry' }],
     ['', '<p class="dim">The first-year stares at the bread on the floor, then at Ryo. He bolts.</p>'],
     ['aoi', '{slow}He’s scared of you now, Kazan.{/slow}', { mood: 'neutral' }],
     ['ryo', '{fast}Scared beats possessed.{/fast}', { mood: 'neutral' }],
@@ -15566,7 +15566,7 @@ BOND_TXT.mini_mb_cafe = { _mx: 1,
     ['ryo', 'You can stop making your point. Nurse\u2019s office, kid.', { mood: 'neutral' }]] },
   balanced: {
     fierce: [
-    ['ryo', '{shout}Don’t eat that.{/shout}{p} Ever.', { hype: 1, mood: 'rage' }],
+    ['ryo', '{shout}Don’t eat that.{/shout}{p} Ever.', { hype: 1, mood: 'angry' }],
     ['', '<p class="dim">The first-year stares at the bread on the floor, then at Ryo. He bolts.</p>'],
     ['aoi', 'He\u2019s scared of you now, Kazan.', { mood: 'neutral' }],
     ['ryo', 'Scared of me beats eating that.{p} {slow}\u2026Hey. Sorry, kid. Nurse\u2019s office.{/slow}', { mood: 'sad' }],
@@ -15584,7 +15584,7 @@ BOND_TXT.mini_mb_cafe = { _mx: 1,
     ['aoi', 'And don\u2019t take food from anyone else on the way.', { mood: 'neutral' }]] },
   strategic: {
     fierce: [
-    ['ryo', '{shout}Don’t eat that.{/shout}{p} Ever.', { hype: 1, mood: 'rage' }],
+    ['ryo', '{shout}Don’t eat that.{/shout}{p} Ever.', { hype: 1, mood: 'angry' }],
     ['', '<p class="dim">The first-year stares at the bread on the floor, then at Ryo. He bolts.</p>'],
     ['aoi', 'He\u2019s clear of the bread. Now watch where he runs.', { mood: 'neutral' }],
     ['ryo', 'Away from this room. That\u2019ll do.', { mood: 'neutral' }]],
@@ -16253,7 +16253,7 @@ BOND_TXT.dg = { _mx: 1,
     fierce: [
     ['ryo', 'No sneaking. They should see this coming.', { hype: 1, mood: 'neutral' }],
     ['', '<p class="dim">The fox fire flares. Somewhere inside, the fox grins.</p>'],
-    ['aoi', 'Then make the approach draw their eyes. I\u2019ll watch the opening.', { mood: 'sad' }],
+    ['aoi', 'Then make the approach draw their eyes. I\u2019ll watch the opening.', { mood: 'neutral' }],
     ['ryo', 'One loud entrance. You read what it buys us.', { mood: 'neutral' }]],
     balanced: [
     ['aoi', 'Side by side. If one of us gets hit, the other covers.', { mood: 'neutral' }],
@@ -17305,7 +17305,7 @@ var LIB_SC = {
     ['mb_lib', 'Before the lamp, someone walked into the Archive.{p} {slow}They opened that crack.{/slow}', { mood: 'calm' }],
     ['mb_lib', 'Purple light poured out.{p} {slow}After that, all I wanted was quiet.{/slow}', { mood: 'calm' }],
     ['aoi', 'Your readers are safe. Shiraishi-sensei needs to hear every word of this.', { mood: 'neutral' }],
-    ['ryo', 'Nurse’s Office, then. You too, Mizuno. Say sorry. {shout}Loudly.{/shout}', { hype: 1, mood: 'rage' }],
+    ['ryo', 'Nurse’s Office, then. You too, Mizuno. Say sorry. {shout}Loudly.{/shout}', { hype: 1, mood: 'angry' }],
     ['mb_lib', 'I will. \u2026The old librarians hid a lampglass earring by the east wall. Take it.', { mood: 'calm' }],
     ['', '<p class="dim">Out in the gallery, a chain clatters to the floor. Mizuno limps off toward the Nurse\u2019s Office.</p>']],
   mizuno2: [['mb_lib', '\u2026So tired. I\u2019ll go to the Nurse\u2019s Office. The earring\u2019s by the east wall.', { mood: 'calm' }]],
@@ -17681,7 +17681,7 @@ var ART_SC = {
   wall: [['', '<p class="dim">Somewhere down the hall, the Wall of Sound cracks and falls silent.</p>'], ['aoi', 'The Music Hall is open. She\u2019ll be waiting on the stage.', { mood: 'neutral' }]],
   sketch: [
     ['', '<p class="dim">A chalk sketch wall. Someone has left a box of stubs.</p>'],
-    ['aoi', 'Hold still, Kazan. You want me to do this or not?', { mood: 'sad' }],
+    ['aoi', 'Hold still, Kazan. You want me to do this or not?', { mood: 'neutral' }],
     ['ryo', 'I\u2019m right here, aren\u2019t I? Make me look less angry.', { mood: 'neutral' }],
     ['aoi', 'I\u2019m drawing what\u2019s in front of me.', { mood: 'neutral' }],
     ['ryo', '{slow}…That’s a raccoon.{/slow}{p} You doing that on purpose?', { mood: 'neutral' }],
@@ -20115,7 +20115,7 @@ BOND_Q.c2lm_sento = { q: '<b>Aoi\u2019s call</b><p>He sealed the bath with the o
 BOND_Q.c2lm_depot = { q: '<b>Aoi\u2019s call</b><p>He\u2019s loading gray crates onto the night freight.</p>', o: { fierce: ['Jump the loading dock', 'Fierce'], strategic: ['Use the crates for cover', 'Strategic'], balanced: ['Ask whose freight it is', 'Compassionate'] } };
 BOND_MID.c2lm_arcade = 'balanced'; BOND_MID.c2lm_game = 'strategic'; BOND_MID.c2lm_sento = 'balanced'; BOND_MID.c2lm_depot = 'fierce';
 BOND_TXT.c2lm_arcade = { fierce: [['ryo', 'Toll\u2019s cancelled.', { hype: 1, mood: 'neutral' }], ['mb2_arcade', 'Bold. I like bold. It bruises nicely.', { mood: 'calm' }]], strategic: [['ryo', 'He parked his carts on his own left. Generous.', { mood: 'neutral' }], ['mb2_arcade', 'Sneaking in my arcade? That\u2019s extra.', { mood: 'calm' }]], balanced: [['ryo', 'Everyone hear that? Nobody here owes him a yen.', { mood: 'neutral' }], ['mb2_arcade', 'Loud kid. Let\u2019s make you quiet.', { mood: 'calm' }]] };
-BOND_TXT.c2lm_game = { fierce: [['ryo', '{shout}Go home, kid.{/shout} Now.', { hype: 1, mood: 'rage' }], ['mb2_game', 'Rude. You don\u2019t touch another player\u2019s session.', { mood: 'calm' }]], strategic: [['aoi', '{brisk}His left hand twitches before every combo.{/brisk}', { mood: 'neutral' }], ['mb2_game', 'Reading me? Two can play.', { mood: 'calm' }]], balanced: [['ryo', 'One game. I win, you let him go.', { mood: 'neutral' }], ['mb2_game', '{shout}Ha!{/shout} Deal. Real fight, though.', { mood: 'angry' }]] };
+BOND_TXT.c2lm_game = { fierce: [['ryo', '{shout}Go home, kid.{/shout} Now.', { hype: 1, mood: 'rage' }], ['mb2_game', 'Rude. You don\u2019t touch another player\u2019s session.', { mood: 'calm' }]], strategic: [['aoi', '{brisk}His left hand twitches before every combo.{/brisk}', { mood: 'neutral' }], ['mb2_game', 'Reading me? Two can play.', { mood: 'calm' }]], balanced: [['ryo', 'One game. I win, you let him go.', { mood: 'neutral' }], ['mb2_game', '{shout}Ha!{/shout} Deal. Real fight, though.', { mood: 'calm' }]] };
 BOND_TXT.c2lm_sento = { fierce: [['ryo', 'Bath\u2019s open.', { hype: 1, mood: 'neutral' }], ['mb2_sento', 'Kicking a sent\u014d door. Your grandfather would weep.', { mood: 'calm' }]], strategic: [['ryo', 'He guards the bath. Nobody guards the lockers.', { mood: 'neutral' }], ['mb2_sento', 'I can smell you in the steam, child.', { mood: 'calm' }]], balanced: [['ryo', '{slow}Please.{/slow} The bath, for the old folks.', { mood: 'sad' }], ['mb2_sento', 'Polite. Fine. Polite gets a fair fight.', { mood: 'calm' }]] };
 BOND_TXT.c2lm_depot = { fierce: [['ryo', '{shout}Last stop!{/shout}', { hype: 1, mood: 'rage' }], ['mb2_depot', '{shout}Off my dock, kid!{/shout}', { mood: 'angry' }]], strategic: [['aoi', 'Crates on both sides. He can\u2019t swing the forklift here.', { mood: 'neutral' }], ['mb2_depot', 'Rats in the crates again.', { mood: 'calm' }]], balanced: [['ryo', 'Whose crates, Masa?', { mood: 'neutral' }], ['mb2_depot', 'His. Always his. Now get out of the way.', { mood: 'angry' }]] };
 CXD.mb2_arcade = { n: '\u201cNails\u201d Kuroda', k: 'Turf Sub-Boss', img: 'mb2_arcade_fig', a: 'Cream double-breasted jacket over a leopard shirt, punch perm, gold chain. Runs the toll in the Ginko Sh\u014dtengai arcade. Flurry Rusher.', b: 'Aoi-favored: counter the first rake. Drop: one card, 50% Common / 50% Uncommon.' };
