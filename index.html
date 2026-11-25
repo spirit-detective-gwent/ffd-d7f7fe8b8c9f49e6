@@ -35637,11 +35637,16 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
                                 talk(SABU_GLOW[path()] || SABU_GLOW.balanced, function () {
                                   setFire(0, 'n13');
                                   sabuDemo(function () {
-                                    /* v6.5.64: Nails turns his head to Ryo ONCE, on 'There it is' (said to Ryo), then faces straight again for the rest */
-                                    try { if (n && ryoSp()) waddle(n, 0, ryoSp().x < n.x ? Math.PI : 0); } catch (eN) {} /* a clean side-on look (a diagonal would not pass the facing hysteresis) */
-                                    talk([['mb2_arcade', '{quiet}Hm. There it is.{/quiet}']], function () {
-                                    try { if (n) waddle(n, 0, Math.PI / 2); } catch (eN2) {}
-                                    talk(SABU_DEMO[path()] || SABU_DEMO.balanced, function () {
+                                    /* v6.5.64 / r2.3: Nails turns his head to Ryo ONCE, on 'There it is' (said to Ryo), then faces straight again.
+                                     * The lesson camera is tight on the corner, so Nails at the booth was off-frame. After the demo, a slow
+                                     * ease-in-out pan (no zoom) frames Nails and Ryo together for that line, then eases back to Ryo and Aoi. */
+                                    function nailsLook() {
+                                      try { if (n && ryoSp()) waddle(n, 0, ryoSp().x < n.x ? Math.PI : 0); } catch (eN) {} /* a clean side-on look (a diagonal would not pass the facing hysteresis) */
+                                      beat('look');
+                                      talk([['mb2_arcade', '{quiet}Hm. There it is.{/quiet}']], function () {
+                                        try { if (n) waddle(n, 0, Math.PI / 2); } catch (eN2) {}
+                                        function afterLook() {
+                                          talk(SABU_DEMO[path()] || SABU_DEMO.balanced, function () {
                                       alleyCard(function () {
                                         /* t3089u: Nails stays at the booth; player walks up to turn in the tin */
                                         if (n) {
@@ -35653,8 +35658,14 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
                                         lockIn(0); W.cut = false; W.busy = false; W.dlg = false; W.c2busy = 0;
                                         beat('walkup');
                                       });
-                                    });
-                                    });
+                                          });
+                                        }
+                                        if (n) camHigh([r, a], afterLook, 1.15);
+                                        else afterLook();
+                                      });
+                                    }
+                                    if (n) camHigh([n, r], nailsLook, 1.35);
+                                    else nailsLook();
                                   });
                                 });
                               });
