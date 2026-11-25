@@ -40023,12 +40023,43 @@ ROOMS.club = { name: 'Club Kitsune · bouncers / back room', paint: function (x)
   lights: [], neon: [[360, 75, 220, '200,110,255']], beams: 3, motes: 16, mood: 'club' };
 /* 11. Genji's gym (the spar ring) */
 ROOMS.gym = { name: 'Genji’s gym · the ring', paint: function (x) {
-    R(x, 0, 0, WD, H0, '#4a4440', 0); for (var i = 0; i < 6; i++) { R(x, 30 + i * 118, 40, 90, 120, '#2a2420'); R(x, 38 + i * 118, 48, 74, 104, '#d8c8a0', 0); x.fillStyle = '#8a2a20'; x.fillRect(48 + i * 118, 60, 54, 10); }
-    for (i = 0; i < 3; i++) { x.beginPath(); x.moveTo(140 + i * 220, 0); x.lineTo(140 + i * 220, 190); x.strokeStyle = INK; x.lineWidth = 3; x.stroke(); x.beginPath(); x.ellipse(140 + i * 220, 230, 34, 60, 0, 0, 6.28); x.fillStyle = '#8a2a24'; x.fill(); x.stroke(); }
-    floor(x, { kind: 'board', far: '#9a7a54', near: '#5a442e', line: 'rgba(30,20,10,.4)', cols: 10, rows: 16 });
-    poly(x, [[fx0(60, 560), 560], [fx0(660, 560), 560], [fx0(660, 1180), 1180], [fx0(60, 1180), 1180]], '#2e4a7a'); poly(x, [[fx0(90, 590), 590], [fx0(630, 590), 590], [fx0(630, 1150), 1150], [fx0(90, 1150), 1150]], '#3b5c92', 0);
-    [520, 545, 570].forEach(function (y, k) { x.beginPath(); x.moveTo(fx0(60, 560) - 6, y); x.lineTo(fx0(660, 560) + 6, y); x.strokeStyle = ['#d8d0c0', '#c8302a', '#d8d0c0'][k]; x.lineWidth = 5; x.stroke(); });
-    pool(x, 360, 120, 420, 160, '255,236,190', 0.32); pool(x, 360, 860, 360, 260, '255,236,190', 0.2); vign(x, 0.5); },
+    /* ch2-fixes GGD-25: the spar battle now stands in the SAME boxing ring as the Kurogane gym overworld (cream canvas, blue apron,
+     * red/blue corner posts with grey pads, white-red-blue ropes, plank floor, brick wall with the three fighter posters).
+     * Both fighters are centred on x=360 and stand inside the ropes: foe feet ~y250 (back edge 175), Ryo/Aoi feet ~y805 (front edge 950). */
+    var h0 = H0, vp0 = VP; H0 = 150; VP = [360, -1300];
+    bricks(x, 0, 0, WD, 150, '#6e4638', 'rgba(26,12,12,.38)');
+    [[70, '#c73239', '#e9c9af'], [250, '#2d61c8', '#e9c9af'], [470, '#d9a43a', '#e9c9af']].forEach(function (P) { R(x, P[0], 12, 96, 112, P[1], INK, 3); R(x, P[0] + 8, 20, 80, 30, 'rgba(0,0,0,.28)', 0); [28, 58].forEach(function (dx) { x.beginPath(); x.ellipse(P[0] + dx + 4, 36, 8, 12, 0, 0, 6.28); x.fillStyle = P[2]; x.fill(); x.strokeStyle = INK; x.lineWidth = 2; x.stroke(); }); });
+    x.beginPath(); x.moveTo(640, 0); x.lineTo(640, 44); x.strokeStyle = INK; x.lineWidth = 3; x.stroke(); x.beginPath(); x.ellipse(640, 66, 20, 26, 0, 0, 6.28); x.fillStyle = '#c73239'; x.fill(); x.stroke();
+    R(x, 0, 140, WD, 14, '#2a2026', 0);
+    floor(x, { kind: 'board', far: '#b0845c', near: '#8d6641', line: 'rgba(40,24,12,.34)', cols: 10, rows: 16, seed: 7 });
+    var BY = 175, FY = 950, UH = 310, ap = 50;
+    function kk(y) { return (y - VP[1]) / (HT - VP[1]); }
+    function X(u, y) { return 360 + u * kk(y); }
+    function ht(y, hu) { return hu * kk(y); }
+    /* soft contact shadow under the whole ring */
+    x.fillStyle = 'rgba(20,10,6,.32)'; poly(x, [[X(-UH - 14, BY + 8), BY + 8], [X(UH + 14, BY + 8), BY + 8], [X(UH + 22, FY + ap + 14), FY + ap + 14], [X(-UH - 22, FY + ap + 14), FY + ap + 14]], 'rgba(20,10,6,.32)', 0);
+    /* blue apron skirt (front face), seams every eighth */
+    poly(x, [[X(-UH, FY), FY], [X(UH, FY), FY], [X(UH, FY + ap), FY + ap], [X(-UH, FY + ap), FY + ap]], '#304f9b', INK, 3);
+    for (var i = 1; i < 8; i++) { var uu = -UH + i * (2 * UH / 8); x.beginPath(); x.moveTo(X(uu, FY), FY); x.lineTo(X(uu, FY + ap), FY + ap); x.strokeStyle = 'rgba(12,16,50,.45)'; x.lineWidth = 2; x.stroke(); }
+    /* the cream canvas + faint plank seams + blue rim */
+    poly(x, [[X(-UH, BY), BY], [X(UH, BY), BY], [X(UH, FY), FY], [X(-UH, FY), FY]], '#ede6d6', INK, 3);
+    for (i = 1; i < 6; i++) { var yy = BY + (FY - BY) * Math.pow(i / 6, 1.15); x.beginPath(); x.moveTo(X(-UH, yy), yy); x.lineTo(X(UH, yy), yy); x.strokeStyle = 'rgba(150,134,100,.30)'; x.lineWidth = 2; x.stroke(); }
+    [[-1], [1]].forEach(function (S) { x.beginPath(); x.moveTo(X(S[0] * (UH - 8), BY), BY); x.lineTo(X(S[0] * (UH - 8), FY), FY); x.strokeStyle = '#3660bd'; x.lineWidth = 5; x.stroke(); });
+    x.beginPath(); x.moveTo(X(-UH, FY - 3), FY - 3); x.lineTo(X(UH, FY - 3), FY - 3); x.strokeStyle = '#3660bd'; x.lineWidth = 5; x.stroke();
+    var ROPE = [[100, '#e7e4dc'], [68, '#bc3440'], [36, '#2f4d92']];
+    function post(u, y, col) { var k = kk(y), w = 30 * k / 0.855, h = ht(y, 118), px = X(u, y);
+      R(x, px - w / 2, y - h, w, h, col, INK, 3); R(x, px - w / 2 - 1, y - h - 7 * k, w + 2, 11 * k, '#9e9fa8', INK, 2); R(x, px - w / 2 - 1, y - 6 * k, w + 2, 10 * k, '#9e9fa8', INK, 2); }
+    function ropeSeg(a, b, hu, col) { var k0 = kk(a[1]), k1 = kk(b[1]); x.beginPath(); x.moveTo(a[0], a[1] - hu * k0); x.lineTo(b[0], b[1] - hu * k1); x.strokeStyle = INK; x.lineWidth = 7 * ((k0 + k1) / 2) / 0.855 + 2; x.stroke();
+      x.beginPath(); x.moveTo(a[0], a[1] - hu * k0); x.lineTo(b[0], b[1] - hu * k1); x.strokeStyle = col; x.lineWidth = 7 * ((k0 + k1) / 2) / 0.855; x.stroke(); }
+    var bl = [X(-UH, BY), BY], br = [X(UH, BY), BY], fl = [X(-UH, FY), FY], fr = [X(UH, FY), FY];
+    /* back posts + ropes, side ropes, then the front posts and ropes */
+    post(-UH, BY, '#c73239'); post(UH, BY, '#2d61c8');
+    ROPE.forEach(function (R3) { ropeSeg(bl, br, R3[0], R3[1]); });
+    ROPE.forEach(function (R3) { ropeSeg(bl, fl, R3[0], R3[1]); ropeSeg(br, fr, R3[0], R3[1]); });
+    post(-UH, FY, '#2d61c8'); post(UH, FY, '#c73239');
+    ROPE.forEach(function (R3) { ropeSeg(fl, fr, R3[0], R3[1]); });
+    H0 = h0; VP = vp0;
+    pool(x, 360, 120, 420, 160, '255,236,190', 0.30); pool(x, 360, 560, 380, 300, '255,236,190', 0.14); vign(x, 0.46); },
   lights: [[360, 40, '255,236,190', 160, 0.2, 'lamp']], motes: 30, mood: 'dust' };
 /* 12. the freight depot (gray coats) */
 ROOMS.depot = { name: 'Freight depot · gray coats', paint: function (x) {
