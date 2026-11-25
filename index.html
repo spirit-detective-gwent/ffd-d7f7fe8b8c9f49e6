@@ -34800,7 +34800,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
 
   /* ---------------- places ---------------- */
   var ARC = C2W.doors.arcade, ARC_AT = ARC.at, APRON = [2090, 3290, 2270, 3440];
-  var GK_DOOR = { r: [2096, 2560, 2212, 2676], at: [2150, 2692] }, GK_CURB = [2202, 2606]; /* t3123u: Flip leans on the cafe door post, not mid-sidewalk */
+  var GK_DOOR = { r: [2096, 2560, 2212, 2676], at: [2150, 2692] }, GK_CURB = [2224, 2700]; /* ch2-fixes GGD-26: was [2202, 2606], which sorts BEHIND the big tree (tree y 2690, canopy drawn over him). Now just left of the trunk base, one step in front of it (y 2700 > 2690), so he is fully in view. */
   var LOOK = { bat: { at: [1340, 1970], route: [[1300, 1955], [1390, 1955], [1390, 1985], [1300, 1985]], z: 'the Chuo-d\u014dri south edge', id: 'c2_hustler', lab: 'Chuo-d\u014dri south edge' },
     dep: { at: [2630, 3190], route: [[2590, 3175], [2680, 3175], [2680, 3205], [2590, 3205]], z: 'the east end of Wagashi row', id: 'c2_boso', lab: 'Wagashi row, east end' } };
   var LK = 'n13_look';
@@ -34934,13 +34934,13 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
     if (s === 'cut' || s === 'meet') { var at = W.n13flipAt || flipStartAt(); T.flip = flipNpc(at[0], at[1]); if (s === 'meet') escortStart('meet'); }
     if (s === 'meet') guardsOn();
     if (s === 'tin') { T.flip = flipNpc(W.n13tinEsc ? ARC_AT[0] + 40 : GK_CURB[0], W.n13tinEsc ? ARC_AT[1] + 40 : GK_CURB[1]); if (W.n13tinEsc) escortStart('tin'); else flipLean(); }
-    if (s === 'paid') { T.flip = flipNpc(GK_CURB[0], GK_CURB[1]); }
+    if (s === 'paid') { T.flip = flipNpc(GK_CURB[0], GK_CURB[1]); flipLean(); }
     if (s === 'look' || s === 'done') lookCrew();
     if (s === 'done') cornerOn();
   }
   function flipStartAt() { var r = W.ryo, B = G38T.BORDER[E().n13b || 'X2']; var b = B ? B.at : [r.x, r.y];
     var cand = [[r.x + 150, r.y + 40], [r.x - 150, r.y + 40], [r.x, r.y + 160], [r.x + 120, r.y - 120]]; for (var i = 0; i < cand.length; i++) if (okAt(cand[i][0], cand[i][1])) return cand[i]; return [r.x + 60, r.y + 60]; }
-  function flipLean() { var f = T.flip; if (!f) return; f.lean = -7; waddle(f, 0, Math.PI); place(f, 0); }
+  function flipLean() { var f = T.flip; if (!f) return; f.lean = -9; f.n13leaning = 1; waddle(f, 0, Math.PI); place(f, 0); } /* ch2-fixes GGD-26: -9 = head toward the trunk on his right (shoulder on the bark); facing the cafe door */
   /* t3118u: after a Kissa Gekko loss, Flip (at the curb by the tree) says one
    * trash-talk line when you walk up. Once per return, no repeat spam. */
   function flipRibTick() {
@@ -35056,7 +35056,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
     var lmArr0 = c2LmArrive;
     c2LmArrive = function (k) {
       if (k === 'arcade' && on() && st() === 'turn') { var eT = E(); if (!eT.in_arcade) { eT.in_arcade = 1; save(); } return; }
-      if (k === 'arcade' && on() && W.n13arc) { var why = W.n13arc; W.n13arc = null; var e = E(); if (!e.in_arcade) { e.in_arcade = 1; save(); } later(150, function () { if (why === 'meet') nailsScene(); else if (why === 'paid') sabuScene(); }); return; }
+      if (k === 'arcade' && on() && (W.n13arc || (st() === 'paid' && !W.n13sabu))) { var why = W.n13arc || 'paid'; W.n13arc = null; /* v6.5.64: a reload in the middle of the turn-in resumes the scene, never the plain arcade */ var e = E(); if (!e.in_arcade) { e.in_arcade = 1; save(); } later(150, function () { if (why === 'meet') nailsScene(); else if (why === 'paid') sabuScene(); }); return; }
       return lmArr0.apply(this, arguments);
     };
   }
@@ -35320,9 +35320,9 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
     strategic: [['', '<p class="dim">Ryo\u2019s knuckles prickle. A thin fox-flame licks up his hand, and is gone.</p>'], ['ryo', 'And the glow. Same as my hand.'], ['aoi', 'Walk soft, get behind, one strike. We try it next.']]
   };
   var SABU_DEMO = {
-    balanced: [['ryo', 'Easy. Got it down.'], ['aoi', 'Don\u2019t get cocky. You felt it once.']],
-    fierce: [['ryo', 'Easy. Got it down.'], ['aoi', 'Do it when it counts.']],
-    strategic: [['ryo', 'Easy. Got it down.'], ['aoi', 'Walk soft. Behind them. Like that.']]
+    balanced: [['ryo', 'I learned it, Aoi.'], ['ryo', 'Easy. Got it down.'], ['aoi', 'Don\u2019t get cocky. You felt it once.']],
+    fierce: [['ryo', 'I learned it, Aoi.'], ['ryo', 'Easy. Got it down.'], ['aoi', 'Do it when it counts.']],
+    strategic: [['ryo', 'I learned it, Aoi.'], ['ryo', 'Easy. Got it down.'], ['aoi', 'Walk soft. Behind them. Like that.']]
   };
   var NAILS_NEXT = {
     bat: [['mb2_arcade', 'G\u014dda wants our streets. Chuo south edge. His lookouts. Go.']],
@@ -35354,43 +35354,97 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
       if (done) done();
     }, sec);
   }
+  /* v6.5.64 GGD-27: Ryo practises the move on a shadow form he makes himself. The screen dims (that is his focus, no kneeling), a
+   * translucent glowing shadow of a Punk forms in front of him, he runs the real Stealth Takedown on it (opnTDPlay: tap, turn,
+   * lunge, fold), it shatters into light, the screen comes back and he turns to Aoi. Root cause of the old freeze: the demo aimed
+   * at an invisible ghost target (el:null), so opnTDPlay threw at s.el.style inside hitR(), its done() never ran, the demo never
+   * finished, and W.cut / W.ambOn stayed set; the quest stayed 'paid', so after a reload Flip led you straight back into it.
+   * Also: the scene used W.ryo (the leader), which is Aoi's sprite when you play Aoi. ryoSp()/aoiSp() pick the sprites by who. */
+  function ryoSp() { var r = W.ryo, a = W.aoi; var aoiLead = r && r.el && r.el.dataset ? r.el.dataset.who === 'aoi' : SAVE.act === 'aoi'; return aoiLead && a ? a : r; }
+  function aoiSp() { var r = W.ryo, a = W.aoi; var aoiLead = r && r.el && r.el.dataset ? r.el.dataset.who === 'aoi' : SAVE.act === 'aoi'; return aoiLead ? r : a; }
+  function beat(tag) { W.n13sabuT = performance.now(); ev('world:13u:sabu:' + tag); }
+  (function shGuards() {
+    var z0 = typeof ambStingZ1 === 'function' ? ambStingZ1 : null, lie0 = typeof lieEl === 'function' ? lieEl : null, bub0 = typeof bubbleOn === 'function' ? bubbleOn : null;
+    if (z0) ambStingZ1 = function () { if (W.n13shOn) return null; return z0.apply(this, arguments); }; /* no sting zoom on the shadow: the camera stays still */
+    if (lie0) lieEl = function () { if (W.n13shOn) return null; return lie0.apply(this, arguments); }; /* a shadow does not lie down; it shatters */
+    if (bub0) bubbleOn = function () { if (W.n13shOn) return; return bub0.apply(this, arguments); }; /* no "!" over a shadow */
+  })();
+  function shCss() {
+    if (document.getElementById('n13sh-css')) return;
+    var c = document.createElement('style'); c.id = 'n13sh-css';
+    c.textContent = '#world .n13shadow{filter:brightness(0) invert(.86) sepia(1) hue-rotate(172deg) saturate(4.2) drop-shadow(0 0 4px rgba(150,220,255,.95)) drop-shadow(0 0 12px rgba(110,160,255,.7))!important;mix-blend-mode:screen;opacity:0;transition:opacity .8s ease-out;pointer-events:none}' +
+      '#world .n13shadow.on{opacity:.68;animation:n13shf 1.1s ease-in-out infinite alternate}@keyframes n13shf{from{opacity:.68}to{opacity:.48}}' +
+      '#world .n13shring{position:absolute;pointer-events:none;border-radius:50%;background:radial-gradient(ellipse,rgba(150,220,255,.8),rgba(110,160,255,.3) 50%,rgba(110,160,255,0) 72%);z-index:9050}' +
+      '#world .n13shmote,#world .n13shard,#world .n13shwave{position:absolute;pointer-events:none;z-index:9200}' +
+      '#world .n13shmote{width:5px;height:5px;margin:-2px 0 0 -2px;border-radius:50%;background:#d8f4ff;box-shadow:0 0 8px 2px rgba(130,200,255,.9)}' +
+      '#world .n13shard{width:4px;height:13px;margin:-6px 0 0 -2px;background:linear-gradient(#fff,#9ad8ff);box-shadow:0 0 8px 2px rgba(140,210,255,.95);border-radius:1px}' +
+      '#world .n13shwave{width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;border:2px solid #e4f8ff;box-shadow:0 0 12px rgba(150,220,255,.9)}';
+    document.head.appendChild(c);
+  }
+  var SH = null;
+  function shFx(cls, x, y, css) { var e = document.createElement('i'); e.className = cls; e.style.left = x + 'px'; e.style.top = y + 'px'; if (css) e.style.cssText += ';' + css; layer.appendChild(e); if (SH) SH.fx.push(e); return e; }
+  function shClean(why) {
+    var o = SH; SH = null; W.n13shOn = 0; var d = document.getElementById('n13dim'); if (d) d.style.transition = '';
+    if (!o) return false;
+    clearTimeout(o.wd);
+    o.fx.forEach(function (e) { try { e.remove(); } catch (e0) {} });
+    try { if (o.s) kill(o.s); } catch (e1) {}
+    try { var r = ryoSp(); if (r) { opnPoseEnd(r); r.snk = 0; r.sheet = null; if (r.el) { r.el.classList.remove('opnsnk'); r.el.style.translate = ''; } place(r, 0); } } catch (e2) {}
+    if (W.ambOn && W.ambOn.via === 'n13demo') W.ambOn = null;
+    try { setFire(0, 'n13'); } catch (e3) {}
+    ev('world:13u:sabu:shadow:clean:' + why); return true;
+  }
   function sabuDemo(done) {
-    var r = W.ryo, a = W.aoi;
-    ev('world:13u:sabu:demo');
-    hideDlg();
-    /* t3120u: practice in place, hidden by the cart. Turn and hit thin air.
-     * No enemy sprite, no teleport to the center aisle. */
-    var airX = r.x + 56, airY = r.y;
-    try { c2Face(r, airX, airY); if (a) c2Face(a, airX, airY); } catch (eF) {}
-    ev('world:13u:sabu:demo:air:' + Math.round(r.x) + ',' + Math.round(r.y));
-    later(200, function () { takeDown(); });
-    function takeDown() {
-      hideDlg();
-      try { c2Face(r, airX, airY); } catch (eF2) {}
-      try { if (typeof opnSnkPose === 'function') opnSnkPose(r, 0); } catch (eP) {}
-      r.snk = 0;
-      var finished = 0;
-      function finish() {
-        if (finished) return; finished = 1;
-        try { if (typeof opnPoseEnd === 'function') opnPoseEnd(r); } catch (e0) {}
-        ev('world:13u:sabu:demo:end');
-        later(160, function () { if (done) done(); });
-      }
-      if (typeof opnTDPlay !== 'function') {
-        ev('world:13u:err:demo:no-td');
-        later(200, finish);
-        return;
-      }
-      /* Invisible air target so the real Alley Cat animation can play; never shown. */
-      var ghost = { x: airX, y: airY, k: r.k || 1, el: null, gone: 1 };
-      var q = { id: 'c2_hustler', s: ghost, fa: 0, st: 'idle', sus: 0, key: 'n13demo_air' };
-      var T = { q: q, x0: r.x, y0: r.y, who: 'ryo', cheap: 0 };
-      W.ambOn = { q: q, side: 'back', fx: { ko: 1 }, via: 'n13demo' };
-      ev('world:13u:sabu:demo:td');
-      try {
-        opnTDPlay(r, T, 'ryo', false, function () { pulse(); ev('world:13u:sabu:demo:hit'); }, finish);
-      } catch (eT) { ev('world:13u:err:demo:' + (eT && eT.message)); finish(); }
+    var r = ryoSp(), a = aoiSp(), fin = 0, spot = [262, 640], sx = spot[0] + 80, sy = spot[1], s = null, wf = 0;
+    beat('demo'); hideDlg(); shCss(); SH = { fx: [], s: null, wd: 0 };
+    /* failsafe: whatever throws, the demo ends in 20 s, the screen comes back and the scene goes on */
+    SH.wd = setTimeout(function () { beat('demo:watchdog'); finish('watchdog'); }, 20000);
+    function finish(why) {
+      if (fin) return; fin = 1; shClean(why); glowAt(0, 0, 0); try { dim(1, '.3'); } catch (eD) {}
+      try { var rr = ryoSp(); if (rr && aoiSp()) c2Face(rr, aoiSp().x, aoiSp().y); } catch (eF) {}
+      later(160, function () { if (done) done(); });
     }
+    function flash() { try { var f = document.createElement('div'); f.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:99990;background:radial-gradient(circle at 50% 55%,rgba(230,248,255,.7),rgba(130,190,255,.25) 60%,rgba(130,190,255,0))'; document.body.appendChild(f); var an = f.animate([{ opacity: 0 }, { opacity: 1, offset: .2 }, { opacity: 0 }], { duration: 520, easing: 'ease-out' }); an.onfinish = function () { f.remove(); }; setTimeout(function () { f.remove(); }, 900); } catch (eL) {} }
+    function shatter() {
+      if (!SH || !s) return; beat('demo:shatter');
+      var px = s.x, py = s.y - SPH * 0.45; try { s.el.style.visibility = 'hidden'; } catch (e0) {}
+      for (var i = 0; i < 16; i++) { var an = Math.random() * 6.283, d = 40 + Math.random() * 70, e = shFx('n13shard', px, py);
+        e.animate([{ transform: 'translate(0,0) rotate(' + (an * 57) + 'deg) scale(1)', opacity: 1 }, { transform: 'translate(' + Math.cos(an) * d + 'px,' + (Math.sin(an) * d * 0.7 + 10) + 'px) rotate(' + (an * 57 + 200) + 'deg) scale(.4)', opacity: 0 }], { duration: 520 + Math.random() * 240, easing: 'cubic-bezier(.1,.7,.3,1)', fill: 'forwards' }); }
+      var w = shFx('n13shwave', px, py); w.animate([{ transform: 'scale(.2)', opacity: 1 }, { transform: 'scale(2.6)', opacity: 0 }], { duration: 520, easing: 'ease-out', fill: 'forwards' });
+      flash(); try { AU.play('fin_p2', { gain: 0.5 }); AU.play('whoosh_b', { gain: 0.3 }); } catch (eA) {}
+      var d0 = document.getElementById('n13dim'); if (d0) d0.style.transition = 'opacity .9s ease'; try { dim(1, '.3'); } catch (eD) {} /* the screen comes back */
+      try { setFire(0, 'n13'); } catch (eS) {}
+    }
+    function strike() {
+      if (fin || !SH) return; beat('demo:td');
+      var q = { id: 'c2_punk', s: s, fa: Math.PI, st: 'idle', sus: 0, key: 'n13shadow' }, T = { q: q, x0: r.x, y0: r.y, who: 'ryo', cheap: 0 };
+      W.n13shOn = 1; W.ambOn = null;
+      try { r.snk = 0; opnSnkPose(r, 0); } catch (eP) {}
+      try {
+        opnTDPlay(r, T, 'ryo', false, function () { beat('demo:hit'); flash(); setTimeout(function () { try { shatter(); } catch (eT) { ev('world:13u:err:shatter:' + (eT && eT.message)); } }, 780); },
+          function () { beat('demo:end'); later(620, function () { finish('ok'); }); });
+      } catch (eT2) { ev('world:13u:err:demo:' + (eT2 && eT2.message)); finish('throw'); }
+    }
+    function form() {
+      if (fin || !SH) return; beat('demo:form');
+      s = SH.s = npc('c2_punk', sx, sy, Math.PI); s.el.classList.add('n13shadow'); waddle(s, 0, Math.PI); place(s, 0); void s.el.offsetWidth; s.el.classList.add('on');
+      var hx = r.x + 4, hy = r.y - SPH * 0.92, ty = sy - SPH * 0.5;
+      for (var i = 0; i < 10; i++) { var m = shFx('n13shmote', hx, hy), jx = (Math.random() - 0.5) * 36, jy = (Math.random() - 0.5) * 40;
+        m.animate([{ transform: 'translate(0,0) scale(.5)', opacity: 0 }, { opacity: 1, offset: .25 }, { transform: 'translate(' + (sx - hx + jx) + 'px,' + (ty - hy + jy) + 'px) scale(1.1)', opacity: 0 }], { duration: 720 + i * 50, delay: i * 55, easing: 'cubic-bezier(.3,.1,.3,1)', fill: 'both' }); }
+      var g = shFx('n13shring', sx - 36, sy - 9, 'width:72px;height:22px'); g.animate([{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 700, easing: 'ease-out', fill: 'forwards' });
+      try { AU.play('whoosh_c', { gain: 0.35 }); } catch (eA) {}
+      later(1050, strike);
+    }
+    function focus() {
+      if (fin || !SH) return; beat('demo:focus');
+      try { c2Face(r, sx, sy); if (a) c2Face(a, sx, sy); } catch (e0) {}
+      var d = document.getElementById('n13dim'); if (d) d.style.transition = 'opacity .9s ease'; try { dim(1, '.62'); } catch (eD) {} /* the screen goes dark: his focus */
+      try { setFire(1, 'n13'); AU.play('tick'); } catch (eS) {}
+      later(950, form);
+    }
+    /* step out from behind the cart onto open floor, then the focus */
+    c2Walk(r, spot[0], spot[1], 120, function () { focus(); });
+    if (a) c2Walk(a, spot[0] - 52, spot[1] + 30, 120, function () { try { c2Face(a, sx, sy); } catch (e1) {} });
   }
 
   function alleyCard(done) {
@@ -35403,6 +35457,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
       else if (typeof opnGrant === 'function') granted = !!opnGrant('alley', true);
     } catch (eG) { ev('world:13u:err:grant:' + (eG && eG.message)); }
     ev('world:13u:sabu:card:' + (granted ? 1 : (root.FFF_OPN && FFF_OPN.has && FFF_OPN.has('alley') ? 'had' : 0)));
+    if (!granted && root.FFF_OPN && FFF_OPN.has && FFF_OPN.has('alley')) { if (done) done(); return; } /* v6.5.64: replaying the scene after a reload never re-shows the New Move card */
     if (!document.getElementById('n13-wnmove-css')) {
       var st = document.createElement('style'); st.id = 'n13-wnmove-css';
       st.textContent = '#wnmove{position:fixed;inset:0;z-index:86;display:none;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px 16px 16px;box-sizing:border-box;background:radial-gradient(circle at 50% 42%,var(--glow),rgba(4,4,10,.92) 62%)}#wnmove.on{display:flex}#wnmove.fierce{--rc:#ff7a2a;--rd:#5c2a00;--rg:rgba(255,122,42,.7);--glow:rgba(255,160,70,.30);--path:#ffb070;--path2:#ffe0b8}#wnmove.strategic{--rc:#5cc8ff;--rd:#0a2a66;--rg:rgba(92,200,255,.55);--glow:rgba(92,200,255,.30);--path:#8ed8ff;--path2:#c8f0ff}#wnmove.balanced{--rc:#ffd84a;--rd:#5a4400;--rg:rgba(255,216,74,.6);--glow:rgba(255,216,74,.26);--path:#ffe680;--path2:#fff4c0}#wnmove .lcard{position:relative;width:min(292px,78vw);height:auto;max-height:calc(100dvh - 140px);min-height:0;border-radius:16px;overflow:hidden;flex:0 0 auto;background:linear-gradient(180deg,#1a2238,#10151f 55%,#0c1018);box-shadow:0 0 0 3px var(--rc),0 0 0 6px var(--rd),0 0 36px 8px var(--rc);color:#f6f1e4;font-family:system-ui,-apple-system,sans-serif;animation:lvslide .55s cubic-bezier(.2,1.3,.4,1)}#wnmove .lcard::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:5;background:linear-gradient(115deg,transparent 28%,rgba(255,255,255,.48) 46%,transparent 62%);background-size:250% 100%;animation:vshine 1.6s .5s ease-in-out infinite}#wnmove .rgem{position:absolute;left:50%;top:7px;width:11px;height:11px;margin-left:-5.5px;transform:rotate(45deg);background:var(--rc);box-shadow:0 0 0 1px var(--rd),0 0 0 2px rgba(255,255,255,.55),0 0 8px var(--rg);z-index:6}#wnmove .rlab{position:absolute;left:50%;top:22px;transform:translateX(-50%);z-index:6;padding:3px 10px;border-radius:10px;font:900 11px/1.2 system-ui;letter-spacing:1.4px;text-transform:uppercase;color:#fff;background:var(--rc);box-shadow:0 0 0 1.5px var(--rd),0 0 8px var(--rg);text-shadow:0 1px 1px rgba(0,0,0,.7)}#wnmove .art{position:relative;left:auto;right:auto;top:auto;height:auto;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:44px 16px 10px 16px;text-align:center;box-sizing:border-box;background:radial-gradient(circle at 50% 42%,var(--glow),transparent 62%),linear-gradient(180deg,#24324a 0%,#151a28 70%,#10151f 100%)}#wnmove .art svg{width:56px;height:56px;filter:drop-shadow(0 0 10px var(--rc));margin:0 0 2px;flex:0 0 auto}#wnmove .lvk{font:700 13px/1 Cinzel,Georgia,serif;letter-spacing:.22em;text-transform:uppercase;color:var(--path2);margin:2px 0 0}#wnmove .lvn{font:700 28px/.95 Cinzel,Georgia,serif;color:#e8c46a;text-shadow:0 0 16px rgba(232,196,106,.45);margin:1px 0 0}#wnmove .txt{position:relative;left:auto;right:auto;bottom:auto;height:auto;box-sizing:border-box;padding:12px 14px 14px;border-top:3px solid var(--rc);background:linear-gradient(180deg,#f3e6c8,#d8c39a);color:#2a1a08;display:flex;flex-direction:column;gap:8px;justify-content:flex-start;overflow:hidden}#wnmove .row{background:rgba(255,255,255,.34);border:1px solid rgba(42,26,8,.14);border-radius:12px;padding:6px 10px 6px}#wnmove .row .hd{display:flex;align-items:baseline;justify-content:space-between;gap:8px}#wnmove .row strong{font:800 15px/1.2 system-ui;color:#1a1208}#wnmove .row p{margin:4px 0 0;font:600 12.5px/1.3 system-ui;color:#3a2a18}#wnmove .pill{display:inline-block;margin-right:6px;padding:1px 6px;border-radius:999px;font:900 10px/1.3 system-ui;letter-spacing:.08em;color:#fff;background:#c43a00;vertical-align:2px}#wnmove .lvt{margin:0;font:650 12.5px/1.32 Georgia,serif;color:#2a1a08}#wnmove .got{margin:0;font:800 16px/1.25 system-ui;color:#1a1208}#wnmove .does{margin:0;font:600 13px/1.35 system-ui;color:#2a1a08}#wnmove .how{margin:0;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,.4);border:1px solid rgba(42,26,8,.14);font:600 13px/1.35 system-ui;color:#2a1a08}#wnmove .how strong{display:block;font:800 11px/1.2 system-ui;letter-spacing:.08em;text-transform:uppercase;color:#6a2a00;margin:0 0 3px}#wnmove .wcap{margin:8px 0 0;padding:0 16px;text-align:center;font:900 15px/1.25 system-ui;letter-spacing:1px;color:#fff;text-shadow:0 0 10px var(--rc)}#wnmove .wnext{border:0;border-radius:12px;padding:11px 28px;min-height:44px;font:800 16px/1 system-ui;color:#fff;background:linear-gradient(180deg,#3a4a66,#243044);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 3px 0 #000}#wnmove.fierce .wnext{background:linear-gradient(180deg,#6a3218,#3a1a0c)}#wnmove.strategic .wnext{background:linear-gradient(180deg,#1a4a6a,#0e2a44)}#wnmove.balanced .wnext{background:linear-gradient(180deg,#6a5418,#3a2e0c)}#wnmove .wnext:disabled{opacity:.45;filter:grayscale(.6)}#wnmove.take .lcard{transition:transform .3s ease-in,opacity .3s;transform:translateY(30vh) scale(.4);opacity:0;animation:none}#wnmove.take .wcap,#wnmove.take .wnext{opacity:0}';
@@ -35455,27 +35510,58 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
     c2LmBoss._v6553turn = 1;
   }
 
+  /* v6.5.64 GGD-27 failsafe: while the turn-in scene runs, a 3 s check. If nothing has happened for 15 s and no dialog or card is open,
+   * the scene is stuck: clear every lock and effect, make sure Alley Cat is granted, put the quest on 'turn' and hand control back.
+   * Only runs during the scene (no always-on loop); the card, the walk-up and every exit stand it down. */
+  function sabuGuardOff() { W.n13sabu = 0; clearTimeout(W.n13sg); W.n13sg = 0; }
+  function sabuGuardOn() { sabuGuardOff(); W.n13sabu = 1; W.n13sabuT = performance.now(); W.n13sg = setTimeout(sabuGuardTick, 3000); }
+  function sabuGuardTick() {
+    W.n13sg = 0; if (!W.n13sabu) return;
+    try {
+      if (st() !== 'paid' || room() !== 'arcade') { sabuGuardOff(); return; }
+      if (document.querySelector('#wdlg.on, #wnmove.on') || W.paused) W.n13sabuT = performance.now();
+      else if (performance.now() - W.n13sabuT > 15000) { sabuRescue('stall'); return; }
+    } catch (eG) { ev('world:13u:err:guard:' + (eG && eG.message)); }
+    W.n13sg = setTimeout(sabuGuardTick, 3000);
+  }
+  function sabuRescue(why) {
+    sabuGuardOff(); ev('world:13u:sabu:rescue:' + why);
+    try { shClean('rescue'); } catch (e0) {}
+    try { glowAt(0, 0, 0); setFire(0, 'n13'); } catch (e1) {}
+    try { if (AR._sabuLie) { AR._sabuLie.remove(); AR._sabuLie = null; } if (AR.sabu) kill(AR.sabu); } catch (e2) {}
+    try { var rr = ryoSp(); if (rr) { opnPoseEnd(rr); rr.snk = 0; } W.ambOn = null; } catch (e3) {}
+    try { if (root.FFF_OPN && typeof FFF_OPN.grant === 'function') FFF_OPN.grant('alley', true); } catch (e4) {}
+    try { var n = AR.nails || (W.c2n && W.c2n.boss); if (n) { n.x = 640; n.y = 282; place(n, 0); waddle(n, 0, Math.PI / 2); n.el.style.filter = 'brightness(.62) saturate(.85)'; } } catch (e5) {}
+    try { var r2 = ryoSp(), a2 = aoiSp(); if (r2) { r2.x = 612; r2.y = 700; place(r2); } if (a2) { a2.x = 668; a2.y = 716; place(a2); } resetTrail(W.ryo.x, W.ryo.y, 3); } catch (e6) {}
+    try { var dd = document.getElementById('n13dim'); if (dd) dd.style.transition = ''; dim(1, '.3'); } catch (e7) {}
+    try { hideDlg(); var mv = document.getElementById('wnmove'); if (mv) { mv.className = ''; mv.innerHTML = ''; } } catch (e8) {}
+    W.lvcOn = 0; W.camFocus = null; try { cam(null); } catch (e9) { W.pan = null; }
+    if (st() === 'paid') go('turn');
+    lockIn(0); W.cut = false; W.busy = false; W.dlg = false; W.c2busy = 0; W.n13closing = 0; W.pan = null;
+    try { camera(true); } catch (e10) {}
+  }
+
   function sabuScene() {
-    var r = W.ryo, a = W.aoi, n = AR.nails || (W.c2n && W.c2n.boss); if (!n) { ev('world:13u:err:nonails'); }
-    lockIn(1); ev('world:13u:sabu:in');
+    var r = ryoSp(), a = aoiSp(), n = AR.nails || (W.c2n && W.c2n.boss); if (!n) { ev('world:13u:err:nonails'); } /* v6.5.64 GGD-27: Ryo is always Ryo's own sprite here, even when you play Aoi */
+    lockIn(1); sabuGuardOn(); beat('in');
     var sb = AR.sabu = npc(IMG.n13sb_walk ? 'n13sb' : 'c2_punk', 640, 410, -Math.PI / 2);
     if (n) { n.x = 640; n.y = 300; place(n, 0); waddle(n, 0, Math.PI / 2); n.el.style.filter = 'brightness(.75)'; }
     dim(1, '.42');
     r.x = 612; r.y = 820; place(r); if (a) { a.x = 668; a.y = 836; place(a); }
-    try { resetTrail(612, 820, 3); } catch (eT) {}
+    try { var ld = W.ryo; resetTrail(ld.x, ld.y, 3); } catch (eT) {}
     c2Face(r, 640, 400); if (a) c2Face(a, 640, 400);
     W.camFocus = [r, a].filter(Boolean);
     try { W.pan = null; if (W.cam) { var ct = (typeof camAt === 'function') ? camAt(r.x, (a && a.y || r.y)) : [r.x, r.y]; W.cam.x = ct[0]; W.cam.y = ct[1]; } camera(true); } catch (eC0) {}
-    ev('world:13u:sabu:enter');
+    beat('enter');
     later(200, function () {
       talk(SABU_WHISPER[path()] || SABU_WHISPER.balanced, function () {
-        ev('world:13u:sabu:whisper');
+        beat('whisper');
         var RUN_SP = (typeof FAST_WALK === 'number' ? FAST_WALK : 178);
         var hid = 0, need = a ? 2 : 1, panDone = 0;
         function maybeWatch() {
           if (!(hid >= need && panDone)) return;
           c2Face(r, 640, 400); if (a) c2Face(a, 640, 400);
-          ev('world:13u:sabu:hidden');
+          beat('hidden');
           talk([['n13sb', 'Nails, come on. Shops are slow, everybody knows that\u2014'], ['mb2_arcade', 'Gekko\u2019s street. Weeks of nothing. And you said \u2018slow.\u2019']], function () {
             var k = 0, flick = function () { dim(1, k % 2 ? '.42' : '.93'); if (++k < 5) later(140, flick); else after(); };
             AU.play('tick'); flick();
@@ -35501,7 +35587,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
                         } else { sb.el.classList.add('lying'); place(sb, 0); }
                       } else { sb.el.classList.add('lying'); place(sb, 0); }
                     } catch (eL) { try { sb.el.classList.add('lying'); place(sb, 0); } catch (eL2) {} }
-                    ev('world:13u:sabu:down');
+                    beat('down');
                     later(900, function () {
                       var fadeEl = (AR._sabuLie) || (sb && sb.el);
                       try {
@@ -35513,13 +35599,13 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
                       later(500, function () {
                         try { if (AR._sabuLie) { AR._sabuLie.remove(); AR._sabuLie = null; } } catch (eR) {}
                         try { kill(sb); } catch (eK) {}
-                        ev('world:13u:sabu:fade');
+                        beat('fade');
                         talk([['mb2_arcade', 'Tell the street what skimming costs.']], function () {
-                          ev('world:13u:sabu:costs');
+                          beat('costs');
                           function afterNailsHome() {
                             dim(1, '.3');
                             camHigh([r, a], function () {
-                              ev('world:13u:sabu:see');
+                              beat('see');
                               talk(SABU_SEE[path()] || SABU_SEE.balanced, function () {
                                 setFire(1, 'n13'); pulse();
                                 talk(SABU_GLOW[path()] || SABU_GLOW.balanced, function () {
@@ -35532,10 +35618,10 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
                                           n.x = 640; n.y = 282; place(n, 0); waddle(n, 0, Math.PI / 2);
                                           n.el.style.filter = 'brightness(.62) saturate(.85)';
                                         }
-                                        go('turn');
+                                        if (st() === 'paid') go('turn'); sabuGuardOff(); /* v6.5.64: idempotent, and the failsafe stands down */
                                         try { W.camFocus = null; cam(null); } catch (eC) { W.camFocus = null; }
                                         lockIn(0); W.cut = false; W.busy = false; W.dlg = false; W.c2busy = 0;
-                                        ev('world:13u:sabu:walkup');
+                                        beat('walkup');
                                       });
                                     });
                                   });
@@ -35543,7 +35629,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
                               });
                             }, 1.0);
                           }
-                          if (n) move(n, [[640, 282]], 90, function () { waddle(n, 0, Math.PI / 2); n.el.style.filter = 'brightness(.62) saturate(.85)'; ev('world:13u:sabu:nailsback'); afterNailsHome(); });
+                          if (n) move(n, [[640, 282]], 90, function () { waddle(n, 0, Math.PI / 2); n.el.style.filter = 'brightness(.62) saturate(.85)'; beat('nailsback'); afterNailsHome(); });
                           else afterNailsHome();
                         });
                       });
