@@ -13770,7 +13770,7 @@ function charIntro(id, done, opt) {
  * over-the-shoulder, a slow push on the threat line) and the scene's end eases out slowly. Gouki gets a longer multi-shot build.
  * Camera only: one-shot WAAPI on #wv through FFF_SCAM; no loops. Gated like the story camera (reduced motion / setting / instant text
  * skip the moves; the card and lines still play). Tap during the reveal jumps to the card; the card stays skippable. Kagero is not here. */
-var BENT_ALIAS = { mizuno: 'mb_lib', mai: 'mb_art', kurata: 'mb_cafe', bando: 'mb_field', nails: 'mb2_arcade', jin: 'mb2_game', goda: 'mb2_sento', masa: 'mb2_depot' };
+var BENT_ALIAS = { mizuno: 'mb_lib', mai: 'mb_art', kurata: 'mb_cafe', bando: 'mb_field', nails: 'mb2_arcade', jin: 'mb2_game', goda: 'mb2_sento', masa: 'mb2_depot', saeki: 'hall_mon', shigure: 'enforcer', kaneda: 'c2_doorman' };
 function bentLive(s) { return s && s.el && s.el.parentNode ? s : null; }
 function bentSpr(who) { var id = BENT_ALIAS[who] || who, r = W.dgRelay, b = W.c2n && W.c2n.boss, x = W.bentS;
   if (x && x.id === id && bentLive(x.s)) return x.s; /* the entrance was handed its boss sprite */
@@ -13779,8 +13779,14 @@ function bentSpr(who) { var id = BENT_ALIAS[who] || who, r = W.dgRelay, b = W.c2
   if (bentLive(b) && b.el.dataset.mb === id) return b;
   if (id === 'mb_field' && W.libN) return bentLive(W.libN.bando);
   if (id === 'mb_lib' && W.libN) return bentLive(W.libN.mizuno);
+  if ((id === 'enforcer' || id === 'shigure') && W.c2n) return bentLive(W.c2n.enforcer);
+  if (id === 'hall_mon' || id === 'saeki') {
+    var v = document.getElementById('wv');
+    var el = v && v.querySelector('[data-npc="hall_mon"],[data-who="hall_mon"],[data-mb="hall_mon"]');
+    return el ? (el.__spr || { el: el }) : null;
+  }
   return null; }
-root.FFF_SCAM_SPR = function (who) { return (BENT_ALIAS[who] || /^mb2?_|^gouki$/.test(who)) ? bentSpr(who) : null; };
+root.FFF_SCAM_SPR = function (who) { return (BENT_ALIAS[who] || /^(mb2?_|gouki$|hall_mon$|enforcer$|c2_doorman$|saeki$|shigure$|kaneda$)/.test(who)) ? bentSpr(who) : null; };
 function bentIsBoss(id, who) { var C = CHAR_INTRO[id]; return !!who && (who === id || (C && who === C.who) || BENT_ALIAS[who] === id); }
 /* add held shots to the opening lines (copies; the script text is untouched). Reframe only when the shot changes. */
 function bentDirect(id, L, big) { L = (L || []).slice(); var bossAt = id, threat = -1, lastB = -1, shot = 'boss';
@@ -13804,7 +13810,8 @@ function bossEnt(id, lines, done, opt) { opt = opt || {}; var C = CHAR_INTRO[id]
   if (!C || id === 'c2_boss' || bentSeen(id) || !SC || !SC.shot || root.FFF_SKIP_INTRO) { charIntro(id, function () { scene(null, lines, done); }); return; }
   SAVE.bent = SAVE.bent || {}; SAVE.bent[id] = 1; try { save(); } catch (eS) {}
   if (opt.spr) W.bentS = { id: id, s: opt.spr }; else if (!W.bentS || W.bentS.id !== id) W.bentS = null;
-  var big = id === 'gouki', sg = W.scGen | 0, T = [], fin = 0, cf0 = W.camFocus, cfSet = false, boss = bentSpr(id), still = SC.still && SC.still();
+  var big = id === 'gouki', sg = W.scGen | 0, T = [], fin = 0, cf0 = W.camFocus, cfSet = false, boss = bentSpr(id);
+  var still = (SC.still && SC.still()) || (typeof ptReduced === 'function' && ptReduced()) || !!(ST.set && ST.set.rm);
   ev('world:bent:' + id + ':' + (boss ? 1 : 0) + ':' + (still ? 's' : 'm'));
   sLock(1, 'bent'); W.path = []; if (W.ryo) W.ryo.v = 0;
   if (!W.pan && boss && boss.x != null && typeof g38CamAt === 'function') { W.camFocus = [W.ryo, W.aoi, boss].filter(Boolean); cfSet = true; }
@@ -17631,7 +17638,7 @@ function artBondScene() { var S = artS(), R = ARTG.hall, P = function (x, y) { r
     /* re-frame the circle with Ryo / Aoi still in shot */
     var f2 = focus(), t2 = camAt(f2[0], f2[1]), b0 = [W.cam.x, W.cam.y], u = 0; W.scrCam = f2; W.pan = { scr: 1, run: function (dt) { u += dt; var e = ease(Math.min(1, u / 0.45)); W.cam.x = b0[0] + (t2[0] - b0[0]) * e; W.cam.y = b0[1] + (t2[1] - b0[1]) * e; } };
     ev('world:art:hallb:cornered:' + all.length); W.busy = false;
-    scene(null, ART_SC.hallb, function () { bondAsk('mini_mb_art', function (L2) { var pk = ((STORY.bond(SAVE) || {}).picks || {}).mini_mb_art || 'balanced'; ev('world:art:hallb:act:' + pk); W.busy = true; act(pk, function () { if (L2 && L2.length) scene(null, L2, function () { end(pk); }); else end(pk); }); }); }); };
+    W.bentS = mon ? { id: 'hall_mon', s: mon } : null; bossEnt('hall_mon', ART_SC.hallb, function () { bondAsk('mini_mb_art', function (L2) { var pk = ((STORY.bond(SAVE) || {}).picks || {}).mini_mb_art || 'balanced'; ev('world:art:hallb:act:' + pk); W.busy = true; act(pk, function () { if (L2 && L2.length) scene(null, L2, function () { end(pk); }); else end(pk); }); }); }); };
   var out = function (q, spd, cb) { var k = P(637, 652); actFW(q, k[0], k[1], function () { /* v6.5.42: the student walks out fast (was the run sheet at 240-320) */ q.gone = 1; if (q.el && q.el.parentNode) q.el.remove(); if (cb) cb(); }); };
   var act = function (pk, cb) { var r = W.ryo;
     if (pk === 'fierce') { ev('world:art:hallb:fist'); /* v4.70 Hold #4: a clean, raw regular-fist punch (no fire ball) */
@@ -24575,10 +24582,9 @@ function v640Enforcer() {
   v640EnforcerFoe();
   if ((S.e.c2loss | 0) >= 3) { scene(null, [['', '<p class="dim">The lane past Lucky 7 is empty. The enforcer is gone.</p>']]); return; }
   var n = S.e.c2loss | 0, job = n === 0 ? 'Turn around. This isn\'t your business.' : n === 1 ? 'I said turn around. You don\'t go further.' : 'Last time. Turn around.';
-  scene(null, [['enforcer', job], ['ryo', n ? 'Move.' : 'We\'re walking.']], function () {
-    W.v640EnfLoss = 1;
-    fight(['enforcer'], false, { dg: 'c2', dgk: 'enforcer', flv: 5, enfDoom: 1 });
-  });
+  var enfLines = [['enforcer', job], ['ryo', n ? 'Move.' : 'We\'re walking.']];
+  var goEnf = function () { W.v640EnfLoss = 1; fight(['enforcer'], false, { dg: 'c2', dgk: 'enforcer', flv: 5, enfDoom: 1 }); };
+  if (!n) bossEnt('enforcer', enfLines, goEnf); else scene(null, enfLines, goEnf);
 }
 function v640Informant() {
   if (c2Room() !== 'town') return;
@@ -38629,7 +38635,8 @@ function camPan(to, o, done) {
     var bg = window.c2DoorGuard && window.c2DoorGuard('sento'); if (bg && bg.el) bg.el.style.visibility = 'hidden';
     DM.k = npc('c2_doorman', 330, 884, Math.PI / 2); DM.g = [npc(H, 284, 906, Math.PI / 2), npc(H, 376, 906, Math.PI / 2)];
     move(DM.k, [[330, 918]], 90, function () { face(DM.k, r.x, r.y); lockIn(false);
-      talk(VO.door, function () {
+      W.dlg = true; W.bentS = DM.k ? { id: 'c2_doorman', s: DM.k } : null;
+      bossEnt('c2_doorman', typeof pv === 'function' ? pv(VO.door) : VO.door, function () { W.dlg = false; /* v6.5.63: first meeting = MGS arrival */
         DM.f = 1; fight(['c2_doorman', H, H], false, { dg: 'c2', dgk: 'nq_d_0', dgks: ['nq_d_0', 'nq_d_1', 'nq_d_2'], nqk: 'nq_d', c2pos: [['c2_doorman', DM.k.x, DM.k.y], [H, DM.g[0].x, DM.g[0].y], [H, DM.g[1].x, DM.g[1].y]] }); }); });
   }
   function doorWon() {
