@@ -8064,7 +8064,8 @@ function countTo(elm, from, to, max, ms, tick) {
       if (p < 1) requestAnimationFrame(k); else fin(); })();
   });
 }
-function shakeEl(e, cls) { e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls); setTimeout(function () { e.classList.remove(cls); }, 600); }
+function shakeEl(e, cls) { if (cls === 'hit') { try { var rh = e.getBoundingClientRect(); window.FFF_RINGHIT = { side: (rh.top + rh.height / 2) < (innerHeight / 2) ? 1 : 0 }; } catch (eH) {} } /* v6.5.64: the Genji's-gym ring ropes sway on a landed hit (the backdrop reads this; a cheap flag, no loop) */
+  e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls); setTimeout(function () { e.classList.remove(cls); }, 600); }
 /* apply the move's events to the shown state, with hit flash, floating numbers and the HP bar sliding */
 async function impactPhase(fx, after) {
   var V = ST.view, ps = [], dy = 0, hurt = 0, from = V.map(function (v) { return v.hp; });
@@ -40139,6 +40140,23 @@ ROOMS.club = { name: 'Club Kitsune · bouncers / back room', paint: function (x)
     pool(x, 360, 75, 260, 100, '200,110,255', 0.45); wet(x, [[360, 0, 300, '200,110,255', 0.2]], 0.6); vign(x, 0.6); },
   lights: [], neon: [[360, 75, 220, '200,110,255']], beams: 3, motes: 16, mood: 'club' };
 /* 11. Genji's gym (the spar ring) */
+/* v6.5.64 (r2) the Genji's-gym ring: geometry + posts + SWAYING ropes (drawn on the moving layer, no new loop) */
+function rmOn() { try { if (root.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return true; } catch (e) {} try { if (root.ST && ST.set && ST.set.rm) return true; } catch (e2) {} return false; }
+var GYM_G = null;
+function gymGeo() { if (GYM_G) return GYM_G; var VPy = -6000, BY = 205, FY = 885, UH = 288, ap = 46;
+  function kk(y) { return (y - VPy) / (HT - VPy); } function X(u, y) { return 360 + u * kk(y); } function ht(y, hu) { return hu * kk(y); }
+  return (GYM_G = { VPy: VPy, BY: BY, FY: FY, UH: UH, ap: ap, kk: kk, X: X, ht: ht, lamps: [200, 410, 600] }); }
+function gymPost(x, G, u, y, col) { var k = G.kk(y), w = 30 * k / 0.855, h = G.ht(y, 118), px = G.X(u, y);
+  R(x, px - w / 2, y - h, w, h, col, INK, 3); R(x, px - w / 2 - 1, y - h - 7 * k, w + 2, 11 * k, '#9e9fa8', INK, 2); R(x, px - w / 2 - 1, y - 6 * k, w + 2, 10 * k, '#9e9fa8', INK, 2); }
+/* one rope: a quadratic from corner a to corner b at height hu, sagging a little and bowing (dx,dy) by the sway */
+function gymRope(x, G, a, b, hu, col, sag, dx, dy) { var k0 = G.kk(a[1]), k1 = G.kk(b[1]), ax = a[0], ay = a[1] - hu * k0, bx = b[0], by = b[1] - hu * k1, cx = (ax + bx) / 2 + dx, cy = (ay + by) / 2 + sag + dy, lw = 7 * ((k0 + k1) / 2) / 0.855;
+  x.beginPath(); x.moveTo(ax, ay); x.quadraticCurveTo(cx, cy, bx, by); x.strokeStyle = INK; x.lineWidth = lw + 2; x.stroke(); x.beginPath(); x.moveTo(ax, ay); x.quadraticCurveTo(cx, cy, bx, by); x.strokeStyle = col; x.lineWidth = lw; x.stroke(); }
+function gymRopes(x, G, t, s) { var UH = G.UH, BY = G.BY, FY = G.FY, bl = [G.X(-UH, BY), BY], br = [G.X(UH, BY), BY], fl = [G.X(-UH, FY), FY], fr = [G.X(UH, FY), FY], ROPE = [[100, '#e7e4dc'], [68, '#bc3440'], [36, '#2f4d92']], sw = [0, 0, 0, 0], q;
+  if (s && s.hit) { var el = (t - s.hit.t); if (el >= 0 && el < 1.8) { var A = 11 * Math.exp(-2.5 * el) * Math.sin(el * 19); sw = s.hit.side ? [A, A * 0.35, A * 0.5, A * 0.5] : [A * 0.35, A, A * 0.5, A * 0.5]; } }
+  /* back ropes, side ropes, then the front ropes (the near ones bow most when the player is hit; the far ones when the foe is) */
+  ROPE.forEach(function (R3, i) { q = 1 - i * 0.18; gymRope(x, G, bl, br, R3[0], R3[1], 5, 0, sw[0] * q); });
+  ROPE.forEach(function (R3, i) { q = 1 - i * 0.18; gymRope(x, G, bl, fl, R3[0], R3[1], 3, -sw[2] * q, 0); gymRope(x, G, br, fr, R3[0], R3[1], 3, sw[3] * q, 0); });
+  ROPE.forEach(function (R3, i) { q = 1 - i * 0.18; gymRope(x, G, fl, fr, R3[0], R3[1], 6, 0, sw[1] * q); }); }
 ROOMS.gym = { name: 'Genji’s gym · the ring', paint: function (x) {
     /* ch2-fixes GGD-25: the spar battle now stands in the SAME boxing ring as the Kurogane gym overworld (cream canvas, blue apron,
      * red/blue corner posts with grey pads, white-red-blue ropes, plank floor, brick wall with the three fighter posters).
@@ -40149,35 +40167,29 @@ ROOMS.gym = { name: 'Genji’s gym · the ring', paint: function (x) {
     x.beginPath(); x.moveTo(640, 0); x.lineTo(640, 44); x.strokeStyle = INK; x.lineWidth = 3; x.stroke(); x.beginPath(); x.ellipse(640, 66, 20, 26, 0, 0, 6.28); x.fillStyle = '#c73239'; x.fill(); x.stroke();
     R(x, 0, 140, WD, 14, '#2a2026', 0);
     floor(x, { kind: 'board', far: '#b0845c', near: '#8d6641', line: 'rgba(40,24,12,.34)', cols: 10, rows: 16, seed: 7 });
-    var BY = 175, FY = 950, UH = 310, ap = 50;
-    function kk(y) { return (y - VP[1]) / (HT - VP[1]); }
-    function X(u, y) { return 360 + u * kk(y); }
-    function ht(y, hu) { return hu * kk(y); }
+    H0 = h0; VP = vp0;
+    /* v6.5.64 (r2): ONE square-ish ring that fills the screen width (full sides + posts), nearly orthographic so it reads square, not a long trapezoid */
+    var G = gymGeo(), BY = G.BY, FY = G.FY, UH = G.UH, ap = G.ap, kk = G.kk, X = G.X, ht = G.ht;
+    /* the empty gym: three hanging lamp fixtures on the wall line (their light + dust is animated in fx), no crowd */
+    G.lamps.forEach(function (lx) { x.beginPath(); x.moveTo(lx, 0); x.lineTo(lx, 20); x.strokeStyle = INK; x.lineWidth = 3; x.stroke(); poly(x, [[lx - 9, 20], [lx + 9, 20], [lx + 20, 40], [lx - 20, 40]], '#3b3f4a', INK, 3); x.beginPath(); x.ellipse(lx, 41, 18, 4, 0, 0, 6.28); x.fillStyle = '#ffe9b0'; x.fill();
+      x.save(); x.globalCompositeOperation = 'lighter'; var bg = x.createLinearGradient(0, 44, 0, 900); bg.addColorStop(0, 'rgba(255,232,170,.16)'); bg.addColorStop(1, 'rgba(255,232,170,0)'); x.fillStyle = bg; x.beginPath(); x.moveTo(lx - 18, 44); x.lineTo(lx + 18, 44); x.lineTo(lx + 150, 900); x.lineTo(lx - 150, 900); x.closePath(); x.fill(); x.restore(); });
     /* soft contact shadow under the whole ring */
-    x.fillStyle = 'rgba(20,10,6,.32)'; poly(x, [[X(-UH - 14, BY + 8), BY + 8], [X(UH + 14, BY + 8), BY + 8], [X(UH + 22, FY + ap + 14), FY + ap + 14], [X(-UH - 22, FY + ap + 14), FY + ap + 14]], 'rgba(20,10,6,.32)', 0);
+    poly(x, [[X(-UH - 12, BY + 8), BY + 8], [X(UH + 12, BY + 8), BY + 8], [X(UH + 20, FY + ap + 14), FY + ap + 14], [X(-UH - 20, FY + ap + 14), FY + ap + 14]], 'rgba(20,10,6,.32)', 0);
     /* blue apron skirt (front face), seams every eighth */
     poly(x, [[X(-UH, FY), FY], [X(UH, FY), FY], [X(UH, FY + ap), FY + ap], [X(-UH, FY + ap), FY + ap]], '#304f9b', INK, 3);
     for (var i = 1; i < 8; i++) { var uu = -UH + i * (2 * UH / 8); x.beginPath(); x.moveTo(X(uu, FY), FY); x.lineTo(X(uu, FY + ap), FY + ap); x.strokeStyle = 'rgba(12,16,50,.45)'; x.lineWidth = 2; x.stroke(); }
     /* the cream canvas + faint plank seams + blue rim */
     poly(x, [[X(-UH, BY), BY], [X(UH, BY), BY], [X(UH, FY), FY], [X(-UH, FY), FY]], '#ede6d6', INK, 3);
-    for (i = 1; i < 6; i++) { var yy = BY + (FY - BY) * Math.pow(i / 6, 1.15); x.beginPath(); x.moveTo(X(-UH, yy), yy); x.lineTo(X(UH, yy), yy); x.strokeStyle = 'rgba(150,134,100,.30)'; x.lineWidth = 2; x.stroke(); }
+    for (i = 1; i < 6; i++) { var yy = BY + (FY - BY) * i / 6; x.beginPath(); x.moveTo(X(-UH, yy), yy); x.lineTo(X(UH, yy), yy); x.strokeStyle = 'rgba(150,134,100,.30)'; x.lineWidth = 2; x.stroke(); }
     [[-1], [1]].forEach(function (S) { x.beginPath(); x.moveTo(X(S[0] * (UH - 8), BY), BY); x.lineTo(X(S[0] * (UH - 8), FY), FY); x.strokeStyle = '#3660bd'; x.lineWidth = 5; x.stroke(); });
     x.beginPath(); x.moveTo(X(-UH, FY - 3), FY - 3); x.lineTo(X(UH, FY - 3), FY - 3); x.strokeStyle = '#3660bd'; x.lineWidth = 5; x.stroke();
-    var ROPE = [[100, '#e7e4dc'], [68, '#bc3440'], [36, '#2f4d92']];
-    function post(u, y, col) { var k = kk(y), w = 30 * k / 0.855, h = ht(y, 118), px = X(u, y);
-      R(x, px - w / 2, y - h, w, h, col, INK, 3); R(x, px - w / 2 - 1, y - h - 7 * k, w + 2, 11 * k, '#9e9fa8', INK, 2); R(x, px - w / 2 - 1, y - 6 * k, w + 2, 10 * k, '#9e9fa8', INK, 2); }
-    function ropeSeg(a, b, hu, col) { var k0 = kk(a[1]), k1 = kk(b[1]); x.beginPath(); x.moveTo(a[0], a[1] - hu * k0); x.lineTo(b[0], b[1] - hu * k1); x.strokeStyle = INK; x.lineWidth = 7 * ((k0 + k1) / 2) / 0.855 + 2; x.stroke();
-      x.beginPath(); x.moveTo(a[0], a[1] - hu * k0); x.lineTo(b[0], b[1] - hu * k1); x.strokeStyle = col; x.lineWidth = 7 * ((k0 + k1) / 2) / 0.855; x.stroke(); }
-    var bl = [X(-UH, BY), BY], br = [X(UH, BY), BY], fl = [X(-UH, FY), FY], fr = [X(UH, FY), FY];
-    /* back posts + ropes, side ropes, then the front posts and ropes */
-    post(-UH, BY, '#c73239'); post(UH, BY, '#2d61c8');
-    ROPE.forEach(function (R3) { ropeSeg(bl, br, R3[0], R3[1]); });
-    ROPE.forEach(function (R3) { ropeSeg(bl, fl, R3[0], R3[1]); ropeSeg(br, fr, R3[0], R3[1]); });
-    post(-UH, FY, '#2d61c8'); post(UH, FY, '#c73239');
-    ROPE.forEach(function (R3) { ropeSeg(fl, fr, R3[0], R3[1]); });
-    H0 = h0; VP = vp0;
-    pool(x, 360, 120, 420, 160, '255,236,190', 0.30); pool(x, 360, 560, 380, 300, '255,236,190', 0.14); vign(x, 0.46); },
-  lights: [[360, 40, '255,236,190', 160, 0.2, 'lamp']], motes: 30, mood: 'dust' };
+    /* corner posts (the ropes themselves are drawn by ROOMS.gym.ropes: they sway when a hit lands; a reduced-motion player gets them painted here) */
+    gymPost(x, G, -UH, BY, '#c73239'); gymPost(x, G, UH, BY, '#2d61c8'); gymPost(x, G, -UH, FY, '#2d61c8'); gymPost(x, G, UH, FY, '#c73239');
+    if (rmOn()) gymRopes(x, G, 0, null);
+    pool(x, 360, 120, 420, 160, '255,236,190', 0.26); pool(x, 360, 560, 380, 300, '255,236,190', 0.12); vign(x, 0.46); },
+  ropes: function (x, t, s) { if (!rmOn()) gymRopes(x, gymGeo(), t, s); },
+  lights: [[200, 66, '255,226,160', 150, 0.2, 'flick'], [410, 66, '255,226,160', 150, 0.2, 'flick'], [600, 66, '255,226,160', 130, 0.17, 'flick']],
+  cones: [[200, 44, 18, 0.14], [410, 44, 18, 0.14], [600, 44, 18, 0.14]], motes: 26, moteR: [3, 6], mood: 'dust' };
 /* 12. the freight depot (gray coats) */
 ROOMS.depot = { name: 'Freight depot · gray coats', paint: function (x) {
     sky(x, '#121626', '#283048', 20); for (var i = 0; i < 5; i++) { R(x, i * 150, 120, 140, 210, ['#4a5a6a', '#6a4a3a', '#3a5a4a', '#5a5a6a', '#6a5a3a'][i]); for (var j = 0; j < 6; j++) R(x, i * 150 + 10 + j * 22, 130, 6, 190, 'rgba(0,0,0,.18)', 0); R(x, i * 150 + 40, 170, 60, 30, '#8a8a90'); txt(x, '▲', i * 150 + 70, 186, 20, '#3a3a40'); }
@@ -40198,22 +40210,26 @@ root.BT_ROOMS = ROOMS;
 function sprite(col, r) { var c = document.createElement('canvas'); c.width = c.height = r * 2; var g = c.getContext('2d'), rg = g.createRadialGradient(r, r, 0, r, r, r); rg.addColorStop(0, 'rgba(' + col + ',1)'); rg.addColorStop(0.4, 'rgba(' + col + ',.35)'); rg.addColorStop(1, 'rgba(' + col + ',0)'); g.fillStyle = rg; g.fillRect(0, 0, r * 2, r * 2); return c; }
 var SPR = {}; function spr(col, r) { var k = col + r; return SPR[k] || (SPR[k] = sprite(col, r)); }
 var STEAM = null; function steamSpr() { if (STEAM) return STEAM; STEAM = sprite('250,248,240', 32); return STEAM; }
+/* dust that only shows inside the lamps' light shafts: respawn a mote somewhere in a random shaft */
+function moteCone(R0, p, anyY) { var C = R0.cones[(Math.random() * R0.cones.length) | 0], y = anyY ? rr(0, 80, 820) : rr(0, 640, 840); p.x = C[0] + rr(0, -1, 1) * (C[2] + (y - C[1]) * C[3]); p.y = y; p.cx = C; }
 function mkState(R0) { var s = { steam: [], rain: [], motes: [], embers: [] }, i;
   (R0.steam || []).forEach(function (p) { for (i = 0; i < 2; i++) s.steam.push({ o: p, life: Math.random() * 2.5, max: rr(0, 2.2, 3.2) }); });
   for (i = 0; i < (R0.rain || 0); i++) s.rain.push({ x: Math.random() * 820 - 60, y: Math.random() * HT, v: rr(0, 900, 1250), l: rr(0, 22, 40), a: rr(0, 0.18, 0.34) });
-  for (i = 0; i < (R0.motes || 0); i++) s.motes.push({ x: Math.random() * WD, y: rr(0, 120, HT), vx: rr(0, -6, 6), vy: -rr(0, 4, 14), ph: Math.random() * 6.28, r: rr(0, 6, 12) });
+  for (i = 0; i < (R0.motes || 0); i++) { var mo = { x: Math.random() * WD, y: rr(0, 120, HT), vx: rr(0, -6, 6), vy: -rr(0, 4, 14), ph: Math.random() * 6.28, r: R0.moteR ? rr(0, R0.moteR[0], R0.moteR[1]) : rr(0, 6, 12) }; if (R0.cones) moteCone(R0, mo, true); s.motes.push(mo); }
   for (i = 0; i < (R0.embers || 0); i++) s.embers.push({ x: rr(0, 300, 420), y: rr(0, 160, 260), vx: rr(0, -30, 30), vy: -rr(0, 30, 80), life: Math.random() * 3, max: rr(0, 1.6, 3.2) });
   return s; }
 function fx(x, R0, s, t, dt) { var i, p;
   x.save(); x.globalCompositeOperation = 'lighter';
-  (R0.lights || []).forEach(function (L, k) { var fl = L[5] === 'fire' ? 0.75 + 0.25 * Math.sin(t * 9 + k) * Math.sin(t * 5.3) : L[5] === 'lantern' ? 0.88 + 0.12 * Math.sin(t * 1.7 + k * 1.3) : 0.94 + 0.06 * Math.sin(t * 1.1 + k); x.globalAlpha = L[4] * fl * 2.2; var sp = spr(L[2], 64), rad = L[3]; x.drawImage(sp, L[0] - rad, L[1] - rad, rad * 2, rad * 2); });
+  (R0.lights || []).forEach(function (L, k) { var fl = L[5] === 'flick' ? (0.93 + 0.05 * Math.sin(t * 7.3 + k * 1.9) - (function (u) { return u < 0.045 ? 0.4 * Math.abs(Math.sin(u * 70)) : 0; })((t * 0.43 + k * 0.31) % 1)) : L[5] === 'fire' ? 0.75 + 0.25 * Math.sin(t * 9 + k) * Math.sin(t * 5.3) : L[5] === 'lantern' ? 0.88 + 0.12 * Math.sin(t * 1.7 + k * 1.3) : 0.94 + 0.06 * Math.sin(t * 1.1 + k); x.globalAlpha = L[4] * fl * 2.2; var sp = spr(L[2], 64), rad = L[3]; x.drawImage(sp, L[0] - rad, L[1] - rad, rad * 2, rad * 2); });
   (R0.neon || []).forEach(function (N, k) { var on = (Math.sin(t * 23 + k * 7) > -0.96) && !(((t * 1.3 + k) % 6) > 5.82); x.globalAlpha = on ? 0.42 : 0.08; var sp = spr(N[3], 64); x.drawImage(sp, N[0] - N[2], N[1] - N[2] * 0.6, N[2] * 2, N[2] * 1.2); });
   (R0.screens || []).forEach(function (S2, k) { x.globalAlpha = 0.25 + 0.2 * Math.max(0, Math.sin(t * 3 + k * 2.1)); x.drawImage(spr('200,230,255', 64), S2[0] - 50, S2[1] - 44, 100, 88); });
   if (R0.beams) for (i = 0; i < R0.beams; i++) { var a = Math.sin(t * 0.6 + i * 2.1) * 0.5; x.save(); x.translate(180 + i * 180, 0); x.rotate(a); var g = x.createLinearGradient(0, 0, 0, 900); g.addColorStop(0, 'rgba(' + ['200,110,255', '255,90,200', '120,200,255'][i] + ',.22)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.globalAlpha = 1; x.fillStyle = g; x.beginPath(); x.moveTo(-10, 0); x.lineTo(10, 0); x.lineTo(120, 900); x.lineTo(-120, 900); x.fill(); x.restore(); }
   if (R0.sweep) { var sx = 360 + Math.sin(t * 0.5) * 300; x.globalAlpha = 0.18; x.drawImage(spr('220,236,255', 64), sx - 160, 600, 320, 260); }
-  for (i = 0; i < s.motes.length; i++) { p = s.motes[i]; p.x += (p.vx + Math.sin(t + p.ph) * 4) * dt; p.y += p.vy * dt; if (p.y < 80) { p.y = HT; p.x = Math.random() * WD; } x.globalAlpha = 0.35 + 0.35 * Math.sin(t * 2.2 + p.ph); x.drawImage(spr(R0.mood === 'club' ? '220,160,255' : '255,236,190', 16), p.x - p.r, p.y - p.r, p.r * 2, p.r * 2); }
+  for (i = 0; i < s.motes.length; i++) { p = s.motes[i]; p.x += (p.vx + Math.sin(t + p.ph) * 4) * dt; p.y += p.vy * dt; if (R0.cones) { var Cc = p.cx, hw = Cc[2] + (p.y - Cc[1]) * Cc[3], dxm = Math.abs(p.x - Cc[0]); if (p.y < 70 || dxm > hw) { moteCone(R0, p, false); continue; } x.globalAlpha = (0.3 + 0.35 * Math.sin(t * 2.2 + p.ph)) * Math.min(1, (hw - dxm) / (hw * 0.4 + 1)); x.drawImage(spr('255,236,190', 16), p.x - p.r, p.y - p.r, p.r * 2, p.r * 2); continue; }
+    if (p.y < 80) { p.y = HT; p.x = Math.random() * WD; } x.globalAlpha = 0.35 + 0.35 * Math.sin(t * 2.2 + p.ph); x.drawImage(spr(R0.mood === 'club' ? '220,160,255' : '255,236,190', 16), p.x - p.r, p.y - p.r, p.r * 2, p.r * 2); }
   for (i = 0; i < s.embers.length; i++) { p = s.embers[i]; p.life += dt; p.x += (p.vx + Math.sin(t * 3 + i) * 12) * dt; p.y += p.vy * dt; if (p.life > p.max) { p.x = rr(0, 300, 420); p.y = rr(0, 180, 250); p.life = 0; } var k2 = 1 - p.life / p.max; x.globalAlpha = k2; x.drawImage(spr('255,150,50', 8), p.x - 5, p.y - 5, 10, 10); }
   x.restore();
+  if (R0.ropes) { var RH = root.FFF_RINGHIT; if (RH && RH !== s.hs) { s.hs = RH; s.hit = { t: t, side: RH.side }; } x.save(); x.globalAlpha = 1; R0.ropes(x, t, s); x.restore(); } /* the swaying ring ropes */
   for (i = 0; i < s.steam.length; i++) { p = s.steam[i]; p.life += dt; if (p.life > p.max) p.life = 0; var q = p.life / p.max, al = Math.min(1, q * 4) * (1 - q) * 0.38, rad2 = 26 + q * 90; x.globalAlpha = al; x.drawImage(steamSpr(), p.o[0] - rad2 + Math.sin(t + i) * 12 * q, p.o[1] - q * 260 - rad2, rad2 * 2, rad2 * 2); }
   x.globalAlpha = 1;
   if (s.rain.length) { x.strokeStyle = 'rgba(200,215,255,.3)'; x.lineWidth = 2; x.beginPath(); for (i = 0; i < s.rain.length; i++) { p = s.rain[i]; p.y += p.v * dt; p.x += p.v * 0.12 * dt; if (p.y > HT) { p.y = -40; p.x = Math.random() * 820 - 60; } x.moveTo(p.x, p.y); x.lineTo(p.x - p.l * 0.12, p.y - p.l); } x.stroke();
