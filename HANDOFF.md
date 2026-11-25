@@ -12,6 +12,16 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 ## Log (newest first)
 
 ### 2026-11-25 — executor (Grok Bot) — v6.5.62 (branch v6562-dlg) — NOT published; waiting on Ernest's OK
+Ernest asked for the entire ambush mechanic to be removed from the game, every chapter, including Chapter 2 lane jumps (`laneAmb` / `c2v2AmbTick`). Story-scripted and quest fights stay, plus walk-up fights the player starts, and the Ban Shigure losses.
+What changed (commits after the D-style dialogue work; versions still v6.5.62):
+- `f374478`: `ambCheck` is a no-op after the last (g38) wrap, so Chapter 1 bushes / trees / doorways no longer jump a fight on their own. The world tick still calls it; it just returns.
+- `ffc33db`: `c2v2AmbTick` is a no-op, so the three Ch2 lane spots (`p_amb_hus` / `p_amb_pnk` / `p_amb_syn`) never spawn a mid-walk gang. The unused `c2v2Ambush` function is left in place. Visible door crews, street patrols, and the Ch2 events-director walk-ups stay.
+- `aba7e33`: the Gameplay "Street ambushes" Fewer/Normal/More row and its click handler are gone. `gpAmbK()` always returns 1, so a leftover `ambRate` in an old save cannot change fight, suspicion, or roam rates.
+Quest check: no quest depended on a surprise or lane ambush. The three `p_amb_*` flags are only cleaned after those jump fights. Four Corners border clashes are visible stand-ups, not ambushes, and were left alone. Bath Tax / "the Hustler ambush" (`t_alley`) was already taken out of `C2CREW` in an earlier batch and replaced by the visible Kitsune-no-Yu door crew (`p_g_bath`); this work did not convert that quest. (The Ch2 events director already empties `C2V2.AMBS` when it loads, so the lane tick was already a leftover — it is now hard off anyway.)
+Player sneak stays: the Ambush button, behind-foe sneak (`ambTap` / `ambushPick`), Genji's sneak lesson, the Alley Cat Stealth Takedown perk, and the front / back / Alley Cat stings those still use. Shared story-camera code (`#wv` WAAPI, `cuMusic`, `FFF_SCAM`) was not stripped. Only automatic jump-out triggers were removed.
+Checks: Chapter 1, all 64 cover spots with force-on, no jump fight and no errors; settings show Enemy strength / Item scarcity / XP mode and no Street ambushes row; leftover `ambRate` few/more still yields `gpAmbK()===1`. Chapter 2, the three lane spots restored and force-on, the no-op tick ran and no gang jumped out; visible event crews still spawn. All 3 Nails door paths (Fierce / Strategic / Compassionate) still open the Kaneda fight on `c2_street` with no page errors. Official `perf_check origin/main` vs the earlier dialogue tip (`43e4fe9`) was still running at this entry; a fresh official run against this tip is still needed after that job finishes. Do not publish until Ernest OKs the release.
+
+### 2026-11-25 — executor (Grok Bot) — v6.5.62 (branch v6562-dlg) — NOT published; waiting on Ernest's OK
 Versions: `window.FFF_BUILD="v6562"`, title `.vtag` "v6.5.62", `#ver` text "v6.5.62" (bumped in e95863b).
 Ernest asked for the dark-blue talk box to be translucent so the scene shows through, without white words disappearing on bright tiles, and he disliked B's black scrim behind the words. He picked option D (A's approach, B's lightness).
 What is on this branch (not live):
