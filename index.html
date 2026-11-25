@@ -35394,10 +35394,20 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
   function focusOn() { var D = W.inside && INT[W.inside.id], e = document.getElementById('n13focus'); if (!e) { e = document.createElement('i'); e.id = 'n13focus'; e.style.width = ((D && D.w) || 3600) + 'px'; e.style.height = ((D && D.h) || 960) + 'px'; layer.appendChild(e); void e.offsetWidth; } e.style.opacity = '1';
     var r = ryoSp(); if (r && r.el) r.el.classList.add('n13lit'); }
   function focusOff(quick) { var e = document.getElementById('n13focus'); if (e) { if (quick) { e.remove(); } else { e.style.opacity = '0'; setTimeout(function () { if (e.parentNode) e.remove(); }, 1000); } } var r = ryoSp(); if (r && r.el) r.el.classList.remove('n13lit'); }
+  /* ch2-fixes GGD-27: Ryo kneels (the game's own one-knee ryo_kn breathing loop) while he focuses; the frame timer is scene-bound and cleared by kneelOne(0) / shClean */
+  function kneelOne(s, on) {
+    if (!s || !s.el) return;
+    if (!on) { if (W.n13kI) { clearInterval(W.n13kI); W.n13kI = null; } if (s.act && s.act.kn) { actStop(s, true); delete s.el.dataset.kn; delete s.el.dataset.knf; } return; }
+    var sh = actWho(s) + '_kn'; if (!IMG[sh]) return;
+    actStop(s, true); s.dir = 2; s.act = { kn: 1, row: 2, fr: 0, n: 4, sh: sh, x: s.x, y: s.y, t: null, bi: s.el.style.backgroundImage, bs: s.el.style.backgroundSize, dir: 2 };
+    s.el.classList.add('acting'); s.el.dataset.kn = sh; actPaint(s); place(s, 0);
+    if (W.n13kI) clearInterval(W.n13kI); var f = 0;
+    W.n13kI = setInterval(function () { if (!s.act || !s.act.kn) { clearInterval(W.n13kI); W.n13kI = null; return; } f = (f + 1) % 4; s.act.fr = f; actPaint(s); }, 360);
+  }
   function shClean(why) {
     var o = SH; SH = null; W.n13shOn = 0; var d = document.getElementById('n13dim'); if (d) d.style.transition = '';
     if (!o) return false;
-    clearTimeout(o.wd); focusOff(true);
+    clearTimeout(o.wd); focusOff(true); try { kneelOne(ryoSp(), 0); } catch (eK) {}
     o.fx.forEach(function (e) { try { e.remove(); } catch (e0) {} });
     try { if (o.s) kill(o.s); } catch (e1) {}
     try { var r = ryoSp(); if (r) { opnPoseEnd(r); r.snk = 0; r.sheet = null; if (r.el) { r.el.classList.remove('opnsnk'); r.el.style.translate = ''; } place(r, 0); } } catch (e2) {}
@@ -35430,6 +35440,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
       if (fin || !SH) return; beat('demo:td');
       var q = { id: 'c2_punk', s: s, fa: Math.PI, st: 'idle', sus: 0, key: 'n13shadow' }, T = { q: q, x0: r.x, y0: r.y, who: 'ryo', cheap: 0 };
       W.n13shOn = 1; W.ambOn = null;
+      try { kneelOne(r, 0); } catch (eK) {}
       try { r.snk = 0; opnSnkPose(r, 0); } catch (eP) {}
       try {
         opnTDPlay(r, T, 'ryo', false, function () { beat('demo:hit'); flash(); setTimeout(function () { try { shatter(); } catch (eT) { ev('world:13u:err:shatter:' + (eT && eT.message)); } }, 780); },
@@ -35439,7 +35450,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
     function form() {
       if (fin || !SH) return; beat('demo:form');
       s = SH.s = npc('c2_punk', sx, sy, Math.PI); s.el.classList.add('n13shadow', 'n13lit'); waddle(s, 0, Math.PI); place(s, 0); void s.el.offsetWidth; s.el.classList.add('on');
-      var hx = r.x + 4, hy = r.y - SPH * 0.92, ty = sy - SPH * 0.5;
+      var hx = r.x + 4, hy = r.y - SPH * 0.74, ty = sy - SPH * 0.5;
       for (var i = 0; i < 10; i++) { var m = shFx('n13shmote', hx, hy), jx = (Math.random() - 0.5) * 36, jy = (Math.random() - 0.5) * 40;
         m.animate([{ transform: 'translate(0,0) scale(.5)', opacity: 0 }, { opacity: 1, offset: .25 }, { transform: 'translate(' + (sx - hx + jx) + 'px,' + (ty - hy + jy) + 'px) scale(1.1)', opacity: 0 }], { duration: 720 + i * 50, delay: i * 55, easing: 'cubic-bezier(.3,.1,.3,1)', fill: 'both' }); }
       var g = shFx('n13shring', sx - 36, sy - 9, 'width:72px;height:22px'); g.animate([{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 700, easing: 'ease-out', fill: 'forwards' });
@@ -35450,8 +35461,9 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
       if (fin || !SH) return; beat('demo:focus');
       try { c2Face(r, sx, sy); if (a) c2Face(a, sx, sy); } catch (e0) {}
       focusOn(); /* the screen goes dark: his focus */
+      try { kneelOne(r, 1); beat('demo:kneel'); } catch (eK) {} /* kneels and meditates */
       try { setFire(1, 'n13'); AU.play('tick'); } catch (eS) {}
-      later(950, form);
+      later(1500, form);
     }
     /* step out from behind the cart onto open floor, then the focus */
     c2Walk(r, spot[0], spot[1], 120, function () { focus(); });
@@ -35622,7 +35634,8 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
                                 talk(SABU_GLOW[path()] || SABU_GLOW.balanced, function () {
                                   setFire(0, 'n13');
                                   sabuDemo(function () {
-                                    talk(SABU_DEMO[path()] || SABU_DEMO.balanced, function () {
+                                    try { if (n && ryoSp()) c2Face(n, ryoSp().x, ryoSp().y); } catch (eN) {} /* Nails turns to look */
+                                    talk([['mb2_arcade', '{quiet}Hm. There it is.{/quiet}']].concat(SABU_DEMO[path()] || SABU_DEMO.balanced), function () {
                                       alleyCard(function () {
                                         /* t3089u: Nails stays at the booth; player walks up to turn in the tin */
                                         if (n) {
