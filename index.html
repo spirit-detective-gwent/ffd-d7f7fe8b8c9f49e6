@@ -19952,7 +19952,7 @@ function c2Ask() { /* Title > Chapter Two / Journal: carry the cleared save over
   dialog('<b>Chapter Two \u2014 The Central District</b><p>Kitsune-Ch\u016b\u014d, downtown, after dark. ' + (has ? 'Your decks, Shared Double, Bond, Essence, yen, gear and sodas come with you.' : 'No cleared Chapter One here yet: start with a balanced preset (Bond Lv 4, Shared Double, \u00a530).') + '</p>',
     [['Not now', function () { if (!SAVE.intro) leave(); }]].concat(has ? [['Fresh preset', function () { c2Begin(true); }], ['Continue my save', function () { c2Begin(false); }, 'hot']] : [['Start Chapter Two', function () { c2Begin(true); }, 'hot']])); }
 /* ---------- the arrival cinematic, Central Station Plaza ---------- */
-function c2Cine() { c2MaskTetsu(); var S = c2S(); if (S.e.arrive || c2Room() !== 'town') return; if (root.FFF_SKIP_C2_CINE) { S.e.arrive = 1; save(); c2QStart(CQ.arrive); ev('world:c2:cine:skip'); return; } S.e.arrive = 1; save(); ev('world:c2:cine:start');
+function c2Cine() { c2MaskTetsu(); var S = c2S(); if (S.e.arrive || c2Room() !== 'town') return; if (root.FFF_SKIP_C2_CINE || W._c2SkipCine) { W._c2SkipCine = 0; S.e.arrive = 1; save(); c2QStart(CQ.arrive); ev('world:c2:cine:skip'); return; } S.e.arrive = 1; save(); ev('world:c2:cine:start');
   var r = W.ryo, a = W.aoi; r.x = C2W.start[0]; r.y = C2W.start[1]; r.dir = 0; a.x = r.x + 62; a.y = r.y + 4; a.dir = 0; resetTrail(r.x, r.y, 0); place(r); place(a); camera(true); sLock(1, 'c2cine'); W.cut = true;
   var y0 = r.y + 6, ch = c2Npc(C2PUNK, r.x - 520, y0, 0), bo = c2Npc(C2CINE2, r.x - 590, y0 + 46, 0); ch.el.classList.add('c2cin'); bo.el.classList.add('c2cin'); ch.src2 = ch.src; W.c2n.cinCh = ch; W.c2n.cinBo = bo;
   var sp = 120 / Math.max(0.25, cinK()), fin = function () { W.cut = false; sLock(0, 'c2cine'); rdyOff(W.ryo); ev('world:c2:cine:end'); c2QStart(CQ.arrive);
@@ -20790,7 +20790,7 @@ function c2Trans(mid, done) { var k = cinK(), T = Math.max(400, 6200 * k), t0 = 
   size(); ev('world:c2:trans:start'); AU.play('whoosh', { gain: 0.35 });
   function goMid() { if (midDone) return; midDone = true; try { mid(); } catch (e) {} ev('world:c2:trans:mid'); }
   function finish() { if (end) return; end = true; goMid(); el.classList.add('out'); ev('world:c2:trans:dissolve'); setTimeout(function () { el.remove(); ev('world:c2:trans:end'); if (done) done(); }, Math.max(120, 700 * k)); }
-  el.querySelector('.c2tskip').onclick = function (e) { e.stopPropagation(); ev('world:c2:trans:skip'); finish(); };
+  el.querySelector('.c2tskip').onclick = function (e) { e.stopPropagation(); ev('world:c2:trans:skip'); W._c2SkipCine = 1; finish(); };
   (function frame(now) { if (end) return; var u = Math.min(1, (now - t0) / T); c2TransDraw(cx, cv.width, cv.height, u, (now - t0) / 1000, sh); el.dataset.beat = u < 0.38 ? 1 : u < 0.8 ? 2 : 3;
     if (u >= 0.8) goMid(); if (u >= 1) { finish(); return; } requestAnimationFrame(frame); })(t0); }
 function c2TransDraw(c, w, h, u, t, sh) { var e = function (x) { return x < 0 ? 0 : x > 1 ? 1 : x * x * (3 - 2 * x); }, crane = e((u - 0.32) / 0.46), H = h * 1.9, oy = -crane * (H - h); /* the camera rises: the world slides down */
