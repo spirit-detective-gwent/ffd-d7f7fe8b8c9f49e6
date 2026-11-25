@@ -399,7 +399,7 @@ body.cuc .sparks{z-index:19}
 #wtoast{position:absolute;left:50%;top:calc(env(safe-area-inset-top) + 60px);transform:translateX(-50%);max-width:90vw;padding:9px 14px;border-radius:12px;background:rgba(10,10,24,.9);box-shadow:inset 0 0 0 1px rgba(255,255,255,.15);font:700 calc(14px * var(--ts, 1)) system-ui;text-align:center;opacity:0;pointer-events:none;z-index:30}
 #wtoast.go{animation:wtoast 3.2s both}
 @keyframes wtoast{0%{opacity:0;transform:translate(-50%,-8px)}8%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
-#wdlg{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 26px);transform:translateX(-50%);width:min(94vw,520px);max-height:calc(100% - 34px - env(safe-area-inset-bottom) - env(safe-area-inset-top));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;box-sizing:border-box;padding:14px 16px;border-radius:16px;background:linear-gradient(180deg,rgba(28,22,58,.97),rgba(12,10,28,.97));box-shadow:0 0 0 2px rgba(255,190,80,.6),0 10px 30px rgba(0,0,0,.7);z-index:40;display:none}
+#wdlg{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom) + 26px);transform:translateX(-50%);width:min(94vw,520px);max-height:calc(100% - 34px - env(safe-area-inset-bottom) - env(safe-area-inset-top));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;box-sizing:border-box;padding:14px 16px;border-radius:16px;background:linear-gradient(180deg,rgba(28,22,58,.50),rgba(12,10,28,.50)); /* v6.5.62: D-style 50% wash, no scrim */box-shadow:0 0 0 2px rgba(255,190,80,.6),0 10px 30px rgba(0,0,0,.7);z-index:40;display:none}
 #wdlg.on{display:block;animation:wdlg .25s ease-out}
 @keyframes wdlg{0%{opacity:0;transform:translate(-50%,20px)}}
 #wdlg.wp{padding-left:104px;min-height:130px}
@@ -412,6 +412,30 @@ body.cuc .sparks{z-index:19}
 #wdlg .bt button{border:0;border-radius:12px;padding:11px 16px;min-height:44px;font-weight:800;background:linear-gradient(180deg,#2a2f55,#181b33);box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 3px 0 #000}
 .hot{background:linear-gradient(180deg,#ff8a2a,#c2410c)!important}
 #wdlg .bt button.hot{background:#1f7a72!important;color:#f4fffc!important;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22),0 3px 0 #0e3f3b!important}
+/* v6.5.62: D-style story box — readable white type on a 50% wash (1px 8-way outline + paint-order stroke + soft glow). Choice (d2/d3) overlays keep their own type. */
+#wdlg.dock-top{bottom:auto;top:calc(env(safe-area-inset-top) + 12px)}
+#wdlg .tx p.q, #wdlg.scene .tw p.q{
+  font-size:calc(16.5px * var(--ts, 1))!important;
+  font-weight:700;
+  -webkit-text-stroke:1px rgba(8,6,20,.88);
+  paint-order:stroke fill;
+  text-shadow:
+    -1px -1px 0 rgba(8,6,20,.95), 1px -1px 0 rgba(8,6,20,.95),
+    -1px  1px 0 rgba(8,6,20,.95), 1px  1px 0 rgba(8,6,20,.95),
+    -1px 0 0 rgba(8,6,20,.95), 1px 0 0 rgba(8,6,20,.95),
+     0 -1px 0 rgba(8,6,20,.95), 0 1px 0 rgba(8,6,20,.95),
+     0 1px 3px rgba(0,0,0,.75), 0 0 8px rgba(0,0,0,.45);
+}
+#wdlg .snm, #wdlg .tx > b:first-child,
+#wdlg .tx p, #wdlg.scene .tw.nar, #wdlg.scene .tw.nar p, #wdlg.scene .tw p.dim{
+  -webkit-text-stroke:1px rgba(8,6,20,.75);
+  paint-order:stroke fill;
+  text-shadow:
+    -1px -1px 0 rgba(8,6,20,.9), 1px -1px 0 rgba(8,6,20,.9),
+    -1px  1px 0 rgba(8,6,20,.9), 1px  1px 0 rgba(8,6,20,.9),
+     0 1px 3px rgba(0,0,0,.7), 0 0 6px rgba(0,0,0,.4);
+}
+
 .wsp.boss{background-position:50% 100%;filter:drop-shadow(0 0 8px rgba(255,60,60,.8))}
 /* v4.1: Ryo's HP / spirit on the map HUD (carried between fights) */
 /* v4.49 t1063u/t1064u: overworld HP+Spirit ONE compact box (smaller Spirit + ECG); combat bars untouched */
@@ -3274,7 +3298,7 @@ html.pc-desk #wstat>#wbag{position:static;top:auto;right:auto;left:auto;margin-l
 /* Story dialogue: Next is the teal action. Auto is outlined when off and filled when on. */
 #wdlg.scene{box-shadow:0 0 0 2px rgba(186,214,232,.55),0 10px 30px rgba(0,0,0,.7)}
 #wdlg.scene .bt button.hot{background:#1f7a72!important;color:#f4fffc!important;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22),0 3px 0 #0e3f3b!important}
-#wdlg .wauto{background:transparent;color:#d7fff8;box-shadow:inset 0 0 0 1.5px #2f9d92}
+#wdlg .wauto{background:rgba(12,10,28,.78);color:#d7fff8;box-shadow:inset 0 0 0 1.5px #2f9d92} /* v6.5.62: Auto stays readable on the 50% box */
 #wdlg .wauto.on{background:#1f7a72;color:#f4fffc;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.28)}
 #wdlg.scene .snm{color:#f6f1e4}
 #wdlg.scene .pt2{border-bottom-color:#2f9d92}
