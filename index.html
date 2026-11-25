@@ -34800,7 +34800,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
 
   /* ---------------- places ---------------- */
   var ARC = C2W.doors.arcade, ARC_AT = ARC.at, APRON = [2090, 3290, 2270, 3440];
-  var GK_DOOR = { r: [2096, 2560, 2212, 2676], at: [2150, 2692] }, GK_CURB = [2224, 2700]; /* ch2-fixes GGD-26: was [2202, 2606], which sorts BEHIND the big tree (tree y 2690, canopy drawn over him). Now just left of the trunk base, one step in front of it (y 2700 > 2690), so he is fully in view. */
+  var GK_DOOR = { r: [2096, 2560, 2212, 2676], at: [2150, 2692] }, GK_CURB = [2226, 2712]; /* ch2-fixes GGD-26: was [2202, 2606], which sorts BEHIND the big tree (tree y 2690, canopy drawn over him). Now just left of the trunk base, one step in front of it (y 2700 > 2690), so he is fully in view. */
   var LOOK = { bat: { at: [1340, 1970], route: [[1300, 1955], [1390, 1955], [1390, 1985], [1300, 1985]], z: 'the Chuo-d\u014dri south edge', id: 'c2_hustler', lab: 'Chuo-d\u014dri south edge' },
     dep: { at: [2630, 3190], route: [[2590, 3175], [2680, 3175], [2680, 3205], [2590, 3205]], z: 'the east end of Wagashi row', id: 'c2_boso', lab: 'Wagashi row, east end' } };
   var LK = 'n13_look';
@@ -34940,7 +34940,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
   }
   function flipStartAt() { var r = W.ryo, B = G38T.BORDER[E().n13b || 'X2']; var b = B ? B.at : [r.x, r.y];
     var cand = [[r.x + 150, r.y + 40], [r.x - 150, r.y + 40], [r.x, r.y + 160], [r.x + 120, r.y - 120]]; for (var i = 0; i < cand.length; i++) if (okAt(cand[i][0], cand[i][1])) return cand[i]; return [r.x + 60, r.y + 60]; }
-  function flipLean() { var f = T.flip; if (!f) return; f.lean = -9; f.n13leaning = 1; waddle(f, 0, Math.PI); place(f, 0); } /* ch2-fixes GGD-26: -9 = head toward the trunk on his right (shoulder on the bark); facing the cafe door */
+  function flipLean() { var f = T.flip; if (!f) return; f.lean = -7; f.n13leaning = 1; waddle(f, 0, Math.PI); place(f, 0); } /* ch2-fixes GGD-26 (r2): the SAME lean he uses against the coat rack inside the cafe (lean -7, side-on facing left), here with his back (his right side) against the trunk; curb [2226, 2712] = right against the trunk base, clear of the canopy and the crates */
   /* t3118u: after a Kissa Gekko loss, Flip (at the curb by the tree) says one
    * trash-talk line when you walk up. Once per return, no repeat spam. */
   function flipRibTick() {
