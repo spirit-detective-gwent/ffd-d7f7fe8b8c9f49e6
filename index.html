@@ -22744,8 +22744,8 @@ function n9CxList(cat) {
   }
   if (cat === 'food') {
     var out = [];
-    Object.keys(FOODS).forEach(function (k) { out.push({ id: 'food_' + k, lab: FOODS[k].n, sub: '\u00a5' + FOOD.cost + ' \u00b7 eaten on the spot \u00b7 +30% HP', ok: 1, food: k }); });
-    out.push({ id: 'soda', lab: 'Soda', sub: '\u00a52 \u00b7 +5 Spirit on the map', ok: 1, soda: 1 });
+    Object.keys(FOODS).forEach(function (k) { out.push({ id: 'food_' + k, lab: FOODS[k].n, sub: '\u00a5' + FOOD.cost + ' \u00b7 eaten on the spot \u00b7 +30% HP, full HP on a mini-game win', ok: 1, food: k }); }); /* v6.5.63-eat */
+    out.push({ id: 'soda', lab: 'Soda', sub: '\u00a52 \u00b7 +5 Spirit on the map, full on a shake-and-chug win', ok: 1, soda: 1 });
     Object.keys(HITEM).forEach(function (k) { var H = HITEM[k]; out.push({ id: 'heal_' + k, lab: H.n, sub: 'Carryable \u00b7 +' + Math.round(H.pct * 100) + '% HP', ok: 1, heal: k }); });
     return out;
   }
@@ -45243,7 +45243,7 @@ function stepLogic(dt) {
   if (!S) return;
   S.t += dt;
   if (S.moodT < 1) S.moodT = Math.min(1, S.moodT + dt / 0.12);
-  if (S.ph === 'intro') { S.it += dt; if (S.it >= INTRO_T) { S.ph = 'play'; sfx('go'); } }
+  if (S.ph === 'intro') { if (!S.wait) S.it += dt; if (S.it >= INTRO_T) { S.ph = 'play'; sfx('go'); } }
   else if (S.ph === 'play') { S.pt += dt; if (S.script) S.script(S, dt); if (S.ph === 'play') { var g0 = S.C.game; if (g0 === 'noodles') noodleUpdate(dt); else if (g0 === 'coffee') coffeeUpdate(dt); else if (g0 === 'soda') sodaUpdate(dt); else if (g0 === 'bite') biteUpdate(dt); } }
   else if (S.ph === 'result') {
     S.rt += dt; if (S.tofu.st === 2) S.tofu.tt += dt;
@@ -46281,13 +46281,12 @@ function open(o) {
   OV.addEventListener('pointerdown', pDown); OV.addEventListener('pointerup', pUp); OV.addEventListener('pointercancel', pUp); OV.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   window.addEventListener('keydown', kDown, true); window.addEventListener('keyup', kUp, true); window.addEventListener('resize', fit); document.addEventListener('visibilitychange', onVis);
   try { if (root.AUDIO && root.AUDIO.wake) root.AUDIO.wake(); var A = root.AUDIO && root.AUDIO.st; if (A && A.ctx && A.ctx.state === 'suspended') A.ctx.resume(); } catch (eA) {}
-  loadFor(who, poses, function () {
-    if (!OV || OPT !== o) return;
-    newRun(o.item, who, o.seed || ((Math.random() * 1e6) | 0), o.bot ? makeBot(o.item, o.bot) : null);
-    if (o.jp || o.en) S.CT = { jp: o.jp || C.jp, en: o.en || C.en, tag: C.tag };
-    if (o.hp0 != null) { S.hp0 = S.hpShown = o.hp0; } if (o.sp0 != null) { S.sp0 = S.spShown = o.sp0; }
-    render(); startLoop();
-  });
+  /* the run starts at once (background, header, intro card); the intro holds until the portraits are decoded */
+  newRun(o.item, who, o.seed || ((Math.random() * 1e6) | 0), o.bot ? makeBot(o.item, o.bot) : null); S.wait = true;
+  if (o.jp || o.en) S.CT = { jp: o.jp || C.jp, en: o.en || C.en, tag: C.tag };
+  if (o.hp0 != null) { S.hp0 = S.hpShown = o.hp0; } if (o.sp0 != null) { S.sp0 = S.spShown = o.sp0; }
+  render(); startLoop();
+  loadFor(who, poses, function () { if (S && OPT === o) S.wait = false; });
   return true;
 }
 function close() {
