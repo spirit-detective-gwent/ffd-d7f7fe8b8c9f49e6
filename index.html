@@ -35461,7 +35461,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
       if (fin || !SH) return; beat('demo:focus');
       try { c2Face(r, sx, sy); if (a) c2Face(a, sx, sy); } catch (e0) {}
       focusOn(); /* the screen goes dark: his focus */
-      try { kneelOne(r, 1); beat('demo:kneel'); } catch (eK) {} /* kneels and meditates */
+      /* v6.5.64: no kneel or meditation pose - he stays on his feet; only the screen dims */
       try { setFire(1, 'n13'); AU.play('tick'); } catch (eS) {}
       later(1500, form);
     }
