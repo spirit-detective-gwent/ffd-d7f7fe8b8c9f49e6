@@ -13248,6 +13248,82 @@ function toast(t) { if (typeof commentHide === 'function') commentHide(); var f 
 
 
 function dlgArm() { return performance.now() < (W.dlgArm || 0); } /* the tap that opened a talk must not also press the first button (iPhone hit-tests the new box) */
+
+/* v6.5.62: dock #wdlg to the top when the bottom slot would cover a speaker.
+ * Decided when the line opens; never flips mid-line. Measures on-screen bboxes
+ * after FFF_SCAM.line() has started. Full-screen choice overlays (d2/d3) are skipped. */
+var DLG_DOCK_COVER = 0.18;
+function dlgDockClear(d) {
+  if (!d) return;
+  d.classList.remove('dock-top');
+  d.style.top = '';
+  d.style.bottom = '';
+  d._dlgDockLock = 0;
+}
+function dlgSpeakerEls() {
+  var out = [], seen = [];
+  function add(s) {
+    var el = s && (s.el || (s.tagName ? s : null));
+    if (!el || !el.getBoundingClientRect || seen.indexOf(el) >= 0) return;
+    if (!el.getBoundingClientRect().width) return;
+    seen.push(el); out.push(el);
+  }
+  try {
+    if (typeof W !== 'undefined' && W) {
+      add(W.ryo); add(W.aoi); add(W.gouki); add(W.gymGouki);
+      if (W.c2n) { for (var k in W.c2n) if (W.c2n[k]) add(W.c2n[k]); }
+    }
+  } catch (eSp) {}
+  return out;
+}
+function dlgSlotOverlap(slot, el) {
+  var r = el.getBoundingClientRect();
+  if (!r.width || !r.height) return { cover: 0, feet: false };
+  var x = Math.max(0, Math.min(slot.right, r.right) - Math.max(slot.left, r.left));
+  var y = Math.max(0, Math.min(slot.bottom, r.bottom) - Math.max(slot.top, r.top));
+  var inter = x * y;
+  var feet = inter > 0 && r.bottom > slot.top && r.bottom <= slot.bottom + 8;
+  return { cover: inter / (r.width * r.height), feet: feet };
+}
+function dlgBottomSlot(d) {
+  var slot = d.getBoundingClientRect();
+  if (!d.classList.contains('dock-top')) return slot;
+  var world = document.getElementById('world') || d.parentNode;
+  var hr = world.getBoundingClientRect();
+  var bottom = hr.bottom - 26;
+  return { left: slot.left, right: slot.right, width: slot.width, height: slot.height, bottom: bottom, top: bottom - slot.height };
+}
+function dlgShouldDock(d) {
+  if (!d || !d.classList.contains('on')) return false;
+  if (d.classList.contains('d2') || d.classList.contains('d3')) return false;
+  var slot = dlgBottomSlot(d), els = dlgSpeakerEls(), i, o;
+  for (i = 0; i < els.length; i++) {
+    o = dlgSlotOverlap(slot, els[i]);
+    if (o.cover > DLG_DOCK_COVER || o.feet) return true;
+  }
+  return false;
+}
+function dlgDockTop(d) {
+  var world = document.getElementById('world') || d.parentNode;
+  var wr = world.getBoundingClientRect();
+  var hud = document.getElementById('wstat') || document.getElementById('whud');
+  var hb = 0;
+  try { if (hud) hb = hud.getBoundingClientRect().bottom; } catch (eH) {}
+  var topPx = Math.max(12, Math.round((hb || (wr.top + 52)) + 8 - wr.top));
+  d.classList.add('dock-top');
+  d.style.top = topPx + 'px';
+  d.style.bottom = 'auto';
+}
+function dlgPlace(d, lock) {
+  d = d || (typeof $ === 'function' ? $('#wdlg') : document.getElementById('wdlg'));
+  if (!d || !d.classList.contains('on')) return;
+  if (d.classList.contains('d2') || d.classList.contains('d3')) return;
+  if (d._dlgDockLock && d.classList.contains('dock-top')) return;
+  if (dlgShouldDock(d)) dlgDockTop(d);
+  if (lock) d._dlgDockLock = 1;
+  try { ev('world:dlg:dock:' + (d.classList.contains('dock-top') ? 'top' : 'bottom')); } catch (eEv) {}
+}
+
 function dialog(html, btns, portrait, opt) {
   if (typeof commentHide === 'function') commentHide(); if (typeof lvDefer === 'function') lvDefer();
   var d = $('#wdlg'); W.dlg = true; W.path = []; W.arrive = null; W.run = false; W.stv = null; stickEnd(); save();
@@ -13275,12 +13351,14 @@ function dialog(html, btns, portrait, opt) {
   try { document.body.classList.add('fff-dlg-on'); } catch (eB) {}
   ev('world:dialog'); ev('world:dialog:' + mode);
   try { var IPd = root.INPUT; if (IPd && IPd.latchDirs) IPd.latchDirs(); if (IPd && IPd.mode !== 'touch' && IPd.setFocus) { var defBtn = d.querySelector('button.hot:not([disabled]), button.on:not([disabled])') || d.querySelector('button:not([disabled])'); if (defBtn) IPd.setFocus(defBtn, 'auto'); } } catch (e3) {}
+  if (!(opt && opt.noPlace)) dlgPlace(d, true); /* v6.5.62: auto-dock */
 }
 function dlgCleanup(d) {
   if (!d) return;
   if (d._fffOnEnd) { d.removeEventListener('animationend', d._fffOnEnd); d._fffOnEnd = null; }
   d.onclick = null;
   d.style.transform = ''; d.style.opacity = '';
+  dlgDockClear(d); /* v6.5.62 */
   try { if (d.getAnimations) d.getAnimations({ subtree: true }).forEach(function (a) { a.cancel(); }); } catch (eA) {}
 }
 function dlgMode(btns, portrait, opt) {
@@ -13747,7 +13825,7 @@ function scene(id, pre, done, i) {
   var html = (who ? '<div class="sh' + (hype ? ' hype' : '') + '">' + (pt ? '<i class="pt2' + (who === 'gouki' && kn ? ' kneel' : '') + '" style="background-image:url(' + IMG[pt] + ')"></i>' : '') + (pt && (who === 'ryo' || who === 'aoi') && GEAR ? gearPt(who) : '') + '<b class="snm">' + nm + '</b></div>' : '') +
     '<div class="tw' + (who ? '' : ' nar') + '">' + (who ? '<p class="q">' + (/^<(p|div|strong)\b/.test(txt) ? txt : '\u201c' + txt + '\u201d') + '</p>' : txt) + '</div>';
   var nxd = 0, nx = function () { if (nxd++) return; if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } };
-  dialog(html, [[last ? 'OK' : 'Next \u25b8', nx, 'hot']], null); // v4.7: no "1 / 4" line counter
+  dialog(html, [[last ? 'OK' : 'Next \u25b8', nx, 'hot']], null, { noPlace: 1 }); // v4.7: no "1 / 4" line counter
   var d = $('#wdlg'); d.classList.add('scene'); d.querySelectorAll('.wardens i').forEach(function (e, j) { var k = 'warden' + (j + 1) + '_fig'; e.style.backgroundImage = 'url(' + (IMG[k] || IMG.aoi_blade_fig) + ')'; e.classList.add('wd'); }); /* v4.10.1: the Wardens, three of Aoi's family */ d.dataset.ln = (i + 1) + ' / ' + L.length; /* tests read the line index here (nothing on screen) */ var tok = W.autoTok = (W.autoTok | 0) + 1, twb = d.querySelector('.tw'), alen = (twb.textContent || '').length; /* v6.5.4 t2218: the hold starts after typing and every pause, and the last line closes too. Choices, bond picks and prompts still wait. */
   var arm = function () { clearTimeout(W.autoT); if (!autoOn()) return; var ms = autoMs(alen); ev('world:auto:arm:' + ms + (last ? ':last' : '')); W.autoT = setTimeout(function () { if (W.autoTok !== tok || !d.classList.contains('on') || !autoOn()) return; ev('world:auto:next:' + (i + 1) + (last ? ':last' : '')); close(); nx(); }, ms); };
   var ab = document.createElement('button'); ab.className = 'wauto' + (autoOn() ? ' on' : ''); ab.textContent = 'Auto'; ab.setAttribute('aria-pressed', autoOn() ? 'true' : 'false'); ab.setAttribute('aria-label', 'Auto-advance');
@@ -13755,6 +13833,7 @@ function scene(id, pre, done, i) {
   var tw = typewrite(twb, arm), b = d.querySelector('.bt button');
   b.onclick = function (e) { e.stopPropagation(); if (dlgArm()) return; if (autoOn()) { autoSet(false); clearTimeout(W.autoT); W.autoTok++; ab.classList.remove('on'); ab.setAttribute('aria-pressed', 'false'); ev('world:auto:off:tap'); } /* a tap on the text or Next takes over. Auto's own advance never calls this, so a scene ending does not turn Auto off */ if (tw.busy()) { tw.finish(); ev('world:tw:skip'); return; } clearTimeout(W.autoT); W.autoTok++; AU.play('tap'); close(); nx(); };
   d.onclick = function (e) { if (e.target.tagName === 'BUTTON') return; if (dlgArm()) return; b.click(); };
+  dlgPlace(d, true); /* v6.5.62: auto-dock after Auto is in the box */
 }
 /* v4.10 Chapter One ending: Gouki's scene, a fade to black, the shrine with the Wardens, the chapter card, then free roam */
 function wSparks() { var c = document.createElement('div'); c.className = 'wspk'; for (var k = 0; k < 18; k++) { var e = document.createElement('i'), a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 110;
