@@ -414,6 +414,7 @@ body.cuc .sparks{z-index:19}
 #wdlg .bt button.hot{background:#1f7a72!important;color:#f4fffc!important;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.22),0 3px 0 #0e3f3b!important}
 /* v6.5.62: D-style story box — readable white type on a 50% wash (1px 8-way outline + paint-order stroke + soft glow). Choice (d2/d3) overlays keep their own type. */
 #wdlg.dock-top{bottom:auto;top:calc(env(safe-area-inset-top) + 12px)}
+#wdlg.on.wdlg-stay{animation:none}
 #wdlg .tx p.q, #wdlg.scene .tw p.q{
   font-size:calc(16.5px * var(--ts, 1))!important;
   font-weight:700;
@@ -13249,32 +13250,57 @@ function toast(t) { if (typeof commentHide === 'function') commentHide(); var f 
 
 function dlgArm() { return performance.now() < (W.dlgArm || 0); } /* the tap that opened a talk must not also press the first button (iPhone hit-tests the new box) */
 
-/* v6.5.62: dock #wdlg to the top when the bottom slot would cover a speaker.
- * Decided when the line opens; never flips mid-line. Measures on-screen bboxes
+/* v6.5.63: dock #wdlg so the CURRENT speaker stays visible (the listener may be covered).
+ * Decided when the line opens; never flips mid-line. In a two-sided scene the box flips
+ * only when the speaker changes, with a ~180 ms slide. Measures on-screen bboxes
  * after FFF_SCAM.line() has started. Full-screen choice overlays (d2/d3) are skipped. */
 var DLG_DOCK_COVER = 0.18;
+var DLG_DOCK_MS = 180;
 function dlgDockClear(d) {
   if (!d) return;
-  d.classList.remove('dock-top');
+  d.classList.remove('dock-top', 'wdlg-stay');
   d.style.top = '';
   d.style.bottom = '';
   d._dlgDockLock = 0;
 }
-function dlgSpeakerEls() {
-  var out = [], seen = [];
-  function add(s) {
-    var el = s && (s.el || (s.tagName ? s : null));
-    if (!el || !el.getBoundingClientRect || seen.indexOf(el) >= 0) return;
-    if (!el.getBoundingClientRect().width) return;
-    seen.push(el); out.push(el);
+function dlgDockBottom(d) {
+  d.classList.remove('dock-top');
+  d.style.top = '';
+  d.style.bottom = '';
+}
+function dlgSpeakerSpr(who) {
+  if (!who || typeof who !== 'string') return null;
+  if (who.charAt(0) === '@' || who.charAt(0) === '{') return null;
+  var id = who === 'ayaf' ? 'aya' : who === 'rikuf' ? 'riku' : who;
+  var mb = { kurata: 'mb_cafe', mai: 'mb_art', mizuno: 'mb_lib', bando: 'mb_field' };
+  function ok(s) { return s && s.el && s.el.parentNode && s.el.getBoundingClientRect && s.el.getBoundingClientRect().width; }
+  function hit(s) {
+    if (!s) return false;
+    var el = s.el || (s.tagName ? s : null);
+    if (!el || !el.dataset) return false;
+    return el.dataset.who === id || el.dataset.npc === id || el.dataset.mb === id || el.dataset.mb === mb[id] || el.dataset.npc === who || el.dataset.who === who;
   }
   try {
-    if (typeof W !== 'undefined' && W) {
-      add(W.ryo); add(W.aoi); add(W.gouki); add(W.gymGouki);
-      if (W.c2n) { for (var k in W.c2n) if (W.c2n[k]) add(W.c2n[k]); }
+    if (typeof W === 'undefined' || !W) return null;
+    if (id === 'ryo' && ok(W.ryo)) return W.ryo;
+    if (id === 'aoi' && ok(W.aoi)) return W.aoi;
+    if (id === 'gouki' && typeof gkSpr === 'function') { var g = gkSpr(); if (ok(g)) return g; }
+    if (id === 'gouki' && ok(W.gouki)) return W.gouki;
+    if (id === 'gouki' && ok(W.gymGouki)) return W.gymGouki;
+    if ((id === 'nurse' || id === 'shiraishi') && ok(W.intNurse)) return W.intNurse;
+    if (id === 'aya' && ok(W.artAya)) return W.artAya;
+    if (W.libN && ok(W.libN[id])) return W.libN[id];
+    if (ok(W.dgRelay) && hit(W.dgRelay)) return W.dgRelay;
+    if (W.c2n) { for (var k in W.c2n) if (ok(W.c2n[k]) && hit(W.c2n[k])) return W.c2n[k]; }
+    var v = document.getElementById('wv') || document.getElementById('world');
+    if (v && /^[A-Za-z0-9_]+$/.test(id)) {
+      var sel = '[data-npc="' + id + '"],[data-who="' + id + '"],[data-mb="' + id + '"]';
+      if (mb[id]) sel += ',[data-mb="' + mb[id] + '"]';
+      var el = v.querySelector(sel);
+      if (el && el.getBoundingClientRect().width) return el.__spr || { el: el };
     }
   } catch (eSp) {}
-  return out;
+  return null;
 }
 function dlgSlotOverlap(slot, el) {
   var r = el.getBoundingClientRect();
@@ -13293,15 +13319,27 @@ function dlgBottomSlot(d) {
   var bottom = hr.bottom - 26;
   return { left: slot.left, right: slot.right, width: slot.width, height: slot.height, bottom: bottom, top: bottom - slot.height };
 }
-function dlgShouldDock(d) {
-  if (!d || !d.classList.contains('on')) return false;
-  if (d.classList.contains('d2') || d.classList.contains('d3')) return false;
-  var slot = dlgBottomSlot(d), els = dlgSpeakerEls(), i, o;
-  for (i = 0; i < els.length; i++) {
-    o = dlgSlotOverlap(slot, els[i]);
-    if (o.cover > DLG_DOCK_COVER || o.feet) return true;
-  }
-  return false;
+function dlgTopSlot(d) {
+  var world = document.getElementById('world') || d.parentNode;
+  var wr = world.getBoundingClientRect();
+  var hud = document.getElementById('wstat') || document.getElementById('whud');
+  var hb = 0;
+  try { if (hud) hb = hud.getBoundingClientRect().bottom; } catch (eH) {}
+  var slot = d.getBoundingClientRect();
+  var top = wr.top + Math.max(12, Math.round((hb || (wr.top + 52)) + 8 - wr.top));
+  return { left: slot.left, right: slot.right, width: slot.width, height: slot.height, top: top, bottom: top + slot.height };
+}
+function dlgPickSide(d, who) {
+  var s = dlgSpeakerSpr(who), el = s && (s.el || s);
+  if (!el || !el.getBoundingClientRect) return 'bottom';
+  var bot = dlgBottomSlot(d), top = dlgTopSlot(d);
+  var ob = dlgSlotOverlap(bot, el), ot = dlgSlotOverlap(top, el);
+  var botBad = ob.cover > DLG_DOCK_COVER || ob.feet;
+  var topBad = ot.cover > DLG_DOCK_COVER || ot.feet;
+  if (botBad && !topBad) return 'top';
+  if (topBad && !botBad) return 'bottom';
+  if (botBad && topBad) return (ot.cover < ob.cover) ? 'top' : 'bottom';
+  return 'bottom';
 }
 function dlgDockTop(d) {
   var world = document.getElementById('world') || d.parentNode;
@@ -13314,14 +13352,46 @@ function dlgDockTop(d) {
   d.style.top = topPx + 'px';
   d.style.bottom = 'auto';
 }
-function dlgPlace(d, lock) {
+function dlgSlideFrom(d, before) {
+  if (!before || !before.height) return;
+  var reduce = false;
+  try { reduce = root.matchMedia && root.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (eM) {}
+  if (reduce) return;
+  var after = d.getBoundingClientRect();
+  var dy = before.top - after.top;
+  if (Math.abs(dy) < 2) return;
+  try { if (d.getAnimations) d.getAnimations().forEach(function (a) { a.cancel(); }); } catch (eA) {}
+  d.animate(
+    [{ transform: 'translate(-50%, ' + dy + 'px)' }, { transform: 'translateX(-50%)' }],
+    { duration: DLG_DOCK_MS, easing: 'cubic-bezier(.33,.1,.25,1)', fill: 'none' }
+  );
+}
+function dlgStay(d) {
+  var prev = (typeof W !== 'undefined' && W) ? W.dlgDock : null;
+  if (!d || !prev || !prev.side || prev.gen !== ((typeof W !== 'undefined' && W) ? (W.scGen | 0) : 0)) return false;
+  d.classList.add('wdlg-stay');
+  if (prev.side === 'top') dlgDockTop(d); else dlgDockBottom(d);
+  return true;
+}
+function dlgPlace(d, lock, who) {
   d = d || (typeof $ === 'function' ? $('#wdlg') : document.getElementById('wdlg'));
   if (!d || !d.classList.contains('on')) return;
   if (d.classList.contains('d2') || d.classList.contains('d3')) return;
-  if (d._dlgDockLock && d.classList.contains('dock-top')) return;
-  if (dlgShouldDock(d)) dlgDockTop(d);
+  var gen = (typeof W !== 'undefined' && W) ? (W.scGen | 0) : 0;
+  var prev = (typeof W !== 'undefined' && W && W.dlgDock) ? W.dlgDock : null;
+  var same = !!(prev && prev.gen === gen);
+  var side;
+  if (who && same && prev.who && who === prev.who && prev.side) side = prev.side;
+  else if (!who && same && prev.side) side = prev.side;
+  else side = dlgPickSide(d, who);
+  var from = d.classList.contains('dock-top') ? 'top' : 'bottom';
+  var slide = same && from !== side;
+  var before = slide ? d.getBoundingClientRect() : null;
+  if (side === 'top') dlgDockTop(d); else dlgDockBottom(d);
+  if (slide) dlgSlideFrom(d, before);
+  if (typeof W !== 'undefined' && W) W.dlgDock = { who: who || (same && prev && prev.who) || '', side: side, gen: gen };
   if (lock) d._dlgDockLock = 1;
-  try { ev('world:dlg:dock:' + (d.classList.contains('dock-top') ? 'top' : 'bottom')); } catch (eEv) {}
+  try { ev('world:dlg:dock:' + side + (slide ? ':slide' : '') + (who ? ':' + who : '')); } catch (eEv) {}
 }
 
 function dialog(html, btns, portrait, opt) {
@@ -13351,7 +13421,8 @@ function dialog(html, btns, portrait, opt) {
   try { document.body.classList.add('fff-dlg-on'); } catch (eB) {}
   ev('world:dialog'); ev('world:dialog:' + mode);
   try { var IPd = root.INPUT; if (IPd && IPd.latchDirs) IPd.latchDirs(); if (IPd && IPd.mode !== 'touch' && IPd.setFocus) { var defBtn = d.querySelector('button.hot:not([disabled]), button.on:not([disabled])') || d.querySelector('button:not([disabled])'); if (defBtn) IPd.setFocus(defBtn, 'auto'); } } catch (e3) {}
-  if (!(opt && opt.noPlace)) dlgPlace(d, true); /* v6.5.62: auto-dock */
+  dlgStay(d);
+  if (!(opt && opt.noPlace)) dlgPlace(d, true, opt && opt.who); /* v6.5.63: dock to the current speaker */
 }
 function dlgCleanup(d) {
   if (!d) return;
@@ -13833,7 +13904,7 @@ function scene(id, pre, done, i) {
   var tw = typewrite(twb, arm), b = d.querySelector('.bt button');
   b.onclick = function (e) { e.stopPropagation(); if (dlgArm()) return; if (autoOn()) { autoSet(false); clearTimeout(W.autoT); W.autoTok++; ab.classList.remove('on'); ab.setAttribute('aria-pressed', 'false'); ev('world:auto:off:tap'); } /* a tap on the text or Next takes over. Auto's own advance never calls this, so a scene ending does not turn Auto off */ if (tw.busy()) { tw.finish(); ev('world:tw:skip'); return; } clearTimeout(W.autoT); W.autoTok++; AU.play('tap'); close(); nx(); };
   d.onclick = function (e) { if (e.target.tagName === 'BUTTON') return; if (dlgArm()) return; b.click(); };
-  dlgPlace(d, true); /* v6.5.62: auto-dock after Auto is in the box */
+  dlgPlace(d, true, who); /* v6.5.63: dock to the current speaker; slide if the side changes */
 }
 /* v4.10 Chapter One ending: Gouki's scene, a fade to black, the shrine with the Wardens, the chapter card, then free roam */
 function wSparks() { var c = document.createElement('div'); c.className = 'wspk'; for (var k = 0; k < 18; k++) { var e = document.createElement('i'), a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 110;
