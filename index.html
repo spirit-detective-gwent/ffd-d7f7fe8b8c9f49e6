@@ -668,6 +668,7 @@ body.cuc .sparks{z-index:19}
 #wdlg.scene .sh{display:flex;align-items:flex-end;gap:10px;margin:-4px 0 4px}
 #wdlg .pt2{flex:0 0 auto;width:58px;height:74px;background-size:contain;background-repeat:no-repeat;background-position:50% 100%;border-bottom:2px solid rgba(255,190,80,.5)}
 #wdlg .snm{font:900 italic calc(18px * var(--ts, 1)) "Arial Black",system-ui;color:#d5e4f2}
+#wdlg.scene.pt-up{overflow:visible;padding:16px}#wdlg.scene.pt-up .tw{max-height:min(42vh,300px);overflow-y:auto;overscroll-behavior:contain}#wdlg.scene .sh.pt-hang{position:relative;margin:0 0 4px}#wdlg.scene .sh.pt-hang .pt2{position:absolute;left:0;bottom:calc(100% + 4px);width:112px;height:150px;border-bottom:0;background-size:cover;background-position:50% 18%;filter:drop-shadow(0 6px 12px rgba(0,0,0,.55));z-index:3;pointer-events:none}#wdlg.scene .sh.pt-hang .snm{position:relative}@media (prefers-reduced-motion:reduce){#wdlg.scene .sh.pt-hang .pt2{filter:drop-shadow(0 3px 6px rgba(0,0,0,.5))}}
 #wdlg .tw{min-height:3.2em}
 #wdlg .tw .twx[data-tw="quiet"]{font-size:.9em;font-style:italic;opacity:.7}
 #wdlg .tw .tw-shout{font-weight:900;text-transform:uppercase;color:#ff8a4d;display:inline-block}
@@ -13667,6 +13668,38 @@ function miniDialog(m, o) { o = o || {}; /* v4.19 o.base: a base's boss: only hi
  * W.fire holds that state; a scene starts from SCF[id] (default plain) and a line's 3rd item {fire:0|1} switches it. */
 var SCF = { tut2: 1, tut3: 1, after: 1 };
 function ryoPt() { return W.fire ? 'ryo_concept_fig' : 'ryo_plain_fig'; }
+/* v6.5.63: painted dialogue busts (URL files, not packed). Hang above the box; one-shot slam on angry/rage. */
+var PT_PAINT = {ryo:'ryo',aoi:'aoi',kurata:'kurata',mb_cafe:'kurata',gouki:'gouki',mizuno:'mizuno',mb_lib:'mizuno',mai:'mai',bando:'bando',mb_field:'bando',hall_mon:'saeki',saeki:'saeki',enforcer:'shigure',shigure:'shigure',nails:'nails',mb2_arcade:'nails',kagero:'kagero',c2_boss:'kagero',goda:'goda',mb2_sento:'goda',kaneda:'kaneda',c2_doorman:'kaneda',jin:'jin',mb2_game:'jin',masa:'masa',mb2_depot:'masa',nurse:'nurse',shiraishi:'nurse',kurogane:'genji',genji:'genji',tsukikage:'tsukikage',hina:'hina',kenta:'kenta',yuto:'yuto',mio:'mio',s_mio:'mio',s_boy:'sota',sota:'sota',s_pony:'rin',rin:'rin',aya:'aya',ayaf:'aya',riku:'riku',rikuf:'riku',kaede:'kaede',kaedef:'kaede',cafe_stu:'cafestu',cafestu:'cafestu',art_stu:'artstu',artstu:'artstu',paint:'artstu',drum:'drum',tut1:'student',bully1:'student',tanaka:'student',student:'student',tut2:'bully4',bully4:'bully4',shun:'bully4',tut3:'bully2',bully2:'bully2',bully3:'bully3',warden1:'sora',sora:'sora',warden2:'kenji',kenji:'kenji',warden3:'yuki',yuki:'yuki',npc_clerk:'mina',mina:'mina',attendant:'attendant',courier:'courier',npc_ramen:'tetsuo',tetsuo:'tetsuo',npc_stall:'rei',rei:'rei',npc_fence:'fence',hachi:'fence',fence:'fence',npc_fence2:'moku',moku:'moku',npc_fence3:'fence3',fence3:'fence3',informant:'informant',bouncer:'bouncer',chinpira1:'chinpira',chinpira:'chinpira',c2_punk:'c2punk',c2punk:'c2punk',c2_suit:'c2suit',c2suit:'c2suit',c2_boso:'c2boso',c2boso:'c2boso',c2_hustler:'c2hustler',c2hustler:'c2hustler'}, PT_HAS = {aoi_angry:1,aoi_happy:1,aoi_neutral:1,aoi_rage:1,aoi_sad:1,artstu_neutral:1,attendant_neutral:1,aya_neutral:1,bando_angry:1,bando_beaten:1,bando_calm:1,bouncer_neutral:1,bully2_neutral:1,bully3_neutral:1,bully4_neutral:1,c2boso_neutral:1,c2hustler_neutral:1,c2punk_neutral:1,c2suit_neutral:1,cafestu_neutral:1,chinpira_neutral:1,courier_neutral:1,drum_neutral:1,fence3_neutral:1,fence_neutral:1,genji_neutral:1,goda_angry:1,goda_beaten:1,goda_calm:1,gouki_angry:1,gouki_beaten:1,gouki_calm:1,hina_neutral:1,informant_neutral:1,jin_angry:1,jin_beaten:1,jin_calm:1,kaede_neutral:1,kagero_angry:1,kagero_beaten:1,kagero_calm:1,kaneda_angry:1,kaneda_beaten:1,kaneda_calm:1,kenji_neutral:1,kenta_neutral:1,kurata_angry:1,kurata_beaten:1,kurata_calm:1,mai_angry:1,mai_beaten:1,mai_calm:1,masa_angry:1,masa_beaten:1,masa_calm:1,mina_neutral:1,mio_neutral:1,mizuno_angry:1,mizuno_beaten:1,mizuno_calm:1,moku_neutral:1,nails_angry:1,nails_beaten:1,nails_calm:1,nurse_neutral:1,rei_neutral:1,riku_neutral:1,rin_neutral:1,ryo_angry:1,ryo_happy:1,ryo_neutral:1,ryo_rage:1,ryo_sad:1,saeki_angry:1,saeki_beaten:1,saeki_calm:1,shigure_angry:1,shigure_beaten:1,shigure_calm:1,sora_neutral:1,sota_neutral:1,student_neutral:1,tetsuo_neutral:1,tsukikage_neutral:1,yuki_neutral:1,yuto_neutral:1};
+function ptPaintId(who) { return (who && (PT_PAINT[who] || PT_PAINT[String(who).replace(/f$/, '')] || '')) || ''; }
+function ptMoodOf(who, opt, txt) {
+  opt = opt || {};
+  if (opt.mood) return opt.mood;
+  if (opt.kneel) return 'beaten';
+  txt = String(txt == null ? '' : txt);
+  if (opt.shout || /\{shout\}/.test(txt)) return (opt.hype || opt.rage) ? 'rage' : 'angry';
+  var id = ptPaintId(who);
+  return (id && PT_HAS[id + '_calm'] && id !== 'ryo' && id !== 'aoi') ? 'calm' : 'neutral';
+}
+function ptPaintUrl(who, mood) {
+  var id = ptPaintId(who); if (!id) return '';
+  var tryM = [], add = function (m) { if (m && tryM.indexOf(m) < 0) tryM.push(m); };
+  add(mood);
+  if (mood === 'rage') { add('angry'); add('calm'); add('neutral'); }
+  else if (mood === 'angry') { add('calm'); add('neutral'); }
+  else if (mood === 'happy') { add('neutral'); add('calm'); }
+  else if (mood === 'sad') { add('beaten'); add('neutral'); add('calm'); }
+  else if (mood === 'beaten') { add('sad'); add('neutral'); add('calm'); }
+  else { add('neutral'); add('calm'); }
+  for (var i = 0; i < tryM.length; i++) if (PT_HAS[id + '_' + tryM[i]]) return 'portraits/' + id + '_' + tryM[i] + '.webp';
+  return '';
+}
+function ptReduced() { try { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (eR) { return false; } }
+function ptSlam(kind) {
+  if (ptReduced()) return;
+  var d = document.getElementById('wdlg'), p = d && d.querySelector('.pt2'), hard = kind === 'rage', px = hard ? 9 : 5, dur = hard ? 320 : 220;
+  if (p && p.animate) { try { p.getAnimations().forEach(function (a) { a.cancel(); }); } catch (e0) {} p.animate([{ transform: 'translateY(-10px) scale(1.06)' }, { transform: 'translate(' + px + 'px, 3px) scale(1)', offset: 0.4 }, { transform: 'translate(' + (-px) + 'px, 0) scale(1)', offset: 0.7 }, { transform: 'translate(0,0) scale(1)' }], { duration: dur, easing: 'cubic-bezier(.2,.8,.2,1)' }); }
+  if (d && d.animate) { try { d.getAnimations().forEach(function (a) { if (a._ptSlam) a.cancel(); }); } catch (e1) {} var an = d.animate([{ marginLeft: '0px' }, { marginLeft: px + 'px', offset: 0.3 }, { marginLeft: (-px) + 'px', offset: 0.6 }, { marginLeft: '0px' }], { duration: dur, easing: 'ease-out' }); try { an._ptSlam = 1; } catch (e2) {} }
+}
 /* v4.17: Mizuno (mb_lib) is an in-game character model (tools/make_mizuno.py), not an illustration: his art keys are mizuno_*,
  * and on the map he is a walker the same size as Ryo and Aoi. v4.52: Bando (mb_field) is the same cel pipeline (tools/v426). */
 var ARTK = { mb_lib: 'mizuno' }; function ak(id) { return ARTK[id] || id; }
@@ -13903,11 +13936,12 @@ function scene(id, pre, done, i) {
   if (ln[2] && ln[2].punch) { AU.play('fist', { gain: 1 }); setTimeout(function () { AU.play('hit', { gain: 0.8 }); }, 90); wSparks(); ev('world:gouki:ko'); }
   var nm = who ? (NM[who] || KN_NM[who] || (CD.chars[who] && CD.chars[who].name) || who) : '';
   txt = twMarkup(txt, id || 'talk');
-  var html = (who ? '<div class="sh' + (hype ? ' hype' : '') + '">' + (pt ? '<i class="pt2' + (who === 'gouki' && kn ? ' kneel' : '') + '" style="background-image:url(' + IMG[pt] + ')"></i>' : '') + (pt && (who === 'ryo' || who === 'aoi') && GEAR ? gearPt(who) : '') + '<b class="snm">' + nm + '</b></div>' : '') +
+  var mood = ptMoodOf(who, ln[2], ln[1]), paint = ptPaintUrl(who, mood), ptUrl = paint || (pt && IMG[pt]);
+  var html = (who ? '<div class="sh' + (hype ? ' hype' : '') + (paint ? ' pt-hang' : '') + '">' + (ptUrl ? '<i class="pt2' + (who === 'gouki' && kn ? ' kneel' : '') + '" style="background-image:url(' + ptUrl + ')"></i>' : '') + (pt && (who === 'ryo' || who === 'aoi') && GEAR ? gearPt(who) : '') + '<b class="snm">' + nm + '</b></div>' : '') +
     '<div class="tw' + (who ? '' : ' nar') + '">' + (who ? '<p class="q">' + (/^<(p|div|strong)\b/.test(txt) ? txt : '\u201c' + txt + '\u201d') + '</p>' : txt) + '</div>';
   var nxd = 0, nx = function () { if (nxd++) return; if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } };
   dialog(html, [[last ? 'OK' : 'Next \u25b8', nx, 'hot']], null, { noPlace: 1 }); // v4.7: no "1 / 4" line counter
-  var d = $('#wdlg'); d.classList.add('scene'); d.querySelectorAll('.wardens i').forEach(function (e, j) { var k = 'warden' + (j + 1) + '_fig'; e.style.backgroundImage = 'url(' + (IMG[k] || IMG.aoi_blade_fig) + ')'; e.classList.add('wd'); }); /* v4.10.1: the Wardens, three of Aoi's family */ d.dataset.ln = (i + 1) + ' / ' + L.length; /* tests read the line index here (nothing on screen) */ var tok = W.autoTok = (W.autoTok | 0) + 1, twb = d.querySelector('.tw'), alen = (twb.textContent || '').length; /* v6.5.4 t2218: the hold starts after typing and every pause, and the last line closes too. Choices, bond picks and prompts still wait. */
+  var d = $('#wdlg'); d.classList.add('scene'); if (paint) { d.classList.add('pt-up'); if (mood === 'angry' || mood === 'rage') ptSlam(mood); } else d.classList.remove('pt-up'); d.querySelectorAll('.wardens i').forEach(function (e, j) { var k = 'warden' + (j + 1) + '_fig'; e.style.backgroundImage = 'url(' + (IMG[k] || IMG.aoi_blade_fig) + ')'; e.classList.add('wd'); }); /* v4.10.1: the Wardens, three of Aoi's family */ d.dataset.ln = (i + 1) + ' / ' + L.length; /* tests read the line index here (nothing on screen) */ var tok = W.autoTok = (W.autoTok | 0) + 1, twb = d.querySelector('.tw'), alen = (twb.textContent || '').length; /* v6.5.4 t2218: the hold starts after typing and every pause, and the last line closes too. Choices, bond picks and prompts still wait. */
   var arm = function () { clearTimeout(W.autoT); if (!autoOn()) return; var ms = autoMs(alen); ev('world:auto:arm:' + ms + (last ? ':last' : '')); W.autoT = setTimeout(function () { if (W.autoTok !== tok || !d.classList.contains('on') || !autoOn()) return; ev('world:auto:next:' + (i + 1) + (last ? ':last' : '')); close(); nx(); }, ms); };
   var ab = document.createElement('button'); ab.className = 'wauto' + (autoOn() ? ' on' : ''); ab.textContent = 'Auto'; ab.setAttribute('aria-pressed', autoOn() ? 'true' : 'false'); ab.setAttribute('aria-label', 'Auto-advance');
   ab.onclick = function (e) { e.stopPropagation(); autoSet(!autoOn()); ab.classList.toggle('on', autoOn()); ab.setAttribute('aria-pressed', autoOn() ? 'true' : 'false'); AU.play('ui_sel'); if (autoOn() && !tw.busy()) arm(); else if (!autoOn()) clearTimeout(W.autoT); }; ab.addEventListener('pointerdown', function (e) { e.stopPropagation(); }); d.appendChild(ab);
@@ -15654,7 +15688,7 @@ function bondAsk(id, cb) {
      * choice shows each answer in its path's colour with the path named, previews the path effect around Ryo on hover /
      * focus / the first tap, and plays it when picked. Later answers stay plain lines. */
     var qm = /<b>([\s\S]*?)<\/b>\s*<p>([\s\S]*?)<\/p>/.exec(Q.q), ql = qm ? qm[1] : '', qt = qm ? qm[2] : Q.q, pt = me === 'ryo' ? ryoPt() : PT[me];
-    var html = '<div class="sh' + (first ? ' bfxsh' : '') + '"><i class="pt2" style="background-image:url(' + IMG[pt] + ')"></i>' + (GEAR ? gearPt(me) : '') + '<b class="snm">' + (NM[me] || CNAME[me]) + '</b></div>' +
+    var _pq = ptPaintUrl(me, ptMoodOf(me)), html = '<div class="sh' + (first ? ' bfxsh' : '') + (_pq ? ' pt-hang' : '') + '"><i class="pt2" style="background-image:url(' + (_pq || IMG[pt]) + ')"></i>' + (GEAR ? gearPt(me) : '') + '<b class="snm">' + (NM[me] || CNAME[me]) + '</b></div>' +
       '<div class="tw bq"><p class="dim bqq">' + (ql ? '<strong>' + ql + ':</strong> ' : '') + qt + '</p></div>';
     dialog(html, STORY.BOND.P.map(function (p) { return [first ? '\u201c' + Q.o[p][0] + '.\u201d<small>' + Q.o[p][1] + '</small>' : '\u201c' + Q.o[p][0] + '.\u201d', function () { pick(p); }, 'bondopt bline bond-' + p + (first ? ' bcol' : '')]; }));
     $('#wdlg').classList.add('scene', 'bask'); if (first) $('#wdlg').classList.add('bfirst'); ev('world:bond:say:' + id);
@@ -17399,7 +17433,7 @@ function actFW(s, x, y, cb) { var last = performance.now(), tok = s.actT = (s.ac
 function actSay(s, t, ms) { var who = s.who || (s === W.ryo ? 'ryo' : s === W.aoi ? 'aoi' : (s.el && s.el.dataset.npc) || ''), nm = s.nm || NM[who] || (typeof KN_NM !== 'undefined' && KN_NM[who]) || '';
   var b = document.createElement('i'); b.className = 'asay'; b.innerHTML = '<b></b><b></b><b></b>'; s.el.appendChild(b);
   var d = $('#wdlg'), tok = W.sayTok = (W.sayTok | 0) + 1; if (!d.classList.contains('on') || d.classList.contains('sayb')) { var pt = who === 'ryo' ? ryoPt() : PT[who];
-    d.innerHTML = '<div class="tx"><div class="sh">' + (pt && IMG[pt] ? '<i class="pt2" style="background-image:url(' + IMG[pt] + ')"></i>' : '') + (nm ? '<b class="snm">' + nm + '</b>' : '') + '</div><div class="tw"><p class="q">\u201c' + t + '\u201d</p></div></div><div class="bt"></div>';
+    var _ps = ptPaintUrl(who, ptMoodOf(who)); d.innerHTML = '<div class="tx"><div class="sh' + (_ps ? ' pt-hang' : '') + '">' + ((_ps || (pt && IMG[pt])) ? '<i class="pt2" style="background-image:url(' + (_ps || IMG[pt]) + ')"></i>' : '') + (nm ? '<b class="snm">' + nm + '</b>' : '') + '</div><div class="tw"><p class="q">\u201c' + t + '\u201d</p></div></div><div class="bt"></div>';
     d.className = 'on scene sayb'; d.dataset.say = t; }
   ev('world:say:' + (who || 'x') + ':' + t); setTimeout(function () { b.remove(); if (W.sayTok === tok && d.classList.contains('sayb')) d.className = ''; }, ms || 1400); }
 /* v4.42 #6 (Ernest, shot 01M6NV01): the Music Hall bond scene, redone. Camera locked on the low bench (lower left). The first-year runs
