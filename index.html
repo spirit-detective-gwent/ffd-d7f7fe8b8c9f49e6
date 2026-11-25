@@ -13789,22 +13789,30 @@ function bentSpr(who) { var id = BENT_ALIAS[who] || who, r = W.dgRelay, b = W.c2
 root.FFF_SCAM_SPR = function (who) { return (BENT_ALIAS[who] || /^(mb2?_|gouki$|hall_mon$|enforcer$|c2_doorman$|saeki$|shigure$|kaneda$)/.test(who)) ? bentSpr(who) : null; };
 function bentIsBoss(id, who) { var C = CHAR_INTRO[id]; return !!who && (who === id || (C && who === C.who) || BENT_ALIAS[who] === id); }
 /* add held shots to the opening lines (copies; the script text is untouched). Reframe only when the shot changes. */
-function bentDirect(id, L, big) { L = (L || []).slice(); var bossAt = id, threat = -1, lastB = -1, shot = 'boss', pz = 0;
-  L.forEach(function (ln, i) { if (!ln || !bentIsBoss(id, ln[0])) return; lastB = i; var o = ln[2] || {}, tx = String(ln[1] || '');
+function bentDirect(id, L, big) { L = (L || []).slice(); var bossAt = id, threat = -1, lastB = -1, firstB = -1, shot = 'boss', pz = 0, still = false, SP = BENT_SPL[id] || {};
+  L.forEach(function (ln, i) { if (!ln || !bentIsBoss(id, ln[0])) return; lastB = i; if (firstB < 0) firstB = i; var o = ln[2] || {}, tx = String(ln[1] || '');
     if (threat < 0 && (/\{shout\}/.test(tx) || o.mood === 'angry' || o.mood === 'rage')) threat = i; });
   if (threat < 0) threat = lastB;
-  return L.map(function (ln, i) { if (!ln || typeof ln[0] !== 'string' || ln[0].charAt(0) === '@') return ln; var who = ln[0], o0 = ln[2] || {};
-    if (o0.cam) { shot = ''; return ln; }
+  var out = [];
+  L.forEach(function (ln, i) { if (!ln || typeof ln[0] !== 'string' || ln[0].charAt(0) === '@') { out.push(ln); return; } var who = ln[0], o0 = ln[2] || {};
+    if (SP.before === 'threat' && i === threat) { out.push(['@splash', SP.key]); still = true; }
+    else if (SP.face && i === firstB) { out.push(['@splash', SP.face]); still = true; }
+    if (o0.cam) { shot = ''; out.push(ln); return; }
     var c = null;
     if (!who) c = i === 0 ? { cam: 'bars+hold' } : null;
     else if (bentIsBoss(id, who)) {
-      if (i === threat) { pz = big ? 2.55 : 2.12; c = { cam: 'push', at: bossAt, z: pz, z0: pz * 0.84, cut: shot !== 'boss' ? 1 : 0, ms: big ? 4000 : 3200, f: 0.88, gy: 0.36, ease: 'cubic-bezier(.37,0,.63,1)', nofocus: 1 }; /* cut in from the hero shot, then one slow push that stays in */ if (/\{shout\}/.test(String(ln[1]))) { c.cam += '+shake'; c.onShout = 1; } shot = 'push'; }
-      else if (shot !== 'boss') { c = pz && i > threat ? { cam: 'frame', at: bossAt, z: pz, k: 0, f: 0.88, gy: 0.36 } : { cam: 'frame', at: bossAt, z: big ? 1.9 : 1.72, k: 0.07, ms: big ? 3600 : 3200, f: 0.85, gy: 0.36 }; shot = 'boss'; } /* a cut back to the boss: after the threat line it stays at the pushed-in size */
+      if (i === threat) { pz = big ? 2.55 : 2.12; c = { cam: 'push', at: bossAt, z: pz, z0: still ? pz : pz * 0.84, cut: (shot !== 'boss' || still) ? 1 : 0, ms: big ? 4000 : 3200, f: 0.88, gy: 0.36, ease: 'cubic-bezier(.37,0,.63,1)', nofocus: 1 }; /* cut in from the hero shot (a still cut after a splash), then one slow push that stays in */ if (/\{shout\}/.test(String(ln[1]))) { c.cam += '+shake'; c.onShout = 1; } shot = 'push'; still = false; }
+      else if (shot !== 'boss' || still) { c = pz && i > threat ? { cam: 'frame', at: bossAt, z: pz, k: 0, f: 0.88, gy: 0.36 } : { cam: 'frame', at: bossAt, z: big ? 1.9 : 1.72, k: still ? 0 : 0.07, ms: big ? 3600 : 3200, f: 0.85, gy: 0.36 }; shot = 'boss'; still = false; } /* a cut back to the boss: after the threat line it stays at the pushed-in size */
     } else if (who === 'ryo' || who === 'aoi') {
-      if (shot !== 'heroes') { c = { cam: 'frame', at: who, at2: bossAt, z: big ? 1.7 : 1.62, k: 0.07, ms: big ? 3600 : 3400, ots: big ? 0.56 : 0.58 }; shot = 'heroes'; }
+      if (shot !== 'heroes' || still) { c = { cam: 'frame', at: who, at2: bossAt, z: big ? 1.7 : 1.62, k: still ? 0 : 0.07, ms: big ? 3600 : 3400, ots: big ? 0.56 : 0.58 }; shot = 'heroes'; still = false; }
     }
     if (i === 0 && !/bars/.test((c && c.cam) || '')) c = Object.assign({}, c || {}, { cam: 'bars+' + ((c && c.cam) || 'hold') });
-    return c ? [ln[0], ln[1], Object.assign({}, o0, c)] : ln; }); }
+    out.push(c ? [ln[0], ln[1], Object.assign({}, o0, c)] : ln);
+    if (SP.after === 'last' && i === lastB) { out.push(['@splash', SP.afterKey]); still = true; } });
+  return out; }
+/* which boss lines get a splash (prototype: Jin and Gouki). before: 'threat' = just before the threat line; face = a split-screen before the boss's first line; after: 'last' = after his final line */
+var BENT_SPL = { mb2_game: { before: 'threat', key: 'jin_threat' }, gouki: { face: 'gouki_face', after: 'last', afterKey: 'gouki_final' } };
+var BENT_REVEAL = { gouki: 'gouki_reveal' };
 function bentSeen(id) { return !!(SAVE.bent && SAVE.bent[id]); }
 function bossEnt(id, lines, done, opt) { opt = opt || {}; var C = CHAR_INTRO[id], SC = root.FFF_SCAM;
   if (!C || id === 'c2_boss' || bentSeen(id) || !SC || !SC.shot || root.FFF_SKIP_INTRO) { charIntro(id, function () { scene(null, lines, done); }); return; }
@@ -13822,11 +13830,14 @@ function bossEnt(id, lines, done, opt) { opt = opt || {}; var C = CHAR_INTRO[id]
       SC.st.keep = true; SC.st.outMs = big ? 3400 : 3000;
       scene(null, bentDirect(id, lines, big), function () { if (cfSet) { W.camFocus = cf0; cfSet = false; } W.bentS = null; ev('world:bent:end:' + id); if (done) done(); });
       sLock(0, 'bent'); }, { keepBars: 1, cls: 'onshot' }); }
-  function onTap(e) { if (e && e.target && e.target.closest && e.target.closest('#wintro')) return; if (e) { e.preventDefault(); e.stopPropagation(); } ev('world:bent:skip:' + id); stopAll(); fin = 0; setTimeout(card, 0); }
+  function onTap(e) { if (SPL_ON || (e && e.target && e.target.closest && e.target.closest('#wintro'))) return; if (e) { e.preventDefault(); e.stopPropagation(); } ev('world:bent:skip:' + id); stopAll(); fin = 0; setTimeout(card, 0); }
   document.addEventListener('pointerdown', onTap, true);
   SC.bars(1); SC.st.boss = true; /* v6.5.63: MGS camera: cuts and one-way pushes only, never an animated zoom-out */
-  if (still || !boss) { at(still ? 450 : 300, card); return; }
-  var B = boss, k = 1;
+  var rz = null, B = boss;
+  function reveal() { var rk = BENT_REVEAL[id]; if (!rk) { card(); return; } /* a splash on the reveal, then a hard cut to a still shot and the name card */
+    bossSplash(rk, function () { if (fin) return; if (rz && SC.shot) SC.shot(rz[0], { z: rz[1], z0: rz[1], f: rz[4], gy: rz[5] }); card(); }); }
+  if (still || !boss) { at(still ? 450 : 300, reveal); return; }
+  var k = 1;
   /* shots: [target, zoom, ease ms, hold after (ms), centre weight, frame height, extra] */
   var P = big ? [
       ['ryo', 1.3, 1800, 250, 0.7, 0.5, 0, 0],
@@ -13836,7 +13847,119 @@ function bossEnt(id, lines, done, opt) { opt = opt || {}; var C = CHAR_INTRO[id]
     ];
   var t = cfSet ? 420 : 100; /* the push starts as soon as the world camera has the room (no dead pause) */
   P.forEach(function (s) { at(t, function () { SC.shot(s[0], { z: s[1], z0: s[7] || 0, ms: s[2], f: s[4], gy: s[5] }); if (s[6] === 'slam') at(s[2] - 120, function () { try { AU.play('hit', { gain: 0.5 }); wShake(); } catch (eA) {} }); }); t += s[2] + s[3]; });
-  at(t, card); }
+  rz = P[P.length - 1]; at(t, reveal); }
+
+/* v6.5.63 (GGD-22): boss splash art. A handmade, in-engine painted close-up of the boss on the big beats: the portrait is cropped tight inside a torn
+ * slashed panel over a colour burst, halftone and ink border, with motion streaks and a caption. It is drawn ONCE (two canvases) and then only moved with
+ * one-shot WAAPI (slide in, hold ~1 s while the world is frozen, slide out). No loop, nothing drawn per frame; the canvases are released on close.
+ * Reduced motion: the still splash fades in and out with no slide. A tap skips it. Used through the '@splash' scene line and the bossEnt reveal. */
+var SPL = {
+  jin_threat: { p: ['jin', 'angry'], c1: '#b6ff3c', c2: '#ff3fa4', bg: '#07140a', word: 'LOSERS PAY.', sub: 'HIGH-SCORE JIN', crop: [175, 168, 236], box: [0.12, 0.74], tilt: -6, dir: 1 },
+  gouki_reveal: { p: ['gouki', 'angry'], c1: '#b98cff', c2: '#ff2d4d', bg: '#0d0618', word: 'UNBEATABLE.', sub: 'GOUKI DAIMON', crop: [180, 232, 316], box: [0.10, 0.76], tilt: 4, dir: -1 },
+  gouki_final: { p: ['gouki', 'angry'], c1: '#b98cff', c2: '#ff2d4d', bg: '#0d0618', word: 'NOW EARN THE REST.', sub: '', crop: [180, 160, 200], box: [0.31, 0.64], tilt: -3, dir: 1, slit: 1 },
+  gouki_face: { split: [['ryo', 'angry', '#ff9a3c', 196, 182], ['gouki', 'angry', '#b98cff', 178, 168]], c1: '#ffd23c', c2: '#ff2d4d', bg: '#0b0610', word: 'VS', sub: '', tilt: 0, dir: 1 }
+};
+var SPL_ON = null;
+function splRng(s) { var h = 1779033703 ^ s.length; for (var i = 0; i < s.length; i++) { h = Math.imul(h ^ s.charCodeAt(i), 3432918353); h = (h << 13) | (h >>> 19); } return function () { h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); h ^= h >>> 16; return (h >>> 0) / 4294967296; }; }
+function splUrls(S) { var L = S.split ? S.split : [S.p]; return L.map(function (q) { return ptPaintUrl(q[0], q[1]); }); }
+function splLoad(urls, cb) { var out = [], n = 0, bad = false; if (!urls.length) { cb(null); return; }
+  urls.forEach(function (u, k) { if (!u) { bad = true; if (++n === urls.length) cb(null); return; } var im = new Image(); im.onload = function () { out[k] = im; if (++n === urls.length) cb(bad ? null : out); }; im.onerror = function () { bad = true; if (++n === urls.length) cb(null); }; im.src = u; }); }
+/* one panel: a torn parallelogram, rotated about its centre; the portrait is cropped tight (cx, cy, region width in source px) */
+function splPanel(g, S, R, im, box, crop, col, edgeL, edgeR) {
+  var w = box.w, h = box.h; g.save(); g.translate(box.x, box.y); g.rotate((S.tilt || 0) * Math.PI / 180);
+  var path = function (dx, dy) { g.beginPath(); var sk = Math.min(40, h * 0.07), pts = [], q;
+    pts.push([-w / 2 + dx, -h / 2 + sk + dy]); for (q = 1; q < 9; q++) pts.push([-w / 2 + dx + (edgeL ? (R() - 0.5) * 16 : 0), -h / 2 + sk + (h - sk) * q / 9 + dy]); pts.push([-w / 2 + dx, h / 2 + dy]);
+    pts.push([w / 2 + dx, h / 2 - sk + dy]); for (q = 8; q >= 1; q--) pts.push([w / 2 + dx + (edgeR ? (R() - 0.5) * 16 : 0), -h / 2 + (h - sk) * q / 9 + dy]); pts.push([w / 2 + dx, -h / 2 + dy]);
+    pts.forEach(function (p, i) { if (i) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); }); g.closePath(); };
+  var seed = R() * 1e9; var R1 = splRng('e' + seed), R2 = splRng('e' + seed); /* identical edge for the shadow, the ink and the clip */
+  var Rs = R; R = R1; path(12, 12); g.fillStyle = col; g.fill(); R = R2; path(0, 0); g.lineWidth = 16; g.strokeStyle = '#05050a'; g.lineJoin = 'round'; g.stroke(); g.fillStyle = '#05050a'; g.fill();
+  R = splRng('e' + seed); path(0, 0); g.save(); g.clip();
+  var sc = w / crop[2], x0 = -crop[0] * sc, y0 = -crop[1] * sc - h * 0.06; /* the crop centre sits a little above the middle */
+  g.fillStyle = S.bg; g.fillRect(-w / 2 - 20, -h / 2 - 20, w + 40, h + 40);
+  try { g.filter = 'contrast(1.14) saturate(1.22) brightness(1.04)'; } catch (eF) {}
+  g.imageSmoothingQuality = 'high'; g.drawImage(im, x0, y0, im.naturalWidth * sc, im.naturalHeight * sc); try { g.filter = 'none'; } catch (eF2) {}
+  var vg = g.createRadialGradient(0, 0, Math.min(w, h) * 0.25, 0, 0, Math.max(w, h) * 0.75); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.6)'); g.fillStyle = vg; g.fillRect(-w / 2, -h / 2, w, h);
+  g.globalCompositeOperation = 'soft-light'; var cg = g.createLinearGradient(-w / 2, h / 2, w / 2, -h / 2); cg.addColorStop(0, col); cg.addColorStop(1, 'rgba(255,255,255,0)'); g.globalAlpha = 0.55; g.fillStyle = cg; g.fillRect(-w / 2, -h / 2, w, h); g.globalAlpha = 1; g.globalCompositeOperation = 'source-over';
+  for (var k = 0; k < 520; k++) { g.fillStyle = k % 2 ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.09)'; g.fillRect((R() - 0.5) * w, (R() - 0.5) * h, 1.6, 1.6); } /* paper grain */
+  g.restore(); R = splRng('e' + seed); path(0, 0); g.lineWidth = 5; g.strokeStyle = '#fff'; g.stroke(); g.restore(); }
+/* render both layers; cb(base, fx, Wc, Hc). Pure canvas work, no DOM. */
+function splRender(key, Wc, Hc, d, imgs) {
+  var S = SPL[key], R = splRng(key), mk = function () { var c = document.createElement('canvas'); c.width = Math.round(Wc * d); c.height = Math.round(Hc * d); var g = c.getContext('2d'); g.scale(d, d); return [c, g]; };
+  var A = mk(), B = mk(), g = A[1], f = B[1], FX = Wc / 2, FY = Hc * 0.42, i, a;
+  /* 1. colour burst */
+  var bgG = g.createRadialGradient(FX, FY, 20, FX, FY, Hc * 0.8); bgG.addColorStop(0, S.c1); bgG.addColorStop(0.18, S.bg); bgG.addColorStop(1, '#020204'); g.fillStyle = bgG; g.fillRect(0, 0, Wc, Hc);
+  var N = 30, off = R() * 6; for (i = 0; i < N; i++) { var aw; a = (i / N) * Math.PI * 2 + off; aw = Math.PI / N * (0.4 + R() * 0.9); g.beginPath(); g.moveTo(FX, FY); g.lineTo(FX + Math.cos(a) * 1400, FY + Math.sin(a) * 1400); g.lineTo(FX + Math.cos(a + aw) * 1400, FY + Math.sin(a + aw) * 1400); g.closePath(); g.fillStyle = i % 2 ? S.c1 : S.c2; g.globalAlpha = i % 2 ? 0.17 : 0.10; g.fill(); }
+  g.globalAlpha = 1;
+  /* 2. halftone, fading from the lower-left corner */
+  for (var yy = 0, row = 0; yy < Hc; yy += 15, row++) for (var xx = (row % 2) * 7.5; xx < Wc; xx += 15) { var dd = Math.hypot(xx, yy - Hc) / Hc, r = Math.max(0, 5.2 * (1 - dd * 1.15)); if (r > 0.4) { g.beginPath(); g.arc(xx, yy, r, 0, 6.3); g.fillStyle = S.c2; g.globalAlpha = 0.5; g.fill(); } }
+  g.globalAlpha = 1;
+  /* 3. wide brush slashes behind the panel */
+  for (i = 0; i < 3; i++) { var y0 = Hc * (0.18 + i * 0.28) + R() * 40, th = 16 + R() * 26; g.save(); g.translate(0, y0); g.rotate(((S.tilt || 0) - 9 - i * 2) * Math.PI / 180); g.beginPath(); g.moveTo(-40, 0); g.lineTo(Wc + 60, -th); g.lineTo(Wc + 60, th * 0.2); g.lineTo(-40, th * 1.4); g.closePath(); g.fillStyle = i % 2 ? S.c1 : S.c2; g.globalAlpha = 0.5; g.fill(); g.restore(); }
+  g.globalAlpha = 1;
+  /* 4. the portrait panel(s) */
+  if (S.split) {
+    var ty0 = Hc * 0.14, ty1 = Hc * 0.86;
+    S.split.forEach(function (q, k) { var left = k === 0; g.save(); g.beginPath(); if (left) { g.moveTo(0, ty0); g.lineTo(Wc * 0.58, ty0); g.lineTo(Wc * 0.42, ty1); g.lineTo(0, ty1); } else { g.moveTo(Wc * 0.58 + 14, ty0); g.lineTo(Wc, ty0); g.lineTo(Wc, ty1); g.lineTo(Wc * 0.42 + 14, ty1); } g.closePath(); g.clip();
+      var cx = left ? Wc * 0.29 : Wc * 0.71, sc = 1.3, r2 = splRng(key + k);
+      g.fillStyle = S.bg; g.fillRect(0, ty0, Wc, ty1 - ty0);
+      var rg = g.createRadialGradient(cx, Hc * 0.4, 10, cx, Hc * 0.4, Hc * 0.6); rg.addColorStop(0, q[2]); rg.addColorStop(1, S.bg); g.globalAlpha = 0.5; g.fillStyle = rg; g.fillRect(0, 0, Wc, Hc); g.globalAlpha = 1;
+      try { g.filter = 'contrast(1.14) saturate(1.22) brightness(1.04)'; } catch (eF) {} g.imageSmoothingQuality = 'high';
+      g.drawImage(imgs[k], cx - q[3] * sc, ty0 - 8, imgs[k].naturalWidth * sc, imgs[k].naturalHeight * sc); try { g.filter = 'none'; } catch (eF2) {}
+      var vg = g.createLinearGradient(left ? 0 : Wc, 0, Wc / 2, 0); vg.addColorStop(0, 'rgba(0,0,0,.55)'); vg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = vg; g.fillRect(0, 0, Wc, Hc);
+      for (var s2 = 0; s2 < 420; s2++) { g.fillStyle = s2 % 2 ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.09)'; g.fillRect(r2() * Wc, r2() * Hc, 1.6, 1.6); }
+      g.restore(); });
+    g.beginPath(); g.moveTo(Wc * 0.58 + 7, ty0 - 6); g.lineTo(Wc * 0.42 + 7, ty1 + 6); g.lineWidth = 22; g.strokeStyle = '#05050a'; g.stroke(); g.lineWidth = 6; g.strokeStyle = '#fff'; g.stroke(); g.lineWidth = 2; g.strokeStyle = S.c2; g.translate(5, 0); g.stroke(); g.translate(-5, 0);
+  } else {
+    var by = Hc * S.box[0], bh = Hc * (S.box[1] - S.box[0]);
+    splPanel(g, S, R, imgs[0], { x: Wc / 2, y: by + bh / 2, w: Wc * 1.1, h: bh }, S.crop, S.c1, 1, 1);
+  }
+  /* 5. motion streaks (own layer, moves faster): tapered, head in the direction of the slide */
+  var dir = S.dir, th0 = (S.tilt || 0) * Math.PI / 180, cnt = S.split ? 40 : 58;
+  for (i = 0; i < cnt; i++) {
+    var y = R() * Hc, len = 120 + R() * 340, x = R() * (Wc + 200) - 100, t = (i % 7 === 0 ? 5 + R() * 5 : 1.6 + R() * 3.6), th = th0 + (R() - 0.5) * 0.06, cx2 = Math.cos(th) * dir, cy2 = Math.sin(th) * dir, hx = x + cx2 * len, hy = y + cy2 * len;
+    if (S.split) { cx2 = (x < Wc / 2 ? 1 : -1); hx = x + cx2 * len; hy = y + Math.sin(th) * len * 0.3; }
+    var gr = f.createLinearGradient(x, y, hx, hy), col = R() < 0.62 ? '255,255,255' : (R() < 0.5 ? S.c1 : S.c2);
+    var rgb = function (c) { if (c.charAt(0) !== '#') return c; return parseInt(c.substr(1, 2), 16) + ',' + parseInt(c.substr(3, 2), 16) + ',' + parseInt(c.substr(5, 2), 16); }; col = rgb(col);
+    gr.addColorStop(0, 'rgba(' + col + ',0)'); gr.addColorStop(1, 'rgba(' + col + ',' + (0.45 + R() * 0.5).toFixed(2) + ')');
+    f.beginPath(); f.moveTo(x, y - t / 2); f.lineTo(hx, hy); f.lineTo(x, y + t / 2); f.closePath(); f.fillStyle = gr; f.fill(); }
+  for (i = 0; i < 9; i++) { var sx = R() * Wc, sy = R() * Hc, sr = 4 + R() * 8; f.save(); f.translate(sx, sy); f.rotate(0.785); f.fillStyle = i % 2 ? S.c1 : '#fff'; f.globalAlpha = 0.85; f.fillRect(-sr / 2, -sr / 2, sr, sr); f.restore(); }
+  /* 6. caption */
+  if (S.word) {
+    var fs = 62, fam = '900 italic ' + fs + 'px "Arial Black",Impact,system-ui,sans-serif'; f.font = fam; var tw = f.measureText(S.word).width; fs = Math.max(26, Math.min(70, Math.floor(fs * (Wc * 0.88) / tw))); fam = '900 italic ' + fs + 'px "Arial Black",Impact,system-ui,sans-serif'; f.font = fam;
+    var ty = S.split ? Hc * 0.80 : Math.min(Hc * 0.90, Hc * S.box[1] + fs + 22), tx = S.split ? Wc / 2 : Wc * 0.07; f.save(); f.translate(tx, ty); f.rotate(S.split ? -0.10 : -0.07); f.textAlign = S.split ? 'center' : 'left'; f.lineJoin = 'round';
+    if (S.split) { f.font = '900 italic 92px "Arial Black",Impact,system-ui,sans-serif'; }
+    f.lineWidth = 14; f.strokeStyle = '#05050a'; f.strokeText(S.word, 0, 0); f.fillStyle = S.c2; f.fillText(S.word, 5, 5); f.lineWidth = 4; f.strokeStyle = '#05050a'; f.strokeText(S.word, 0, 0); f.fillStyle = '#fff'; f.fillText(S.word, 0, 0);
+    if (S.sub) { f.font = '900 italic 15px "Arial Black",system-ui,sans-serif'; f.fillStyle = S.c1; f.lineWidth = 5; f.strokeStyle = '#05050a'; f.strokeText(S.sub, 3, fs * 0.62); f.fillText(S.sub, 3, fs * 0.62); }
+    f.restore(); }
+  if (S.split) { [['RYO', Wc * 0.07, 0], ['GOUKI', Wc * 0.93, 1]].forEach(function (q) { f.save(); f.font = '900 italic 20px "Arial Black",system-ui,sans-serif'; f.textAlign = q[2] ? 'right' : 'left'; f.lineWidth = 6; f.strokeStyle = '#05050a'; f.lineJoin = 'round'; f.strokeText(q[0], q[1], Hc * 0.835); f.fillStyle = '#fff'; f.fillText(q[0], q[1], Hc * 0.835); f.restore(); }); }
+  return [A[0], B[0]]; }
+function bossSplash(key, done) {
+  var S = SPL[key], sg = W.scGen | 0, fin = 0, tm = [], prevP = W.paused, prevOn = SPL_ON;
+  var fail = function () { if (done) done(); };
+  if (!S || SPL_ON || root.FFF_NO_SPLASH) { fail(); return; }
+  var red = ptReduced() || !!(ST.set && ST.set.rm);
+  splLoad(splUrls(S), function (imgs) {
+    if (!imgs || !scOk(sg)) { fail(); return; }
+    var host = document.getElementById('game') || document.body, o = document.createElement('div'); o.id = 'wsplash';
+    o.style.cssText = 'position:fixed;inset:0;z-index:245;overflow:hidden;background:rgba(0,0,0,.0);touch-action:none';
+    var Wc = Math.max(200, window.innerWidth), Hc = Math.max(300, window.innerHeight), d = Math.min(2, window.devicePixelRatio || 1), cv;
+    try { cv = splRender(key, Wc, Hc, d, imgs); } catch (eR) { ev('world:splash:err:' + key + ':' + (eR && eR.message)); fail(); return; }
+    var lay = cv.map(function (c) { c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;will-change:transform'; o.appendChild(c); return c; });
+    document.body.appendChild(o); SPL_ON = o; W.paused = true; W.path = []; if (W.ryo) W.ryo.v = 0; ev('world:splash:' + key + ':' + (red ? 'still' : 'slide'));
+    var finish = function () { if (fin++) return; tm.forEach(clearTimeout); document.removeEventListener('pointerdown', onTap, true); SPL_ON = null; W.paused = prevP; lay.forEach(function (c) { c.width = 1; c.height = 1; }); if (o.parentNode) o.remove(); ev('world:splash:end:' + key); if (done) done(); };
+    var t0 = performance.now(), onTap = function (e) { if (e) { e.preventDefault(); e.stopPropagation(); } if (performance.now() - t0 > 380) finish(); };
+    document.addEventListener('pointerdown', onTap, true); tm.push(setTimeout(finish, 4200)); /* never hold the freeze */
+    var dr = S.dir;
+    if (red || !o.animate) { lay[0].style.opacity = 0; lay[1].style.opacity = 0; o.style.background = 'rgba(0,0,0,.35)'; var ia = function (el, a, ms, dl) { try { return el.animate(a, { duration: ms, delay: dl || 0, fill: 'forwards' }); } catch (e) { el.style.opacity = a[a.length - 1].opacity; } };
+      ia(lay[0], [{ opacity: 0 }, { opacity: 1 }], 180); ia(lay[1], [{ opacity: 0 }, { opacity: 1 }], 180); tm.push(setTimeout(function () { ia(lay[0], [{ opacity: 1 }, { opacity: 0 }], 180); ia(lay[1], [{ opacity: 1 }, { opacity: 0 }], 180); }, 1300)); tm.push(setTimeout(finish, 1500)); return; }
+    var T = 1520, a1 = 230 / T, a2 = 1300 / T, sx = -105 * dr; /* in 230 ms, hold ~1.07 s, out 220 ms */
+    lay[0].animate([{ transform: 'translateX(' + sx + '%) skewX(' + (-10 * dr) + 'deg)', easing: 'cubic-bezier(.1,.8,.2,1)' }, { transform: 'translateX(0) skewX(0deg) scale(1)', offset: a1, easing: 'linear' }, { transform: 'translateX(0) skewX(0deg) scale(1.04)', offset: a2, easing: 'cubic-bezier(.6,0,.9,.4)' }, { transform: 'translateX(' + (-sx) + '%) skewX(' + (10 * dr) + 'deg) scale(1.04)' }], { duration: T, fill: 'forwards' });
+    lay[1].animate([{ transform: 'translateX(' + (-sx * 0.9) + '%)', easing: 'cubic-bezier(.1,.8,.2,1)' }, { transform: 'translateX(0)', offset: a1, easing: 'linear' }, { transform: 'translateX(' + (sx * 0.05) + '%)', offset: a2, easing: 'cubic-bezier(.6,0,.9,.4)' }, { transform: 'translateX(' + (sx * 1.3) + '%)' }], { duration: T, fill: 'forwards' });
+    o.animate([{ background: 'rgba(0,0,0,0)' }, { background: 'rgba(0,0,0,.5)', offset: a1 }, { background: 'rgba(0,0,0,.5)', offset: a2 }, { background: 'rgba(0,0,0,0)' }], { duration: T, fill: 'forwards' });
+    tm.push(setTimeout(function () { try { AU.play('hit', { gain: 0.7 }); } catch (eA) {} }, 200));
+    tm.push(setTimeout(function () { try { AU.play('swirl', { gain: 0.25 }); } catch (eB) {} }, 1250));
+    tm.push(setTimeout(finish, T + 30)); });
+}
 
 /* v4.17: Mizuno (mb_lib) is an in-game character model (tools/make_mizuno.py), not an illustration: his art keys are mizuno_*,
  * and on the map he is a walker the same size as Ryo and Aoi. v4.52: Bando (mb_field) is the same cel pipeline (tools/v426). */
@@ -14063,6 +14186,7 @@ function scene(id, pre, done, i) {
   if (who === '@cin') { close(); if (ln[2] && ln[2].fire != null) setFire(ln[2].fire, id); cine(txt, function () { if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } }); return; }
   if (who === '@map') { close(); qMap(txt, function () { if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } }); return; } /* v4.44 */
   if (who === '@quest') { close(); if (txt === 'done') qDoneNow(); else if (txt === 'next') qNextNow(); else qStart(txt); setTimeout(function () { if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } }, Math.round(1500 * cinK())); return; } /* v4.35 the quest banner, mid-scene */
+  if (who === '@splash') { close(); bossSplash(txt, function () { if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } }); return; } /* v6.5.63: boss splash art mid-scene */
   if (who === '@pan') { close(); pan(function () { if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } }); return; }
   if (ln[2] && ln[2].fire != null) setFire(ln[2].fire, id);
   if (ln[2] && ln[2].bul === 0) kneelGo();
