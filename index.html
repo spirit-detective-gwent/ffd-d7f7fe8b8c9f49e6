@@ -11454,7 +11454,7 @@ function seeK(q, tx, ty, ok, noSense) { var s = q.s, dx = tx - s.x, dy = ty - s.
   var rr = th <= c ? r : r * (1 - (1 - AW.side) * (th - c) / Math.max(1e-3, a - c)); // full reach ahead, AW.side x reach at the edge of the field
   if (d > rr || !losClear(s.x, s.y, tx, ty, ok)) return 0; return Math.max(0.02, 1 - d / rr); }
 /* notice build-up: true once q has seen enough to go "!" */
-function gpAmbK() { try { var k = root.FFF_UI && root.FFF_UI.ST.set.ambRate; return k === 'few' ? 0.5 : k === 'more' ? 1.5 : 1; } catch (e) { return 1; } }
+function gpAmbK() { return 1; } /* v6.5.62: street-ambush rate setting is gone; leftover saves must not change fight or roam rates */
 function gpChance(p) { var k = gpAmbK(); return k === 1 ? Math.min(0.9, p) : Math.min(0.9, p * k); }
 function susStep(q, k, dt) { var N = ntc(q.id); if (k > 0) { var ambK = gpAmbK(), rate = (AW.far + (3 - AW.far) * k) / (N.t * (q.talk ? 1.4 : 1)); q.sus = (q.sus || 0) + dt * (ambK === 1 ? rate : rate * ambK); if (q.sus >= AW.susQ && !q.qm) { q.qm = 1; bubbleOn(q.s, '?'); ev('world:aware:sus:' + q.id); } }
   else { q.sus = Math.max(0, (q.sus || 0) - dt * 0.6); if (!q.sus) q.qm = 0; } return q.sus >= 1; }
@@ -21727,7 +21727,6 @@ function phRenderSet() {
     /* v6.5.32: Highlight hidden items row removed */
     
     h += '<div class="set-row col set-foe"><span><b>Enemy strength</b><small>HP and damage, the four Chapter 1 doubles, and Chapter 2 street crews</small></span>' + phSeg('foe', s.foeStr === 'weak' || s.foeStr === 'strong' || s.foeStr === 'max' ? s.foeStr : 'normal', [['weak', 'Weaker'], ['normal', 'Normal'], ['strong', 'Stronger'], ['max', 'Strongest']]) + '</div>';
-    h += '<div class="set-row col"><span><b>Street ambushes</b><small>How often street fights start on their own</small></span>' + phSeg('amb', s.ambRate === 'few' || s.ambRate === 'more' ? s.ambRate : 'normal', [['few', 'Fewer'], ['normal', 'Normal'], ['more', 'More']]) + '</div>';
     h += '<div class="set-row col"><span><b>Item scarcity</b><small>How many optional hidden pickups are out there</small></span>' + phSeg('scarce', s.itemScarce === 'scarce' ? 'scarce' : 'normal', [['normal', 'Normal'], ['scarce', 'Scarce']]) + '</div>';
     h += '<div class="set-row col"><span><b>XP mode</b><small>Grinder: story and quests give half XP, fights give more</small></span>' + phSeg('xpmode', s.xpMode === 'grinder' ? 'grinder' : 'normal', [['normal', 'Normal'], ['grinder', 'Grinder']]) + '</div>';
     h += '</section>';
@@ -21824,7 +21823,7 @@ function phSetWire(box) {
       if (a === 'tips') { s.tips = s.tips === false; phSaveSet(); paint(); return; }
       /* v6.5.32: findhi click removed */
       if (a === 'foe') { s.foeStr = v; phSaveSet(); paint(); return; }
-      if (a === 'amb') { s.ambRate = v; phSaveSet(); paint(); return; }
+      /* v6.5.62: Street ambushes setting removed */
       if (a === 'scarce') { s.itemScarce = v; phSaveSet(); W.tagSig = ''; paint(); return; }
       if (a === 'xpmode') { s.xpMode = v; phSaveSet(); paint(); return; }
       if (a === 'ping') { if (typeof setPing === 'function') setPing(!pingOn()); paint(); return; }
