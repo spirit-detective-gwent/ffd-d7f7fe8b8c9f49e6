@@ -11,6 +11,16 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
+### 2026-11-25 — executor (Grok Bot) — v6.5.62 (branch v6562-dlg) — NOT published; waiting on Ernest's OK
+Versions: `window.FFF_BUILD="v6562"`, title `.vtag` "v6.5.62", `#ver` text "v6.5.62" (bumped in e95863b).
+Ernest asked for the dark-blue talk box to be translucent so the scene shows through, without white words disappearing on bright tiles, and he disliked B's black scrim behind the words. He picked option D (A's approach, B's lightness).
+What is on this branch (not live):
+- D-style `#wdlg`: 50% dark-blue wash, no scrim. White quotes are 16.5px / 700 with a 1px 8-way text outline, `paint-order: stroke fill`, and a soft glow. Names and narrator lines get the same outline. Auto gets a solid fill so it stays readable. Full-screen choice overlays (`#wdlg.d2` / `.d3`, shops, versus prompts) keep their own type and veil.
+- Auto-dock (`dlgPlace`, `DLG_DOCK_COVER = 0.18`): when a line opens, if a speaker's on-screen bbox overlaps the default bottom slot by more than 18%, or their feet would sit under it, the box docks to the top, under the safe area and clear of the HP/SP HUD (`#wstat`). The slot is chosen once per line and never flips mid-line. Runs after `FFF_SCAM.line()` has started, and again after Auto is added. d2/d3 overlays are skipped.
+Commits: `50f826c` CSS, `51e2c66` auto-dock, `e95863b` version bump, this handoff entry.
+Checks: Ch1 and Ch2 scenes, Lucky 7 (Ban) battle-adjacent talk, bath-hall typography, herbalist shop, a 2-button choice, and a vending machine — no console errors; choices stayed d2 and were not auto-docked. Preview shots in `/workspace/v6560-review/dlg_final_*.png`. Official `perf_check origin/main` vs this branch is in progress or recorded at the end of the turn.
+Not in git (dev only): `index_fffonly.html`, `page.canvas.tsx.txt`. Do not publish until Ernest OKs the release.
+
 ### 2026-11-24 — executor (Grok Bot) — v6.5.61 (commit 44a0391) — LIVE after Ernest's OK
 Versions: `window.FFF_BUILD="v6561"`, title `.vtag` "v6.5.61", `#ver` text "v6.5.61" (bumped in 2d95937).
 Approved by Ernest after the previews ("add everything from the previews and then it's finished"; "once you verify everything, you can release it to the live build and update our folder"). Fast-forward onto 62b3c59 (v6.5.60). Published commit `44a0391`; live serves v6.5.61 with no console errors.
