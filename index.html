@@ -16456,8 +16456,8 @@ function dgFrame(dt) { var I = W.inside; if (!I || !INT[I.id].dg || !W.dgF) retu
 function dgAfter(win, st) { var c = st && st.ctx; if (!c || !c.dg) return; var ks = c.dgks || [c.dgk], fs = (W.dgF || []).filter(function (q) { return ks.indexOf(q.key) >= 0; }); W.dgFight = null;
   if (win && !st.escaped) { ks.forEach(function (k) { if (typeof dgRefilled === 'function' && dgRefilled(c.dg) && typeof dgRfDown === 'function') dgRfDown(c.dg, k); else dgS(c.dg).f[k] = 1; }); save(); fs.forEach(function (f) { f.s.el.classList.add('out'); setTimeout(function () { f.s.el.remove(); }, 600); W.dgF.splice(W.dgF.indexOf(f), 1); }); ks.forEach(function (k) { ev('world:dg:down:' + c.dg + ':' + k); }); if (typeof sqAfterFight === 'function') sqAfterFight(win, st); }
   else fs.forEach(function (f) { f.stun = 3; f.st = 'scan'; f.wait = AW.lookT; f.lk0 = f.fa || 0; f.sus = 0; }); } // v4.22 / v4.66 refill visit flags + side-quest kills
-/* the indoor soda + food machines (two per building: soda + food). Food: \u00a53, heals 30% at once, 3 per machine, 4 foods */
-var FOODS = { melon: { n: 'Melon bread', ic: '\ud83c\udf48' }, onigiri: { n: 'Onigiri', ic: '\ud83c\udf59' }, yakisoba: { n: 'Yakisoba bread', ic: '\ud83e\udd56' }, pudding: { n: 'Custard pudding', ic: '\ud83c\udf6e' } }, FOOD = { cost: 3, pct: 0.3, uses: 3 }, DSODA = 2;
+/* the indoor soda + food machines (two per building: soda + food). Food: \u00a54, heals 30% at once, 3 per machine, 4 foods */
+var FOODS = { melon: { n: 'Melon bread', ic: '\ud83c\udf48' }, onigiri: { n: 'Onigiri', ic: '\ud83c\udf59' }, yakisoba: { n: 'Yakisoba bread', ic: '\ud83e\udd56' }, pudding: { n: 'Custard pudding', ic: '\ud83c\udf6e' } }, FOOD = { cost: 4, pct: 0.3, uses: 3 }, DSODA = 2;
 function dgVendAct(a) { var k = INT[W.inside.id].dg, S0 = dgS(k);
   if (a === 'vsoda') { var n = S0.soda == null ? DSODA : S0.soda, c = SODA.cost; ev('world:dg:vend:' + k);
     dialog('<b>Soda machine</b><p><strong>Soda</strong> \u00b7 \u00a5' + c + '. Restores 5 Spirit when you drink it. In this machine: <b>' + (n ? n + ' left' : 'SOLD OUT') + '</b>. Your yen: <b>\u00a5' + SAVE.items + '</b>.</p>',
@@ -21965,7 +21965,7 @@ function phPrices() {
     craftCh1: '1 Clean Gauze + 1 Medical Tape = 20% dressing. Tape has no shop price. Chapter 2 gauze is picked up near the clinic and the alley, or dropped by street crews.',
     craftCh2: '1 Mugwort Leaf + 1 Ginger Root = 35% potion. Ingredients already defined. Gated to Chapter 2.',
     income: 'Each bully rolls 50% of \u00a51 (expected \u00a50.5). A relay rolls 50% of \u00a52 (expected \u00a51). Gouki alone rolls 50% of \u00a53 (expected \u00a51.5), plus \u00a51 of that roll per joiner before the half.',
-    recommendation: 'Leave the numbers. A \u00a54 stored 20% bandage and a \u00a53 stored 35% potion undercut crafting, and \u00a53 food heals 30% immediately. Crafters do not yet save yen for Chapter 2. Raising those prices needs Ernest\u2019s call. Nurse kits were not given a new restock number.'
+    recommendation: 'Leave the numbers. A \u00a54 stored 20% bandage and a \u00a53 stored 35% potion undercut crafting, and \u00a54 food heals 30% immediately. Crafters do not yet save yen for Chapter 2. Raising those prices needs Ernest\u2019s call. Nurse kits were not given a new restock number.'
   };
 }
 function phSetUI() { return root.FFF_UI; }
@@ -36013,13 +36013,13 @@ var GINKO = (function () {
      2) Kissa Gekko café counter (snappy shop, herbalist-style dialog)
      ======================================================================== */
   var GK_MENU = root.GK_MENU = [
-    { id: 'antoast', n: 'An-toast', kind: 'hp', hp: 20, cost: 10, ic: '\ud83e\udd67' },
-    { id: 'napoli', n: 'Napolitan', kind: 'hp', hp: 35, cost: 15, ic: '\ud83c\udf5d' },
-    { id: 'omurice', n: 'Omurice', kind: 'hp', hp: 42, cost: 19, ic: '\ud83e\udd5a' },
-    { id: 'blend', n: 'Blend coffee', kind: 'sp', sp: 15, cost: 10, ic: '\u2615' },
-    { id: 'iced', n: 'Iced coffee', kind: 'sp', sp: 20, cost: 12, ic: '\u2615' },
-    { id: 'lait', n: 'Caf\u00e9 au lait', kind: 'sp', sp: 25, cost: 14, ic: '\u2615' },
-    { id: 'wiener', n: 'Wiener coffee', kind: 'sp', full: 1, cost: 16, ic: '\u2615' }
+    { id: 'antoast', n: 'An-toast', kind: 'hp', hp: 20, cost: 12, ic: '\ud83e\udd67' },
+    { id: 'napoli', n: 'Napolitan', kind: 'hp', hp: 35, cost: 18, ic: '\ud83c\udf5d' },
+    { id: 'omurice', n: 'Omurice', kind: 'hp', hp: 42, cost: 22, ic: '\ud83e\udd5a' },
+    { id: 'blend', n: 'Blend coffee', kind: 'sp', sp: 15, cost: 12, ic: '\u2615' },
+    { id: 'iced', n: 'Iced coffee', kind: 'sp', sp: 20, cost: 14, ic: '\u2615' },
+    { id: 'lait', n: 'Caf\u00e9 au lait', kind: 'sp', sp: 25, cost: 17, ic: '\u2615' },
+    { id: 'wiener', n: 'Wiener coffee', kind: 'sp', full: 1, cost: 18, ic: '\u2615' }
   ];
 
   function spMax() { return (typeof SPMAX === 'number' && SPMAX > 0) ? SPMAX : 40; }
@@ -38858,10 +38858,10 @@ function camPan(to, o, done) {
   HITEM.udon = HITEM.udon || { n: 'Udon to-go', pct: 0.35, ic: '\ud83c\udf5c', rank: 3 };
   /* the udon counter */
   var UDON_MENU = [
-    { id: 'kake', n: 'Kake udon', jp: '\u304b\u3051', hp: 20, base: 10, cost: 8, st: 'kake' },
-    { id: 'kitsune', n: 'Kitsune udon', jp: '\u304d\u3064\u306d', hp: 40, base: 18, cost: 14, st: 'kitsune' },
-    { id: 'tsukimi', n: 'Tsukimi udon', jp: '\u6708\u898b', hp: 30, base: 14, cost: 11, st: 'tsukimi' },
-    { id: 'curry', n: 'Curry udon', jp: '\u30ab\u30ec\u30fc', hp: 35, sp: 5, base: 16, cost: 13, st: 'curry' },
+    { id: 'kake', n: 'Kake udon', jp: '\u304b\u3051', hp: 20, base: 12, cost: 10, st: 'kake' },
+    { id: 'kitsune', n: 'Kitsune udon', jp: '\u304d\u3064\u306d', hp: 40, base: 22, cost: 18, st: 'kitsune' },
+    { id: 'tsukimi', n: 'Tsukimi udon', jp: '\u6708\u898b', hp: 30, base: 16, cost: 13, st: 'tsukimi' },
+    { id: 'curry', n: 'Curry udon', jp: '\u30ab\u30ec\u30fc', hp: 35, sp: 5, base: 19, cost: 15, st: 'curry' },
     { id: 'nabe', n: 'Nabeyaki udon', jp: '\u934b\u713c', full: 1, base: 24, cost: 19, st: 'nabe' },
     { id: 'mugi', n: 'Barley tea', jp: '\u9ea6\u8336', tea: 8, base: 6, cost: 5 },
     { id: 'togo', n: 'Udon to-go', jp: '\u6301\u5e30', bag: 'udon', base: 9, cost: 7 }
@@ -39027,7 +39027,7 @@ function camPan(to, o, done) {
   }
   NQ.capFx = capFx;
   /* the bathhouse counter (after the seal) */
-  var SENTO_MENU = [{ id: 'soak', n: 'Hot soak', jp: '\u6e6f', hp: 40, both: 15, base: 12, cost: 9 }, { id: 'cmilk', n: 'Coffee milk', jp: '\u73c8\u7432\u725b\u4e73', spOnly: 25, base: 4, cost: 3 }, { id: 'fmilk', n: 'Fruit milk', jp: '\u30d5\u30eb\u30fc\u30c4\u725b\u4e73', hp: 15, base: 4, cost: 3 }];
+  var SENTO_MENU = [{ id: 'soak', n: 'Hot soak', jp: '\u6e6f', hp: 40, both: 15, base: 12, cost: 9 }, { id: 'cmilk', n: 'Coffee milk', jp: '\u73c8\u7432\u725b\u4e73', spOnly: 25, base: 6, cost: 5 }, { id: 'fmilk', n: 'Fruit milk', jp: '\u30d5\u30eb\u30fc\u30c4\u725b\u4e73', hp: 15, base: 5, cost: 4 }];
   function sentoMenu() { counterMenu({ who: 'nq_bandai', name: 'Old Sato', line: 'Water\u2019s hot again. First time in a year.', items: SENTO_MENU, nails: true, buy: function (it, c) { payYen(c); ev('world:nq:sento:buy:' + it.id); if (it.id === 'soak') { soakFx(function () { applyVit(it); later(200, sentoMenu); }); return; } applyVit(it); try { actPlay('drink', W.ryo); } catch (e) {} sfx('pl_heal', { gain: 0.45 }); later(700, sentoMenu); } }); }
   function soakFx(done) { var ov = document.createElement('div'); ov.id = 'nqsoak'; ov.innerHTML = '<b>\u2668</b><i>Hot soak\u2026</i>'; document.body.appendChild(ov); lockIn(true); sfx('swirl'); later(1500, function () { ov.classList.add('out'); later(300, function () { ov.remove(); lockIn(false); done(); }); }); }
   NQ.sentoMenu = sentoMenu;
