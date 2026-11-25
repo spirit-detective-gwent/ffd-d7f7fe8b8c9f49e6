@@ -884,6 +884,16 @@ body #wcrawl .crnext.kfocus,#wcrawl .crnext:focus{outline:0!important;box-shadow
 .wspk{position:fixed;left:50%;top:42%;z-index:80;pointer-events:none}
 .wspk i{position:absolute;width:5px;height:5px;border-radius:50%;background:#fff1b0;box-shadow:0 0 8px 3px rgba(255,170,40,.9);animation:wspk .6s ease-out forwards}
 @keyframes wspk{0%{transform:translate(0,0) scale(1.4);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.3);opacity:0}}
+/* v6.5.63: one-shot locker burst in the storehouse bay. CSS animation only; no loop. */
+.wlockburst{position:absolute;pointer-events:none;overflow:visible}
+.wlockburst .wlb-hole{position:absolute;inset:3px 4px 3px 3px;background:linear-gradient(180deg,#1c1824,#0a0810);box-shadow:inset 0 0 10px #000,inset 0 0 0 1px #2a2438}
+.wlockburst .wlb-door{position:absolute;inset:0;background:linear-gradient(90deg,#8b93a6,#c8ced8 42%,#7c8496);border:2px solid #3a4150;border-radius:2px 3px 3px 2px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.28),2px 2px 0 #2a303a;transform-origin:left center;animation:wlb-swing .44s cubic-bezier(.2,.75,.15,1) forwards}
+.wlockburst .wlb-door:after{content:'';position:absolute;right:5px;top:50%;width:5px;height:11px;margin-top:-5px;background:#d0a84a;border-radius:1px;box-shadow:0 0 0 1px #5a4318}
+@keyframes wlb-swing{0%{transform:rotate(0);filter:brightness(1)}16%{transform:rotate(-10deg);filter:brightness(1.45)}100%{transform:rotate(-122deg) translate(6px,12px);opacity:.12;filter:brightness(.75)}}
+.wlockburst .wlb-chip{position:absolute;width:6px;height:5px;background:#b9bfcb;border:1px solid #4a5160;box-shadow:0 0 0 1px rgba(0,0,0,.25);animation:wlb-chip .5s ease-out forwards}
+@keyframes wlb-chip{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));opacity:0}}
+.wlockburst.wlb-shk{animation:wlb-shk .28s steps(2) 2}
+@keyframes wlb-shk{0%{transform:translate(3px,-2px)}50%{transform:translate(-3px,3px)}100%{transform:none}}
 body.wshake #world{animation:wshk .3s steps(2) 2}
 @keyframes wshk{0%{transform:translate(4px,-3px)}50%{transform:translate(-4px,3px)}100%{transform:none}}
 #wfade{position:fixed;inset:0;z-index:90;background:#000;opacity:0;pointer-events:all;transition:opacity .7s}
@@ -17940,15 +17950,50 @@ function fldGo(k, at) { fldRegrid(k); var out = !W.inside; intGo('sf_' + k, { at
 function fldEnter() { if (W.fading) return; W.path = []; W.dlg = true; ev('world:dg:enter:field'); if (beaten('mb_field')) dgMarkRefill('field'); /* the defeat step stays open until Bando is actually beaten */
   var first = !(SAVE.sc || {}).fldArr; if (first) { SAVE.sc = SAVE.sc || {}; SAVE.sc.fldArr = 1; save(); }
   var er = W.entRet; intFade(function () { W.dlg = false; fldGo('bay'); if (er) W.inRet = er; AU.play('door', { gain: 0.6 });
-    if (first && !fldS().e.entry && !beaten('mb_field')) setTimeout(function () { fldEntryScene(); }, 500); }); }
+    if (first && !fldS().e.entry && !beaten('mb_field')) { fldFreezeFoes(); setTimeout(function () { fldEntryScene(); }, 500); } }); }
+function fldFreezeFoes() { /* v6.5.63: hold every bay foe still for the arrival talk and the locker burst */
+  (W.dgF || []).forEach(function (f) { if (!f) return; f.stun = 1e9; f.path = []; f.st = 'idle'; f.wait = 9e9; f.sus = 0;
+    if (f.s) { f.s.v = 0; f.s.runK = 0; try { waddle(f.s, 0, 0); place(f.s, 0); } catch (eF) {} } }); ev('world:field:entry:freeze'); }
+function fldLockBurst(rect, done) { /* one-shot door swing + debris + shake; cleaned up on a timer, no loop */
+  ev('world:field:entry:burst');
+  var host = (W.dgF && W.dgF[0] && W.dgF[0].s && W.dgF[0].s.el && W.dgF[0].s.el.parentNode) || layer;
+  var box = document.createElement('i'); box.className = 'wlockburst wlb-shk';
+  box.style.left = rect[0] + 'px'; box.style.top = rect[1] + 'px'; box.style.width = rect[2] + 'px'; box.style.height = rect[3] + 'px';
+  box.style.zIndex = String(100 + Math.round(rect[1] + rect[3]) + 24);
+  var hole = document.createElement('i'); hole.className = 'wlb-hole';
+  var door = document.createElement('i'); door.className = 'wlb-door';
+  box.appendChild(hole); box.appendChild(door);
+  var n, c, ang, d;
+  for (n = 0; n < 7; n++) { c = document.createElement('i'); c.className = 'wlb-chip';
+    ang = -0.35 + Math.random() * 2.7; d = 26 + Math.random() * 50;
+    c.style.setProperty('--dx', Math.round(Math.cos(ang) * d) + 'px');
+    c.style.setProperty('--dy', Math.round(Math.sin(ang) * d) + 'px');
+    c.style.setProperty('--rot', (Math.random() * 260 - 90) + 'deg');
+    c.style.left = (6 + Math.random() * 22) + 'px'; c.style.top = (12 + Math.random() * 40) + 'px';
+    c.style.animationDelay = Math.round(Math.random() * 60) + 'ms'; box.appendChild(c); }
+  host.appendChild(box);
+  try { wShake(); } catch (eS) {}
+  try { if (AU) { AU.play('hit', { gain: 0.85 }); AU.play('door', { gain: 0.7 }); } } catch (eA) {}
+  setTimeout(function () { if (box && box.parentNode) box.remove(); }, 720);
+  if (done) setTimeout(done, 280); }
+function fldEntryLocker() { /* second locker from the right, on the path toward the south door */
+  var R = FLDG.bay, n = 7, span = 290, x0 = 160, y0 = 528, y1 = 696, i = 5, w = span / n, lx = x0 + i * w;
+  var a = lw(R, [lx, y0]), b = lw(R, [lx + w, y1]);
+  return { rect: [a[0], a[1], Math.max(12, b[0] - a[0]), Math.max(24, b[1] - a[1])], out: lw(R, [lx + w / 2, y1 - 8]) }; }
 function fldEntryScene() { var S = fldS(); if (S.e.entry || beaten('mb_field')) { W.dlg = false; W.busy = false; return; }
-  W.dlg = true; W.busy = true; W.path = []; if (W.ryo) W.ryo.v = 0; ev('world:field:arrive');
+  W.dlg = true; W.busy = true; W.path = []; if (W.ryo) W.ryo.v = 0; fldFreezeFoes();
+  var locker = fldEntryLocker(), g0 = (W.dgF || [])[0];
+  if (g0 && g0.s) { g0.s.x = locker.out[0]; g0.s.y = locker.out[1]; g0.s.el.style.visibility = 'hidden'; place(g0.s, 0); }
+  ev('world:field:arrive');
   scene(null, FLD_ARR, function () { ev('world:field:arrive:end'); var g = (W.dgF || [])[0];
     if (!g || !g.s) { S.e.entry = 1; save(); W.dlg = false; W.busy = false; ev('world:field:entry:none'); return; }
-    g.stun = 1e9; g.st = 'chase'; var bang = document.createElement('i'); bang.className = 'wemo'; bang.textContent = '!'; g.s.el.appendChild(bang); ev('world:field:entry:notice');
-    actTo(g.s, W.ryo.x, Math.max(40, W.ryo.y - 78), 230, function () { var m = g.s.el.querySelector('.wemo'); if (m) m.remove();
-      S.e.entry = 1; save(); W.busy = false; W.dlg = false; ev('world:field:entry:fight');
-      fight([g.id], false, { dg: 'field', dgk: g.key, dgm: W.inside && W.inside.id }); }); }); }
+    fldFreezeFoes(); try { helpTip('fielddg', { t: 'Sports Storehouse', h: '<p><b>Bando</b> is lapping a crack on the Outdoor Track. Do not chase him.</p><p>Find three <b>hurdles</b>. Lift one, carry it to a <b>lane mark</b> on the track. No running; a fight knocks it back.</p><p>The Coach’s Office is a <b>safe room</b>.</p>' }); } catch (eT) {}
+    ev('world:field:entry:notice');
+    fldLockBurst(locker.rect, function () { g.s.el.style.visibility = ''; g.st = 'chase'; g.stun = 1e9;
+      var bang = document.createElement('i'); bang.className = 'wemo'; bang.textContent = '!'; g.s.el.appendChild(bang);
+      actTo(g.s, W.ryo.x, Math.max(40, W.ryo.y - 78), 230, function () { var m = g.s.el.querySelector('.wemo'); if (m) m.remove();
+        S.e.entry = 1; save(); W.busy = false; W.dlg = false; ev('world:field:entry:fight');
+        fight([g.id], false, { dg: 'field', dgk: g.key, dgm: W.inside && W.inside.id }); }); }); }); }
 function fldKneelMid() { /* existing bando_kn sheet, one frame, middle of the track. No timer, so the pose never changes. */
   var R = FLDG.track, a = lw(R, [640, 360]), s = IMG.bando_kn ? intSprite('bando_kn', SPH, 'lkneel') : fldMkBando('lkneel');
   s.el.classList.add('celkn', 'lkneel'); s.el.dataset.dir = '0'; s.el.dataset.mb = 'mb_field'; s.nm = 'Bando Rikiya';
@@ -18094,7 +18139,10 @@ function fldArrive(k) { var S = fldS(), b = beaten('mb_field');
   if (k === 'track' && fldOpen() && !b && (S.e.bond || S.e.bondRun)) { fldBoss(); return; }
   if (k === 'track' && fldOpen() && !b && S.e.crash) { libPend(function () { fldBondScene(); }); return; }
   if (k === 'track' && fldOpen() && !b) { libPend(function () { fldCueOut(); }); return; }
-  if (S.e[k]) return; S.e[k] = 1; save(); var L = FLD_SC['in_' + k], after = null; if (!L) return;
+  if (S.e[k]) return; S.e[k] = 1; save();
+  /* v6.5.63: first bay visit is the locker-burst arrival talk; skip the dim flavor so the two scenes do not overlap */
+  if (k === 'bay' && !S.e.entry && !b) return;
+  var L = FLD_SC['in_' + k], after = null; if (!L) return;
   if (k === 'bay') after = function () { helpTip('fielddg', { t: 'Sports Storehouse', h: '<p><b>Bando</b> is lapping a crack on the Outdoor Track. Do not chase him.</p><p>Find three <b>hurdles</b>. Lift one, carry it to a <b>lane mark</b> on the track. No running; a fight knocks it back.</p><p>The Coach\u2019s Office is a <b>safe room</b>.</p>' }); };
   libPend(function () { scene(null, L, after); }); }
 /* surprise: first track visit — Bando blurs past; camera pans with him; Aoi: don't chase */
