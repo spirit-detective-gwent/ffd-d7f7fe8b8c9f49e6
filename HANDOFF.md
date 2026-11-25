@@ -11,7 +11,7 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
-### 2026-11-25 — executor (Grok Bot) — v6.5.62 (branch v6562-dlg) — NOT published; waiting on Ernest's OK
+### 2026-11-25 — executor (Grok Bot) — v6.5.62 (commit b16ca27) — LIVE after Ernest's OK
 Ernest asked for the entire ambush mechanic to be removed from the game, every chapter, including Chapter 2 lane jumps (`laneAmb` / `c2v2AmbTick`). Story-scripted and quest fights stay, plus walk-up fights the player starts, and the Ban Shigure losses.
 What changed (commits after the D-style dialogue work; versions still v6.5.62):
 - `f374478`: `ambCheck` is a no-op after the last (g38) wrap, so Chapter 1 bushes / trees / doorways no longer jump a fight on their own. The world tick still calls it; it just returns.
@@ -19,17 +19,18 @@ What changed (commits after the D-style dialogue work; versions still v6.5.62):
 - `aba7e33`: the Gameplay "Street ambushes" Fewer/Normal/More row and its click handler are gone. `gpAmbK()` always returns 1, so a leftover `ambRate` in an old save cannot change fight, suspicion, or roam rates.
 Quest check: no quest depended on a surprise or lane ambush. The three `p_amb_*` flags are only cleaned after those jump fights. Four Corners border clashes are visible stand-ups, not ambushes, and were left alone. Bath Tax / "the Hustler ambush" (`t_alley`) was already taken out of `C2CREW` in an earlier batch and replaced by the visible Kitsune-no-Yu door crew (`p_g_bath`); this work did not convert that quest. (The Ch2 events director already empties `C2V2.AMBS` when it loads, so the lane tick was already a leftover — it is now hard off anyway.)
 Player sneak stays: the Ambush button, behind-foe sneak (`ambTap` / `ambushPick`), Genji's sneak lesson, the Alley Cat Stealth Takedown perk, and the front / back / Alley Cat stings those still use. Shared story-camera code (`#wv` WAAPI, `cuMusic`, `FFF_SCAM`) was not stripped. Only automatic jump-out triggers were removed.
-Checks: Chapter 1, all 64 cover spots with force-on, no jump fight and no errors; settings show Enemy strength / Item scarcity / XP mode and no Street ambushes row; leftover `ambRate` few/more still yields `gpAmbK()===1`. Chapter 2, the three lane spots restored and force-on, the no-op tick ran and no gang jumped out; visible event crews still spawn. All 3 Nails door paths (Fierce / Strategic / Compassionate) still open the Kaneda fight on `c2_street` with no page errors. Official `perf_check origin/main` vs the earlier dialogue tip (`43e4fe9`) was still running at this entry; a fresh official run against this tip is still needed after that job finishes. Do not publish until Ernest OKs the release.
+Checks: Chapter 1, all 64 cover spots with force-on, no jump fight and no errors; settings show Enemy strength / Item scarcity / XP mode and no Street ambushes row; leftover `ambRate` few/more still yields `gpAmbK()===1`. Chapter 2, the three lane spots restored and force-on, the no-op tick ran and no gang jumped out; visible event crews still spawn. All 3 Nails door paths (Fierce / Strategic / Compassionate) still open the Kaneda fight on `c2_street` with no page errors. Official `perf_check origin/main` vs `b16ca27` OVERALL PASS (native spots ~60 fps, battle 59.85 vs 59.9, card-pick 59.95, long walks 59.95 / 59.9, x4 battle 55.85 vs 56.25, soak heap slope 0.064 MB/battle).
+Approved by Erik. Fast-forward onto def995f (v6.5.61). Published commit `b16ca27`; live serves v6.5.62 with no console errors.
 
-### 2026-11-25 — executor (Grok Bot) — v6.5.62 (branch v6562-dlg) — NOT published; waiting on Ernest's OK
+### 2026-11-25 — executor (Grok Bot) — v6.5.62 (commit b16ca27) — LIVE after Ernest's OK
 Versions: `window.FFF_BUILD="v6562"`, title `.vtag` "v6.5.62", `#ver` text "v6.5.62" (bumped in e95863b).
 Ernest asked for the dark-blue talk box to be translucent so the scene shows through, without white words disappearing on bright tiles, and he disliked B's black scrim behind the words. He picked option D (A's approach, B's lightness).
-What is on this branch (not live):
+What shipped (same publish as the ambush removal):
 - D-style `#wdlg`: 50% dark-blue wash, no scrim. White quotes are 16.5px / 700 with a 1px 8-way text outline, `paint-order: stroke fill`, and a soft glow. Names and narrator lines get the same outline. Auto gets a solid fill so it stays readable. Full-screen choice overlays (`#wdlg.d2` / `.d3`, shops, versus prompts) keep their own type and veil.
 - Auto-dock (`dlgPlace`, `DLG_DOCK_COVER = 0.18`): when a line opens, if a speaker's on-screen bbox overlaps the default bottom slot by more than 18%, or their feet would sit under it, the box docks to the top, under the safe area and clear of the HP/SP HUD (`#wstat`). The slot is chosen once per line and never flips mid-line. Runs after `FFF_SCAM.line()` has started, and again after Auto is added. d2/d3 overlays are skipped.
 Commits: `50f826c` CSS, `51e2c66` auto-dock, `e95863b` version bump, this handoff entry.
-Checks: Ch1 and Ch2 scenes, Lucky 7 (Ban) battle-adjacent talk, bath-hall typography, herbalist shop, a 2-button choice, and a vending machine — no console errors; choices stayed d2 and were not auto-docked. Preview shots in `/workspace/v6560-review/dlg_final_*.png`. Official `perf_check origin/main` vs this branch is in progress or recorded at the end of the turn.
-Not in git (dev only): `index_fffonly.html`, `page.canvas.tsx.txt`. Do not publish until Ernest OKs the release.
+Checks: Ch1 and Ch2 scenes, Lucky 7 (Ban) battle-adjacent talk, bath-hall typography, herbalist shop, a 2-button choice, and a vending machine — no console errors; choices stayed d2 and were not auto-docked. Preview shots in `/workspace/v6560-review/dlg_final_*.png`. Official `perf_check origin/main` vs the dialogue tip (`43e4fe9`) and vs `b16ca27` both OVERALL PASS.
+Not in git (dev only): `index_fffonly.html`, `page.canvas.tsx.txt`.
 
 ### 2026-11-24 — executor (Grok Bot) — v6.5.61 (commit 44a0391) — LIVE after Ernest's OK
 Versions: `window.FFF_BUILD="v6561"`, title `.vtag` "v6.5.61", `#ver` text "v6.5.61" (bumped in 2d95937).
