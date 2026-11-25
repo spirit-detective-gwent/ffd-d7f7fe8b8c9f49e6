@@ -11,9 +11,9 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
-### 2026-11-24 — executor (Grok Bot) — v6.5.61 (commit 2d95937) — LIVE after Ernest's OK
+### 2026-11-24 — executor (Grok Bot) — v6.5.61 (commit 44a0391) — LIVE after Ernest's OK
 Versions: `window.FFF_BUILD="v6561"`, title `.vtag` "v6.5.61", `#ver` text "v6.5.61" (bumped in 2d95937).
-Approved by Ernest after the previews ("add everything from the previews and then it's finished"; "once you verify everything, you can release it to the live build and update our folder"). Fast-forward onto 62b3c59 (v6.5.60). Published SHA recorded after the live check.
+Approved by Ernest after the previews ("add everything from the previews and then it's finished"; "once you verify everything, you can release it to the live build and update our folder"). Fast-forward onto 62b3c59 (v6.5.60). Published commit `44a0391`; live serves v6.5.61 with no console errors.
 What shipped:
 - Story camera (`FFF_SCAM`): light frame on scene lines; push / pull / hold / shake / bars on `#wv` (one WAAPI animation, gated by the camera setting). Heavy beats hold the push, then ease out slowly (1.5–2.5s, no snap) when the scene leaves that moment — including Aoi "breaking them on purpose", Gouki's deal, Ryo's "knowing" shake, the school-gate and Four Corners pull-outs, Gōda's seal and defeat, and Ban Shigure's push-in after each loss. A push also turns the world camera onto its target.
 - Ambush stings hold the punch-in into the fight and settle behind the board; they no longer zoom out before the battle. A KO eases out slowly.
