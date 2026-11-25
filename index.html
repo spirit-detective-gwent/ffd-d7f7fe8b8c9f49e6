@@ -27373,6 +27373,8 @@ function c2v2AmbTick() { if (!g38tRoam() || c2v2Frozen() || W.hid || (root.FFF_A
     W.c2v2Arm[A.k] = now + C2V2.AMB.rearm * 1000; var K = typeof gpAmbK === 'function' ? gpAmbK() : 1, hit = root.FFF_FORCE_AMB || Math.random() < Math.min(1, C2V2.AMB.p * K);
     ev('world:c2v2:amb:roll:' + A.k + ':' + (hit ? 1 : 0)); if (!hit) continue;
     W.c2v2AmbNext = now + C2V2.AMB.gap * 1000; c2v2Ambush(A); return; } }
+/* v6.5.62: no Ch2 lane jump-out ambushes. Visible door crews, patrols, walk-ups, and story fights stay. */
+c2v2AmbTick = function () { return; };
 function c2v2Ambush(A) { var r = W.ryo, men = A.pts.map(function (p, i) { var f = g38tSpawn({ k: A.k, at: A.at, tr: 0, z: A.z }, A.id, i, A.k + '_' + i, p); f.c2v2 = 1; f.v2amb = 1; f.st = 'g38'; f.g38x = null; f.fa = Math.atan2(r.y - p[1], r.x - p[0]); waddle(f.s, 0, f.fa); return f; });
   W.g39ambd = 1; W.busy = true; W.path = []; r.v = 0; ev('world:c2v2:ambush:' + A.k + ':' + men.length); AU.play('hit', { gain: 0.5 });
   var bn = $('#wban'); bn.innerHTML = '<em>AMBUSH! A GANG JUMPS OUT!</em><small>' + men.length + ' of them, from ' + A.z + (SAVE.hp < MAXHP ? ' \u00b7 HP ' + SAVE.hp + '/' + MAXHP : '') + '</small>'; bn.className = 'on'; ev('world:beat'); AU.play('cutin', { gain: 0.6 });
