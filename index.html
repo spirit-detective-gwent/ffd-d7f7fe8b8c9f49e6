@@ -22644,6 +22644,7 @@ function eatgHold(on) { /* the map sleeps under the overlay: its loop idles like
   var wd = document.getElementById('world');
   if (on) { if (EATG_HOLD) return; EATG_HOLD = { p: W.paused, v: wd ? wd.style.visibility : '' }; W.paused = true; if (wd) wd.style.visibility = 'hidden'; return; }
   if (!EATG_HOLD) return; var h = EATG_HOLD; EATG_HOLD = null; W.paused = h.p; if (wd) wd.style.visibility = h.v; }
+function eatgWho() { try { return SAVE.act === 'aoi' ? 'aoi' : 'ryo'; } catch (e) { return 'ryo'; } }
 function eatgOn(item) { var G = root.EATG; return !!(G && !root.FFF_EATG_OFF && G.has(item) && !G.busy() && W.on); }
 function eatgRows(stat, add, half, mx) { var u = stat === 'hp' ? ' HP' : ' SP';
   return { win: ['WIN', stat === 'hp' ? 'FULL HP' : 'FULL SP', 'back to ' + mx + ' / ' + mx], close: ['CLOSE MISS', '+' + add + u, 'the normal ' + (stat === 'hp' ? 'heal' : 'boost')], bad: ['BAD RUN', '+' + half + u, 'half of normal'] }; }
@@ -22652,7 +22653,7 @@ eatFx = function (ic, nm, h0, msg) {
   var id = EAT_GAME[nm], self = this, args = arguments; if (!id || !eatgOn(id)) return eatFx0.apply(self, args);
   var h1 = SAVE.hp, add = Math.max(0, h1 - h0), half = Math.ceil(add / 2), tg = { win: MAXHP, close: h1, bad: Math.min(MAXHP, h0 + half) }, b0 = W.busy;
   W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + id);
-  var ok = root.EATG.open({ item: id, who: 'ryo', hp0: h0, sp0: SAVE.sp | 0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('hp', add, half, MAXHP), bot: root.FFF_EATG_BOT,
+  var ok = root.EATG.open({ item: id, who: eatgWho(), hp0: h0, sp0: SAVE.sp | 0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('hp', add, half, MAXHP), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: tg[r] != null ? tg[r] : h1, sp: SAVE.sp | 0 }; },
     onEnd: function (res) { eatgHold(false); SAVE.hp = Math.min(MAXHP, tg[res] != null ? tg[res] : h1); save(); hud(); W.busy = b0; W.path = []; W.cool = Math.max(W.cool || 0, 0.5); eatFx0.call(self, ic, nm, h0, msg); ev('world:eatg:' + id + ':' + res); } });
   if (!ok) { eatgHold(false); W.busy = b0; return eatFx0.apply(self, args); }
@@ -22666,7 +22667,7 @@ drinkSoda = function (k) {
   var s0 = SAVE.sp | 0, tg = { win: SPMAX, close: Math.min(SPMAX, s0 + 5), bad: Math.min(SPMAX, s0 + 3) }, b0 = W.busy;
   SAVE.sp = tg.close; save(); hud(); try { if (root.INPUT && root.INPUT.rumble) root.INPUT.rumble('soda'); } catch (eR) {}
   W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:soda');
-  var ok = root.EATG.open({ item: 'ramune', who: 'ryo', hp0: SAVE.hp, sp0: s0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('sp', 5, 3, SPMAX), bot: root.FFF_EATG_BOT,
+  var ok = root.EATG.open({ item: 'ramune', who: eatgWho(), hp0: SAVE.hp, sp0: s0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('sp', 5, 3, SPMAX), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: SAVE.hp, sp: tg[r] != null ? tg[r] : tg.close }; },
     onEnd: function (res) { eatgHold(false); SAVE.sp = tg[res] != null ? tg[res] : tg.close; save(); hud(); W.busy = b0; W.path = []; W.cool = Math.max(W.cool || 0, 0.5);
       try { AU.play('pl_heal', { gain: 0.55 }); } catch (e) {} try { actPlay('drink'); } catch (e2) {}
@@ -22679,7 +22680,7 @@ root.FFF_EATG_SP = function (it, s0, done) { /* Kissa Gekko's four coffees: each
   var id = ({ blend: 'blend', iced: 'iced', lait: 'lait', wiener: 'wiener' })[it.id]; if (!id || !eatgOn(id)) return false;
   var spM = SPMAX, s1 = SAVE.sp | 0, add = Math.max(0, s1 - s0), half = Math.ceil(add / 2), tg = { win: spM, close: s1, bad: Math.min(spM, s0 + half) }, b0 = W.busy;
   W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + it.id);
-  var ok = root.EATG.open({ item: id, who: 'ryo', hp0: SAVE.hp, sp0: s0, maxhp: MAXHP, spmax: spM, rows: eatgRows('sp', add, half, spM), bot: root.FFF_EATG_BOT,
+  var ok = root.EATG.open({ item: id, who: eatgWho(), hp0: SAVE.hp, sp0: s0, maxhp: MAXHP, spmax: spM, rows: eatgRows('sp', add, half, spM), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: SAVE.hp, sp: tg[r] != null ? tg[r] : s1 }; },
     onEnd: function (res) { eatgHold(false); SAVE.sp = tg[res] != null ? tg[res] : s1; save(); hud(); W.busy = b0; W.path = []; if (done) done(SAVE.sp - s0); ev('world:eatg:' + it.id + ':' + res); } });
   if (!ok) { eatgHold(false); W.busy = b0; } return ok;
@@ -22689,7 +22690,7 @@ root.FFF_EATG_MILK = function (it, apply, done) { /* the sento milks: the shake-
   var stat = id === 'fmilk' ? 'hp' : 'sp', mx = stat === 'hp' ? MAXHP : SPMAX, v0 = (stat === 'hp' ? SAVE.hp : SAVE.sp) | 0, s0 = SAVE.sp | 0, h0 = SAVE.hp | 0, b0 = W.busy;
   apply(it); var v1 = (stat === 'hp' ? SAVE.hp : SAVE.sp) | 0, add = Math.max(0, v1 - v0), half = Math.ceil(add / 2), tg = { win: mx, close: v1, bad: Math.min(mx, v0 + half) };
   W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + id);
-  var ok = root.EATG.open({ item: id, who: 'ryo', hp0: h0, sp0: s0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows(stat, add, half, mx), bot: root.FFF_EATG_BOT,
+  var ok = root.EATG.open({ item: id, who: eatgWho(), hp0: h0, sp0: s0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows(stat, add, half, mx), bot: root.FFF_EATG_BOT,
     target: function (r) { var t = tg[r] != null ? tg[r] : v1; return stat === 'hp' ? { hp: t, sp: SAVE.sp | 0 } : { hp: SAVE.hp | 0, sp: t }; },
     onEnd: function (res) { eatgHold(false); var t = Math.min(mx, tg[res] != null ? tg[res] : v1); if (stat === 'hp') SAVE.hp = t; else SAVE.sp = t; save(); hud(); W.busy = b0; W.path = [];
       try { actPlay('drink', W.ryo); } catch (e) {} try { AU.play('pl_heal', { gain: 0.45 }); } catch (e2) {} try { if (typeof vitFlo === 'function') vitFlo(stat, t - v0); } catch (e3) {}
@@ -22702,7 +22703,7 @@ useHeal = function (i) {
   var h0 = SAVE.hp | 0, ok = useHeal1(i); if (!ok) return ok;
   var h1 = SAVE.hp | 0, add = Math.max(0, h1 - h0), half = Math.ceil(add / 2), tg = { win: MAXHP, close: h1, bad: Math.min(MAXHP, h0 + half) }, b0 = W.busy;
   W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:candy');
-  var go = root.EATG.open({ item: 'candy', who: 'ryo', hp0: h0, sp0: SAVE.sp | 0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('hp', add, half, MAXHP), bot: root.FFF_EATG_BOT,
+  var go = root.EATG.open({ item: 'candy', who: eatgWho(), hp0: h0, sp0: SAVE.sp | 0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('hp', add, half, MAXHP), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: tg[r] != null ? tg[r] : h1, sp: SAVE.sp | 0 }; },
     onEnd: function (res) { eatgHold(false); SAVE.hp = Math.min(MAXHP, tg[res] != null ? tg[res] : h1); save(); hud(); W.busy = b0; W.path = []; W.cool = Math.max(W.cool || 0, 0.5);
       try { if (typeof vitFlo === 'function') vitFlo('hp', SAVE.hp - h0); } catch (e) {} ev('world:eatg:candy:' + res); } });
