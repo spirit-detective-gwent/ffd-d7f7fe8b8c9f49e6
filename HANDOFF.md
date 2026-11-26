@@ -217,3 +217,8 @@ At a fair true idle (skip flags + `c2AbortTalk` on both), mai is **lighter** tha
 
 **Official perf_check:** run with a leftover-talk hush after skipall so live also reaches true overworld idle (same cleanup extra_perf already uses). Do not freeze mai to match stuck live cine.
 
+## Merge ggd50-garden into v6563-mai (274dccc)
+
+Merged `55ddcad` (clinic garden, chance picks, yard map, meal edge) into `25d54f3` (GGD-37 S2 frame gates). Auto-merge was clean. `tools/s2/build.py` re-injected both; FFF_BUILD stays v6562.
+
+Garden adds no `c2Frame` / rAF / interval hook. Clinic pots pop on clinic enter; yard-map pins update on town pop and quest refresh only. GGD-37 gates (no per-frame hookBattle, quest-gated flowTick, rain hide on room change, p5 turf once, C2AMB size cache, EATG world pause) are intact.
