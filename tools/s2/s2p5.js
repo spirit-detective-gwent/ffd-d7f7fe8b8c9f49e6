@@ -304,33 +304,52 @@
 
   /* ---------------- paint ---------------- */
   var RCV = {};
+  function stripP5Art(keep) {
+    try {
+      [].forEach.call(document.querySelectorAll('[id^="s2P5Room_"], #s2P5Battle'), function (el) {
+        if (keep && el.id === 's2P5Room_' + keep) return;
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+    } catch (eS) {}
+    try {
+      var keepLie = keep === 'dshut' && E().masaFate === 'leave' && !E().seal_depot;
+      if (!keepLie) {
+        [].forEach.call(document.querySelectorAll('.c2lie[data-npc="mb2_depot"]'), function (el) { if (el.parentNode) el.parentNode.removeChild(el); });
+        if (W.c2n) W.c2n.s2masaLie = null;
+      }
+    } catch (eL) {}
+  }
   function paintRoom() {
     var k = room();
-    KEYS.forEach(function (rk) {
-      var el = document.getElementById('s2P5Room_' + rk);
-      if (el && k !== rk && el.parentNode) el.parentNode.removeChild(el);
-    });
+    stripP5Art(KEYS.indexOf(k) >= 0 ? k : null);
     if (KEYS.indexOf(k) < 0) return;
     var m = document.getElementById('wimap') || document.getElementById('world');
     if (!m) return;
     var fate = (k === 'dshut') ? (E().masaFate || '') : '';
-    var key = k + ':' + (cleared() || (k === 'dshut' && won()) ? (fate || 'cleared') : 'held');
+    var key = k + ':' + (cleared() || (k === 'dshut' && won()) ? (fate || 'cleared') : 'held') + (E().seal_depot ? ':seal' : '');
     if (!RCV[key]) {
       RCV[key] = document.createElement('canvas'); RCV[key].width = RW; RCV[key].height = RH;
       var g = RCV[key].getContext('2d'), fn = PAINT[k];
       if (k === 'dshut' && fate === 'leave') fn = 'depShutterLeave';
       else if (k === 'dshut' && fate === 'notes') fn = 'depShutterNotes';
       else if (k === 'dshut' && fate === 'help') fn = 'depShutterHelp';
-      try { if (P5.ART && root.FFF_S2P && fn && root.FFF_S2P[fn]) root.FFF_S2P[fn](g, key !== k + ':held'); }
+      try { if (P5.ART && root.FFF_S2P && fn && root.FFF_S2P[fn]) root.FFF_S2P[fn](g, !!E().seal_depot); }
       catch (e) { ev('world:s2p5:err:paint:' + (e && e.message)); }
     }
     var c = RCV[key];
+    /* drop a stale same-id canvas from a previous fate / seal so it cannot sit on top */
+    try {
+      [].forEach.call(document.querySelectorAll('#s2P5Room_' + k + ', [id="s2P5Room_' + k + '"]'), function (el) {
+        if (el !== c && el.parentNode) el.parentNode.removeChild(el);
+      });
+    } catch (eD) {}
     if (c && c.parentNode !== m) {
-      c.className = 'nqprop'; c.id = 's2P5Room_' + k;
+      c.className = 'nqprop'; c.id = 's2P5Room_' + k; c.setAttribute('data-key', key);
       c.style.cssText = 'position:absolute;left:0;top:0;width:' + RW + 'px;height:' + RH + 'px;z-index:1;pointer-events:none';
       m.insertBefore(c, m.firstChild);
     }
   }
+  P5.resetPaint = function () { RCV = {}; stripP5Art(null); };
   P5.paintRoom = paintRoom;
 
   /* ---------------- battle ---------------- */
@@ -691,13 +710,22 @@
     };
   }
 
+  var lastPaintK = null;
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) chainRepair(); } catch (e) { if (!P5.ferr) { P5.ferr = 1; ev('world:s2p5:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { chainRepair(); var k = room(); if (k !== lastPaintK) { lastPaintK = k; popMasa(); paintRoom(); } } } catch (e) { if (!P5.ferr) { P5.ferr = 1; ev('world:s2p5:err:frame:' + (e && e.message)); } } };
+  }
+  if (typeof c2Go === 'function') {
+    var goX = c2Go;
+    c2Go = function () {
+      var r = goX.apply(this, arguments);
+      try { if (on()) { later(0, function () { popMasa(); paintRoom(); }); later(350, function () { popMasa(); paintRoom(); }); } } catch (eG) {}
+      return r;
+    };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
-    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); hookBattle(); popMasa(); if (inDepot()) paintRoom(); } } catch (eP) {} };
+    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); hookBattle(); popMasa(); paintRoom(); } } catch (eP) {} };
   }
   try { chainRepair(); } catch (eC) {}
   ev('world:s2p5:ready');

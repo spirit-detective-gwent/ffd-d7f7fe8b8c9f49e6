@@ -44389,7 +44389,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   };
 
   /* ---------- 13. Lift shutter (boss room) ---------- */
-  function shutterRoom(g, mode) {
+  function shutterRoom(g, mode, broke) {
     /* mode: 'fight' | 'leave' | 'notes' | 'help' | 'cleared' */
     rr(g);
     corrug(g, 90, 40, 1100, 280, '#3a4254', '#323848', 22);
@@ -44405,9 +44405,19 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     caution(g, 318, 276, 644, 14);
     /* freight lift frame in front of the slats */
     liftFrame(g, 260, 40, 760, 280);
-    /* freight manifest + a large gray seal on the shutter itself */
+    /* freight manifest + a large gray seal on the shutter itself (omitted / broken after the pry) */
     manifest(g, 500, 110, 160, 120, true);
-    graySeal(g, 760, 170, 36);
+    if (broke || mode === 'cleared') {
+      /* broken seal: pale ring, the 灰 is cracked off */
+      g.save();
+      g.strokeStyle = '#6a6a72'; g.lineWidth = 3;
+      g.beginPath(); g.arc(760, 170, 36, 0.3, Math.PI * 1.6); g.stroke();
+      g.strokeStyle = '#3a3a42'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(748, 158); g.lineTo(772, 186); g.stroke();
+      g.restore();
+    } else {
+      graySeal(g, 760, 170, 36);
+    }
     lamp(g, 180, 70); lamp(g, 1100, 70);
     glow(g, 640, 160, 180, 'rgba(255,200,110,.16)');
     concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 67);
@@ -44463,10 +44473,10 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     }
     shell(g, '\u30b7\u30e3\u30c3\u30bf\u30fc', 'Lift shutter');
   }
-  S2P.depShutter = function (g, cleared) { shutterRoom(g, cleared ? 'cleared' : 'fight'); };
-  S2P.depShutterLeave = function (g) { shutterRoom(g, 'leave'); };
-  S2P.depShutterNotes = function (g) { shutterRoom(g, 'notes'); };
-  S2P.depShutterHelp = function (g) { shutterRoom(g, 'help'); };
+  S2P.depShutter = function (g, broke) { shutterRoom(g, broke ? 'cleared' : 'fight', broke); };
+  S2P.depShutterLeave = function (g, broke) { shutterRoom(g, 'leave', broke); };
+  S2P.depShutterNotes = function (g, broke) { shutterRoom(g, 'notes', broke); };
+  S2P.depShutterHelp = function (g, broke) { shutterRoom(g, 'help', broke); };
 
   /* ---------- battle: lift shutter ---------- */
   S2P.battleShutter = function (g) {
@@ -47013,33 +47023,52 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
 
   /* ---------------- paint ---------------- */
   var RCV = {};
+  function stripP5Art(keep) {
+    try {
+      [].forEach.call(document.querySelectorAll('[id^="s2P5Room_"], #s2P5Battle'), function (el) {
+        if (keep && el.id === 's2P5Room_' + keep) return;
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+    } catch (eS) {}
+    try {
+      var keepLie = keep === 'dshut' && E().masaFate === 'leave' && !E().seal_depot;
+      if (!keepLie) {
+        [].forEach.call(document.querySelectorAll('.c2lie[data-npc="mb2_depot"]'), function (el) { if (el.parentNode) el.parentNode.removeChild(el); });
+        if (W.c2n) W.c2n.s2masaLie = null;
+      }
+    } catch (eL) {}
+  }
   function paintRoom() {
     var k = room();
-    KEYS.forEach(function (rk) {
-      var el = document.getElementById('s2P5Room_' + rk);
-      if (el && k !== rk && el.parentNode) el.parentNode.removeChild(el);
-    });
+    stripP5Art(KEYS.indexOf(k) >= 0 ? k : null);
     if (KEYS.indexOf(k) < 0) return;
     var m = document.getElementById('wimap') || document.getElementById('world');
     if (!m) return;
     var fate = (k === 'dshut') ? (E().masaFate || '') : '';
-    var key = k + ':' + (cleared() || (k === 'dshut' && won()) ? (fate || 'cleared') : 'held');
+    var key = k + ':' + (cleared() || (k === 'dshut' && won()) ? (fate || 'cleared') : 'held') + (E().seal_depot ? ':seal' : '');
     if (!RCV[key]) {
       RCV[key] = document.createElement('canvas'); RCV[key].width = RW; RCV[key].height = RH;
       var g = RCV[key].getContext('2d'), fn = PAINT[k];
       if (k === 'dshut' && fate === 'leave') fn = 'depShutterLeave';
       else if (k === 'dshut' && fate === 'notes') fn = 'depShutterNotes';
       else if (k === 'dshut' && fate === 'help') fn = 'depShutterHelp';
-      try { if (P5.ART && root.FFF_S2P && fn && root.FFF_S2P[fn]) root.FFF_S2P[fn](g, key !== k + ':held'); }
+      try { if (P5.ART && root.FFF_S2P && fn && root.FFF_S2P[fn]) root.FFF_S2P[fn](g, !!E().seal_depot); }
       catch (e) { ev('world:s2p5:err:paint:' + (e && e.message)); }
     }
     var c = RCV[key];
+    /* drop a stale same-id canvas from a previous fate / seal so it cannot sit on top */
+    try {
+      [].forEach.call(document.querySelectorAll('#s2P5Room_' + k + ', [id="s2P5Room_' + k + '"]'), function (el) {
+        if (el !== c && el.parentNode) el.parentNode.removeChild(el);
+      });
+    } catch (eD) {}
     if (c && c.parentNode !== m) {
-      c.className = 'nqprop'; c.id = 's2P5Room_' + k;
+      c.className = 'nqprop'; c.id = 's2P5Room_' + k; c.setAttribute('data-key', key);
       c.style.cssText = 'position:absolute;left:0;top:0;width:' + RW + 'px;height:' + RH + 'px;z-index:1;pointer-events:none';
       m.insertBefore(c, m.firstChild);
     }
   }
+  P5.resetPaint = function () { RCV = {}; stripP5Art(null); };
   P5.paintRoom = paintRoom;
 
   /* ---------------- battle ---------------- */
@@ -47400,13 +47429,22 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     };
   }
 
+  var lastPaintK = null;
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) chainRepair(); } catch (e) { if (!P5.ferr) { P5.ferr = 1; ev('world:s2p5:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { chainRepair(); var k = room(); if (k !== lastPaintK) { lastPaintK = k; popMasa(); paintRoom(); } } } catch (e) { if (!P5.ferr) { P5.ferr = 1; ev('world:s2p5:err:frame:' + (e && e.message)); } } };
+  }
+  if (typeof c2Go === 'function') {
+    var goX = c2Go;
+    c2Go = function () {
+      var r = goX.apply(this, arguments);
+      try { if (on()) { later(0, function () { popMasa(); paintRoom(); }); later(350, function () { popMasa(); paintRoom(); }); } } catch (eG) {}
+      return r;
+    };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
-    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); hookBattle(); popMasa(); if (inDepot()) paintRoom(); } } catch (eP) {} };
+    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); hookBattle(); popMasa(); paintRoom(); } } catch (eP) {} };
   }
   try { chainRepair(); } catch (eC) {}
   ev('world:s2p5:ready');

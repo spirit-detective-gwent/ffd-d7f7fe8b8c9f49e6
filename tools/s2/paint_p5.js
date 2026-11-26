@@ -1132,7 +1132,7 @@
   };
 
   /* ---------- 13. Lift shutter (boss room) ---------- */
-  function shutterRoom(g, mode) {
+  function shutterRoom(g, mode, broke) {
     /* mode: 'fight' | 'leave' | 'notes' | 'help' | 'cleared' */
     rr(g);
     corrug(g, 90, 40, 1100, 280, '#3a4254', '#323848', 22);
@@ -1148,9 +1148,19 @@
     caution(g, 318, 276, 644, 14);
     /* freight lift frame in front of the slats */
     liftFrame(g, 260, 40, 760, 280);
-    /* freight manifest + a large gray seal on the shutter itself */
+    /* freight manifest + a large gray seal on the shutter itself (omitted / broken after the pry) */
     manifest(g, 500, 110, 160, 120, true);
-    graySeal(g, 760, 170, 36);
+    if (broke || mode === 'cleared') {
+      /* broken seal: pale ring, the 灰 is cracked off */
+      g.save();
+      g.strokeStyle = '#6a6a72'; g.lineWidth = 3;
+      g.beginPath(); g.arc(760, 170, 36, 0.3, Math.PI * 1.6); g.stroke();
+      g.strokeStyle = '#3a3a42'; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(748, 158); g.lineTo(772, 186); g.stroke();
+      g.restore();
+    } else {
+      graySeal(g, 760, 170, 36);
+    }
     lamp(g, 180, 70); lamp(g, 1100, 70);
     glow(g, 640, 160, 180, 'rgba(255,200,110,.16)');
     concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 67);
@@ -1206,10 +1216,10 @@
     }
     shell(g, '\u30b7\u30e3\u30c3\u30bf\u30fc', 'Lift shutter');
   }
-  S2P.depShutter = function (g, cleared) { shutterRoom(g, cleared ? 'cleared' : 'fight'); };
-  S2P.depShutterLeave = function (g) { shutterRoom(g, 'leave'); };
-  S2P.depShutterNotes = function (g) { shutterRoom(g, 'notes'); };
-  S2P.depShutterHelp = function (g) { shutterRoom(g, 'help'); };
+  S2P.depShutter = function (g, broke) { shutterRoom(g, broke ? 'cleared' : 'fight', broke); };
+  S2P.depShutterLeave = function (g, broke) { shutterRoom(g, 'leave', broke); };
+  S2P.depShutterNotes = function (g, broke) { shutterRoom(g, 'notes', broke); };
+  S2P.depShutterHelp = function (g, broke) { shutterRoom(g, 'help', broke); };
 
   /* ---------- battle: lift shutter ---------- */
   S2P.battleShutter = function (g) {
