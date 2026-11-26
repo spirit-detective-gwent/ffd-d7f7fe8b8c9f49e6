@@ -43,8 +43,8 @@ READ = """(function(){
   var intro=document.getElementById('wintro');
   var snm=d&&d.querySelector('.snm, .d2-nm, b.snm');
   var q=d&&d.querySelector('.q, .d2-q, .tw');
-  var pts=[...((d&&d.querySelectorAll('.pt2, .pt, .d2-face'))||[])];
-  var bgs=pts.map(function(p){return p.style.backgroundImage||''});
+  var pts=[...((d&&d.querySelectorAll('.pt2, .pt, .d2-face, .d3-face, i.pt'))||[])];
+  var bgs=pts.map(function(p){return (p.style.backgroundImage||(getComputedStyle(p).backgroundImage||''))});
   var bg=bgs.join(' | ');
   return {
     dlg:!!(d&&d.classList.contains('on')),
@@ -95,15 +95,25 @@ async def shot(pg, name):
     return path
 
 async def st(pg):
-    return await ev(pg, READ)
+    s = await ev(pg, READ)
+    if isinstance(s, dict) and s.get("line"):
+        s["line"] = s["line"].replace("\u2060", "").replace("\u2060", "").replace("⁠", "")
+    return s
+
+def has_name_line(s):
+    line = (s.get("line") or "").replace("\u2060", "").replace("⁠", "")
+    return "Shiraishi" in line and "School nurse" in line
 
 async def next_line(pg, times=1):
     for _ in range(times):
-        # finish typewriter if busy, then advance
-        busy = await ev(pg, "(function(){var b=document.querySelector('#wdlg .bt button, #wdlg button.hot'); if(!b)return 'none'; b.click(); return 'click'})()")
-        await pg.wait_for_timeout(80)
-        await ev(pg, "(function(){var b=document.querySelector('#wdlg .bt button, #wdlg button.hot'); if(b)b.click(); return 1})()")
-        await pg.wait_for_timeout(120)
+        # One click: finishes typewriter if it is still running, otherwise advances one line.
+        await ev(pg, """(function(){
+          var d=document.getElementById('wdlg');
+          var b=d&&d.querySelector('.bt button, button.hot, .d2-list button');
+          if(b) b.click();
+          return 1;
+        })()""")
+        await pg.wait_for_timeout(180)
     return await st(pg)
 
 async def skip_intro_card(pg):
@@ -191,8 +201,8 @@ def static_checks():
        "charIntro('nurse', function () { scene('nurse2'" not in src)
     ok("nurseReveal / nurseLabel helpers present",
        "function nurseReveal(done)" in src and "function nurseLabel()" in src)
-    ok("n9Cabinet uses ptFace painted bust", "ptFace('nurse', 'White cabinet')" in src)
-    ok("dress tutorial offer uses ptFace", "You keep coming back scraped" in src and "ptFace('nurse', nurseLabel())" in src)
+    ok("n9Cabinet passes painted nursePtUrl", "n9Cabinet" in src and "nursePtUrl()" in src and "White cabinet" in src)
+    ok("dress tutorial offer passes painted nursePtUrl", "You keep coming back scraped" in src and "nursePtUrl()" in src)
     # leftover third-arg nurse_fig is only the chalk board, which goes through dlgPtUrl
     leftover = re.findall(r"dialog\([^;]{0,500}'nurse_fig'", src)
     ok("no unscoped dialog(..., 'nurse_fig') besides board (dlgPtUrl)",
@@ -215,23 +225,22 @@ async def run_path(pg, path, ngp=False, do_shots=False):
     if do_shots:
         await shot(pg, "01_nurse_label_before")
     # advance to the name-saying line
-    s = await step_until(pg, lambda x: "Shiraishi. School nurse" in (x.get("line") or "") or x.get("intro"))
+    s = await step_until(pg, lambda x: has_name_line(x) or x.get("intro"))
     if s.get("intro"):
         ok(f"{tag} card must not appear before the name line", False, s)
         await skip_intro_card(pg)
         return
     ok(f"{tag} name line still labelled Nurse",
-       s.get("name") == "Nurse" and "Shiraishi. School nurse" in (s.get("line") or ""), s)
+       s.get("name") == "Nurse" and has_name_line(s), s)
     if do_shots:
         await shot(pg, "02_name_line_still_nurse")
-    # next should be the intro card
+    # next click should open the intro card (or finish typewriter first)
     s = await next_line(pg)
-    # typewriter-finish may have only completed text; ensure we advanced
+    if not s.get("intro") and "Shiraishi. School nurse" in (s.get("line") or "").replace("\u2060",""):
+        s = await next_line(pg)
     if not s.get("intro"):
-        await pg.wait_for_timeout(200)
+        await pg.wait_for_timeout(300)
         s = await st(pg)
-        if not s.get("intro"):
-            s = await next_line(pg)
     ok(f"{tag} reveal card plays after the name line",
        s.get("intro") and "Shiraishi" in (s.get("introName") or ""), s)
     if do_shots:
@@ -270,27 +279,24 @@ async def portraits(pg, errs):
       window._ptNurse = PT_HAS.nurse_neutral; PT_HAS.nurse_neutral=0;
       return 1;
     })()""")
-    await ev(pg, "(function(){ try{ v630DressTalk(); }catch(e){ return String(e&&e.message||e);} return 1; })()")
-    await pg.wait_for_timeout(250)
-    s = await st(pg)
+    await ev(pg, "(function(){ try{ close(); }catch(e){} try{ v630DressTalk(); }catch(e){ return String(e&&e.message||e);} return 1; })()")
+    s = await wait_dlg(pg)
     await shot(pg, "05_bandage_tutorial_before")
     ok("bandage before uses old fig (forced)", s.get("oldfig") or not s.get("painted"), s)
     await ev(pg, HUSH)
-    await ev(pg, "(function(){ try{ n9Cabinet(); }catch(e){ return String(e&&e.message||e);} return 1; })()")
-    await pg.wait_for_timeout(250)
+    await ev(pg, "(function(){ try{ close(); }catch(e){} try{ n9Cabinet(); }catch(e){ return String(e&&e.message||e);} return 1; })()")
+    await wait_dlg(pg)
     await shot(pg, "07_cabinet_pickup_before")
     # --- after: restore painted ---
     await ev(pg, "PT_HAS.nurse_neutral = window._ptNurse || 1")
     await ev(pg, HUSH)
-    await ev(pg, "(function(){ try{ v630DressTalk(); }catch(e){ return String(e&&e.message||e);} return 1; })()")
-    await pg.wait_for_timeout(300)
-    s = await st(pg)
+    await ev(pg, "(function(){ try{ close(); }catch(e){} try{ v630DressTalk(); }catch(e){ return String(e&&e.message||e);} return 1; })()")
+    s = await wait_dlg(pg)
     await shot(pg, "06_bandage_tutorial_after")
     ok("bandage tutorial uses painted nurse portrait", s.get("painted"), s)
     await ev(pg, HUSH)
-    await ev(pg, "(function(){ try{ n9Cabinet(); }catch(e){ return String(e&&e.message||e);} return 1; })()")
-    await pg.wait_for_timeout(300)
-    s = await st(pg)
+    await ev(pg, "(function(){ try{ close(); }catch(e){} try{ n9Cabinet(); }catch(e){ return String(e&&e.message||e);} return 1; })()")
+    s = await wait_dlg(pg)
     await shot(pg, "08_cabinet_pickup_after")
     ok("cabinet pickup uses painted nurse portrait", s.get("painted"), s)
     # enter1 speaker during the hold-up, still unnamed

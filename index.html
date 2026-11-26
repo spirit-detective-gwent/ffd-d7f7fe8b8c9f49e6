@@ -22894,8 +22894,7 @@ function n9Cabinet() {
   var body = '<b>White cabinet</b><p>The nurse keeps a restocking stash here. Clean gauze and medical tape. Not your own items.</p>';
   if (teach) body += '<p>She shows the wrap once. Gauze, then tape. A 20% dressing.</p>';
   if (wait) body += '<p class="dim">The shelf is thin. Give it a minute.</p>';
-  dialog((typeof ptFace === 'function' ? ptFace('nurse', 'White cabinet') : '') + '<div class="tw">' + body + '</div>', b);
-  if (typeof ptLift === 'function') ptLift();
+  dialog(body, b, (typeof nursePtUrl === 'function' && nursePtUrl()) || 'nurse_fig');
 }
 
 function n9Slam(step, need) {
@@ -23783,15 +23782,14 @@ intDoorsFrame = function () { intDoorsFrame0(); try { v630TrainGate(); } catch (
 function v630DressTalk() {
   SAVE.sc = SAVE.sc || {};
   var st = SAVE.sc.dress || '';
-  if (st === 'fetch') { dialog((typeof ptFace === 'function' ? ptFace('nurse', nurseLabel()) : '<b>' + NURSE_NAME + '</b>') + '<div class="tw"><p class="q">\u201cThe gauze is in the white cabinet. Bring a roll, and tape if it is there.\u201d</p></div>', [['OK', null]]); if (typeof ptLift === 'function') ptLift(); return; }
+  if (st === 'fetch') { dialog('<b>' + nurseLabel() + '</b><p class="q">\u201cThe gauze is in the white cabinet. Bring a roll, and tape if it is there.\u201d</p>', [['OK', null]], (typeof nursePtUrl === 'function' && nursePtUrl()) || 'nurse_fig'); return; }
   if (st === 'cine') { W.v630Lesson = 'dress'; W.phBagTab = 'craft'; W.dlg = false; pause('bag'); return; }
   var b = [['Maybe later', function () { SAVE.sc.dress = 'later'; save(); ev('world:dress:later'); }], ['Teach me', function () {
     SAVE.sc.dress = 'fetch'; save(); ev('world:dress:fetch');
     scene(null, [['nurse', 'The gauze is in the white cabinet. Watch once, then you do it.']], function () { W.dlg = false; });
   }, 'hot']];
   if (SAVE.hp < MAXHP) b.push(['Bandaging (+' + Math.round(MAXHP * HEAL.freePct) + ' HP)', function () { infirmary0(); }]);
-  dialog((typeof ptFace === 'function' ? ptFace('nurse', nurseLabel()) : '<b>' + NURSE_NAME + '</b>') + '<div class="tw"><p class="q">\u201cYou keep coming back scraped. I can teach you a dressing, if you want it.\u201d</p></div>', b);
-  if (typeof ptLift === 'function') ptLift();
+  dialog('<b>' + nurseLabel() + '</b><p class="q">\u201cYou keep coming back scraped. I can teach you a dressing, if you want it.\u201d</p>', b, (typeof nursePtUrl === 'function' && nursePtUrl()) || 'nurse_fig');
 }
 var infirmary0 = infirmary;
 infirmary = function () {
