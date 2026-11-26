@@ -22128,8 +22128,8 @@ function phClicks(o, tab) {
       if (a === 'ofeq' && typeof ofWear === 'function') { if (!b.dataset.o) AU.play('gear_off', { gain: 0.9 }); ofWear(phWho(), b.dataset.o || null); toast(b.dataset.o ? 'Equipped.' : 'Back in the school uniform.'); pause('equip'); return; }
       if (a === 'btab') { W.phBagTab = b.dataset.s === 'craft' ? 'craft' : 'items'; pause('bag'); return; }
       if (a === 'isel') { W.phSel = b.dataset.k; pause('bag'); return; }
-      if (a === 'use') { phUseType(b.dataset.k); W.phBagTab = 'items'; pause('bag'); return; }
-      if (a === 'drink') { drinkSoda(b.dataset.k); W.phBagTab = 'items'; pause('bag'); return; }
+      if (a === 'use') { var uk = b.dataset.k; W.phBagTab = 'items'; if (uk === 'candy' && typeof phClose === 'function') { phClose(); phUseType(uk); return; } phUseType(uk); pause('bag'); return; } /* v6.5.63-eat */
+      if (a === 'drink') { W.phBagTab = 'items'; if (typeof phClose === 'function') phClose(); drinkSoda(b.dataset.k); return; } /* v6.5.63-eat: close the bag before the overlay */
       if (a === 'q' || a === 'qmin' || a === 'qmax') { var r = b.dataset.r, d = +b.dataset.d; W.phQty = W.phQty || {}; var need = r === 'potion' ? [['leaf', 1], ['ginger', 1]] : [['gauze', 1], ['tape', 1]]; var raw = phCraftMax(need), cap = Math.max(1, raw), qn = (W.phQty[r] | 0) || 1; if (a === 'qmin') qn = 1; else if (a === 'qmax') qn = Math.max(1, raw); else qn = Math.max(1, Math.min(cap, qn + d)); W.phQty[r] = qn; pause('bag'); return; }
       if (a === 'craft') { phDoCraft(b.dataset.r); return; }
       if (a === 'ch2go') { phClose(); if (typeof c2Ask === 'function') c2Ask(); return; }
@@ -22640,6 +22640,11 @@ drinkSoda = function (k) {
  * WIN = full HP (food) / full SP (soda), CLOSE MISS = the normal effect, BAD RUN = half of the normal effect (the mockup's fail rule). */
 var EAT_GAME = { 'Onigiri': 'onigiri', 'Melon bread': 'melonbread', 'Yakisoba bread': 'yakisoba', 'Custard pudding': 'pudding', 'Hot lunch': 'lunch', 'An-toast': 'antoast', 'Omurice': 'omurice' };
 var EATG_HOLD = null;
+function eatgCloseBag() { /* the pause bag must be gone before the overlay, and must not come back under it */
+  try { if (typeof phClose === 'function') phClose(); } catch (e) {}
+  var o = document.getElementById('wpause'); if (o) { o.className = ''; }
+  W.paused = false; W.dlg = false;
+}
 function eatgHold(on) { /* the map sleeps under the overlay: its loop idles like the pause menu and its layer stops painting */
   var wd = document.getElementById('world');
   if (on) { if (EATG_HOLD) return; EATG_HOLD = { p: W.paused, v: wd ? wd.style.visibility : '' }; W.paused = true; if (wd) wd.style.visibility = 'hidden'; return; }
@@ -22652,7 +22657,7 @@ var eatFx0 = eatFx;
 eatFx = function (ic, nm, h0, msg) {
   var id = EAT_GAME[nm], self = this, args = arguments; if (!id || !eatgOn(id)) return eatFx0.apply(self, args);
   var h1 = SAVE.hp, add = Math.max(0, h1 - h0), half = Math.ceil(add / 2), tg = { win: MAXHP, close: h1, bad: Math.min(MAXHP, h0 + half) }, b0 = W.busy;
-  W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + id);
+  eatgCloseBag(); W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + id);
   var ok = root.EATG.open({ item: id, who: eatgWho(), hp0: h0, sp0: SAVE.sp | 0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('hp', add, half, MAXHP), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: tg[r] != null ? tg[r] : h1, sp: SAVE.sp | 0 }; },
     onEnd: function (res) { eatgHold(false); SAVE.hp = Math.min(MAXHP, tg[res] != null ? tg[res] : h1); save(); hud(); W.busy = b0; W.path = []; W.cool = Math.max(W.cool || 0, 0.5); eatFx0.call(self, ic, nm, h0, msg); ev('world:eatg:' + id + ':' + res); } });
@@ -22666,7 +22671,7 @@ drinkSoda = function (k) {
   SAVE.sodaSeen = SAVE.sodaSeen || {}; SAVE.sodaSeen.fizz = 1; SAVE.sodaSeen.cola = 1; SAVE.sodaSeen.orange = 1;
   var s0 = SAVE.sp | 0, tg = { win: SPMAX, close: Math.min(SPMAX, s0 + 5), bad: Math.min(SPMAX, s0 + 3) }, b0 = W.busy;
   SAVE.sp = tg.close; save(); hud(); try { if (root.INPUT && root.INPUT.rumble) root.INPUT.rumble('soda'); } catch (eR) {}
-  W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:soda');
+  eatgCloseBag(); W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:soda');
   var ok = root.EATG.open({ item: 'ramune', who: eatgWho(), hp0: SAVE.hp, sp0: s0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('sp', 5, 3, SPMAX), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: SAVE.hp, sp: tg[r] != null ? tg[r] : tg.close }; },
     onEnd: function (res) { eatgHold(false); SAVE.sp = tg[res] != null ? tg[res] : tg.close; save(); hud(); W.busy = b0; W.path = []; W.cool = Math.max(W.cool || 0, 0.5);
@@ -22679,7 +22684,7 @@ drinkSoda = function (k) {
 root.FFF_EATG_SP = function (it, s0, done) { /* Kissa Gekko's four coffees: each has its own cup in the coffee sip game; settles the SP the counter already added */
   var id = ({ blend: 'blend', iced: 'iced', lait: 'lait', wiener: 'wiener' })[it.id]; if (!id || !eatgOn(id)) return false;
   var spM = SPMAX, s1 = SAVE.sp | 0, add = Math.max(0, s1 - s0), half = Math.ceil(add / 2), tg = { win: spM, close: s1, bad: Math.min(spM, s0 + half) }, b0 = W.busy;
-  W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + it.id);
+  eatgCloseBag(); W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + it.id);
   var ok = root.EATG.open({ item: id, who: eatgWho(), hp0: SAVE.hp, sp0: s0, maxhp: MAXHP, spmax: spM, rows: eatgRows('sp', add, half, spM), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: SAVE.hp, sp: tg[r] != null ? tg[r] : s1 }; },
     onEnd: function (res) { eatgHold(false); SAVE.sp = tg[res] != null ? tg[res] : s1; save(); hud(); W.busy = b0; W.path = []; if (done) done(SAVE.sp - s0); ev('world:eatg:' + it.id + ':' + res); } });
@@ -22689,7 +22694,7 @@ root.FFF_EATG_MILK = function (it, apply, done) { /* the sento milks: the shake-
   var id = ({ cmilk: 'cmilk', fmilk: 'fmilk' })[it.id]; if (!id || !eatgOn(id)) return false;
   var stat = id === 'fmilk' ? 'hp' : 'sp', mx = stat === 'hp' ? MAXHP : SPMAX, v0 = (stat === 'hp' ? SAVE.hp : SAVE.sp) | 0, s0 = SAVE.sp | 0, h0 = SAVE.hp | 0, b0 = W.busy;
   apply(it); var v1 = (stat === 'hp' ? SAVE.hp : SAVE.sp) | 0, add = Math.max(0, v1 - v0), half = Math.ceil(add / 2), tg = { win: mx, close: v1, bad: Math.min(mx, v0 + half) };
-  W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + id);
+  eatgCloseBag(); W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + id);
   var ok = root.EATG.open({ item: id, who: eatgWho(), hp0: h0, sp0: s0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows(stat, add, half, mx), bot: root.FFF_EATG_BOT,
     target: function (r) { var t = tg[r] != null ? tg[r] : v1; return stat === 'hp' ? { hp: t, sp: SAVE.sp | 0 } : { hp: SAVE.hp | 0, sp: t }; },
     onEnd: function (res) { eatgHold(false); var t = Math.min(mx, tg[res] != null ? tg[res] : v1); if (stat === 'hp') SAVE.hp = t; else SAVE.sp = t; save(); hud(); W.busy = b0; W.path = [];
@@ -22702,7 +22707,7 @@ useHeal = function (i) {
   var k = SAVE.heal && SAVE.heal[i]; if (k !== 'candy' || !eatgOn('candy')) return useHeal1(i);
   var h0 = SAVE.hp | 0, ok = useHeal1(i); if (!ok) return ok;
   var h1 = SAVE.hp | 0, add = Math.max(0, h1 - h0), half = Math.ceil(add / 2), tg = { win: MAXHP, close: h1, bad: Math.min(MAXHP, h0 + half) }, b0 = W.busy;
-  W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:candy');
+  eatgCloseBag(); W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:candy');
   var go = root.EATG.open({ item: 'candy', who: eatgWho(), hp0: h0, sp0: SAVE.sp | 0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('hp', add, half, MAXHP), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: tg[r] != null ? tg[r] : h1, sp: SAVE.sp | 0 }; },
     onEnd: function (res) { eatgHold(false); SAVE.hp = Math.min(MAXHP, tg[res] != null ? tg[res] : h1); save(); hud(); W.busy = b0; W.path = []; W.cool = Math.max(W.cool || 0, 0.5);
