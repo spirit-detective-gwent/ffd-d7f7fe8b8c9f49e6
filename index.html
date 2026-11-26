@@ -354,9 +354,9 @@ body.cuc .sparks{z-index:19}
 /* v6.5.20: Equipment Bay + Side Court — lower the whole foe column (plate, icons, sprite, chips) 32px.
    Relative layout stays intact; mid HUD READY bar is well below. */
 #fE.bt-feet-lo{transform:translateY(32px)}
-/* v6.5.64 GGD-25 r2: Genji's spar ring — lift Ryo clear of the near ropes, and the foe a little higher, both still inside the ropes. Phone column only; does not change other rooms. */
-#game[data-bfx="c2_gym"] #fP{transform:translateY(-44px)}
-#game[data-bfx="c2_gym"] #fE{transform:translateY(-18px)}
+/* v6.5.64 GGD-25 r2: Genji's spar ring — lift the sprites (not the HUD plates) so Ryo's feet clear the near ropes and Aoi sits a little higher, both still inside the ropes. top/margin, not transform, so attack animations keep working. */
+#game[data-bfx="c2_gym"] #fP .fbody{top:-42px}
+#game[data-bfx="c2_gym"] #fE .fbody{top:6px}
 
 .fchip{position:relative;width:44px;height:52px;padding:0;border:0;border-radius:10px;background:#1a1530;box-shadow:inset 0 0 0 2px rgba(200,160,255,.35);overflow:hidden}
 .fchip i{position:absolute;inset:2px 2px 9px;background-size:auto 150%;background-position:50% 8%;background-repeat:no-repeat}
