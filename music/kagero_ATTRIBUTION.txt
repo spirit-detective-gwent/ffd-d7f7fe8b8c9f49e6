@@ -1,0 +1,28 @@
+Fox Fire Fist: Delinquent Duel — Kagerō — Chapter Two final boss
+
+Title: Darkness is Coming
+Artist: Kevin MacLeod (incompetech.com)
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100584
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/base_roof.mp3 (plays in his roof (always))
+
+Required in-game credit:
+"Darkness is Coming" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+Edit: 1:58 excerpt from 23.0 s of the original, cut on bar lines (73 bpm), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched. Stereo MP3 at 128 kbps, 44.1 kHz.
+
+
+Title: Clash Defiant
+Artist: Kevin MacLeod (incompetech.com)
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600003
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/battle_kagero.mp3 (plays in his fight)
+
+Required in-game credit:
+"Clash Defiant" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+Edit: 1:19 excerpt from 15.2 s of the original, cut on bar lines (170 bpm), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched. Stereo MP3 at 192 kbps, 44.1 kHz.

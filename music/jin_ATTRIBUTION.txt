@@ -1,0 +1,28 @@
+Fox Fire Fist: Delinquent Duel — Jin (Syndicate) — Chapter Two Game Center boss
+
+Title: Ethernight Club
+Artist: Kevin MacLeod (incompetech.com)
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN2100002
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/base_game.mp3 (plays in the Game Center, while he is a fight target)
+
+Required in-game credit:
+"Ethernight Club" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+Edit: 1:30 excerpt from 67.6 s of the original, cut on bar lines (117 bpm), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched. Stereo MP3 at 128 kbps, 44.1 kHz.
+
+
+Title: Shiny Tech II
+Artist: Kevin MacLeod (incompetech.com)
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100077
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/battle_jin.mp3 (plays in his fight)
+
+Required in-game credit:
+"Shiny Tech II" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+Edit: 1:17 excerpt from 19.6 s of the original, cut on bar lines (138 bpm), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched. Stereo MP3 at 192 kbps, 44.1 kHz.

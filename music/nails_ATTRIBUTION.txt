@@ -1,0 +1,28 @@
+Fox Fire Fist: Delinquent Duel — Nails (Punks) — Chapter Two arcade boss
+
+Title: Griphop
+Artist: Kevin MacLeod (incompetech.com)
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100413
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/base_arcade.mp3 (plays in his arcade, while he is a fight target)
+
+Required in-game credit:
+"Griphop" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+Edit: 1:57 excerpt from 71.5 s of the original, cut on bar lines (90 bpm), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched. Stereo MP3 at 128 kbps, 44.1 kHz.
+
+
+Title: Bet You Can
+Artist: Kevin MacLeod (incompetech.com)
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1200019
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/battle_nails.mp3 (plays in his fight (Kevin MacLeod file "Bet You Can ver 2"))
+
+Required in-game credit:
+"Bet You Can" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+Edit: 1:21 excerpt from 40.4 s of the original, cut on bar lines (118 bpm), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched. Stereo MP3 at 192 kbps, 44.1 kHz.

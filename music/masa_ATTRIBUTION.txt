@@ -1,0 +1,28 @@
+Fox Fire Fist: Delinquent Duel — Masa (Riders) — Chapter Two depot boss
+
+Title: Industrial Cinematic
+Artist: Kevin MacLeod (incompetech.com)
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1600047
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/base_depot.mp3 (plays in the depot rooms, while he is a fight target)
+
+Required in-game credit:
+"Industrial Cinematic" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+Edit: 1:36 excerpt from 73.9 s of the original, cut on bar lines (110 bpm), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched. Stereo MP3 at 128 kbps, 44.1 kHz.
+
+
+Title: Harmful or Fatal
+Artist: Kevin MacLeod (incompetech.com)
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100210
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/battle_masa.mp3 (plays in his fights (landmark and shutter))
+
+Required in-game credit:
+"Harmful or Fatal" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+Edit: 1:18 excerpt from 167.7 s of the original, cut on bar lines (135 bpm), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched. Stereo MP3 at 192 kbps, 44.1 kHz.
