@@ -44346,25 +44346,26 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   function CF(z, o) { return Object.assign({ cam: 'frame', at: 'mb2_sento', at2: 'ryo', z: z || 1.7, f: 0.3, ms: 1500 }, o || {}); }
   function F(fn) { return ['@fn', function (next) { try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {} /* no dialogue box during a staged beat: the camera frame holds (no watchdog zoom-out) */ fn(next); }]; }
   function fadeLie(next) { if (GS && GS.lie) { fadeOut(GS.lie, 1100); GS.lie = null; } later(1100, next); }
-  /* the answer's rows are spliced into the SAME scene after the pick, so the camera frame, bars and dialogue dock run as one scene */
+  /* the answer's rows are appended to the @bond L2 so they play in the same dock before the seal pry */
   function seqFor(ans, P) {
     var vq = VQ[P] || VQ.balanced;
     if (ans === 'fierce') return [F(stageKO), ['ryo', '{quiet}Gently enough.{/quiet}', CF(1.7)], ['aoi', '\u2026He\u2019s breathing. Out cold, but breathing.'], F(stageCarryIn), ['', '<p class="dim">Old Sato and Tome-baa carry him up the stairs. He doesn\u2019t open his eyes.</p>'], F(stageCarryOut), ['', '<p class="dim">A gray-coat pickup slip is pinned under the boiler lamp. One name in pencil: <b>TETSU</b>. Club Kitsune, back office.</p>'], ['aoi', 'Tetsu sits in Jin\u2019s club.{p} {quiet}We can\u2019t touch Jin\u2019s ground yet.{/quiet}'], ['ryo', 'Then we don\u2019t.']].concat(vq);
     if (ans === 'strategic') return [F(stageDeal), ['aoi', 'Condemned by March. The parts never came. They don\u2019t want your fire lit. They want your basement.', CF(1.7)], ['ryo', '{brisk}You give us the crates, the route, the nights. We give the city a boiler with no parts.{/brisk}'], ['mb2_sento', '\u2026{p=500}{slow}A deal.{/slow} Nobody\u2019s offered me one that wasn\u2019t a loan.'], F(stageDealWalk), ['mb2_sento', 'Tetsu sits in Jin\u2019s club. You can\u2019t walk Jin\u2019s ground yet.{p} The crates used to run east. Masa\u2019s Riders. Wagashi row.', CF(1.7, { at2: null })]].concat(vq);
     return [F(stageHelp), ['mb2_sento', '\u2026{p=600}An \u014dzeki doesn\u2019t take a hand.', CF(1.7)], ['ryo', 'Then take it as a favor to me.'], ['aoi', '{quiet}Tome-baa! Towels. Hot water.{/quiet}'], F(stageHelpWalk), ['ryo', 'The fire\u2019s lit. It\u2019s been lit all along. The seal\u2019s only chalk.', CF(1.7)], ['ryo', 'Break it {slow}with{/slow} me.'], F(stageHelpPalm), ['aoi', 'The alley can pay for the parts. {quiet}It\u2019s been paying for the water for thirty years.{/quiet}'], ['mb2_sento', 'Tetsu sits in Jin\u2019s club.{p} {slow}Leave that ground alone for now.{/slow} East. Wagashi row. Masa and the Riders.{p} {slow}Tome-baa will tell you the rest.{/slow}']].concat(vq); }
   function pathNow() { try { return STORY.bond(SAVE).path || 'balanced'; } catch (e) { return 'balanced'; } }
-  function branch(rows, self, next) { var ans = ((STORY.bond(SAVE) || {}).picks || {}).c2_goda || pathNow(), e = E(); if (GS) GS.fate = ans; ev('world:c2:goda:' + ans);
-    e.godaFate = ans === 'fierce' ? 'ko' : ans === 'strategic' ? 'deal' : 'help'; if (ans === 'strategic') e.ckTip = 1; save();
-    var seq = seqFor(ans, pathNow()); Array.prototype.splice.apply(rows, [rows.indexOf(self) + 1, 0].concat(seq)); next(); }
+  /* Post-pick staging (carry on Fierce, Tetsu rumor, east-to-Masa pointer) is appended to bondAsk's L2.
+   * A trailing @fn that splices into `rows` is invisible to scene(): a later wrapper copies `pre` via .map(),
+   * so the engine treated the @fn as last and jumped to the seal pry. L2 plays in the same dialogue dock before c2LmSeal. */
+  function afterPick(L2) { var ans = ((STORY.bond(SAVE) || {}).picks || {}).c2_goda || pathNow(), e = E(); if (GS) GS.fate = ans; ev('world:c2:goda:' + ans);
+    e.godaFate = ans === 'fierce' ? 'ko' : ans === 'strategic' ? 'deal' : 'help'; if (ans === 'strategic') e.ckTip = 1; try { save(); } catch (x) {}
+    return (L2 || []).concat(seqFor(ans, pathNow())); }
   function godaRows() { var e = E(); e.ckNamed = 1; e.nq = e.nq && typeof e.nq === 'object' ? e.nq : {}; e.nq.named = 1; try { save(); } catch (x) {}
-    var rows = [], self = F(function (next) { branch(rows, self, next); });
-    rows.push(['mb2_sento', '\u2026{p=600}{slow}Thirty years since anyone put me on the clay.{/slow}', { cam: 'bars+push', at: 'mb2_sento', z: 1.7, f: 0.3, ms: 2600 }], F(godaRise),
-      ['mb2_sento', '\u2026Not the seal.{p} {slow}It keeps the fire lit.{/slow}', CF(1.7)], ['aoi', 'He\u2019s going to throw himself on it.'], ['@bond', 'c2_goda'], self);
-    return rows; }
+    return [['mb2_sento', '\u2026{p=600}{slow}Thirty years since anyone put me on the clay.{/slow}', { cam: 'bars+push', at: 'mb2_sento', z: 1.7, f: 0.3, ms: 2600 }], F(godaRise),
+      ['mb2_sento', '\u2026Not the seal.{p} {slow}It keeps the fire lit.{/slow}', CF(1.7)], ['aoi', 'He\u2019s going to throw himself on it.'], ['@bond', 'c2_goda']]; }
 
   /* ---------- wiring ---------- */
   var bo1 = c2BossOut; c2BossOut = function (k) { if (k === 'sento' && nailsRun() && GS && GS.lie) return godaRows(); return bo1.apply(this, arguments); };
-  var ba1 = bondAsk; bondAsk = function (id, cb) { if (id === 'c2lm_sento' && nailsRun()) { ev('world:c2:goda:skipold'); cb([]); return; } return ba1.apply(this, arguments); }; /* the Punk run asks c2_goda after the fight instead */
+  var ba1 = bondAsk; bondAsk = function (id, cb) { if (id === 'c2lm_sento' && nailsRun()) { ev('world:c2:goda:skipold'); cb([]); return; } if (id === 'c2_goda') return ba1.call(this, id, function (L2) { cb(afterPick(L2)); }); return ba1.apply(this, arguments); }; /* the Punk run asks c2_goda after the fight instead; post-pick rows ride on L2 so they play before the seal pry */
   var sl1 = c2LmSeal; c2LmSeal = function (k) { if (GS) { var g = GS; if (g.carryT) clearInterval(g.carryT); if (g.carryRaf) cancelAnimationFrame(g.carryRaf); GS = null; fadeOut(g.lie, 700); fadeOut(g.g && g.g.el, 700); g.fx.forEach(function (d) { fadeOut(d, 500); }); if (W.c2n && W.c2n.godaS === g.g) W.c2n.godaS = null; } return sl1.apply(this, arguments); };
   /* Gōda stands at the bath counter after the Compassionate answer; the free-soak flag resets on each visit */
   var cp1 = c2Pop; c2Pop = function () { var r = cp1.apply(this, arguments); try { if (nailsRun() && c2Room() === 'sento') { W.godaSoak = 0; var e = E();

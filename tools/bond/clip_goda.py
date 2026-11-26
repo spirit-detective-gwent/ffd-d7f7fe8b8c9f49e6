@@ -41,7 +41,7 @@ async def record(ans, body, errs, keep=None):
         await v.run(1.0)
         info = await bh.ev(pg, "JSON.stringify({fate:c2S().e.godaFate,tip:c2S().e.ckTip,picks:STORY.bond(SAVE).picks,px:STORY.bond(SAVE).px})")
         print(ans, 'frames', v.n, 'clicks', clicks, info); await b.close()
-    mp4 = OUT / f'c2_goda_{ans}_v3.mp4'; bh.encode(d, mp4); return d, mp4
+    mp4 = OUT / f'c2_goda_{ans}_v4.mp4'; bh.encode(d, mp4); return d, mp4
 async def main():
     order = sys.argv[1:] or ['fierce', 'strategic', 'balanced']
     bh.serve(PORT); body = bh.inject(); errs = []
