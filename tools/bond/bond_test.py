@@ -21,18 +21,31 @@ async def newpage(b, body, path='balanced', run=True):
 def norm(s):
     return (s or '').replace('\u2019', "'").replace('\u2018', "'").replace('\u2060', '')
 async def drive(pg, ans_idx, maxn=480):
+    # seal_sento is set at the start of the pry beat; Aoi's post-seal pointer
+    # ("Wagashi row. Masa and the Riders.") is the next L2 line. Don't return
+    # on the flag alone — keep clicking until that line is in the log.
     log, plate, qbody = [], None, ''
+    saw_seal, after_seal = False, 0
     for i in range(maxn):
         await pg.wait_for_timeout(330); st = await bh.ev(pg, POLL)
+        if not isinstance(st, dict):
+            continue
         if st['bond'] and plate is None:
             plate = (st.get('who') or '').strip()
             qbody = norm(st.get('txt') or '')
         if st['on'] and st.get('txt'):
             log.append((st.get('who') or '', st['txt']))
-        if st['seal']: return True, log, plate, qbody
+        if st['seal']:
+            saw_seal = True
+            blob = norm(' '.join(txt for who, txt in log))
+            if 'Wagashi' in blob:
+                return True, log, plate, qbody
+            after_seal += 1
+            if after_seal > 40:
+                return True, log, plate, qbody
         if st['on']:
             await pg.evaluate(CLICK, ans_idx if st['bond'] else 0)
-    return False, log, plate, qbody
+    return saw_seal, log, plate, qbody
 async def scene_case(b, body, path, idx, fate):
     ctx, pg, errs = await newpage(b, body, path)
     await bh.ev(pg, "c2Go('sento')"); await pg.wait_for_timeout(2500); await bh.ev(pg, bh.HUSH)
