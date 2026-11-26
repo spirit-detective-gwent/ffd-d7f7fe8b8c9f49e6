@@ -65,8 +65,8 @@
     etape: { jp: '電気テープ', icon: 'etape', flavor: 'For wiring, or a knuckle.', eff: 'into your pouch' },
     patch: { jp: 'パンク修理', icon: 'patch', flavor: 'A cheap roadside repair kit.' },
     bpart: { jp: '予備チューブ', icon: 'bpart', flavor: 'A patched inner tube. You can wrap a cut with it.' },
-    chainoil: { jp: 'チェーンオイル', icon: 'chainoil', flavor: 'Keeps a bike quiet. Or a hinge.', eff: 'into your pouch' },
-    cancoffee: { jp: '缶コーヒー', icon: 'cancoffee', flavor: 'Hot from the machine in the bay.', eff: '+6 SP  ·  drink now' }
+    chainoil: { jp: 'チェーンオイル', icon: 'chainoil', flavor: 'Keeps a bike quiet. Or a hinge.', eff: 'into your pouch', prov: 1 },
+    cancoffee: { jp: '缶コーヒー', icon: 'cancoffee', flavor: 'Hot from the machine in the bay.', eff: '+6 SP  ·  drink now', prov: 1 }
   };
   var HASE_NEW = [
     { id: 'chainoil', n: 'Chain oil', k: 'herb', hb: 'oil', base: 5, cost: 4, stock: 2, prov: 1 },
