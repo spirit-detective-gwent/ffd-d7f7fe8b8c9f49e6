@@ -22639,6 +22639,11 @@ drinkSoda = function (k) {
  * The counter / machine code has already charged and applied the normal effect (so a reload mid-game keeps it); the game then settles it:
  * WIN = full HP (food) / full SP (soda), CLOSE MISS = the normal effect, BAD RUN = half of the normal effect (the mockup's fail rule). */
 var EAT_GAME = { 'Onigiri': 'onigiri', 'Melon bread': 'melonbread', 'Yakisoba bread': 'yakisoba', 'Custard pudding': 'pudding', 'Hot lunch': 'lunch', 'An-toast': 'antoast', 'Omurice': 'omurice' };
+var EATG_HOLD = null;
+function eatgHold(on) { /* the map sleeps under the overlay: its loop idles like the pause menu and its layer stops painting */
+  var wd = document.getElementById('world');
+  if (on) { if (EATG_HOLD) return; EATG_HOLD = { p: W.paused, v: wd ? wd.style.visibility : '' }; W.paused = true; if (wd) wd.style.visibility = 'hidden'; return; }
+  if (!EATG_HOLD) return; var h = EATG_HOLD; EATG_HOLD = null; W.paused = h.p; if (wd) wd.style.visibility = h.v; }
 function eatgOn(item) { var G = root.EATG; return !!(G && !root.FFF_EATG_OFF && G.has(item) && !G.busy() && W.on); }
 function eatgRows(stat, add, half, mx) { var u = stat === 'hp' ? ' HP' : ' SP';
   return { win: ['WIN', stat === 'hp' ? 'FULL HP' : 'FULL SP', 'back to ' + mx + ' / ' + mx], close: ['CLOSE MISS', '+' + add + u, 'the normal ' + (stat === 'hp' ? 'heal' : 'boost')], bad: ['BAD RUN', '+' + half + u, 'half of normal'] }; }
@@ -22646,11 +22651,11 @@ var eatFx0 = eatFx;
 eatFx = function (ic, nm, h0, msg) {
   var id = EAT_GAME[nm], self = this, args = arguments; if (!id || !eatgOn(id)) return eatFx0.apply(self, args);
   var h1 = SAVE.hp, add = Math.max(0, h1 - h0), half = Math.ceil(add / 2), tg = { win: MAXHP, close: h1, bad: Math.min(MAXHP, h0 + half) }, b0 = W.busy;
-  W.busy = true; W.path = []; ev('world:eatg:open:' + id);
+  W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + id);
   var ok = root.EATG.open({ item: id, who: 'ryo', hp0: h0, sp0: SAVE.sp | 0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('hp', add, half, MAXHP), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: tg[r] != null ? tg[r] : h1, sp: SAVE.sp | 0 }; },
-    onEnd: function (res) { SAVE.hp = Math.min(MAXHP, tg[res] != null ? tg[res] : h1); save(); hud(); W.busy = b0; W.path = []; W.cool = Math.max(W.cool || 0, 0.5); eatFx0.call(self, ic, nm, h0, msg); ev('world:eatg:' + id + ':' + res); } });
-  if (!ok) { W.busy = b0; return eatFx0.apply(self, args); }
+    onEnd: function (res) { eatgHold(false); SAVE.hp = Math.min(MAXHP, tg[res] != null ? tg[res] : h1); save(); hud(); W.busy = b0; W.path = []; W.cool = Math.max(W.cool || 0, 0.5); eatFx0.call(self, ic, nm, h0, msg); ev('world:eatg:' + id + ':' + res); } });
+  if (!ok) { eatgHold(false); W.busy = b0; return eatFx0.apply(self, args); }
 };
 var drinkSoda0 = drinkSoda;
 drinkSoda = function (k) {
@@ -22660,25 +22665,25 @@ drinkSoda = function (k) {
   SAVE.sodaSeen = SAVE.sodaSeen || {}; SAVE.sodaSeen.fizz = 1; SAVE.sodaSeen.cola = 1; SAVE.sodaSeen.orange = 1;
   var s0 = SAVE.sp | 0, tg = { win: SPMAX, close: Math.min(SPMAX, s0 + 5), bad: Math.min(SPMAX, s0 + 3) }, b0 = W.busy;
   SAVE.sp = tg.close; save(); hud(); try { if (root.INPUT && root.INPUT.rumble) root.INPUT.rumble('soda'); } catch (eR) {}
-  W.busy = true; W.path = []; ev('world:eatg:open:soda');
+  W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:soda');
   var ok = root.EATG.open({ item: 'ramune', who: 'ryo', hp0: SAVE.hp, sp0: s0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('sp', 5, 3, SPMAX), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: SAVE.hp, sp: tg[r] != null ? tg[r] : tg.close }; },
-    onEnd: function (res) { SAVE.sp = tg[res] != null ? tg[res] : tg.close; save(); hud(); W.busy = b0; W.path = []; W.cool = Math.max(W.cool || 0, 0.5);
+    onEnd: function (res) { eatgHold(false); SAVE.sp = tg[res] != null ? tg[res] : tg.close; save(); hud(); W.busy = b0; W.path = []; W.cool = Math.max(W.cool || 0, 0.5);
       try { AU.play('pl_heal', { gain: 0.55 }); } catch (e) {} try { actPlay('drink'); } catch (e2) {}
       var d = SAVE.sp - s0, e = document.createElement('div'); e.className = 'sodafl solid'; e.style.color = '#9fd8c8'; e.innerHTML = '<b>+' + d + ' Spirit</b>';
       document.body.appendChild(e); setTimeout(function () { if (e.parentNode) e.remove(); }, 1400); ev('world:eatg:soda:' + res + ':' + SAVE.sp); } });
-  if (!ok) { W.busy = b0; SAVE.sp = s0; SAVE.soda[k] = (SAVE.soda[k] | 0) + 1; save(); hud(); return drinkSoda0(k); }
+  if (!ok) { eatgHold(false); W.busy = b0; SAVE.sp = s0; SAVE.soda[k] = (SAVE.soda[k] | 0) + 1; save(); hud(); return drinkSoda0(k); }
   return true;
 };
 root.FFF_EATG_SP = function (it, s0, done) { /* the café coffees: the coffee sip game (blend / iced) settles the SP the counter already added */
   var id = it.id === 'iced' ? 'iced' : 'blend'; if (!eatgOn(id)) return false;
   var spM = SPMAX, s1 = SAVE.sp | 0, add = Math.max(0, s1 - s0), half = Math.ceil(add / 2), tg = { win: spM, close: s1, bad: Math.min(spM, s0 + half) }, b0 = W.busy;
   var T = { blend: ['\u30d6\u30ec\u30f3\u30c9', 'BLEND COFFEE'], iced: ['\u30a2\u30a4\u30b9\u30b3\u30fc\u30d2\u30fc', 'ICED COFFEE'], lait: ['\u30ab\u30d5\u30a7\u30aa\u30ec', 'CAF\u00c9 AU LAIT'], wiener: ['\u30a6\u30a4\u30f3\u30ca\u30fc', 'WIENER COFFEE'] }[it.id] || [null, null];
-  W.busy = true; W.path = []; ev('world:eatg:open:' + it.id);
+  W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + it.id);
   var ok = root.EATG.open({ item: id, jp: T[0], en: T[1], who: 'ryo', hp0: SAVE.hp, sp0: s0, maxhp: MAXHP, spmax: spM, rows: eatgRows('sp', add, half, spM), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: SAVE.hp, sp: tg[r] != null ? tg[r] : s1 }; },
-    onEnd: function (res) { SAVE.sp = tg[res] != null ? tg[res] : s1; save(); hud(); W.busy = b0; W.path = []; if (done) done(SAVE.sp - s0); ev('world:eatg:' + it.id + ':' + res); } });
-  if (!ok) W.busy = b0; return ok;
+    onEnd: function (res) { eatgHold(false); SAVE.sp = tg[res] != null ? tg[res] : s1; save(); hud(); W.busy = b0; W.path = []; if (done) done(SAVE.sp - s0); ev('world:eatg:' + it.id + ':' + res); } });
+  if (!ok) { eatgHold(false); W.busy = b0; } return ok;
 };
 /* v6.5.63-eat wire end */
 
@@ -45387,14 +45392,21 @@ function simulate(name, mode, seed) {
 function ltext(s, x, y, px, fill, stroke, lw, align, font, weight) { ctx.save(); ctx.font = (weight || 900) + ' ' + px + 'px ' + (font || LAT); ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round'; if (stroke) { ctx.lineWidth = lw || 4; ctx.strokeStyle = stroke; ctx.strokeText(s, x, y); } ctx.fillStyle = fill; ctx.fillText(s, x, y); ctx.restore(); }
 var BANG = "Bangers,'Arial Black',Impact,system-ui,sans-serif";
 
+var BGC = null, BGK = '';
 function drawBG() {
-  var C = S.C, t = S.t;
+  /* rays + vignette live in an opaque device-res layer, refreshed at 20 Hz (they turn slowly), copied 1:1 each frame */
+  var C = S.C, t = Math.floor(S.t * 20) / 20, key = C.bg + '|' + t, bw = Math.round(W * DPR), bh = Math.round(H * DPR);
+  if (!BGC || BGC.width !== bw) { BGC = document.createElement('canvas'); BGC.width = bw; BGC.height = bh; BGC._g = BGC.getContext('2d', { alpha: false }); BGK = ''; }
+  if (BGK !== key) { BGK = key; var main = ctx; ctx = BGC._g; ctx.setTransform(DPR, 0, 0, DPR, 0, 0); try { drawBGRays(C, t); } finally { ctx = main; } }
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(BGC, 0, 0); ctx.restore();
+  var danger = dangerLevel();
+  if (danger > 0.45) { var pul = 0.5 + 0.5 * Math.sin(S.t * (8 + danger * 10)); ctx.fillStyle = 'rgba(' + (hotDom() ? '255,50,20' : '90,140,40') + ',' + (0.10 + 0.22 * (danger - 0.45) / 0.55 * (0.5 + 0.5 * pul)) + ')'; ctx.fillRect(0, 0, W, H); }
+}
+function drawBGRays(C, t) {
   ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
   var cx = 195, cy = 330, rot = t * 0.45;
   for (var i = 0; i < 40; i++) { var a = i / 40 * Math.PI * 2 + rot, r0 = 90 + (i % 3) * 26; ctx.beginPath(); ctx.moveTo(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0); ctx.lineTo(cx + Math.cos(a + 0.035) * 620, cy + Math.sin(a + 0.035) * 620); ctx.lineTo(cx + Math.cos(a - 0.035) * 620, cy + Math.sin(a - 0.035) * 620); ctx.closePath(); ctx.fillStyle = i % 2 ? C.ray1 : C.ray2; ctx.fill(); }
   var g = ctx.createRadialGradient(cx, 400, 180, cx, 400, 560); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(30,18,10,.32)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  var danger = dangerLevel();
-  if (danger > 0.45) { var pul = 0.5 + 0.5 * Math.sin(S.t * (8 + danger * 10)); ctx.fillStyle = 'rgba(' + (hotDom() ? '255,50,20' : '90,140,40') + ',' + (0.10 + 0.22 * (danger - 0.45) / 0.55 * (0.5 + 0.5 * pul)) + ')'; ctx.fillRect(0, 0, W, H); }
 }
 function dangerLevel() { var g = S.C.game; if (g === 'noodles') return S.heat; if (g === 'coffee') return S.tol; if (g === 'soda') return S.fizz; return 0; }
 function hotDom() { var g = S.C.game; if (g === 'noodles' || g === 'soda') return true; if (g === 'coffee') return (S.hotR > S.bitR + S.baseR * 0.4); return true; }
@@ -45422,22 +45434,34 @@ function drawHeader() {
 }
 
 function portraitImg(m) { return IM[S.who + '_' + m]; }
+/* portraits pre-scaled to device pixels once (3 kept), so a steady frame is a 1:1 copy instead of a resample */
+var PCACHE = [];
+function blitPortrait(im, px, py, pw, ph, upright) {
+  var m = ctx.getTransform ? ctx.getTransform() : null;
+  if (!upright || !m || m.b !== 0 || m.c !== 0 || Math.abs(m.a - DPR) > 1e-6 || Math.abs(m.d - DPR) > 1e-6) { ctx.drawImage(im, px, py, pw, ph); return; }
+  var dw = Math.round(pw * DPR), dh = Math.round(ph * DPR), c = null;
+  for (var i = 0; i < PCACHE.length; i++) if (PCACHE[i].im === im && PCACHE[i].w === dw && PCACHE[i].h === dh) { c = PCACHE[i]; PCACHE.splice(i, 1); break; }
+  if (!c) { var cv2 = document.createElement('canvas'); cv2.width = dw; cv2.height = dh; var g = cv2.getContext('2d'); g.imageSmoothingQuality = 'high'; g.drawImage(im, 0, 0, dw, dh); c = { im: im, w: dw, h: dh, cv: cv2 };
+    while (PCACHE.length >= 3) { var o = PCACHE.shift(); o.cv.width = 0; o.cv.height = 0; } }
+  PCACHE.push(c);
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(c.cv, Math.round(m.e + px * DPR), Math.round(m.f + py * DPR)); ctx.restore();
+}
 function drawPanel() {
   var ch = S.ch, Pn = PANEL;
   var slide = S.ph === 'intro' ? (1 - eo(S.it / 0.42)) * 440 : 0;
   var shx = 0, shy = 0; if (S.shake > 0) { shx = Math.sin(S.t * 90) * 7 * S.shake; shy = Math.cos(S.t * 77) * 5 * S.shake; }
   var danger = dangerLevel(); if (S.ph === 'play' && danger > 0.8) { shx += Math.sin(S.t * 70) * 2.2; shy += Math.cos(S.t * 63) * 1.6; }
-  var rot = -0.012 + (S.ph === 'result' && S.res === 'win' ? Math.sin(S.rt * 9) * 0.008 * Math.max(0, 1 - S.rt / 1.2) : 0);
+  var rot = (S.ph === 'result' && S.res === 'win' && S.rt < 1.2) ? Math.sin(S.rt * 9) * 0.008 * (1 - S.rt / 1.2) : 0;
   ctx.save(); ctx.translate(195 + slide + shx, 345 + shy); ctx.rotate(rot); ctx.translate(-195, -345);
   /* shadow + panel */
   rr(Pn.x + 7, Pn.y + 9, Pn.w, Pn.h, 12); ctx.fillStyle = 'rgba(20,10,5,.4)'; ctx.fill();
-  ctx.save(); rr(Pn.x, Pn.y, Pn.w, Pn.h, 12); ctx.clip();
+  ctx.save(); if (rot) rr(Pn.x, Pn.y, Pn.w, Pn.h, 12); else { ctx.beginPath(); ctx.rect(Pn.x + 1, Pn.y + 1, Pn.w - 2, Pn.h - 2); } ctx.clip(); /* upright: a plain rect clip (the 7px ink frame covers the corners) */
   ctx.fillStyle = '#17141d'; ctx.fillRect(Pn.x, Pn.y, Pn.w, Pn.h);
   /* the portrait (cross-fade between moods), squash on slurp, bob while sipping */
-  var squash = 1 + 0.016 * S.tapPulse; var bob = 0, tilt = 0;
+  var squash = S.C.game === 'noodles' ? 1 + 0.016 * S.tapPulse : 1; var bob = 0, tilt = 0; /* bites: no squash, so the portrait stays a 1:1 copy while mashing */
   if (S.ph === 'play' && S.C.game === 'noodles') bob = Math.sin(S.t * 22) * (S.idle < 0.25 ? 2.2 : 0.6) + (S.blowT > 0 ? 4 : 0);
-  if (S.ph === 'play' && S.C.game === 'coffee') { bob = S.lift > 0.4 ? -4 + Math.sin(S.t * 12) * 1.2 : 0; tilt = S.lift > 0.4 ? -0.014 : 0; }
-  if (S.ph === 'play' && S.C.game === 'soda') { bob = S.canK > 0.4 ? -3 + Math.sin(S.t * 14) * 1.4 : 0; tilt = S.canK > 0.4 ? -0.02 : 0; if (S.name === 'energy' && S.fizz > 0.55) { bob += Math.sin(S.t * 40) * 1.6; } }
+  if (S.ph === 'play' && S.C.game === 'coffee') { bob = S.lift > 0.4 ? -4 + Math.sin(S.t * 12) * 1.2 : 0; }
+  if (S.ph === 'play' && S.C.game === 'soda') { bob = S.canK > 0.4 ? -3 + Math.sin(S.t * 14) * 1.4 : 0; if (S.name === 'energy' && S.fizz > 0.55) { bob += Math.sin(S.t * 40) * 1.6; } }
   if (S.ph === 'play' && S.C.game === 'bite') bob = Math.sin(S.t * 20) * (S.idle < 0.25 ? 2.0 : 0.5);
   if (S.ph === 'result' && S.res === 'win') bob = -Math.abs(Math.sin(S.rt * 7)) * 9 * Math.max(0, 1 - S.rt / 1.4);
   if (S.ph === 'result' && S.cause === 'bitter') bob = Math.sin(S.rt * 40) * 3 * Math.max(0, 1 - S.rt / 1.6);
@@ -45446,14 +45470,14 @@ function drawPanel() {
   if (S.ph === 'result' || showEatPose()) im = IM[S.who + '_' + livePose()];
   else im = portraitImg(S.mood) || portraitImg('neutral');
   ctx.save(); ctx.translate(Pn.x + Pn.w / 2, Pn.y + Pn.h); ctx.rotate(tilt); ctx.translate(-(Pn.x + Pn.w / 2), -(Pn.y + Pn.h));
-  if (im && im.naturalWidth) ctx.drawImage(im, px, py, pw, ph);
+  if (im && im.naturalWidth) blitPortrait(im, px, py, pw, ph, squash === 1 && !tilt && !rot);
   /* a rough finish: gloomy blue wash when you simply ran out of time */
   if (S.ph === 'result' && S.res === 'bad' && S.cause === 'timeup') { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgba(120,130,170,.55)'; ctx.fillRect(Pn.x, Pn.y, Pn.w, Pn.h); ctx.globalCompositeOperation = 'source-over'; }
   ctx.restore();
   /* tint: red when hot, sickly green when bitter */
   var tint = 0, tcol = '255,90,60';
   if (S.ph === 'play' || S.ph === 'result') { if (S.C.game === 'noodles') tint = S.heat * 0.30; else if (S.C.game === 'coffee') { tint = S.tol * 0.28; if (!hotDom()) tcol = '120,170,70'; } else if (S.C.game === 'soda') { tint = S.fizz * 0.26; tcol = '90,170,220'; } else tint = 0; if (S.ph === 'result') { if (S.cause === 'bitter') { tint = 0.28; tcol = '140,180,90'; } else if (S.cause === 'overheat' || S.cause === 'scald') { tint = 0.3; tcol = '255,90,60'; } else if (S.cause === 'overflow') { tint = 0.22; tcol = '90,170,220'; } else tint = 0; } }
-  if (tint > 0.01) { ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = 'rgba(' + tcol + ',' + clamp(tint, 0, 0.6) + ')'; ctx.fillRect(Pn.x, Pn.y, Pn.w, Pn.h); ctx.globalCompositeOperation = 'source-over'; }
+  if (tint > 0.01) { ctx.fillStyle = 'rgba(' + tcol + ',' + clamp(tint * 0.55, 0, 0.35) + ')'; ctx.fillRect(Pn.x, Pn.y, Pn.w, Pn.h); }
   /* a soft ink vignette so the art sits in the panel */
   var vg = ctx.createLinearGradient(0, Pn.y + Pn.h - 60, 0, Pn.y + Pn.h); vg.addColorStop(0, 'rgba(10,8,14,0)'); vg.addColorStop(1, 'rgba(10,8,14,.35)'); ctx.fillStyle = vg; ctx.fillRect(Pn.x, Pn.y + Pn.h - 60, Pn.w, 60);
   /* curry stains on the uniform */
@@ -46032,10 +46056,14 @@ var BITE_SPEC = {
 
 function drawBitePiece(kind) {
   var spec = BITE_SPEC[kind] || BITE_SPEC.onigiri;
-  if (!BITE_OC) { BITE_OC = document.createElement('canvas'); BITE_OC.width = 600; BITE_OC.height = 600; }
+  var bs = DPR, bz = Math.ceil(200 * bs);
+  if (!BITE_OC || BITE_OC.width !== bz) { BITE_OC = document.createElement('canvas'); BITE_OC.width = bz; BITE_OC.height = bz; BITE_OC._k = ''; }
   var g = BITE_OC.getContext('2d'), main = ctx, tt = S.t - (S.biteT == null ? -9 : S.biteT), A = { tt: tt, pop: tt < 0.6 ? Math.exp(-tt * 8) : 0 };
   A.wob = A.pop * Math.sin(tt * 34);
-  g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, 600, 600); g.setTransform(3, 0, 0, 3, 300, 300);
+  var bk = kind + '|' + Math.floor(clamp(S.p, 0, 1) * 40) + '|' + (A.pop > 0 ? 'p' + S.t : Math.floor(S.t * 30));
+  if (BITE_OC._k === bk) { ctx.drawImage(BITE_OC, -100, -100, 200, 200); return; }
+  BITE_OC._k = bk;
+  g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, bz, bz); g.setTransform(bs, 0, 0, bs, 100 * bs, 100 * bs);
   ctx = g;
   try { spec.draw(clamp(S.p, 0, 1), A); } finally { }
   var nb = spec.bites.length, shown = Math.min(nb, Math.floor(clamp(S.p, 0, 1) * (nb + 1))), i, b, r;
@@ -46253,9 +46281,14 @@ function render() {
 }
 
 /* ================= loop: exists only while a run (and its result) is on screen ================= */
-var raf = 0, lastTs = 0, ENDED = false;
+var raf = 0, lastTs = 0, ENDED = false, dtAvg = 1 / 60, slowN = 0;
+/* a slow phone steps the canvas resolution down (2x -> 1.6x -> 1.25x) instead of dropping frames */
+function qualityStep(raw) {
+  if (!S || S.ph === 'result' || S.wait || raw <= 0 || raw > 0.25) return; dtAvg += (raw - dtAvg) * 0.1;
+  if (dtAvg > 1 / 54) { if (++slowN > 40 && DPR > 1.26) { DPR = Math.max(1.25, DPR - 0.4); cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); slowN = 0; dtAvg = 1 / 60; } } else slowN = 0;
+}
 function frame(ts) {
-  raf = 0; if (!S || !cv) return; var dt = lastTs ? clamp((ts - lastTs) / 1000, 0, 0.05) : 1 / 60; lastTs = ts;
+  raf = 0; if (!S || !cv) return; var dt = lastTs ? clamp((ts - lastTs) / 1000, 0, 0.05) : 1 / 60; if (lastTs) qualityStep((ts - lastTs) / 1000); lastTs = ts;
   stepLogic(dt); render();
   if (S.ph === 'result' && S.rt > 9) { close(); return; }
   raf = requestAnimationFrame(frame);
@@ -46271,12 +46304,12 @@ function kUp(e) { if (!S) return; var k = e.key; if (k === ' ' || k === 'Enter' 
 var POSE_FOR = { bite: ['bite_happy', 'bite_fail'], soda: ['chug', 'burp', 'burp_fail'], coffee: ['drink_happy', 'drink_fail'], coffee_ice: ['drink_happy_iced', 'drink_fail_iced'], noodles: ['eat_happy', 'eat_fail', 'eat_fail_curry'] };
 function open(o) {
   if (S || !o || !ITEMS[o.item]) return false;
-  OPT = o; ENDED = false; EVLOG = [];
+  OPT = o; ENDED = false; EVLOG = []; DPR = Math.min(window.devicePixelRatio || 1, 2); dtAvg = 1 / 60; slowN = 0;
   MAXHP = o.maxhp || MAXHP; SPMAX = o.spmax || SPMAX;
   var C = ITEMS[o.item], who = o.who === 'aoi' ? 'aoi' : 'ryo', poses = POSE_FOR[C.game === 'coffee' && C.ice ? 'coffee_ice' : C.game] || [];
   OV = document.createElement('div'); OV.id = 'eatg'; OV.setAttribute('role', 'dialog'); OV.setAttribute('aria-label', (o.en || C.en) + ' mini-game');
   OV.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;z-index:2147483000;background:#120e16;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none';
-  cv = document.createElement('canvas'); cv.width = W * DPR; cv.height = H * DPR; cv.style.display = 'block'; cv.style.touchAction = 'none'; ctx = cv.getContext('2d');
+  cv = document.createElement('canvas'); cv.width = W * DPR; cv.height = H * DPR; cv.style.display = 'block'; cv.style.touchAction = 'none'; ctx = cv.getContext('2d', { alpha: false });
   OV.appendChild(cv); document.body.appendChild(OV); fit();
   OV.addEventListener('pointerdown', pDown); OV.addEventListener('pointerup', pUp); OV.addEventListener('pointercancel', pUp); OV.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   window.addEventListener('keydown', kDown, true); window.addEventListener('keyup', kUp, true); window.addEventListener('resize', fit); document.addEventListener('visibilitychange', onVis);
@@ -46296,12 +46329,14 @@ function close() {
   if (OV && OV.parentNode) OV.parentNode.removeChild(OV);
   if (cv) { cv.width = 0; cv.height = 0; } cv = null; ctx = null; OV = null; S = null; OPT = null;
   if (BITE_OC) { BITE_OC.width = 0; BITE_OC.height = 0; BITE_OC = null; }
+  if (BGC) { BGC.width = 0; BGC.height = 0; BGC = null; BGK = ''; }
+  PCACHE.forEach(function (c) { c.cv.width = 0; c.cv.height = 0; }); PCACHE = [];
   IM = {}; /* the decoded portraits are released; the files stay in the HTTP cache */
   if (o && o.onEnd) try { o.onEnd(res, cause); } catch (e) { try { console.error(e); } catch (e2) {} }
   var q = AFTER; AFTER = []; q.forEach(function (f) { try { f(res); } catch (e3) {} });
 }
 var AFTER = [];
-root.EATG = { open: open, close: close, after: function (f) { if (OPT) AFTER.push(f); else f(); }, busy: function () { return !!OPT; }, has: function (n) { return !!ITEMS[n]; }, state: function () { return S ? { ph: S.ph, pt: S.pt, rt: S.rt, res: S.res, p: S.p, fizz: S.fizz } : null; } };
+root.EATG = { dpr: function () { return DPR; }, open: open, close: close, after: function (f) { if (OPT) AFTER.push(f); else f(); }, busy: function () { return !!OPT; }, has: function (n) { return !!ITEMS[n]; }, state: function () { return S ? { ph: S.ph, pt: S.pt, rt: S.rt, res: S.res, p: S.p, fizz: S.fizz } : null; } };
 
 /* ================= tiny synth (live play uses it; capture renders the same events offline) ================= */
 var NOISE = null;
