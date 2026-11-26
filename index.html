@@ -15780,7 +15780,7 @@ function tutFight(k) {
 function wTrack() { var D = W.inside && INT[W.inside.id]; if (D && D.c2) return D.mus || 'map'; if (D && D.dg === 'lib') return 'lib'; if (D && D.dg === 'art') return 'art'; /* v4.55 Mai */ if (D && D.dg === 'cafe') return 'cafe'; /* v4.58 Kurata */ if (D && D.dg === 'field') return 'field'; /* v4.60 Bando: Wicked Dreams */ if (D && D.dg === 'gym') return 'gym'; /* v4.62 Gouki: Island of Dr. Sinister */ return mapTrack(); }
 /* v6.5.64: once all four relay bosses are down (the path to Gouki is open) the Ch1 outdoor map plays its own track instead of Hitman. */
 var MAP_POST = 'map_post'; /* live: music/map_post.mp3 = "Undaunted" (Kevin MacLeod, CC BY 4.0), see MUS_CRED + credits */
-function mapTrack() { try { if (!W.inside && (SAVE.chapter | 0) <= 1 && typeof minisLeft === 'function' && minisLeft() === 0 && TRACKS[MAP_POST]) return MAP_POST; } catch (e) {} return 'map'; }
+function mapTrack() { try { if (!W.inside && (SAVE.chapter | 0) <= 1 && typeof minisLeft === 'function' && minisLeft() === 0) return MAP_POST; } catch (e) {} return 'map'; }
 root.FFF_WTRACK = function () { return wTrack(); };
 function wMus() { var t = wTrack(); if (typeof ckSurfWall === 'function') ckSurfWall(false); if (!W.on || W.opMus || !t) return; if (AU.st.want === t && AU.st.track === t) return; if (AU.st.want === 'intro' && t === 'map') return; AU.music(t, { slow: AU.st.want && AU.st.want !== t ? 1 : 0 }); ev('world:music:' + t); }
 var built = false;
