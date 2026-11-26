@@ -24637,7 +24637,7 @@ ngOpt({ k: 'gang', sec: 'PROGRESS', title: 'Gang skills', base: 'keep', fresh: '
 ngOpt({ k: 'rep', sec: 'PROGRESS', title: 'Crew rep', base: 'keep', fresh: 'reset', ch: [['keep', 'Keep'], ['reset', 'Neutral']], rv: { keep: 'Kept', reset: 'Neutral' },
   keys: ['crewRep'], apply: function (S, v) { var st = (S.dg && S.dg.c2 && S.dg.c2.stand) || {}; S.crewRep = v === 'reset' ? { arc: 0, neo: 0, bat: 0, dep: 0 } : { arc: st.arc | 0, neo: st.neo | 0, bat: st.bat | 0, dep: st.dep | 0 }; } });
 /* learned-skill stores: add a line here when a new learned skill gets a save key (or a Codex flag) */
-ngSkill('tech', { k: 'c2les', def: null }); ngSkill('tech', { k: 'c2lesReady', def: '' }); ngSkill('tech', { k: 'c2kos', def: 0 }); ngSkill('tech', { k: 'evoLesson', def: 0 }); /* Genji: Sync Break / Cover / Sneak, the Common to Uncommon lesson, and what offers them */
+ngSkill('tech', { k: 'c2les', def: null }); ngSkill('tech', { k: 'c2lesReady', def: '' }); ngSkill('tech', { k: 'c2kos', def: 0 }); ngSkill('tech', { k: 'evoLesson', def: 0 }); ngSkill('tech', { k: 'genjiTeach', def: 0 }); /* Genji: Sync Break / Cover / Sneak, the Common to Uncommon lesson, the shadow-lesson flag, and what offers them */
 ngSkill('gang', { k: 'gsk', def: null }); ngSkill('gang', { k: 'cxNew', prefix: 'gsk_' }); /* gang skills (Hanabi Shot, Grand Finale, Kamikaze Line, Redline, Alley Cat, Cheap Shot, House, Ace) and their Codex NEW badges */
 function v640NgBase() { var o = {}; NG_OPTS.forEach(function (d) { o[d.k] = typeof d.base === 'function' ? d.base() : d.base; }); return o; }
 function v640NgFresh() { var o = {}; NG_OPTS.forEach(function (d) { o[d.k] = d.fresh; }); return o; }
