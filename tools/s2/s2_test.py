@@ -700,11 +700,12 @@ async def main():
           SAVE.mealEdge = { k: 'plate', item: 'onigiri' };
           var gs = { dmg: 4, foe0: 8, hp0: 55, turns: 2, dbl: 2, tri: 0, sig: 0, wasted: 0, amb: 0, foes: 1 };
           /* a mid A score (~80s) with HP below the gate */
-          var low = grade(gs, 30); /* 30/55 < 70% */
+          var grd = (root.ENGINE && ENGINE.grade) || (root.E && E.grade);
+          var low = grd(gs, 30); /* 30/55 < 70% */
           SAVE.mealEdge = { k: 'plate', item: 'onigiri' };
-          var low2 = grade(gs, 30);
+          var low2 = grd(gs, 30);
           SAVE.mealEdge = { k: 'plate', item: 'onigiri' };
-          var okHp = grade(gs, 50); /* 50/55 > 70% */
+          var okHp = grd(gs, 50); /* 50/55 > 70% */
           /* sip not from candy */
           var candyNo = G.mealEligible({ item: 'candy' }) === false;
           var plateYes = G.mealEligible({ item: 'onigiri', from: 'counter' }) === true;

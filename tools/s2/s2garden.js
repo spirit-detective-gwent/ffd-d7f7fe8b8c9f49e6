@@ -525,10 +525,13 @@
   }
 
   function wrapGrade() {
-    if (G.grade || typeof grade !== 'function') return;
+    if (G.grade) return;
+    var Eobj = root.ENGINE || root.E;
+    var grade0 = (Eobj && Eobj.grade) || (typeof grade === 'function' ? grade : null);
+    if (!grade0) return;
     G.grade = 1;
-    var grade0 = grade;
-    grade = function (gs, hpEnd) {
+    var ranks = (Eobj && Eobj.GRADE && Eobj.GRADE.ranks) || (typeof GRADE !== 'undefined' && GRADE.ranks);
+    var wrapped = function (gs, hpEnd) {
       var gr = grade0(gs, hpEnd);
       var bonus = 0;
       try { bonus = consumePlate(); } catch (e) { bonus = 0; }
@@ -537,17 +540,18 @@
         var wasS = gr.k === 'S';
         var hpOk = hpEnd >= 0.7 * Math.max(1, (gs && gs.hp0) || 1);
         gr.score = (gr.score | 0) + bonus;
-        if (typeof GRADE !== 'undefined' && GRADE.ranks) {
-          var r = GRADE.ranks[0];
-          GRADE.ranks.forEach(function (q) { if (gr.score >= q.min) r = q; });
-          if (r.k === 'S' && !hpOk) r = wasS ? r : gr;
+        if (ranks) {
+          var r = ranks[0];
+          ranks.forEach(function (q) { if (gr.score >= q.min) r = q; });
+          if (r.k === 'S' && !hpOk) { /* keep the gated rank */ }
           else { gr.k = r.k; if (r.w != null) gr.w = r.w; if (r.m != null) gr.m = r.m; }
         }
         ev('world:garden:meal:plate:sc:' + gr.score + ':' + gr.k);
       }
       return gr;
     };
-    try { if (root.E && root.E.grade === grade0) root.E.grade = grade; } catch (eE) {}
+    if (Eobj) Eobj.grade = wrapped;
+    try { if (typeof grade === 'function') grade = wrapped; } catch (eG) {}
   }
 
   function wrapFightStart() {
