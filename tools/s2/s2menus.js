@@ -74,8 +74,8 @@
   ];
   var HASE_FALLBACK = [
     { id: 'etape', n: 'Electrical tape', k: 'herb', hb: 'tape', base: 3, cost: 2, stock: 3 },
-    { id: 'patch', n: 'Patch kit', k: 'heal', h: 'bandage', hp: 6, base: 4, cost: 3, stock: 3 },
-    { id: 'bpart', n: 'Spare tube', k: 'heal', h: 'bandage', hp: 10, base: 6, cost: 5, stock: 2 }
+    { id: 'patch', n: 'Patch kit', k: 'heal', h: 'patch', hp: 6, base: 4, cost: 3, stock: 3 },
+    { id: 'bpart', n: 'Spare tube', k: 'heal', h: 'bpart', hp: 10, base: 6, cost: 5, stock: 2 }
   ];
   function decorateHase(it) {
     var o = {}, m = HASE_META[it.id] || {};
