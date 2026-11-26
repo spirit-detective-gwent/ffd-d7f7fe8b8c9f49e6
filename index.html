@@ -4035,7 +4035,7 @@ body.fff-dlg-on #qnote{
    <div id="pvSlot"><div id="logBox"></div><div id="preview"></div></div>
    <div class="topbar"><button id="gMenu" aria-label="menu">&#9776;</button><span id="roundLab"></span><span id="turnLab"></span><span id="furyLab"></span><button id="btnSw" class="run sw" hidden></button><button id="sbPass" class="run sbpass" hidden type="button">PASS</button><button id="btnRun" class="run" hidden></button></div>
    <div class="fighter me" id="fP">
-    <div class="fhud"><div class="fn"><b id="pName"></b><span class="fsub"><small id="pInfo"></small><span class="buffb"></span><span class="markb" aria-hidden="true"></span></span></div><div class="hprow"><div class="hp"><i class="lag"></i><i class="fill"></i><span class="hpn"></span></div><div class="gchip"></div></div></div>
+    <div class="fhud"><div class="fn"><b id="pName"></b><span class="fsub"><small id="pInfo"></small><span class="buffb"></span><span class="markb" aria-hidden="true"></span><span class="bulwb" aria-hidden="true"></span></span></div><div class="hprow"><div class="hp"><i class="lag"></i><i class="fill"></i><span class="hpn"></span></div><div class="gchip"></div></div></div>
     <div class="fbody"><div class="ring"></div><canvas id="pFig" class="fig"></canvas></div>
     <div class="fside"><div class="spirit"><small>SPIRIT</small><b><span class="spv">0</span><i>/40</i></b><div class="spbar"><i></i><canvas class="ecg" width="184" height="12" aria-hidden="true"></canvas></div></div></div>
    </div>
@@ -7360,6 +7360,18 @@ function render(dealAll) { srvChip(); laneChip();
     var sh = f.querySelector('.gchip'); sh.innerHTML = v.guard > 0 ? svg('guard') + '<b>' + v.guard + '</b>' + (v.ctr ? '<span class="ctr">' + svg('ctr') + '</span>' : '') : ''; sh.classList.toggle('on', v.guard > 0);
     var bb = f.querySelector('.buffb'); bb.textContent = v.buff > 0 ? 'ATK +' + v.buff : ''; bb.classList.toggle('on', v.buff > 0);
     var mb = f.querySelector('.markb'); if (mb) { var mkv = v.mark | 0; mb.innerHTML = mkv > 0 ? '<svg viewBox="0 0 12 14" aria-hidden="true"><path fill="#f3d36a" d="M2 1h6l2 2v10H2z"/><path fill="#7a3a16" d="M8 1v2h2"/><circle cx="6" cy="4.2" r=".8" fill="#5a2410"/></svg><b>MARK +' + mkv + '</b>' : ''; mb.classList.toggle('on', mkv > 0); }
+    if (si === 0) {
+      var bw = b.bulw, onB = !!(bw && bw.t > 0), bwEl = f.querySelector('.bulwb'), fP = $('#fP');
+      if (fP) fP.classList.toggle('bulwOn', onB);
+      if (bwEl) {
+        if (onB || (b.reb | 0) > 0) {
+          var pipH = '', pt;
+          if (onB) { for (pt = 0; pt < bw.t; pt++) pipH += '<i class="on"></i>'; }
+          bwEl.innerHTML = (onB ? '<span>BULWARK</span><span class="pips">' + pipH + '</span><b>G' + bw.g + '</b>' : '') + ((b.reb | 0) > 0 ? '<b>REBOUND ' + b.reb + '</b>' : '');
+          bwEl.classList.add('on');
+        } else { bwEl.innerHTML = ''; bwEl.classList.remove('on'); }
+      }
+    }
     var info = si === 1 ? 'Hand ' + v.hand : 'Deck ' + v.deck;
     var SB = si === 0 && !(b.s[0].soda === 'orange' && !((b.s[0].freeDisc | 0) > 0)) && { fizz: ['+5 Energy', '#8fd8ff'], cola: ['+1 Guard', '#e0a070'], orange: ['Free Redraw', '#ffb860'] }[b.s[0].soda]; /* v4.69: the Orange pill goes away once its free redraw is used */ if (SB) info += ' <span class="bsd" data-buff="' + b.s[0].soda + '" title="Soda buff this fight"><i>\ud83e\udd64</i><b style="color:' + SB[1] + '">' + SB[0] + '</b></span>'; // v4.37b: the soda drunk before this fight, beside your name (display only)
     if (si === 1) { var fo = b.s[1], rc = fo && fo.shown != null && fo.hp > 0 ? fo.hand.find(function (x) { return x.u === fo.shown; }) : null; if (rc) info += ' <span class="rdc" title="read card">' + rc.n + (rc.t === 'atk' ? ' ' + rc.v + (rc.hits > 1 ? '\u00d7' + rc.hits : '') : '') + '</span>'; } // v4.18: the read card
@@ -7609,7 +7621,7 @@ function sbBreakFx(sb) {
 }
 /* small spark for Path Echo, over the fighter who played the card */
 function sbEchoFx(fx, si) { if (!fx || !fx.echo || !fx.echo.length || si !== 0) return; var p = fx.echo[0].k, col = SB_COL[p] || '#fff', d = geo(0); sparks(d.x, d.y - d.h * 0.25, col, 9);
-  floatAt(sideEl(0).querySelector('.fbody'), p === 'fierce' ? 'ECHO +1 BREAK' : p === 'strategic' ? 'ECHO MARK +1' : 'ECHO DODGE +8%', 'sbecho', -56); ev('echo:' + p + ':' + fx.echo.length); }
+  floatAt(sideEl(0).querySelector('.fbody'), p === 'fierce' ? 'ECHO +1 BREAK' : p === 'strategic' ? 'ECHO MARK +1' : 'ECHO REBOUND +1', 'sbecho', -56); ev('echo:' + p + ':' + fx.echo.length); }
 /* who stays in? over the hand, after the incoming partner's action. Default (and on timeout / tap outside): keep the incoming one */
 function sbStayAsk() {
   var b = ST.b, A = b && b.sbAsk; if (!A) return false; ST.busy = true; render(false);
@@ -8172,8 +8184,12 @@ async function impactPhase(fx, after) {
     else if (e.t === 'dodge') { floatAt(fe, 'DODGE!', 'dge big', -20); f.classList.remove('dodging'); void f.offsetWidth; f.classList.add('dodging'); setTimeout(function () { f.classList.remove('dodging'); }, 600); AU.play('whoosh', { gain: 0.8 }); ev('dodge:' + e.side); } // v4.13
     else if (e.t === 'dgstack') { floatAt(fe, 'DODGE ' + e.n + '%', 'dge', -24); ev('dgstack:' + e.side + ':' + e.n); } // v4.30: Ryo's stacked dodge chance
     else if (e.t === 'burn') { floatAt(fe, 'ABLAZE', 'brn', -34); ev('burn:' + e.side); }
+    else if (e.t === 'bulwark') { floatAt(sideEl(0).querySelector('.fbody'), 'BULWARK', 'bulw', -48); ev('bulwark:' + e.n); }
     else if (e.t === 'burnt') { floatAt(fe, '\u2212' + e.n + (e.sk ? ' SPARKS' : ' BURN'), 'neg brn' + (e.sk ? ' spk' : ''), 4); shakeEl(f, 'hit'); ev('hit:' + e.side + ':' + e.n); }
   });
+  if (fx.bulwG) { var gc = sideEl(0) && sideEl(0).querySelector('.gchip'); if (gc) { gc.classList.remove('bulwPulse'); void gc.offsetWidth; gc.classList.add('bulwPulse'); } }
+  if (fx.rebS) { floatAt(sideEl(0).querySelector('.fbody'), 'REBOUND +' + fx.rebS, 'reb', -36); ev('reb:store:' + fx.rebS); }
+  if (fx.rel) { var fb0 = sideEl(0) && sideEl(0).querySelector('.fbody'); floatAt(fb0, 'REBOUND +' + fx.rel, 'reb big', -58); if (fb0) { fb0.classList.remove('rebRel'); void fb0.offsetWidth; fb0.classList.add('rebRel'); setTimeout(function () { if (fb0) fb0.classList.remove('rebRel'); }, 450); } ev('reb:rel:' + fx.rel); }
   if (fx.braced) addLog('<b>Lampglass Charm:</b> saw it coming, ' + fx.braced + ' less damage'); // v4.18
   if (fx.reveal) addLog('<b>Aoi reads their hand:</b> ' + fx.reveal); // v4.13 Strategic max level
   ST.view = after; render(false);
@@ -8293,7 +8309,7 @@ async function doDouble() {
   fx.blows.forEach(function (q) { land(q.who, q.who === 'aoi' ? 'slash' : 'punch'); }); // no player (should not happen): the damage still lands
   await Promise.all(ips.concat([wait(420)])); document.body.classList.remove('sigtop'); $('#sigDim').classList.remove('on'); ST.ff = false;
   AU.duck(false); addLog('<b>' + fx.card.n + '</b> (double move): ' + fx.blows.map(function (q) { return CH[q.who].name.split(' ')[0] + ' \u2212' + q.n; }).join(', ')); ev('board:' + fx.card.id);
-  if (fx.awaken) { addLog('<b>Bond Awakening</b> \u00b7 ' + ({ burn: 'every foe is ablaze (3 a turn, 3 turns)', stun: 'the target is stunned and loses its next turn', tide: 'healed, Guard 5' })[fx.awaken]); ev('awaken:' + fx.awaken); } /* v6.5.16 */
+  if (fx.awaken) { addLog('<b>Bond Awakening</b> \u00b7 ' + ({ burn: 'every foe is ablaze (3 a turn, 3 turns)', stun: 'the target is stunned and loses its next turn', tide: 'heal 3, Guard 3' })[fx.awaken]); ev('awaken:' + fx.awaken); } /* v6.5.16 / v6.5.63 Compassionate Awakening */
   if (b.over) { ST.shown = null; await koPhase(); return; }
   if (fx.hold) { ev('fight:hold'); var hb = $('#banner'); hb.innerHTML = '<em class="hold">' + 'Gouki won\u2019t go down while his crew stands!</em>'; hb.className = 'on'; await wait(1100); hb.className = ''; }
   if (fx.foeKO) await downPhase();
@@ -22880,8 +22896,8 @@ root.partyCheer = partyCheer;
  * fight, a cinematic or a dialogue. Two levels at once = one card after the other. Sound: levelup_gong (sound O, one for all paths). */
 /* v6.5.16: Bond Lv 6-10 (Ernest): Lv 6 Path Perk II, Lv 7 Path Echo, Lv 8 Sync Break II, Lv 9 In Sync, Lv 10 Bond Awakening */
 var LV_TITLE = { 6: 'Path Perk II', 7: 'Path Echo', 8: 'Sync Break II', 9: 'In Sync', 10: 'Bond Awakening' };
-var ECHO_T = { fierce: '+1 guard break on that card', strategic: 'add +1 Mark to the enemy', balanced: '+8% dodge until your next turn' };
-var AWK = { fierce: ['Burns all foes', 'Burn the Line also sets every foe ablaze: 3 damage a turn, for 3 turns.'], strategic: ['Stun', 'Final Bell also stuns the target: it loses its next turn.'], balanced: ['Heal + Guard', 'Spring Tide also heals 8 HP and gives Guard 5.'] };
+var ECHO_T = { fierce: '+1 guard break on that card', strategic: 'add +1 Mark to the enemy', balanced: 'add +1 Rebound' };
+var AWK = { fierce: ['Burns all foes', 'Burn the Line also sets every foe ablaze: 3 damage a turn, for 3 turns.'], strategic: ['Stun', 'Final Bell also stuns the target: it loses its next turn.'], balanced: ['Heal 3 + Guard 3', 'Spring Tide also heals 3 HP and gives Guard 3.'] };
 function lvPerks(p, lv) { var m = {}, d = STORY.bondDmg(lv);
   m.spec = { n: 'Special', v: String(d), t: 'Your special hits for ' + d + '.' };
   if (p === 'fierce') { var br = lv >= 3 ? 2 : 1; m.brk = { n: 'Guard break', v: '+' + br, t: 'Your special cracks ' + br + ' more Guard.' };
@@ -22889,9 +22905,10 @@ function lvPerks(p, lv) { var m = {}, d = STORY.bondDmg(lv);
   else if (p === 'strategic') { var mk = lv >= 6 ? 4 : lv >= 3 ? 3 : 2, ct = lv >= 6 ? 3 : lv >= 3 ? 2 : 1; m.mark = { n: 'Mark', v: '+' + mk, t: 'After your special hits, the next attack on that enemy (either fighter) does +' + mk + '.' };
     m.ctr = { n: 'Counters', v: '+' + ct, t: 'When you counter, you hit back for ' + ct + ' extra.' };
     if (lv >= 5) { var ks = lv >= 6 ? 15 : 10, bs = lv >= 6 ? 10 : 5; m.fuel = { n: 'Combo Fuel', v: 'Keep +' + ks + ' \u00b7 Bench +' + bs, t: 'After your special hits, you keep ' + ks + ' Spirit and your benched partner gains ' + bs + ' Spirit.' }; } }
-  else if (p === 'balanced') { var dg = lv >= 6 ? 18 : 6 + 2 * lv; m.dodge = { n: 'Dodge', v: '+' + dg + '%', t: 'You dodge ' + dg + '% more often.' };
-    if (lv >= 3) { var b2 = lv >= 5 ? 2 : 1; m.bm = { n: 'Guard break + Mark', v: '+' + b2, t: 'Your special also cracks ' + b2 + ' Guard and marks the enemy: the next attack on them +' + b2 + '.' }; } }
-  if (lv >= 7 && ECHO_T[p]) { var ep = lv >= 10 ? 35 : 20; m.echo = { n: 'Path Echo', v: ep + '%', t: p === 'strategic' ? ('Path Echo: each regular attack has a ' + ep + '% chance to add +1 Mark to the enemy.') : ('Your regular attack cards have a ' + ep + '% chance to echo your path: ' + ECHO_T[p] + '. A small spark shows when it does.') }; }
+  else if (p === 'balanced') { var bt = lv >= 6 ? 4 : lv >= 5 ? 3 : lv >= 3 ? 2 : 1, bg = lv >= 6 ? 5 : lv >= 5 ? 4 : lv >= 3 ? 3 : 2;
+    m.bulw = { n: 'Bulwark', v: bt + (bt === 1 ? ' turn' : ' turns') + ' \u00b7 Guard ' + bg, t: 'After your special hits, your Guard is topped up to ' + bg + ' at the end of each of your turns for ' + bt + ' enemy turn' + (bt === 1 ? '' : 's') + '.' };
+    if (lv >= 5) { var cap = lv >= 6 ? 10 : 6; m.reb = { n: 'Rebound', v: 'up to ' + cap, t: 'While Bulwark is up, damage your Guard stops is stored (up to ' + cap + ') and released as bonus damage on your next attack\u2019s first hit.' }; } }
+  if (lv >= 7 && ECHO_T[p]) { var ep = lv >= 10 ? 35 : 20; m.echo = { n: 'Path Echo', v: ep + '%', t: p === 'strategic' ? ('Path Echo: each regular attack has a ' + ep + '% chance to add +1 Mark to the enemy.') : p === 'balanced' ? ('Path Echo: each regular attack has a ' + ep + '% chance to add +1 Rebound.') : ('Your regular attack cards have a ' + ep + '% chance to echo your path: ' + ECHO_T[p] + '. A small spark shows when it does.') }; }
   if (lv >= 8) m.sb2 = { n: 'Sync Break II', v: '+3', t: 'The partner who tags in on a break hits +3 with their first card, and that card always echoes.' };
   if (lv >= 9) m.sync = { n: 'In Sync', v: '+5 Spirit', t: 'Your benched partner gains 5 Spirit on each new hand and on each break.' };
   if (lv >= 10 && AWK[p]) m.awake = { n: 'Bond Awakening', v: AWK[p][0], t: AWK[p][1] };
@@ -23102,12 +23119,9 @@ function bondUnlockLines(p, lv) {
     lines.push(['Counters +' + ct, 'When you counter, you hit back for ' + ct + ' extra.']);
     if (lv >= 5) { var ks2 = lv >= 6 ? 15 : 10, bs2 = lv >= 6 ? 10 : 5; lines.push(['Combo Fuel', 'After your special hits, you keep ' + ks2 + ' Spirit and your benched partner gains ' + bs2 + ' Spirit.']); }
   } else if (p === 'balanced') {
-    var dg = lv >= 6 ? 18 : 6 + 2 * lv;
-    lines.push(['Dodge +' + dg + '%', 'You dodge ' + dg + '% more often.']);
-    if (lv >= 3) {
-      var brk = lv >= 5 ? 2 : 1, mk2 = lv >= 5 ? 2 : 1;
-      lines.push(['Guard break +' + brk + ' and Mark +' + mk2, 'Your special also cracks ' + brk + ' Guard and marks the enemy: the next attack on them +' + mk2 + '.']);
-    }
+    var bt2 = lv >= 6 ? 4 : lv >= 5 ? 3 : lv >= 3 ? 2 : 1, bg2 = lv >= 6 ? 5 : lv >= 5 ? 4 : lv >= 3 ? 3 : 2;
+    lines.push(['Bulwark ' + bt2 + (bt2 === 1 ? ' turn' : ' turns') + ' \u00b7 Guard ' + bg2, 'After your special hits, your Guard is topped up to ' + bg2 + ' at the end of each of your turns for ' + bt2 + ' enemy turn' + (bt2 === 1 ? '' : 's') + '.']);
+    if (lv >= 5) { var cap2 = lv >= 6 ? 10 : 6; lines.push(['Rebound up to ' + cap2, 'While Bulwark is up, damage your Guard stops is stored (up to ' + cap2 + ') and released as bonus damage on your next attack\u2019s first hit.']); }
   }
   var m6 = lvPerks(p, lv); ['echo', 'sb2', 'sync', 'awake'].forEach(function (k) { if (m6[k]) lines.push([m6[k].n + ' ' + m6[k].v, m6[k].t]); }); /* v6.5.16 Lv 7-10 */
   return lines;
@@ -23195,26 +23209,22 @@ function n9BondPerkLine(p, lv) {
       parts.push('Combo Fuel: keep ' + ks + ' Spirit, bench +' + bs);
     }
   } else if (p === 'balanced') {
-    dg = lv >= 6 ? 18 : 6 + 2 * lv;
-    parts.push('Dodge +' + dg + '%');
-    if (lv >= 3) {
-      b2 = lv >= 5 ? 2 : 1;
-      parts.push('Guard break +' + b2);
-      parts.push('Mark +' + b2);
-    }
+    var bt3 = lv >= 6 ? 4 : lv >= 5 ? 3 : lv >= 3 ? 2 : 1, bg3 = lv >= 6 ? 5 : lv >= 5 ? 4 : lv >= 3 ? 3 : 2;
+    parts.push('Bulwark ' + bt3 + (bt3 === 1 ? ' turn' : ' turns') + ', Guard ' + bg3);
+    if (lv >= 5) parts.push('Rebound up to ' + (lv >= 6 ? 10 : 6));
   }
   if (lv >= 7) {
     ep = lv >= 10 ? 35 : 20;
     if (p === 'fierce') parts.push('Path Echo ' + ep + '%: a regular attack may add +1 guard break');
     else if (p === 'strategic') parts.push('Path Echo ' + ep + '%: a regular attack may add +1 Mark');
-    else parts.push('Path Echo ' + ep + '%: a regular attack may grant +8% dodge until your next turn');
+    else parts.push('Path Echo ' + ep + '%: a regular attack may add +1 Rebound');
   }
   if (lv >= 8) parts.push('Sync Break II: the partner who tags in on a break hits +3 with their first card, and that card always echoes');
   if (lv >= 9) parts.push(p === 'strategic' ? 'In Sync: bench +5 Spirit on each new hand and on each break (this does not replace Combo Fuel)' : 'In Sync: the bench gains 5 Spirit on each new hand and on each break');
   if (lv >= 10) {
     if (p === 'fierce') parts.push('Awakening: Burn the Line also sets every foe ablaze (3 a turn, for 3 turns)');
     else if (p === 'strategic') parts.push('Awakening: Final Bell also stuns the target (it loses its next turn)');
-    else parts.push('Awakening: Spring Tide also heals 8 HP and gives Guard 5');
+    else parts.push('Awakening: Spring Tide also heals 3 HP and gives Guard 3');
   }
   return parts.join(' \u00b7 ');
 }
@@ -23228,8 +23238,9 @@ function n9BondSnap(p, lv){
     o.ctr=lv>=6?3:lv>=3?2:1;
     if(lv>=5){ o.keep=lv>=6?15:10; o.bench=lv>=6?10:5; }
   }else if(p==='balanced'){
-    o.dodge=lv>=6?18:6+2*lv;
-    if(lv>=3){ o.brk=lv>=5?2:1; o.mark=lv>=5?2:1; }
+    o.bulwT=lv>=6?4:lv>=5?3:lv>=3?2:1;
+    o.bulwG=lv>=6?5:lv>=5?4:lv>=3?3:2;
+    if(lv>=5) o.reb=lv>=6?10:6;
   }
   if(lv>=7) o.echo=lv>=10?35:20;
   if(lv>=8) o.sb2=3;
@@ -23241,7 +23252,7 @@ function n9BondTitle(p, lv){
   var t;
   if(p==='fierce') t={1:'Cracked Guard',2:'Sharper Special',3:'Breaking Point',4:'Heavy Hand',5:'Foxfire',6:'Hotter Burn',7:'Path Echo',8:'Sync Break II',9:'In Sync',10:'Bond Awakening'};
   else if(p==='strategic') t={1:'Marked Target',2:'Sharper Special',3:'Pressure Point',4:'Heavy Hand',5:'Combo Fuel',6:'Deeper Fuel',7:'Path Echo',8:'Sync Break II',9:'In Sync',10:'Bond Awakening'};
-  else t={1:'Sidestep',2:'Lighter Foot',3:'Tide Mark',4:'Rising Dodge',5:'Deep Current',6:'High Tide',7:'Path Echo',8:'Sync Break II',9:'In Sync',10:'Bond Awakening'};
+  else t={1:'Bulwark I',2:'Sharper Special',3:'Bulwark II',4:'Sharper Special',5:'Rebound',6:'Bulwark III',7:'Path Echo',8:'Sync Break II',9:'In Sync',10:'Bond Awakening'};
   return t[lv]||('Bond Level '+lv);
 }
 function n9BondFlavor(p){
@@ -23277,16 +23288,16 @@ function n9BondEffect(p, lv){
     })[lv]||'Your Special hits harder.';
   }
   return ({
-    1:'You dodge 8% more often.',
-    2:'You dodge 10% more often.',
-    3:'You dodge 12% more often. Your Special also cracks 1 Guard and marks the enemy: the next attack on them does +1.',
-    4:'You dodge 14% more often.',
-    5:'You dodge 16% more often. Your Special now cracks 2 Guard and marks +2.',
-    6:'Your dodge bonus caps at +18%.',
-    7:'Each regular attack has a 20% chance to grant +8% dodge until your next turn. A small spark shows when it does.',
-    8:'The partner who tags in on a break hits +3 with their first card, and that card always echoes.',
+    1:'After your Special hits, Bulwark begins: your Guard is topped up to 2 at the end of your turn, for 1 enemy turn.',
+    2:'Your Special hits harder.',
+    3:'Bulwark now lasts 2 enemy turns and tops your Guard up to 3.',
+    4:'Your Special hits harder still.',
+    5:'Bulwark lasts 3 enemy turns and tops Guard up to 4. While it is up, damage your Guard stops is stored (up to 6) and released as bonus damage on your next attack\u2019s first hit \u2014 Rebound.',
+    6:'Bulwark lasts 4 enemy turns and tops Guard up to 5 (the cap). Rebound now stores up to 10.',
+    7:'Each regular attack has a 20% chance to add +1 Rebound. A small spark shows when it does.',
+    8:'The partner who tags in on a break hits +3 with their first card, and that card always echoes (+1 Rebound).',
     9:'Your benched partner gains 5 Spirit on each new hand and on each break.',
-    10:'Path Echo rises to 35%. Spring Tide also heals 8 HP and gives Guard 5.'
+    10:'Path Echo rises to 35%. Spring Tide also heals 3 HP and gives Guard 3.'
   })[lv]||'Your Special hits harder.';
 }
 function n9BondIco(k){
@@ -23298,6 +23309,8 @@ function n9BondIco(k){
   else if(k==='fuel') p='<path d="M12 21c4 0 7-3 7-7 0-5-7-11-7-11S5 9 5 14c0 4 3 7 7 7z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M10 15c1 2 4 2 4 0" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>';
   else if(k==='fire') p='<path d="M12 21c3.8 0 6.5-2.7 6.5-6.2 0-4.4-4.2-7.2-5.2-11.3-2.4 3-3.2 5.4-4.3 5.4-1.4 0-1.5-1.6-2.2-2.6C5.6 9.8 5 12.4 5 14.6 5 18.2 8 21 12 21z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>';
   else if(k==='brk') p='<path d="M12 3l8 3v5c0 5-3.2 8.6-8 10-4.8-1.4-8-5-8-10V6z" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10 8l2 3-2 2 3 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>';
+  else if(k==='bulw') p='<path d="M12 3l8 3v5c0 5-3.2 8.6-8 10-4.8-1.4-8-5-8-10V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>';
+  else if(k==='reb') p='<path d="M12 3l8 3v5c0 5-3.2 8.6-8 10-4.8-1.4-8-5-8-10V6z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 12h8M13 9l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>';
   else if(k==='dodge') p='<path d="M5 16c2-5 5-8 7-11 2 3 5 6 7 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="17" r="2" fill="currentColor"/>';
   else if(k==='echo') p='<path d="M12 4l1.6 4.4L18 10l-4.4 1.6L12 16l-1.6-4.4L6 10l4.4-1.6z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M17 15l1 2.4L20.5 18.5 18 19.6 17 22l-1-2.4L13.5 18.5 16 17.4z" fill="currentColor"/>';
   else if(k==='sb2') p='<path d="M8 8l-3 4 3 4M16 8l3 4-3 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="2" fill="currentColor"/>';
@@ -23314,10 +23327,10 @@ function n9BondIconKind(p, lv, locked){
   if(lv===7) return 'echo';
   if(p==='fierce') return ({1:'brk',2:'up',3:'brk',4:'heavy',5:'fire',6:'fire'})[lv]||'up';
   if(p==='strategic') return ({1:'mark',2:'up',3:'press',4:'heavy',5:'fuel',6:'fuel'})[lv]||'up';
-  return 'dodge';
+  return ({1:'bulw',2:'up',3:'bulw',4:'up',5:'reb',6:'bulw'})[lv]||'up';
 }
 function n9BondChips(p, lv){
-  var a=lv>1?n9BondSnap(p, lv-1):{}, b=n9BondSnap(p, lv), chips=[], isNew=0, isUp=0, awkN={fierce:'Burns all foes',strategic:'Stun',balanced:'Heal + Guard'};
+  var a=lv>1?n9BondSnap(p, lv-1):{}, b=n9BondSnap(p, lv), chips=[], isNew=0, isUp=0, awkN={fierce:'Burns all foes',strategic:'Stun',balanced:'Heal 3 + Guard 3'};
   function add(key, label, fmt){
     if(b[key]==null) return;
     if(lv===1 || a[key]==null){
@@ -23335,6 +23348,9 @@ function n9BondChips(p, lv){
   add('ctr','Counters', function(v){ return '+'+v+' Aoi'; });
   add('keep','Keep', function(v){ return '+'+v; });
   add('bench','Bench', function(v){ return '+'+v; });
+  add('bulwT','Bulwark', function(v){ return v+(v===1?' turn':' turns'); });
+  add('bulwG','Guard', function(v){ return String(v); });
+  add('reb','Rebound', function(v){ return 'up to '+v; });
   add('dodge','Dodge', function(v){ return '+'+v+'%'; });
   add('echo','Path Echo', function(v){ return v+'%'; });
   add('sb2','Sync Break II', function(v){ return '+'+v; });
@@ -46478,6 +46494,22 @@ button.jngp.lock,button.jngp[disabled]{opacity:.5;pointer-events:none;}
 .markb.on{display:inline-flex;align-items:center;gap:3px;opacity:1;transform:none}
 .markb svg{width:11px;height:11px;display:block;flex:none}
 @media (prefers-reduced-motion:reduce){.markb{transition:none}}
+/* v6.5.63 Compassionate Bulwark / Rebound: gold chip + shield ring. CSS only, no new JS loops. */
+.bulwb{display:none;vertical-align:middle;margin-left:5px;padding:2px 6px 2px 5px;border-radius:8px;background:rgba(50,40,8,.78);color:#ffd84a;font:800 9px/1.2 system-ui,sans-serif;letter-spacing:.3px;pointer-events:none;box-shadow:0 0 0 1px rgba(255,216,74,.35)}
+.bulwb.on{display:inline-flex;align-items:center;gap:4px}
+.bulwb .pips{display:inline-flex;gap:2px}
+.bulwb .pips i{width:5px;height:5px;border-radius:50%;background:#5a4a18;box-shadow:inset 0 0 0 1px rgba(255,216,74,.35)}
+.bulwb .pips i.on{background:#ffd84a;box-shadow:0 0 4px #ffd84a}
+.bulwb b{font:900 9px system-ui;color:#ffe9a0}
+.fighter.me.bulwOn .fbody::after{content:"";position:absolute;left:50%;top:46%;width:86px;height:86px;margin:-43px 0 0 -43px;border-radius:50%;border:2px solid rgba(255,216,74,.85);box-shadow:0 0 14px rgba(255,216,74,.55),inset 0 0 12px rgba(255,216,74,.2);pointer-events:none;z-index:3;animation:bulwPulse 1.6s ease-in-out infinite;opacity:.9}
+.fighter.me.bulwOn .fbody.rebRel::after{animation:bulwRel .45s ease-out 1;border-color:#fff6c8;box-shadow:0 0 22px rgba(255,216,74,.95),inset 0 0 16px rgba(255,255,220,.35)}
+.gchip.bulwPulse{animation:bulwG .45s ease-out 1}
+@keyframes bulwPulse{0%,100%{transform:scale(.96);opacity:.75}50%{transform:scale(1.04);opacity:1}}
+@keyframes bulwRel{0%{transform:scale(.9);opacity:1}100%{transform:scale(1.35);opacity:0}}
+@keyframes bulwG{0%{filter:drop-shadow(0 0 2px #ffd84a)}40%{filter:drop-shadow(0 0 10px #ffd84a)}100%{filter:none}}
+@media (prefers-reduced-motion:reduce){.fighter.me.bulwOn .fbody::after,.gchip.bulwPulse{animation:none}}
+.float.reb{color:#ffd84a;font-weight:900;letter-spacing:.4px;text-shadow:0 0 8px rgba(255,216,74,.8),0 1px 2px #000}
+.float.bulw{color:#ffe9a0;font-weight:900;letter-spacing:.5px;text-shadow:0 0 8px rgba(255,216,74,.7),0 1px 2px #000}
 
 </style>
 <style id="fff-v6530">
