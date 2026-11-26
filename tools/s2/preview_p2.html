@@ -1,0 +1,136 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Seal 2 Phase 2 — Night Runs preview</title>
+<style>
+  body { margin: 0; background: #16121a; color: #f0e4c8; font: 14px/1.4 "Noto Sans CJK JP", sans-serif; }
+  h1 { font-size: 20px; margin: 16px 24px 4px; }
+  h2 { font-size: 15px; margin: 20px 24px 8px; color: #d8c8a0; }
+  p { margin: 0 24px 12px; max-width: 900px; opacity: .85; }
+  canvas { background: #0e0c12; margin: 8px 24px; image-rendering: auto; display: block; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 24px 16px; align-items: flex-start; }
+  .row canvas { margin: 0; }
+  .card { background: #221c28; padding: 8px; border-radius: 6px; }
+  .card label { display: block; font-size: 12px; margin-bottom: 4px; color: #c8b898; }
+  img.pt { width: 180px; height: 240px; object-fit: cover; background: #111; }
+</style>
+<h1>Seal 2 · Phase 2 · Night Runs — art preview</h1>
+<p>Minato-sō façade (lit / dark windows), lobby, workshop, two C2BT battle rooms, tenant line cards, and portrait-next-to-sprite sheets. Preview only until self-review.</p>
+
+<h2>Façades</h2>
+<div class="row">
+  <div class="card"><label>North façade 1140×168 — lobby door, mixed windows</label><canvas id="minaNorth" width="1140" height="168"></canvas></div>
+  <div class="card"><label>South façade 1140×220 — workshop bay, shutters, mixed windows</label><canvas id="minaSouth" width="1140" height="220"></canvas></div>
+</div>
+
+<h2>Interiors</h2>
+<div class="row">
+  <div class="card"><label>Lobby 1280×900 — mailboxes, sofa, Residents Only stair</label><canvas id="minaLobby" width="1280" height="900" style="width:640px;height:450px"></canvas></div>
+  <div class="card"><label>Workshop 1280×900 — bench, bike, Hase counter</label><canvas id="minaShop" width="1280" height="900" style="width:640px;height:450px"></canvas></div>
+</div>
+
+<h2>Battle rooms (C2BT 720×1280)</h2>
+<div class="row">
+  <div class="card"><label>East canal bridge</label><canvas id="battleBridge" width="720" height="1280" style="width:360px;height:640px"></canvas></div>
+  <div class="card"><label>SE street / Minato-sō face</label><canvas id="battleSE" width="720" height="1280" style="width:360px;height:640px"></canvas></div>
+  <div class="card"><label>Reference: Wagashi battle (Phase 1)</label><canvas id="battleWaga" width="720" height="1280" style="width:360px;height:640px"></canvas></div>
+</div>
+
+<h2>Portraits</h2>
+<div class="row" id="pts"></div>
+
+<h2>Portrait next to sprite</h2>
+<div class="row">
+  <div class="card"><label>Hase</label><canvas id="sheet_hase" width="720" height="420"></canvas></div>
+  <div class="card"><label>Mori</label><canvas id="sheet_mori" width="720" height="420"></canvas></div>
+  <div class="card"><label>Nao</label><canvas id="sheet_nao" width="720" height="420"></canvas></div>
+  <div class="card"><label>Haru</label><canvas id="sheet_haru" width="720" height="420"></canvas></div>
+</div>
+
+<h2>Tenant lines — Rider-held vs taken</h2>
+<div class="row">
+  <canvas id="line_mori_held" width="900" height="420" style="width:450px;height:210px"></canvas>
+  <canvas id="line_mori_taken" width="900" height="420" style="width:450px;height:210px"></canvas>
+  <canvas id="line_nao_held" width="900" height="420" style="width:450px;height:210px"></canvas>
+  <canvas id="line_nao_taken" width="900" height="420" style="width:450px;height:210px"></canvas>
+  <canvas id="line_haru_held" width="900" height="420" style="width:450px;height:210px"></canvas>
+  <canvas id="line_haru_taken" width="900" height="420" style="width:450px;height:210px"></canvas>
+</div>
+
+<script src="c2bt_lib.js"></script>
+<script src="paint.js"></script>
+<script src="paint_p2.js"></script>
+<script src="yk.js"></script>
+<script>
+(function () {
+  function ctx(id) { return document.getElementById(id).getContext('2d'); }
+  var P = window.FFF_S2P;
+  P.minaNorth(ctx('minaNorth'));
+  P.minaSouth(ctx('minaSouth'));
+  P.minaLobby(ctx('minaLobby'));
+  P.minaShop(ctx('minaShop'));
+  P.battleBridge(ctx('battleBridge'));
+  P.battleSE(ctx('battleSE'));
+  if (P.battle) P.battle(ctx('battleWaga'));
+  ['mori','nao','haru'].forEach(function (w) {
+    P.lineCard(ctx('line_' + w + '_held'), w, 'held');
+    P.lineCard(ctx('line_' + w + '_taken'), w, 'taken');
+  });
+  var names = ['hase','mori','nao','haru'];
+  var labels = { hase: 'Hase, mechanic', mori: 'Mori-san, landlady', nao: 'Nao, night shift', haru: 'Haru, the kid' };
+  var box = document.getElementById('pts');
+  names.forEach(function (n) {
+    var d = document.createElement('div'); d.className = 'card';
+    d.innerHTML = '<label>' + labels[n] + '</label><img class="pt" src="../../portraits/' + n + '_neutral.webp">';
+    box.appendChild(d);
+  });
+
+  function load(src) {
+    return new Promise(function (res) {
+      var im = new Image();
+      im.onload = function () { res(im); };
+      im.onerror = function () { res(null); };
+      im.src = src;
+    });
+  }
+  function sheet(id, name) {
+    var g = ctx(id), c = g.canvas;
+    g.fillStyle = '#16121a'; g.fillRect(0, 0, c.width, c.height);
+    return Promise.all([
+      load('../../portraits/' + name + '_neutral.webp'),
+      load('sprites/' + name + '_idle.webp'),
+      load('sprites/' + name + '_walk.webp'),
+      load('sprites/' + name + '_map.webp'),
+      load('sprites/' + name + '_fig.webp')
+    ]).then(function (ims) {
+      var pt = ims[0], idle = ims[1], walk = ims[2], map = ims[3], fig = ims[4];
+      if (pt) g.drawImage(pt, 12, 20, 180, 240);
+      g.fillStyle = '#c8b898'; g.font = '12px sans-serif';
+      g.fillText(labels[name] || name, 12, 14);
+      function strip(im, x, y, cols, label) {
+        if (!im) { g.fillStyle = '#44384a'; g.fillRect(x, y, 200, 140); g.fillStyle = '#c8b898'; g.fillText('(bake pending) ' + label, x + 8, y + 70); return; }
+        var cw = im.naturalWidth / (cols || 8), ch = im.naturalHeight / 4;
+        var i;
+        g.fillStyle = '#c8b898'; g.fillText(label, x, y - 4);
+        for (i = 0; i < 4; i++) {
+          g.drawImage(im, 0, i * ch, cw, ch, x + i * (cw + 8), y, cw, ch);
+        }
+      }
+      strip(idle || walk, 210, 36, 4, 'idle / walk col0');
+      strip(walk, 210, 230, 8, 'walk 4 facings');
+      if (map) {
+        var mw = map.naturalWidth / 4, mh = map.naturalHeight;
+        g.drawImage(map, 0, 0, mw, mh, 560, 36, mw, mh);
+        g.fillStyle = '#c8b898'; g.fillText('map', 560, 30);
+      }
+      if (fig) {
+        var fw = fig.naturalWidth, fh = fig.naturalHeight / 4;
+        g.drawImage(fig, 0, 0, fw, fh, 560, 200, fw, fh);
+        g.fillStyle = '#c8b898'; g.fillText('fig', 560, 194);
+      }
+    });
+  }
+  Promise.all(names.map(function (n) { return sheet('sheet_' + n, n); })).then(function () {
+    document.title = 'Seal 2 Phase 2 — ready';
+  });
+})();
+</script>

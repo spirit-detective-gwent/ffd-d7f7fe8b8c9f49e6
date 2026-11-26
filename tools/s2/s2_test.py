@@ -228,6 +228,101 @@ async def main():
         ok('Nails module still present', nails and nails.get('nq') and nails.get('west'), nails)
         ok('first-seal quests still marked done (untouched ids)', nails and nails.get('westDone') and nails.get('sealDone'), nails)
 
+
+        # -------- Phase 2 Night Runs --------
+        src = INDEX.read_text(encoding='utf-8')
+        ok('S2P2 injected', 'FFF_S2P2' in src and 'cq2_s2_runs' in src)
+        ok('P2 painters in source', 'minaSouth' in src and 'battleBridge' in src and 'battleSE' in src)
+        ok('Hase world sheets present', (INDEX.parent / 'world' / 'nq_hase_walk.webp').exists() and (INDEX.parent / 'world' / 'nq_hase_idle.webp').exists())
+        ok('tenant portraits present', (INDEX.parent / 'portraits' / 'hase_neutral.webp').exists() and (INDEX.parent / 'portraits' / 'mori_neutral.webp').exists() and (INDEX.parent / 'portraits' / 'nao_neutral.webp').exists() and (INDEX.parent / 'portraits' / 'haru_neutral.webp').exists())
+
+        p2 = await ev(pg, """(function(){
+          var S2=root.FFF_S2, P2=root.FFF_S2P2, st=c2S();
+          if (S2 && S2.setStg) S2.setStg('done');
+          st.q.cq2_s2_waga = 9;
+          if (P2 && P2.chainRepair) P2.chainRepair();
+          var BT=root.FFF_C2BT;
+          var br = BT && BT.room && BT.room({ ctx: { s2br: 1, dgk: 's2_r0_0', s2k: 's2_r0' } });
+          var se = BT && BT.room && BT.room({ ctx: { s2se: 1, dgk: 's2_r2_0', s2k: 's2_r2' } });
+          var t = P2 && P2.s2Tgt && P2.s2Tgt();
+          return {
+            p2: !!P2, art: P2&&P2.ART, q: st.q.cq2_s2_runs, stg: P2&&P2.stg&&P2.stg(),
+            br: br, se: se,
+            doors: !!(P2&&P2.SHOP_DOOR&&P2.LOB_DOOR),
+            shopY: P2&&P2.SHOP_DOOR&&P2.SHOP_DOOR.at&&P2.SHOP_DOOR.at[1],
+            lobY: P2&&P2.LOB_DOOR&&P2.LOB_DOOR.at&&P2.LOB_DOOR.at[1],
+            tgt: t && { lab: t.lab, loc: t.loc, x: t.x, y: t.y },
+            pt: typeof PT_PAINT!=='undefined' && PT_PAINT.nq_hase==='hase' && PT_PAINT.nq_mori==='mori' && PT_PAINT.nq_nao==='nao' && PT_PAINT.nq_haru==='haru',
+            has: typeof PT_HAS!=='undefined' && PT_HAS.hase_neutral && PT_HAS.mori_neutral && PT_HAS.nao_neutral && PT_HAS.haru_neutral,
+            walk: typeof IMG!=='undefined' && !!(IMG.nq_hase_walk && IMG.nq_mori_walk && IMG.nq_nao_walk && IMG.nq_haru_walk),
+            kHaru: typeof C2K!=='undefined' && C2K.nq_haru,
+            s2p: !!(root.FFF_S2P&&FFF_S2P.minaLobby&&FFF_S2P.minaShop&&FFF_S2P.battleBridge&&FFF_S2P.battleSE)
+          };
+        })()""")
+        ok('S2P2 boots', p2 and p2.get('p2'), p2)
+        ok('Night Runs auto-opens after Wagashi is done', p2 and p2.get('q') == 0, p2)
+        ok('runs stage is open', p2 and p2.get('stg') == 'open', p2)
+        ok('pin is Flip / Night Runs, not a boat-house Phase 3', p2 and p2.get('tgt') and 'Flip' in str(p2['tgt']) and 'Boat' not in str(p2['tgt']), p2)
+        ok('south doors stand in the SE street (y > 3300)', p2 and p2.get('shopY') and p2['shopY']>3300 and p2.get('lobY') and p2['lobY']>3300, p2)
+        ok('bridge clash picks the canal battle room', p2 and p2.get('br')=='c2_br', p2)
+        ok('SE clash picks the Minato-sō street room', p2 and p2.get('se')=='c2_se', p2)
+        ok('P2 painters live', p2 and p2.get('s2p'), p2)
+        ok('four portraits mapped', p2 and p2.get('pt') and p2.get('has'), p2)
+        ok('four walk sheets wired', p2 and p2.get('walk'), p2)
+        ok('Haru is shorter than club-staff (C2K < 1)', p2 and p2.get('kHaru') is not None and p2['kHaru'] < 1, p2)
+
+        voices = {}
+        for path in ('fierce', 'strategic', 'balanced'):
+            lines = await ev(pg, f"""(function(){{
+              var raw=root.FFF_S2P2.VO.brief['{path}'] || [];
+              return raw.map(function(L){{return L[0]+':'+L[1];}});
+            }})()""")
+            voices[path] = lines or []
+        ok('Night Runs briefings differ on all three paths',
+           voices['fierce'] != voices['strategic'] and voices['strategic'] != voices['balanced'] and voices['fierce'] != voices['balanced'], voices)
+        ok('fierce runs the bikes down', any('run the bikes down' in (x or '').lower() for x in voices['fierce']), voices['fierce'])
+        ok('strategic cuts the schedule', any('cut the schedule' in (x or '').lower() or 'unravels' in (x or '').lower() for x in voices['strategic']), voices['strategic'])
+        ok('compassionate gets the runs off the bridge so the street can sleep',
+           any('sleep' in (x or '').lower() or 'off the bridge' in (x or '').lower() for x in voices['balanced']), voices['balanced'])
+
+        # save/load mid-runs
+        midr = await ev(pg, """(function(){
+          var P2=root.FFF_S2P2; P2.setStg('r2'); var st=c2S(); st.q.cq2_s2_runs=2; if (typeof save==='function') save();
+          return { stg: P2.stg(), q: st.q.cq2_s2_runs, saved: !!localStorage.getItem('fff_world') };
+        })()""")
+        ok('Night Runs mid-quest state saves', midr and midr.get('stg')=='r2' and midr.get('saved'), midr)
+
+        # win: turf, mechanic stays, Nails price, tenants change, stair stays shut, no Phase 3 pin
+        win = await ev(pg, """(function(){
+          var P2=root.FFF_S2P2, st=c2S(), T=root.FFF_C2TURF;
+          P2.takeEastTurf();
+          P2.setStg('done'); st.q.cq2_s2_runs=9;
+          if (typeof P2.qClose==='function') { st.q.cq2_s2_runs=8; P2.qClose(); }
+          var inP=T&&T.inQ&&T.inQ('P', 4000, 3000);
+          var blk=root.FFF_NQ&&FFF_NQ.BLK&&FFF_NQ.BLK.east;
+          var menu=P2.menuNow();
+          var t = (typeof c2LocksT==='function'? (function(){var x=c2LocksT(); return x&&{lab:x.lab,loc:x.loc,x:x.x,y:x.y};})() : null);
+          var tgtP=P2.s2Tgt && P2.s2Tgt();
+          return {
+            vend: !!st.e.vend_eastst, won: !!(st.e.nq&&st.e.nq.won&&st.e.nq.won.east),
+            inP: !!inP, blk: !!(blk&&blk.n),
+            nails: menu[0].base===3 && menu[0].cost===2,
+            fullOff: menu[1].base===4 && menu[1].cost===3,
+            q: st.q.cq2_s2_runs,
+            tgtNull: !tgtP,
+            pin: t,
+            voTaken: !!(P2.VO.taken&&P2.VO.held&&P2.VO.taken.mori && JSON.stringify(P2.VO.taken.mori)!==JSON.stringify(P2.VO.held.mori)),
+            stair: !!(P2.VO.stair)
+          };
+        })()""")
+        ok('east block marked owned', win and win.get('vend') and win.get('won') and win.get('blk'), win)
+        ok('east block is Punk turf after the flip', win and win.get('inP'), win)
+        ok('Hase sells at Nails price after takeover (¥3 → ¥2 tape)', win and win.get('nails'), win)
+        ok('tenant held and taken lines differ', win and win.get('voTaken'), win)
+        ok('Residents-only stair has a shut line', win and win.get('stair'), win)
+        ok('Night Runs quest closes', win and win.get('q')==9, win)
+        ok('no leftover Night Runs / boat-house pin after close', win and win.get('tgtNull') and 'Boat' not in str(win.get('pin') or ''), win)
+
         # no page errors
         ok('no page errors', not errs, errs[:4])
         await b.close()

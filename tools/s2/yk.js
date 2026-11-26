@@ -476,6 +476,50 @@
         lockD([cS + dir * rS * 0.1, tS + capRy * 0.35, cS + dir * rS * 0.75, tS + capRy * 0.55, cS + dir * rS * 1.0, bS, dir * 1.5 * sc], 0.3);
         lockD([cS - dir * rS * 0.3, tS + capRy * 0.5, cS + dir * rS * 0.3, tS + capRy * 0.7, cS - dir * rS * 0.05, ft + (chinH - ft) * 0.3, 0], 0); }
       x.restore(); }
+    if (spec.hair === 'pony' && capTop) { /* low-mid ponytail, tucked face-frames, matches Nao's portrait */
+      var pR = sideF ? capRx : (spec.tight ? skW : skW * 0.92), pHi = hx(spec.hairHi || '#4a3a32');
+      var pfill = function () { x.fillStyle = rgb(ht.b); x.fill(); x.lineWidth = 1.7 * sc; x.lineJoin = 'round'; x.lineCap = 'round'; x.strokeStyle = rgb(INK); x.stroke(); };
+      var plock = function (a, b, c, d, tx, ty, bn) {
+        x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo((a + tx) / 2 + (bn || 0), (b + ty) / 2, tx, ty);
+        x.quadraticCurveTo((c + tx) / 2 + (bn || 0), (d + ty) / 2, c, d); x.closePath(); pfill();
+      };
+      var tail = function (ox, oy, lean, len, tw0) {
+        var tw = tw0 || pR * 0.32, th = len || 28 * sc;
+        x.beginPath();
+        x.moveTo(ox - tw * 0.8, oy);
+        x.quadraticCurveTo(ox + lean * tw * 0.5, oy + th * 0.45, ox + lean * tw * 0.1, oy + th);
+        x.quadraticCurveTo(ox + tw * 0.7 + lean * tw * 0.15, oy + th * 0.5, ox + tw * 0.8, oy);
+        x.closePath(); pfill();
+        /* navy hair tie, clearly separating cap from tail */
+        x.fillStyle = '#1e2a4a'; x.strokeStyle = rgb(INK); x.lineWidth = 0.8 * sc;
+        x.beginPath(); x.ellipse(ox, oy + 0.6 * sc, tw * 0.85, 2.0 * sc, 0, 0, 7); x.fill(); x.stroke();
+        x.save(); x.strokeStyle = rgb(pHi); x.lineWidth = 1 * sc; x.lineCap = 'round';
+        x.beginPath(); x.moveTo(ox - tw * 0.1, oy + 4 * sc); x.quadraticCurveTo(ox + lean * tw * 0.15, oy + th * 0.5, ox + lean * tw * 0.04, oy + th * 0.85); x.stroke(); x.restore();
+      };
+      x.save();
+      if (face === 'front') {
+        var cP = capCx, tP = capTop, jaw = faceTop + (chinH - faceTop) * 0.58;
+        /* no second helmet: the tight cap is already on the skull. Soft fringe along the forehead only. */
+        plock(cP - pR * 0.42, tP + capRy * 0.85, cP - pR * 0.08, tP + capRy * 1.05, cP - pR * 0.38, faceTop + (chinH - faceTop) * 0.22, -0.4 * sc);
+        plock(cP + pR * 0.08, tP + capRy * 0.85, cP + pR * 0.42, tP + capRy * 1.05, cP + pR * 0.36, faceTop + (chinH - faceTop) * 0.2, 0.4 * sc);
+        /* thin face-frames, tucked toward the jaw, not a bowl */
+        plock(cP - pR * 0.5, tP + capRy * 0.95, cP - pR * 0.22, tP + capRy * 1.15, cP - pR * 0.52, jaw, -0.7 * sc);
+        plock(cP + pR * 0.22, tP + capRy * 0.95, cP + pR * 0.5, tP + capRy * 1.15, cP + pR * 0.5, jaw - 1 * sc, 0.7 * sc);
+        x.strokeStyle = rgb(pHi); x.lineWidth = 1 * sc; x.lineCap = 'round';
+        x.beginPath(); x.ellipse(cP - pR * 0.2, tP + capRy * 0.5, pR * 0.32, capRy * 0.18, -0.35, Math.PI * 1.1, Math.PI * 1.7); x.stroke();
+        tail(cP + pR * 0.55, (capBot || tP + capRy * 1.55) + 1 * sc, 0.7, 24 * sc, pR * 0.28);
+      } else if (face === 'back') {
+        var cB = capCx, mB = capTop + (capBot - capTop) * 0.42, rB = (capBot - capTop) * 0.42 + 1.5 * sc;
+        /* skull cap only, shorter than the tail */
+        x.beginPath(); x.ellipse(cB, mB, pR * 0.92, rB, 0, 0, 7); pfill();
+        tail(cB, capBot + 1 * sc, 0, 30 * sc, pR * 0.3);
+      } else {
+        var cS2 = capCx, tS2 = capTop, rS2 = capRx, bS2 = ft + (chinH - ft) * 0.5;
+        /* keep the existing profile cap; do not add a bigger dome */
+        plock(cS2 - dir * rS2 * 0.15, tS2 + capRy * 0.75, cS2 - dir * rS2 * 0.62, tS2 + capRy * 0.9, cS2 - dir * rS2 * 0.82, bS2, -dir * sc);
+        tail(cS2 + dir * rS2 * 0.5, (capBot || (tS2 + capRy * 1.5)) + 1 * sc, dir * 0.55, 28 * sc, rS2 * 0.3);
+      }
+      x.restore(); }
     if (spec.hair === 'bob' && capTop) { var bR = sideF ? capRx : skW, bfh = Math.max(8, chinH - faceTop); /* v6.5.63 club staff: a chin-length bob, side-swept fringe, gold hairpin */
       var bfill = function () { x.fillStyle = rgb(ht.b); x.fill(); x.lineWidth = 1.8 * sc; x.lineJoin = 'round'; x.strokeStyle = rgb(INK); x.stroke(); }, bhi = function (f) { x.save(); x.strokeStyle = rgb(hx(spec.hairHi || '#3a3946')); x.lineWidth = 1 * sc; x.lineCap = 'round'; x.beginPath(); f(); x.stroke(); x.restore(); };
       var bpin = function (px, py, ang) { if (!spec.hairPin) return; x.save(); x.translate(px, py); x.rotate(ang); x.fillStyle = spec.hairPin; x.strokeStyle = rgb(INK); x.lineWidth = 0.7 * sc; [0, 1].forEach(function (n) { x.beginPath(); x.rect(-3.2 * sc, (n * 2.2 - 1.6) * sc, 6.4 * sc, 1.3 * sc); x.fill(); x.stroke(); }); x.restore(); };
@@ -755,6 +799,32 @@
     happi: { eri: '#f4ead2', hemCol: '#8e3b52' }, apron: '#e2b4b0',
     face2: { eyes: 'soft', brow: 'soft', jaw: 'round', mouth: 'smile', mouthQ: 0.78, mouthW: 0.36, browW: 1.15, age: 1, w: 0.98 },
     skin: '#e8b898', skinRe: 1, noScar: 1, clean: 1, handsCol: '#e8b48a' };
+
+
+  /* v6.5.63 seal2 phase 2: Minato-sō tenants. Club-staff / punk proportions. */
+  SPEC.hase = { base: 'punk', glove: 0, nozig: 1, noScar: 1, clean: 1, skinRe: 1, skin: '#c9956a',
+    bulk: 0.22, bagSide: 0.12, pal: { 3: tri('#1a1816'), 4: tri('#2a4270'), 5: tri('#efe6d8'), 6: tri('#243a66'), 7: tri('#1e2430') },
+    pockets: 0.09, closeV: 0.22, stubble: 1, hair: 'slick', hairCol: '#1a1816',
+    face2: { brow: 'flat', browW: 1.45, mouth: 'flat', jaw: 'wide', w: 1.04, eyeQ: 0.44, mouthQ: 0.7 },
+    hands: 1, armsCol: '#2a4270', handsCol: '#c9956a' };
+  SPEC.mori = { base: 'hina', pal: { 3: tri('#c8c4bc'), 4: tri('#6b3a58'), 5: tri('#efe6d4'), 6: tri('#5a324c'), 7: tri('#4a3040') },
+    armsCol: '#e0b090', handsCol: '#e0b090', hairDress: 0.22, pinCol: '#c8b070', knotCol: '#6b3a58',
+    hands: 1, flat: [4, 5, 6], hair: 'tight', tight: 1, hairCol: '#c8c4bc', closeV: 0.55,
+    happi: { eri: '#efe6d4', hemCol: '#4a283c' },
+    face2: { eyes: 'soft', brow: 'soft', jaw: 'round', mouth: 'smile', mouthQ: 0.7, mouthW: 0.34, browW: 1.1, age: 1, w: 0.96 },
+    skin: '#e4c4a4', skinRe: 1, noScar: 1, clean: 1 };
+  SPEC.nao = { base: 'hina', pal: { 3: tri('#2a221c'), 4: tri('#2a3d6e'), 5: tri('#f2eee8'), 6: tri('#24365e'), 7: tri('#1e2430') },
+    armsCol: '#e8b49a', handsCol: '#e8b49a', hands: 1, flat: [4, 5, 6],
+    hair: 'pony', tight: 1, hairCol: '#2a221c', hairHi: '#4a3a32', closeV: 0.55,
+    happi: { eri: '#f2eee8', hemCol: '#1e2a4a' },
+    face2: { eyes: 'soft', brow: 'soft', jaw: 'pointed', mouth: 'flat', mouthQ: 0.55, mouthW: 0.3, browW: 1.05, w: 0.94, eyeQ: 0.4, lips: '#8a4a4a' },
+    skin: '#f0c8b0', skinRe: 1, noScar: 1, clean: 1 };
+  SPEC.haru = { base: 'hina', pal: { 3: tri('#1a1410'), 4: tri('#d4a026'), 5: tri('#f4efe6'), 6: tri('#c49220'), 7: tri('#5a3a28') },
+    armsCol: '#f0c4a0', handsCol: '#f0c4a0', hairDress: 0.22, hands: 1, flat: [4, 5, 6],
+    hair: 'bob', tight: 1, part: 0, hairPin: '#e8c04a', hairCol: '#1a1410', hairHi: '#3a2a22', closeV: 0.55,
+    happi: { eri: '#f4efe6', hemCol: '#a87818' },
+    face2: { eyes: 'soft', brow: 'soft', jaw: 'round', mouth: 'smile', mouthQ: 0.82, mouthW: 0.32, browW: 0.95, w: 0.9, eyeQ: 0.34, lash: 1, lips: '#c47878' },
+    skin: '#f2c8ae', skinRe: 1, noScar: 1, clean: 1 };
 
   root.FFF_YK = { SPEC: SPEC, paintCell: paintCell, paintSheet: paintSheet, tri: tri };
 })(window);
