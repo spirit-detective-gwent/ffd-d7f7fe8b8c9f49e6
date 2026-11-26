@@ -801,6 +801,21 @@ async def main():
         })()""")
         ok('garden toasts show on the Ch1/Ch2 allowlist', toast and not toast.get('blocked') and toast.get('go') and 'dirt' in (toast.get('t') or ''), toast)
 
+        # The Garden spot must stay tappable (intSpotAt) but must not paint a .wtag.obj box.
+        box = await ev(pg, """(function(){
+          try{
+            if(typeof tagsBuild==='function') tagsBuild();
+            var tags=(W.tagL||[]).filter(function(t){return t.key&&/:garden$/.test(t.key);});
+            var el=document.querySelector('#wtags .wtag.obj[data-k$="garden"], #wtags .wtag.obj[data-k*=":garden"]');
+            var vis=el && el.offsetParent!==null && getComputedStyle(el).display!=='none' && getComputedStyle(el).opacity!=='0';
+            var r=el&&el.getBoundingClientRect();
+            return {n:tags.length, silent:!!(tags[0]&&tags[0].silent), obj:!!(tags[0]&&tags[0].obj),
+              el:!!el, vis:!!vis, w:r&&Math.round(r.width), h:r&&Math.round(r.height),
+              spot:!!(INT.c2_clinic&&INT.c2_clinic.spots||[]).some(function(s){return s.id==='garden';})};
+          }catch(e){return {err:String(e&&e.message||e)};}
+        })()""")
+        ok('Garden spot has no visible obj box and stays registered', box and box.get('spot') and box.get('silent') and not box.get('vis') and not box.get('obj'), box)
+
         # no page errors
         ok('no page errors', not errs, errs[:4])
         await b.close()

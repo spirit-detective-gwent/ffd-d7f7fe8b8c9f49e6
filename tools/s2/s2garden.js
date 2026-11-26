@@ -657,6 +657,19 @@
         return r;
       };
     }
+    if (typeof c2Tags === 'function' && !G.tagsWrap) {
+      G.tagsWrap = 1;
+      var tags0 = c2Tags;
+      c2Tags = function () {
+        var out = tags0.apply(this, arguments);
+        (out || []).forEach(function (t) {
+          /* the Garden spot's .wtag.obj drew a rounded box over the nook; keep the
+           * spot for taps (intSpotAt) but do not paint a highlight. */
+          if (t && t.key && /:garden$/.test(t.key)) { t.obj = null; t.lab = ''; t.silent = 1; }
+        });
+        return out;
+      };
+    }
     if (typeof intSpotAt === 'function' && !G.spotWrap) {
       G.spotWrap = 1;
       var spot0 = intSpotAt;
