@@ -46285,7 +46285,7 @@ var raf = 0, lastTs = 0, ENDED = false, dtAvg = 1 / 60, slowN = 0;
 /* a slow phone steps the canvas resolution down (2x -> 1.6x -> 1.25x) instead of dropping frames */
 function qualityStep(raw) {
   if (!S || S.ph === 'result' || S.wait || raw <= 0 || raw > 0.25) return; dtAvg += (raw - dtAvg) * 0.1;
-  if (dtAvg > 1 / 54) { if (++slowN > 40 && DPR > 1.26) { DPR = Math.max(1.25, DPR - 0.4); cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); slowN = 0; dtAvg = 1 / 60; } } else slowN = 0;
+  if (dtAvg > 1 / 54) { if (++slowN > 24 && DPR > 1.26) { DPR = Math.max(1.25, DPR - 0.4); cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR); slowN = 0; dtAvg = 1 / 60; } } else slowN = 0;
 }
 function frame(ts) {
   raf = 0; if (!S || !cv) return; var dt = lastTs ? clamp((ts - lastTs) / 1000, 0, 0.05) : 1 / 60; if (lastTs) qualityStep((ts - lastTs) / 1000); lastTs = ts;
