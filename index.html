@@ -22675,16 +22675,6 @@ drinkSoda = function (k) {
   if (!ok) { eatgHold(false); W.busy = b0; SAVE.sp = s0; SAVE.soda[k] = (SAVE.soda[k] | 0) + 1; save(); hud(); return drinkSoda0(k); }
   return true;
 };
-root.FFF_EATG_SP = function (it, s0, done) { /* the café coffees: the coffee sip game (blend / iced) settles the SP the counter already added */
-  var id = it.id === 'iced' ? 'iced' : 'blend'; if (!eatgOn(id)) return false;
-  var spM = SPMAX, s1 = SAVE.sp | 0, add = Math.max(0, s1 - s0), half = Math.ceil(add / 2), tg = { win: spM, close: s1, bad: Math.min(spM, s0 + half) }, b0 = W.busy;
-  var T = { blend: ['\u30d6\u30ec\u30f3\u30c9', 'BLEND COFFEE'], iced: ['\u30a2\u30a4\u30b9\u30b3\u30fc\u30d2\u30fc', 'ICED COFFEE'], lait: ['\u30ab\u30d5\u30a7\u30aa\u30ec', 'CAF\u00c9 AU LAIT'], wiener: ['\u30a6\u30a4\u30f3\u30ca\u30fc', 'WIENER COFFEE'] }[it.id] || [null, null];
-  W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + it.id);
-  var ok = root.EATG.open({ item: id, jp: T[0], en: T[1], who: 'ryo', hp0: SAVE.hp, sp0: s0, maxhp: MAXHP, spmax: spM, rows: eatgRows('sp', add, half, spM), bot: root.FFF_EATG_BOT,
-    target: function (r) { return { hp: SAVE.hp, sp: tg[r] != null ? tg[r] : s1 }; },
-    onEnd: function (res) { eatgHold(false); SAVE.sp = tg[res] != null ? tg[res] : s1; save(); hud(); W.busy = b0; W.path = []; if (done) done(SAVE.sp - s0); ev('world:eatg:' + it.id + ':' + res); } });
-  if (!ok) { eatgHold(false); W.busy = b0; } return ok;
-};
 /* v6.5.63-eat wire end */
 
 function bondUnlockLines(p, lv) {
@@ -36323,11 +36313,9 @@ var GINKO = (function () {
       SAVE.sp = item.full ? spM : Math.min(spM, s0 + (item.sp | 0));
       try { save(); } catch (eS2) {}
       try { hud(); } catch (eH2) {}
-      var spFx = function (d) { /* v6.5.63-eat: after the coffee sip game (or at once when it can't open) */
-        try { AU.play('pl_heal', { gain: 0.45 }); } catch (eA2) {}
-        try { actPlay('drink', W.ryo); } catch (eD) {}
-        try { if (typeof vitFlo === 'function') vitFlo('sp', d); } catch (eV2) {} };
-      if (!(root.FFF_EATG_SP && root.FFF_EATG_SP(item, s0, spFx))) spFx(SAVE.sp - s0);
+      try { AU.play('pl_heal', { gain: 0.45 }); } catch (eA2) {}
+      try { actPlay('drink', W.ryo); } catch (eD) {}
+      try { if (typeof vitFlo === 'function') vitFlo('sp', SAVE.sp - s0); } catch (eV2) {}
     }
     ev('world:c2:gekko:buy:' + item.id + ':' + cost);
     setTimeout(function () { if (root.EATG && root.EATG.busy()) root.EATG.after(function () { root.c2GekkoShop(true); }); else root.c2GekkoShop(true); }, 0); /* v6.5.63-eat */
