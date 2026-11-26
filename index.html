@@ -2778,6 +2778,11 @@ html.pc-desk #wstat>#wbag{position:static;top:auto;right:auto;left:auto;margin-l
 #wenh.evo .ego{border-radius:16px;background:#1f7a72;min-height:52px;font:800 18px/1.2 system-ui}
 #wenh.evo .eneed{margin:-2px 0 8px;text-align:center;color:#1a3148;font:700 14px/1.2 system-ui}
 #wenh.evo .ekept{font-size:13px}
+/* v6563 Learn a basic reuses the Evolve spread; a teal frame marks the new copy (no evolve flame) */
+#wenh.evo.learn .evo-to .eslot .card.big{box-shadow:inset 0 0 28px rgba(47,216,232,.4),0 0 0 4px #2fd8e8,0 0 0 6px #0a3d44,0 0 18px rgba(47,216,232,.4)}
+#wenh.evo.learn .elab.ev{color:#1f7a72}
+#wenh.evo.learn .eflame{display:none}
+#wenh.evo.learn .evo-to::before{background:radial-gradient(ellipse at 50% 58%,rgba(47,216,232,.28),rgba(47,216,232,0) 70%)}
 #techflash{position:fixed;inset:0;z-index:88;background:#fff;pointer-events:none;opacity:1}
 #techflash.out{animation:techflash .5s ease forwards}
 @keyframes techflash{0%{opacity:1}100%{opacity:0}}
@@ -9984,16 +9989,13 @@ function openEvo(S, opt) {
     document.getElementById('ehBack').onclick = back;
     UI.ev('enh:evo:locked:' + (S.seal | 0)); return;
   }
-  var body = shell('Evolve Your Moves', '');
-  var panel0 = document.getElementById('wenh'); if (panel0) panel0.classList.add('evo');
-  var head = document.querySelector('#wenh .eh'); if (head) head.insertAdjacentHTML('beforeend', '<span class="eseal" title="Guardian Seals">+ ' + (S.seal | 0) + '</span>');
+  var body = evoOpenShell('Evolve Your Moves', '<span class="eseal" title="Guardian Seals">+ ' + (S.seal | 0) + '</span>');
   var edges = evoEdges(S.act || 'ryo').filter(function (e) { return e.teacher === 'genji' && e.ch === 2; });
   var groups = [];
   edges.forEach(function (e) { var from = E.cards()[e.from], to = E.cards()[e.to], n = owned(e.from).length; if (!from || !to || !n) return; groups.push({ e: e, from: from, to: to, n: n }); });
-  var gfig = (root.ASSETS && root.ASSETS.img && root.ASSETS.img.kurogane_fig) || 'world/kurogane_fig.webp';
-  var face = '<i class="eface" style="background-image:url(' + gfig + ')"></i>';
+  var face = evoFace();
   if (!groups.length) {
-    body.innerHTML = '<div class="equote">' + face + '<p>\u201cShow me a basic move. I\u2019ll make it hit harder.\u201d</p></div><p class="eempty">Nothing of yours that I can push further. Other trainers out in the world go past this gym.</p>';
+    body.innerHTML = evoQuoteHtml('\u201cShow me a basic move. I\u2019ll make it hit harder.\u201d') + '<p class="eempty">Nothing of yours that I can push further. Other trainers out in the world go past this gym.</p>';
     document.getElementById('ehBack').onclick = back; UI.ev('enh:evo:open'); return;
   }
   if (!groups.some(function (g) { return g.e.from === M.evoFrom; })) M.evoFrom = groups[0].e.from;
@@ -10001,23 +10003,17 @@ function openEvo(S, opt) {
   var price = evoPrice(), pick = null, block = '';
   owned(g.e.from).forEach(function (r) { if (pick) return; var w = evoBlock(S, r, g.e, g.to); if (!w) pick = r; else if (!block) block = w; });
   var short = Math.max(0, price - ess());
-  var chips = groups.map(function (x) { return '<button type="button" class="echip' + (x.e.from === g.e.from ? ' on' : '') + '" data-from="' + x.e.from + '">' + x.from.n + ' \u00d7' + x.n + '</button>'; }).join('');
+  var chips = evoChipsHtml(groups.map(function (x) { return { id: x.e.from, label: x.from.n + ' \u00d7' + x.n, on: x.e.from === g.e.from }; }));
   var left = E.upgraded(g.e.from, 0), right = E.upgraded(g.e.to, 0);
   var stat = evoBitName(left) === evoBitName(right) ? (evoBitName(left) + ' ' + evoBit(left) + ' \u2192 ' + evoBit(right)) : (evoBitName(left) + ' ' + evoBit(left) + ' \u2192 ' + evoBitName(right) + ' ' + evoBit(right));
   var gem = (ST.ESSENCE && ST.ESSENCE.icon) || '\u2726';
-  body.innerHTML = '<div class="equote">' + face + '<p>\u201cShow me a basic move. I\u2019ll make it hit harder.\u201d</p></div>' +
-    '<div class="echips">' + chips + '</div>' +
-    '<div class="estage"><div class="evo-from"><span class="elab">Your move</span><div class="eslot" id="evoFrom"></div></div>' +
-    '<i class="evo-arrow" aria-hidden="true">\u2192</i>' +
-    '<div class="evo-to"><canvas class="eflame" aria-hidden="true"></canvas><span class="elab ev">Evolved</span><div class="eslot" id="evoTo"></div></div></div>' +
+  body.innerHTML = evoQuoteHtml('\u201cShow me a basic move. I\u2019ll make it hit harder.\u201d') + chips + evoSpreadHtml('Your move', 'Evolved') +
     '<p class="ediff">' + stat + ' <span>Slots ' + slotsOf(g.from) + ' \u2192 ' + slotsOf(g.to) + '</span></p>' +
     '<p class="eown">Copies you own: ' + g.n + '</p>' +
     '<button type="button" class="ego" id="ehEvo"' + (pick ? '' : ' disabled') + '>Evolve \u00b7 ' + gem + ' ' + price + '</button>' +
     (short && block === 'essence' ? '<p class="eneed">Need ' + short + ' more ' + gem + '</p>' : (block && block !== 'essence' ? '<p class="eneed">' + block + '</p>' : ''));
-  body.querySelector('#evoFrom').appendChild(UI.ST.cardEl(left, 'big'));
-  body.querySelector('#evoTo').appendChild(UI.ST.cardEl(right, 'big'));
-  evoFlames(body.querySelector('.eflame'));
-  body.querySelectorAll('.echip').forEach(function (b) { b.onclick = function () { if (AU) AU.play('ui_sel'); M.evoFrom = b.dataset.from; openEvo(S, V); }; });
+  evoFillSpread(body, left, right, true);
+  evoBindChips(body, function (id) { M.evoFrom = id; openEvo(S, V); });
   var go = body.querySelector('#ehEvo');
   if (go && pick) go.onclick = function () {
     if (!pick || evoBlock(S, pick, g.e, g.to)) return;
@@ -10032,7 +10028,90 @@ function openEvo(S, opt) {
   document.getElementById('ehBack').onclick = back;
   UI.ev('enh:evo:open:' + g.e.from);
 }
-root.ENH = { openTrain: openTrain, openEnhance: openEnhance, openShop: openShop, openEvo: openEvo, isOpen: function () { var n = document.getElementById('wenh'); return !!(n && n.classList.contains('on')); } };
+function evoOpenShell(title, pill) {
+  var body = shell(title, '');
+  var panel = document.getElementById('wenh'); if (panel) panel.classList.add('evo');
+  var head = document.querySelector('#wenh .eh');
+  if (head && pill) head.insertAdjacentHTML('beforeend', pill);
+  return body;
+}
+function evoFace() {
+  var fig = (root.ASSETS && root.ASSETS.img && root.ASSETS.img.kurogane_fig) || 'world/kurogane_fig.webp';
+  return '<i class="eface" style="background-image:url(' + fig + ')"></i>';
+}
+function evoQuoteHtml(text) { return '<div class="equote">' + evoFace() + '<p>' + text + '</p></div>'; }
+function evoChipsHtml(chips) {
+  return '<div class="echips">' + chips.map(function (x) {
+    return '<button type="button" class="echip' + (x.on ? ' on' : '') + '" data-from="' + x.id + '">' + x.label + '</button>';
+  }).join('') + '</div>';
+}
+function evoSpreadHtml(fromLab, toLab) {
+  return '<div class="estage"><div class="evo-from"><span class="elab">' + fromLab + '</span><div class="eslot" id="evoFrom"></div></div>' +
+    '<i class="evo-arrow" aria-hidden="true">\u2192</i>' +
+    '<div class="evo-to"><canvas class="eflame" aria-hidden="true"></canvas><span class="elab ev">' + toLab + '</span><div class="eslot" id="evoTo"></div></div></div>';
+}
+function evoFillSpread(body, left, right, flame) {
+  body.querySelector('#evoFrom').appendChild(UI.ST.cardEl(left, 'big'));
+  body.querySelector('#evoTo').appendChild(UI.ST.cardEl(right, 'big'));
+  if (flame) evoFlames(body.querySelector('.eflame'));
+}
+function evoBindChips(body, onPick) {
+  body.querySelectorAll('.echip').forEach(function (b) { b.onclick = function () { if (AU) AU.play('ui_sel'); onPick(b.dataset.from); }; });
+}
+function evoBindOpt(S, opt) {
+  if (opt !== V) { V.save = opt.save || V.save; V.onClose = opt.onClose || null; V.onSwitch = opt.onSwitch || null; V.fromTrain = !!opt.fromTrain; V.onBack = opt.onBack || null; }
+}
+/* Learn a basic: 5 Essence, own cap 6. Ryo and Aoi each have five basics; Ground Crack and Riposte stay out. */
+var LEARN = { cost: 5, cap: 6, ryo: ['r_jab', 'r_crack', 'r_hook', 'r_ouen', 'r_tape'], aoi: ['a_kata', 'a_kote', 'a_wind', 'a_readln', 'a_step'] };
+function learnSpec() { return root.GENJI_LEARN || LEARN; }
+function learnRows(S) {
+  var Lrn = learnSpec(), who = S.act === 'aoi' ? 'aoi' : 'ryo', C = E.cards();
+  return (Lrn[who] || []).filter(function (id) { return !!C[id]; }).map(function (id) { return { id: id, n: C[id].n, own: owned(id).length, card: C[id] }; });
+}
+function learnBlock(S, row) { var Lrn = learnSpec(); if (!row) return 'missing'; if (row.own >= Lrn.cap) return 'cap'; if (ess() < Lrn.cost) return 'essence'; return ''; }
+function learnBuy(S, id, again) {
+  if (S) V.S = S;
+  var Lrn = learnSpec(), rows = learnRows(S), r = rows.filter(function (x) { return x.id === id; })[0], who = S.act === 'aoi' ? 'aoi' : 'ryo';
+  if (!r || learnBlock(S, r) || !ST.grant) return false;
+  S.ess = ess() - Lrn.cost; ST.grant(S, id, 1); ST.syncOwn(S); save();
+  UI.ev('enh:learn:' + id + ':' + (r.own + 1)); UI.ev('world:c2:genji:learn:buy:' + id + ':' + (r.own + 1));
+  flameStop(); var panel = document.getElementById('wenh'); if (panel) panel.classList.remove('on');
+  var go = again || function () {};
+  if (root.MAT && root.MAT.genji) root.MAT.genji(r.n, go, { mode: 'learn', who: who, card: id }); else { if (AU) AU.play('pl_heal', { gain: 0.7 }); go(); }
+  return true;
+}
+function openLearn(S, opt) {
+  opt = opt || {}; V.S = S; evoBindOpt(S, opt);
+  var back = function () { if (AU) AU.play('ui_back'); if (V.onBack) { var go = V.onBack; V.onBack = null; close(); setTimeout(go, 0); return; } if (V.fromTrain) openTrain(V.S, V); else close(); };
+  var Lrn = learnSpec(), gem = (ST.ESSENCE && ST.ESSENCE.icon) || '\u2726';
+  var body = evoOpenShell('Learn a basic', '<span class="eseal" title="Spirit Essence">' + gem + ' ' + ess() + '</span>');
+  var panel = document.getElementById('wenh'); if (panel) panel.classList.add('learn');
+  var rows = learnRows(S);
+  if (!rows.length) {
+    body.innerHTML = evoQuoteHtml('\u201cNothing of yours I can start from.\u201d') + '<p class="eempty">I teach the five basics. Come back when you have a fighter in the room.</p>';
+    document.getElementById('ehBack').onclick = back; UI.ev('enh:learn:open'); return;
+  }
+  if (!rows.some(function (r) { return r.id === M.learnId; })) M.learnId = rows[0].id;
+  var g = rows.filter(function (r) { return r.id === M.learnId; })[0];
+  var block = learnBlock(S, g), price = Lrn.cost, cap = Lrn.cap, short = Math.max(0, price - ess()), can = !block;
+  var chips = evoChipsHtml(rows.map(function (x) { return { id: x.id, label: x.n + ' \u00d7' + x.own, on: x.id === g.id }; }));
+  var left = E.upgraded(g.id, 0), right = E.upgraded(g.id, 0);
+  var ediff = g.own >= cap ? ('At the cap <span>Cap ' + cap + '</span>') : ('Copies ' + g.own + ' \u2192 ' + (g.own + 1) + ' <span>Cap ' + cap + '</span>');
+  body.innerHTML = evoQuoteHtml('\u201cPick a basic. I\u2019ll add a copy to your hand.\u201d') + chips + evoSpreadHtml('Your move', 'New copy') +
+    '<p class="ediff">' + ediff + '</p>' +
+    '<p class="eown">Copies you own: ' + g.own + ' / ' + cap + '</p>' +
+    '<button type="button" class="ego" id="ehLearn"' + (can ? '' : ' disabled') + '>Learn \u00b7 ' + gem + ' ' + price + '</button>' +
+    (block === 'essence' ? '<p class="eneed">Need ' + short + ' more ' + gem + '</p>' : (block === 'cap' ? '<p class="eneed">The most you can carry (' + cap + ').</p>' : ''));
+  evoFillSpread(body, left, right, false);
+  evoBindChips(body, function (id) { M.learnId = id; openLearn(S, V); });
+  var goBtn = body.querySelector('#ehLearn');
+  if (goBtn && can) goBtn.onclick = function () { if (!learnBuy(S, g.id, function () { openLearn(S, V); })) openLearn(S, V); };
+  document.getElementById('ehBack').onclick = back;
+  UI.ev('enh:learn:open:' + g.id);
+}
+
+root.GENJI_LEARN = LEARN;
+root.ENH = { openTrain: openTrain, openEnhance: openEnhance, openShop: openShop, openEvo: openEvo, openLearn: openLearn, learnBuy: learnBuy, LEARN: LEARN, isOpen: function () { var n = document.getElementById('wenh'); return !!(n && n.classList.contains('on')); } };
 })(this);
 
 ;
@@ -20899,25 +20978,20 @@ function c2PatchLabel() { var left = c2PatchLeft(), hp = c2PatchAmt(); return le
 /* v6563 Genji's "Learn a basic": 5 Spirit Essence buys one more copy of one of the active fighter's five basics (own cap 6 per card).
  * Ryo and Aoi each have their own list; Ryo's Ground Crack and Aoi's Riposte stay out. The copy goes through the same teach scene as an evolve
  * (the shadow lesson the first time, the two-hit exchange after that). The flag SAVE.genjiTeach is set when the scene ends. */
-var GENJI_LEARN = { cost: 5, cap: 6, ryo: ['r_jab', 'r_crack', 'r_hook', 'r_ouen', 'r_tape'], aoi: ['a_kata', 'a_kote', 'a_wind', 'a_readln', 'a_step'] };
-function c2GenjiLearnRows() { var who = SAVE.act === 'aoi' ? 'aoi' : 'ryo', C = (root.ENGINE && root.ENGINE.cards && root.ENGINE.cards()) || {}, own = {};
-  (SAVE.cards || []).forEach(function (r) { own[r.id] = (own[r.id] | 0) + 1; });
-  return GENJI_LEARN[who].filter(function (id) { return !!C[id]; }).map(function (id) { return { id: id, n: C[id].n, own: own[id] | 0 }; }); }
-function c2GenjiLearn() { var rows = c2GenjiLearnRows(), ess = SAVE.ess | 0, cost = GENJI_LEARN.cost, cap = GENJI_LEARN.cap, short = ess < cost;
-  var btns = rows.map(function (r) { var full = r.own >= cap;
-    return [r.n + '<small>' + (full ? 'Own ' + r.own + ' \u00b7 the most you can carry' : 'Own ' + r.own + '/' + cap + ' \u00b7 ' + cost + ' \u2726') + '</small>', function () { setTimeout(function () { c2GenjiLearnBuy(r.id); }, 0); }, 'gmain', full || short]; });
-  btns.push(['Back', function () { setTimeout(c2GenjiMenu, 0); }, 'glater']);
-  dialog(c2GenjiFace() + '<p class="gnote">' + (short ? 'Not enough Essence. A basic costs ' + cost + ' \u2726.' : 'Pick a basic. It costs ' + cost + ' \u2726 a copy, and you can carry ' + cap + ' of each.') + '</p>', btns);
-  $('#wdlg').classList.add('scene', 'c2hq', 'gtrain'); ev('world:c2:genji:learn:' + (short ? 'short' : 'open')); }
-function c2GenjiLearnBuy(id) { var rows = c2GenjiLearnRows(), r = rows.filter(function (x) { return x.id === id; })[0], cost = GENJI_LEARN.cost, who = SAVE.act === 'aoi' ? 'aoi' : 'ryo';
-  if (!r || r.own >= GENJI_LEARN.cap || (SAVE.ess | 0) < cost || !root.STORY) { c2GenjiLearn(); return; }
-  SAVE.ess = (SAVE.ess | 0) - cost; root.STORY.grant(SAVE, id, 1); save(); hud(); ev('world:c2:genji:learn:buy:' + id + ':' + (r.own + 1));
-  var again = function () { if (typeof c2GenjiLearn === 'function') setTimeout(c2GenjiLearn, 60); };
-  if (root.MAT && root.MAT.genji) root.MAT.genji(r.n, again, { mode: 'learn', who: who, card: id }); else { try { AU.play('pl_heal', { gain: 0.7 }); } catch (e) {} again(); } }
+var GENJI_LEARN = root.GENJI_LEARN || { cost: 5, cap: 6, ryo: ['r_jab', 'r_crack', 'r_hook', 'r_ouen', 'r_tape'], aoi: ['a_kata', 'a_kote', 'a_wind', 'a_readln', 'a_step'] };
+function c2GenjiLearnRows() { var Lrn = root.GENJI_LEARN || GENJI_LEARN, who = SAVE.act === 'aoi' ? 'aoi' : 'ryo', C = (root.ENGINE && root.ENGINE.cards && root.ENGINE.cards()) || {}, own = {};
+  if (!Lrn) return []; (SAVE.cards || []).forEach(function (r) { own[r.id] = (own[r.id] | 0) + 1; });
+  return Lrn[who].filter(function (id) { return !!C[id]; }).map(function (id) { return { id: id, n: C[id].n, own: own[id] | 0 }; }); }
+function c2GenjiLearn() {
+  if (root.ENH && root.ENH.openLearn) { var o = trainOpt(); o.onBack = c2GenjiMenu; root.ENH.openLearn(SAVE, o); ev('world:c2:genji:learn:open'); return; }
+}
+function c2GenjiLearnBuy(id) {
+  if (root.ENH && root.ENH.learnBuy) { if (!root.ENH.learnBuy(SAVE, id, function () { c2GenjiLearn(); })) c2GenjiLearn(); return; }
+}
 function c2GenjiMenu() { var S = c2Cyc(), patch = c2PatchLabel(), ch3 = typeof chN === 'function' && chN() === 3;
   if (ch3) {
     var b3 = [['Street Intel', function () { setTimeout(function () { c2Intel(); }, 0); }],
-      ['Learn a basic<small>' + GENJI_LEARN.cost + ' \u2726 each</small>', function () { setTimeout(c2GenjiLearn, 0); }],
+      ['Learn a basic', function () { setTimeout(c2GenjiLearn, 0); }],
       [patch, function () { setTimeout(c2Patch, 0); }],
       ['Conditioning (+2\u20134 max HP)', function () { setTimeout(function () { if (typeof c2CondAsk === 'function') c2CondAsk(); }, 0); }],
       ['Later', null]];
@@ -20926,7 +21000,7 @@ function c2GenjiMenu() { var S = c2Cyc(), patch = c2PatchLabel(), ch3 = typeof c
   }
   var open = c2LessonRows().filter(function (r) { return r.avail; });
   var btns = [['Evolve moves', function () { setTimeout(function () { if (root.ENH) { var o = trainOpt(); o.onBack = c2GenjiMenu; root.ENH.openEvo(SAVE, o); } }, 0); }, 'gmain'],
-    ['Learn a basic<small>' + GENJI_LEARN.cost + ' \u2726 each</small>', function () { setTimeout(c2GenjiLearn, 0); }, 'gmain']];
+    ['Learn a basic', function () { setTimeout(c2GenjiLearn, 0); }, 'gmain']];
   btns.push([patch, function () { setTimeout(c2Patch, 0); }, 'gmain']);
   open.forEach(function (r) { btns.push([r.n + ' \u00b7 Start', function () { setTimeout(function () { if (typeof c2LessonOffer === 'function') c2LessonOffer(r.id); }, 0); }, 'gmain']); });
   btns.push(['Later', null, 'glater']);
