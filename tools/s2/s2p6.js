@@ -884,6 +884,7 @@
     var k = room();
     if (k !== 'gc') { ['j', 'p', 'r'].forEach(function (q) { if (G_CAST[q]) { kill(G_CAST[q]); G_CAST[q] = null; } }); }
     if (k !== 'gcback' && G_CAST.jb) { kill(G_CAST.jb); G_CAST.jb = null; }
+    if (k === 'gcback' && !(qOn() && (stg() === 'met' || stg() === 'won'))) { if (G_CAST.jb) { kill(G_CAST.jb); G_CAST.jb = null; } sweepJin(); }
     function alive(s) { return s && s.el && s.el.parentNode; }
     if (k === 'gc') {
       if (!alive(G_CAST.p)) { G_CAST.p = npc('j6_prize', 225, 540, Math.PI / 2); }
@@ -893,6 +894,7 @@
     }
     if (k === 'gcback' && qOn() && stg() === 'met' && !alive(G_CAST.jb)) { G_CAST.jb = npc('j6_jin', 500, 420, Math.PI / 2); try { waddle(G_CAST.jb, 0, Math.PI / 2); } catch (e) {} }
   }
+  function sweepJin() { try { [].forEach.call(document.querySelectorAll('[data-npc="j6_jin"]'), function (el) { if (!G_CAST.j || el !== G_CAST.j.el) el.remove(); }); } catch (e) {} }
   P6.popGc = popGc; P6.G_CAST = G_CAST;
   function gcArrive() { var j = J(); whenFree(function () { if (room() !== 'gc') return;
     if (qOn() && stg() === 'izak') { lockIn(1); talk(pv(VO.gcJin), function () { lockIn(0); if (G_CAST.j) { kill(G_CAST.j); G_CAST.j = null; } setStg('met'); qStep(6); sv(); toastS('Journal: Jin\u2019s prize room, past the staff door.'); }); return; }
@@ -901,9 +903,9 @@
     var lines = pv(VO.gcBack); function go() { lockIn(0); startFight('gcback', ['mb2_game'], { bt: 'gcback', ctx: { flv: 8, mini: 'mb2_game', j6nm: '\u201cHigh-Score\u201d Jin' } }); }
     try { if (typeof bossEnt === 'function' && G_CAST.jb) { bossEnt('mb2_game', lines, go, { spr: G_CAST.jb }); return; } } catch (eB) { ev('world:s2p6:err:bent6:' + (eB && eB.message)); }
     talk(lines, go); }); }
-  FIGHT.gcback = { win: function () { setStg('won'); qStep(7); sv(); lockIn(1); talk(pv(VO.gcWon), function () { lockIn(0); if (G_CAST.jb) { kill(G_CAST.jb); G_CAST.jb = null; } toastS('Journal: take Jin\u2019s seal off the prize safe.'); }); }, lose: function () { } };
+  FIGHT.gcback = { win: function () { setStg('won'); qStep(7); sv(); lockIn(1); talk(pv(VO.gcWon), function () { lockIn(0); if (G_CAST.jb) { kill(G_CAST.jb); G_CAST.jb = null; } sweepJin(); toastS('Journal: take Jin\u2019s seal off the prize safe.'); }); }, lose: function () { } };
   function takeSeal() {
-    if (busy() || E().seal_game) return; var e = E(); lockIn(1);
+    if (busy() || dlgUp() || E().seal_game) return; var e = E(); lockIn(1);
     try { AU.play('place', { gain: 0.8 }); } catch (eA) {} try { AU.play('fire_whoosh', { gain: 0.6 }); } catch (eA2) {}
     e.seal_game = 1; var n = (typeof c2Seals === 'function') ? c2Seals() : 0;
     var f = (typeof C2S_FAC === 'object' && C2S_FAC.game) || 'neo', own = e.run_fac && f === e.run_fac;
