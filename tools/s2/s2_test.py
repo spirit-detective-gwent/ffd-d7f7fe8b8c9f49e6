@@ -394,11 +394,12 @@ async def main():
           SAVE.bond=SAVE.bond||{}; SAVE.bond.path='balanced';
           try { STORY.ensure(SAVE); } catch(e){}
           P3.setStg('gone'); st.q.cq2_s2_boat=8; P3.qClose();
+          try { if (root.FFF_S2P4 && root.FFF_S2P4.chainRepair) root.FFF_S2P4.chainRepair(); } catch(e){}
           var t = typeof c2LocksT==='function' ? (function(){var x=c2LocksT(); return x&&{lab:x.lab,loc:x.loc,x:x.x,y:x.y};})() : null;
-          return { q: st.q.cq2_s2_boat, stg: P3.stg(), pin: t, p4: st.q.cq2_s2_gar==null };
+          return { q: st.q.cq2_s2_boat, stg: P3.stg(), pin: t, p4: st.q.cq2_s2_gar };
         })()""")
         ok('compassionate walk closes the quest', walked and walked.get('q')==9, walked)
-        ok('after a close the pin is the quay garage, not an unbuilt Phase 4', walked and walked.get('pin') and 'garage' in str(walked['pin']).lower() and walked.get('p4'), walked)
+        ok('after a close the pin is the quay garage and Off Schedule can open', walked and walked.get('pin') and 'garage' in str(walked['pin']).lower() and walked.get('p4')==0, walked)
 
         # skip path: Lookout Corner already done (n13r === 'dep') does not soft-lock
         skip = await ev(pg, """(function(){
@@ -407,13 +408,119 @@ async def main():
           st.q.cq2_s2_boat=0; P3.setStg('open');
           /* play the skip the way a visit does */
           P3.setStg('skip'); st.q.cq2_s2_boat=8; P3.qClose();
+          try { if (root.FFF_S2P4 && root.FFF_S2P4.chainRepair) root.FFF_S2P4.chainRepair(); } catch(e){}
           var t = typeof c2LocksT==='function' ? (function(){var x=c2LocksT(); return x&&{lab:x.lab,loc:x.loc,x:x.x,y:x.y};})() : null;
           var soft = st.q.cq2_s2_boat!==9;
-          return { q: st.q.cq2_s2_boat, pin: t, soft: soft, dep: st.e.n13r, already: P3.alreadyClear && P3.alreadyClear() };
+          return { q: st.q.cq2_s2_boat, pin: t, soft: soft, dep: st.e.n13r, already: P3.alreadyClear && P3.alreadyClear(), p4: st.q.cq2_s2_gar };
         })()""")
         ok('Lookout-Corner-already-done is detected (n13r === dep)', skip and skip.get('already') and skip.get('dep')=='dep', skip)
         ok('skip path closes the quest and does not soft-lock', skip and skip.get('q')==9 and not skip.get('soft'), skip)
         ok('skip path moves the pin to the garage', skip and skip.get('pin') and 'garage' in str(skip['pin']).lower(), skip)
+
+        # -------- Phase 4 Off Schedule --------
+        src = INDEX.read_text(encoding='utf-8')
+        ok('S2P4 injected', 'FFF_S2P4' in src and 'cq2_s2_gar' in src)
+        ok('P4 painters in source', 'garSouth' in src and 'garInside' in src and 'battleGarage' in src and 'battleApproach' in src)
+        ok('Sada world sheets present', (INDEX.parent / 'world' / 'nq_sada_walk.webp').exists() and (INDEX.parent / 'world' / 'nq_sada_idle.webp').exists())
+        ok('Sada portraits present', (INDEX.parent / 'portraits' / 'sada_neutral.webp').exists() and (INDEX.parent / 'portraits' / 'sada_angry.webp').exists() and (INDEX.parent / 'portraits' / 'sada_calm.webp').exists())
+        ok('Nails Door Man win hook is unchanged', "e.baseOpen_bat = 1; e.guardGone_sento = 1" in src and 'doorWon' in src)
+
+        p4 = await ev(pg, """(function(){
+          var P4=root.FFF_S2P4, st=c2S();
+          if (P4 && P4.chainRepair) P4.chainRepair();
+          var BT=root.FFF_C2BT;
+          var gg = BT && BT.room && BT.room({ ctx: { s2gg: 1, dgk: 's2_gg_0', s2k: 's2_gg' } });
+          var ap = BT && BT.room && BT.room({ ctx: { s2ap: 1, dgk: 's2_ap_0', s2k: 's2_ap' } });
+          var t = typeof c2LocksT==='function' ? (function(){var x=c2LocksT(); return x&&{lab:x.lab,loc:x.loc,x:x.x,y:x.y};})() : null;
+          var tgt = P4 && P4.s2Tgt && P4.s2Tgt();
+          var openBefore = typeof c2LmOpen==='function' ? !!c2LmOpen('depot') : null;
+          var flagsBefore = { dep: !!st.e.baseOpen_dep, gone: !!st.e.guardGone_depot, bat: !!st.e.baseOpen_bat };
+          return {
+            p4: !!P4, art: P4&&P4.ART, q: st.q.cq2_s2_gar, stg: P4&&P4.stg&&P4.stg(),
+            gg: gg, ap: ap,
+            doorX: P4&&P4.GAR_DOOR&&P4.GAR_DOOR.at&&P4.GAR_DOOR.at[0],
+            doorY: P4&&P4.GAR_DOOR&&P4.GAR_DOOR.at&&P4.GAR_DOOR.at[1],
+            tgt: tgt && { lab: tgt.lab, loc: tgt.loc, x: tgt.x, y: tgt.y },
+            pin: t,
+            pt: typeof PT_PAINT!=='undefined' && PT_PAINT.nq_sada==='sada',
+            has: typeof PT_HAS!=='undefined' && PT_HAS.sada_neutral && PT_HAS.sada_angry && PT_HAS.sada_calm,
+            walk: typeof IMG!=='undefined' && !!IMG.nq_sada_walk,
+            painters: !!(root.FFF_S2P&&FFF_S2P.garSouth&&FFF_S2P.garInside&&FFF_S2P.battleGarage&&FFF_S2P.battleApproach),
+            noP5: st.q.cq2_s2_depot == null,
+            openBefore: openBefore,
+            flagsBefore: flagsBefore
+          };
+        })()""")
+        ok('S2P4 boots', p4 and p4.get('p4'), p4)
+        ok('Off Schedule auto-opens after Above the Boat is done', p4 and p4.get('q') == 0, p4)
+        ok('garage stage is open', p4 and p4.get('stg') == 'open', p4)
+        ok('pin moves to the quay garage or the depot approach', p4 and p4.get('tgt') and ('garage' in str(p4['tgt']).lower() or 'approach' in str(p4['tgt']).lower()), p4)
+        ok('garage door sits west of the locked depot door on the south quay', p4 and p4.get('doorX') and p4['doorX']>3700 and p4['doorX']<4180 and p4.get('doorY') and p4['doorY']>3600, p4)
+        ok('garage clash picks the dispatch battle room', p4 and p4.get('gg')=='c2_gg', p4)
+        ok('approach clash picks the depot-approach battle room', p4 and p4.get('ap')=='c2_ap', p4)
+        ok('P4 painters live', p4 and p4.get('painters'), p4)
+        ok('Sada portrait mapped', p4 and p4.get('pt') and p4.get('has'), p4)
+        ok('Sada walk sheet wired', p4 and p4.get('walk'), p4)
+        ok('Phase 5 quest is not opened', p4 and p4.get('noP5'), p4)
+        ok('depot door stays shut before the win', p4 and p4.get('openBefore') is False, p4)
+        ok('depot flags are unset before the win', p4 and p4.get('flagsBefore') and not p4['flagsBefore'].get('dep') and not p4['flagsBefore'].get('gone'), p4)
+
+        voices4 = {}
+        for path in ('fierce', 'strategic', 'balanced'):
+            lines = await ev(pg, f"""(function(){{
+              var raw=root.FFF_S2P4.VO.door['{path}'] || [];
+              return raw.map(function(L){{return L[0]+':'+L[1];}});
+            }})()""")
+            voices4[path] = lines or []
+        ok('Off Schedule door lines differ on all three paths',
+           voices4['fierce'] != voices4['strategic'] and voices4['strategic'] != voices4['balanced'] and voices4['fierce'] != voices4['balanced'], voices4)
+        ok('fierce goes through the dispatcher', any('through you' in (x or '').lower() or 'take the garage' in (x or '').lower() or 'the bay' in (x or '').lower() for x in voices4['fierce']), voices4['fierce'])
+        ok('strategic uses the missed freight / already late', any('already late' in (x or '').lower() or 'missed' in (x or '').lower() for x in voices4['strategic']), voices4['strategic'])
+        ok('compassionate asks him to stand aside', any('stand aside' in (x or '').lower() or 'run honest' in (x or '').lower() for x in voices4['balanced']), voices4['balanced'])
+        ok('compassionate still fights if he will not (Kaneda rule)', any('will not stand aside' in (x or '').lower() or 'stays mine' in (x or '').lower() for x in voices4['balanced']), voices4['balanced'])
+
+        # a loss does not open the door or stick the flags
+        loss = await ev(pg, """(function(){
+          var P4=root.FFF_S2P4, st=c2S();
+          st.e.baseOpen_dep=0; st.e.guardGone_depot=0;
+          st.q.cq2_s2_gar=0; P4.setStg('open');
+          /* simulate a lost fight: onFightEnd(false) with P4 ctx, flags must stay off */
+          try { if (typeof onFightEnd==='function') onFightEnd(false, { s2k: 's2_gg' }); } catch(e){}
+          return {
+            q: st.q.cq2_s2_gar,
+            dep: !!st.e.baseOpen_dep,
+            gone: !!st.e.guardGone_depot,
+            open: typeof c2LmOpen==='function' ? !!c2LmOpen('depot') : null,
+            bat: !!st.e.baseOpen_bat
+          };
+        })()""")
+        ok('a lost fight does not open the depot or stick the street', loss and loss.get('q')==0 and not loss.get('dep') and not loss.get('gone') and loss.get('open') is False, loss)
+
+        # win: flags set, door opens, Nails Door Man flags untouched, no Phase 5
+        win4 = await ev(pg, """(function(){
+          var P4=root.FFF_S2P4, st=c2S();
+          var batBefore = !!st.e.baseOpen_bat, sentoBefore = !!st.e.guardGone_sento;
+          st.q.cq2_s2_gar=8; P4.setStg('open');
+          P4.openDepot(); P4.qClose();
+          if (P4.chainRepair) P4.chainRepair();
+          var t = typeof c2LocksT==='function' ? (function(){var x=c2LocksT(); return x&&{lab:x.lab,loc:x.loc,x:x.x,y:x.y};})() : null;
+          return {
+            q: st.q.cq2_s2_gar, stg: P4.stg(),
+            dep: !!st.e.baseOpen_dep, gone: !!st.e.guardGone_depot,
+            open: typeof c2LmOpen==='function' ? !!c2LmOpen('depot') : null,
+            bat: !!st.e.baseOpen_bat, sento: !!st.e.guardGone_sento,
+            batSame: (!!st.e.baseOpen_bat)===batBefore,
+            sentoSame: (!!st.e.guardGone_sento)===sentoBefore,
+            pin: t,
+            p5: st.q.cq2_s2_depot==null
+          };
+        })()""")
+        ok('a win closes Off Schedule', win4 and win4.get('q')==9, win4)
+        ok('win sets baseOpen_dep and guardGone_depot', win4 and win4.get('dep') and win4.get('gone'), win4)
+        ok('depot door opens only after the win', win4 and win4.get('open') is True, win4)
+        ok('Nails Door Man flags are unchanged by the P4 win', win4 and win4.get('batSame') and win4.get('sentoSame'), win4)
+        ok('after the win the pin is the Subway Freight Depot', win4 and win4.get('pin') and 'depot' in str(win4['pin']).lower(), win4)
+        ok('Phase 5 is still not opened after the win', win4 and win4.get('p5'), win4)
 
         # no page errors
         ok('no page errors', not errs, errs[:4])
