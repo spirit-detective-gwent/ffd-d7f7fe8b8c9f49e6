@@ -27153,6 +27153,7 @@ function wfxTick() {
    * after Bando falls, snaps on a load / new game (SAVE.mb is a new object) and when going back (new game). pd is the puddle life: it
    * thins while the rain stops, then ripples keep slowing and fade out over ~45 s more. Everything off = nothing drawn but petals. */
   var tgt = minisLeft() === 0 ? 1 : 0;
+  if (X.tg !== tgt) { var tg0 = X.tg; X.tg = tgt; if (tg0 != null) { try { wMus(); } catch (eM) {} } } /* the grounds track changes once, with the usual slow fade (Hitman -> map_post) */
   if (X.cl == null || X.mbr !== SAVE.mb || tgt < X.cl) { X.cl = tgt; X.pdt = tgt ? 45 : 0; X.mbr = SAVE.mb; }
   else if (X.cl < tgt) X.cl = Math.min(tgt, X.cl + dt / 5);
   if (hold) return; /* v6.5.19: pause weather under the menu only; keep rain moving during cutscenes and dialogue */
