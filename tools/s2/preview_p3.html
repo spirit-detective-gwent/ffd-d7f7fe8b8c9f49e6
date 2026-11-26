@@ -1,0 +1,133 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Seal 2 Phase 3 — Above the Boat preview</title>
+<style>
+  body { margin: 0; background: #16121a; color: #f0e4c8; font: 14px/1.4 "Noto Sans CJK JP", sans-serif; }
+  h1 { font-size: 20px; margin: 16px 24px 4px; }
+  h2 { font-size: 15px; margin: 20px 24px 8px; color: #d8c8a0; }
+  p { margin: 0 24px 12px; max-width: 920px; opacity: .85; }
+  canvas { background: #0e0c12; margin: 8px 24px; image-rendering: auto; display: block; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 24px 16px; align-items: flex-start; }
+  .row canvas { margin: 0; }
+  .card { background: #221c28; padding: 8px; border-radius: 6px; }
+  .card label { display: block; font-size: 12px; margin-bottom: 4px; color: #c8b898; }
+  img.pt { width: 180px; height: 240px; object-fit: cover; background: #111; }
+</style>
+<h1>Seal 2 · Phase 3 · Above the Boat — art preview</h1>
+<p>Lookout façade on the east boardwalk above the flower boat (not on Minato-sō’s already-wired south overlay), a detailed 船宿 interior, two C2BT battle rooms (stairs / quay flank), and Kaji’s portrait next to his sprite. Preview only until self-review.</p>
+
+<h2>Façade</h2>
+<div class="row">
+  <div class="card"><label>船宿 lookout 360×220 — door on the boardwalk, lit windows, 船宿 sign</label><canvas id="boatSouth" width="360" height="220" style="width:720px;height:440px"></canvas></div>
+</div>
+
+<h2>Interior</h2>
+<div class="row">
+  <div class="card"><label>Lookout room 1280×900 — canal windows, radio desk, crates, cot, stairs</label><canvas id="boatLookout" width="1280" height="900" style="width:640px;height:450px"></canvas></div>
+  <div class="card"><label>Cleared (they walked / Lookout Corner already done)</label><canvas id="boatLookoutClear" width="1280" height="900" style="width:640px;height:450px"></canvas></div>
+</div>
+
+<h2>Battle rooms</h2>
+<div class="row">
+  <div class="card"><label>Lookout interior (Fierce / stairs)</label><canvas id="battleLookout" width="720" height="1280" style="width:360px;height:640px"></canvas></div>
+  <div class="card"><label>South quay (Strategic flank)</label><canvas id="battleQuay" width="720" height="1280" style="width:360px;height:640px"></canvas></div>
+</div>
+
+<h2>Side-by-side refs (Chiyo shop, Hase workshop, canal bridge)</h2>
+<div class="row">
+  <div class="card"><label>Chiyo’s shop (phase 1 wired)</label><img id="refChiyo" style="width:640px;height:auto;background:#111" alt="Chiyo shop"></div>
+  <div class="card"><label>Hase workshop v3</label><img id="refHase" style="width:640px;height:auto;background:#111" alt="Hase workshop"></div>
+  <div class="card"><label>Canal bridge battle v3</label><img id="refBridge" style="width:360px;height:auto;background:#111" alt="Bridge BG"></div>
+</div>
+
+<h2>Kaji — portrait and sprite</h2>
+<div class="row">
+  <div class="card"><label>neutral / angry / calm</label>
+    <img class="pt" src="portraits/kaji_neutral.webp" alt="kaji neutral">
+    <img class="pt" src="portraits/kaji_angry.webp" alt="kaji angry">
+    <img class="pt" src="portraits/kaji_calm.webp" alt="kaji calm">
+  </div>
+  <div class="card"><label>portrait next to sprite sheet</label><canvas id="sheet_kaji" width="900" height="480"></canvas></div>
+</div>
+
+<h2>Path-voice line cards</h2>
+<div class="row">
+  <div class="card"><label>Fierce</label><canvas id="line_fierce" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Strategic</label><canvas id="line_strategic" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Compassionate</label><canvas id="line_compassionate" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Skip path</label><canvas id="line_skip" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>After win</label><canvas id="line_win" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Kaji</label><canvas id="line_kaji" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+</div>
+
+<script src="c2bt_lib.js"></script>
+<script src="paint.js"></script>
+<script src="paint_p2.js"></script>
+<script src="paint_p3.js"></script>
+<script src="yk.js"></script>
+<script>
+(function () {
+  var P = window.FFF_S2P;
+  function ctx(id) { return document.getElementById(id).getContext('2d'); }
+  P.boatSouth(ctx('boatSouth'));
+  P.boatLookout(ctx('boatLookout'), false);
+  P.boatLookout(ctx('boatLookoutClear'), true);
+  P.battleLookout(ctx('battleLookout'));
+  P.battleQuay(ctx('battleQuay'));
+  ['fierce','strategic','compassionate','skip','win','kaji'].forEach(function (w) {
+    P.lineCardBoat(ctx('line_' + w), w, w);
+  });
+  document.getElementById('refChiyo').src = '/workspace/v6560-review/seal2/phase1/wired/02_interior_chiyo.png';
+  document.getElementById('refHase').src = '/workspace/v6560-review/seal2/phase2/v3/minaShop.png';
+  document.getElementById('refBridge').src = '/workspace/v6560-review/seal2/phase2/v3/battleBridge.png';
+
+  function load(src) {
+    return new Promise(function (res) {
+      var im = new Image();
+      im.onload = function () { res(im); };
+      im.onerror = function () { res(null); };
+      im.src = src;
+    });
+  }
+  function sheet(id, name) {
+    var g = ctx(id), c = g.canvas;
+    g.fillStyle = '#16121a'; g.fillRect(0, 0, c.width, c.height);
+    return Promise.all([
+      load('portraits/' + name + '_neutral.webp'),
+      load('sprites/' + name + '_idle.webp'),
+      load('sprites/' + name + '_walk.webp'),
+      load('sprites/' + name + '_map.webp'),
+      load('sprites/' + name + '_fig.webp')
+    ]).then(function (ims) {
+      var pt = ims[0], idle = ims[1], walk = ims[2], map = ims[3], fig = ims[4];
+      if (pt) g.drawImage(pt, 12, 20, 180, 240);
+      g.fillStyle = '#c8b898'; g.font = '12px sans-serif';
+      g.fillText('Kaji  ·  梶  ·  Masa’s lookout', 12, 14);
+      function strip(im, x, y, cols, label) {
+        if (!im) { g.fillStyle = '#44384a'; g.fillRect(x, y, 200, 140); g.fillStyle = '#c8b898'; g.fillText('(bake pending) ' + label, x + 8, y + 70); return; }
+        var cw = im.naturalWidth / (cols || 8), ch = im.naturalHeight / 4;
+        var i;
+        g.fillStyle = '#c8b898'; g.fillText(label, x, y - 4);
+        for (i = 0; i < 4; i++) {
+          g.drawImage(im, 0, i * ch, cw, ch, x + i * (cw + 8), y, cw, ch);
+        }
+      }
+      strip(idle || walk, 210, 36, 4, 'idle / walk col0');
+      strip(walk, 210, 230, 8, 'walk 4 facings');
+      if (map) {
+        var mw = map.naturalWidth / 4, mh = map.naturalHeight;
+        g.drawImage(map, 0, 0, mw, mh, 560, 36, mw, mh);
+        g.fillStyle = '#c8b898'; g.fillText('map', 560, 30);
+      }
+      if (fig) {
+        var fw = fig.naturalWidth, fh = fig.naturalHeight / 4;
+        g.drawImage(fig, 0, 0, fw, fh, 560, 200, fw, fh);
+        g.fillStyle = '#c8b898'; g.fillText('fig', 560, 194);
+      }
+    });
+  }
+  sheet('sheet_kaji', 'kaji').then(function () {
+    document.title = 'Seal 2 Phase 3 — ready';
+  });
+})();
+</script>

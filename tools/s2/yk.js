@@ -826,5 +826,12 @@
     face2: { eyes: 'soft', brow: 'soft', jaw: 'round', mouth: 'smile', mouthQ: 0.82, mouthW: 0.32, browW: 0.95, w: 0.9, eyeQ: 0.34, lash: 1, lips: '#c47878' },
     skin: '#f2c8ae', skinRe: 1, noScar: 1, clean: 1 };
 
+  /* v6.5.63 seal2 phase 3: Kaji, Masa's lookout at the Funayado. Punk proportions. */
+  SPEC.kaji = { base: 'punk', glove: 0, nozig: 1, noScar: 1, clean: 1, skinRe: 1, skin: '#c48a62',
+    bulk: 0.08, pal: { 3: tri('#1a1614'), 4: tri('#2a3858'), 5: tri('#c45a3a'), 6: tri('#243048'), 7: tri('#1a2028') },
+    pockets: 0.08, closeV: 0.35, stubble: 1, hair: 'tight', tight: 1, hairCol: '#1a1410', hairHi: '#3a2a22',
+    face2: { brow: 'flat', browW: 1.2, mouth: 'flat', jaw: 'pointed', w: 0.96, eyeQ: 0.38, mouthQ: 0.55 },
+    hands: 1, armsCol: '#2a3858', handsCol: '#c48a62' };
+
   root.FFF_YK = { SPEC: SPEC, paintCell: paintCell, paintSheet: paintSheet, tri: tri };
 })(window);
