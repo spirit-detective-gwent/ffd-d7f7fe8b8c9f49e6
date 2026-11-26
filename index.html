@@ -2121,20 +2121,42 @@ span.ashine::before{display:none}
 #wdlg.gtrain .snm{color:#1a3148}
 #matmove{position:fixed;left:50%;top:16%;transform:translateX(-50%);z-index:80;pointer-events:none;background:#1a3148;color:#e7e0d2;border-radius:12px;padding:8px 14px;font:800 16px system-ui;text-align:center}
 #matmove small{display:block;color:#d5e4f2;font:600 12px system-ui}
-/* v6563 genji-teach: ring-front cine (finite anims only) */
-#teachcard{position:fixed;left:50%;top:42%;z-index:82;pointer-events:none;width:150px;height:214px;transform:translate(-50%,24px) rotateY(88deg) scale(.84);opacity:0;transform-origin:50% 50%}
-#teachcard.go{animation:teachFlip .75s cubic-bezier(.2,.8,.2,1) forwards}
-#teachcard .tcface{position:absolute;inset:0;border-radius:14px;background:linear-gradient(180deg,#24202a,#16141c);color:#e7e0d2;border:3px solid #e7e0d2;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:14px 10px 12px;text-align:center;font:800 17px/1.2 system-ui,sans-serif;box-shadow:0 12px 28px rgba(0,0,0,.5)}
-#teachcard .tcface b{display:block}
-#teachcard .tcface small{display:block;margin-top:8px;font:700 11px/1.2 system-ui,sans-serif;letter-spacing:.08em;text-transform:uppercase;opacity:.88;color:#d5e4f2}
-#teachcard .tcring{position:absolute;inset:7px;border-radius:10px;border:1px solid rgba(255,255,255,.16);pointer-events:none}
-#teachcard .tcglow{position:absolute;inset:-20px;border-radius:24px;pointer-events:none;opacity:0}
-#teachcard.gold .tcface{border-color:#f0c14a;box-shadow:0 0 0 2px #7a4e12,0 12px 28px rgba(0,0,0,.5),0 0 30px rgba(224,178,58,.8)}
-#teachcard.gold .tcglow{background:radial-gradient(circle,rgba(255,214,90,.58),rgba(224,178,58,0) 70%);animation:teachGlow .9s ease-out forwards}
-#teachcard.teal .tcface{border-color:#5ee0d4;box-shadow:0 0 0 2px #145a58,0 12px 28px rgba(0,0,0,.5),0 0 30px rgba(62,200,200,.85)}
-#teachcard.teal .tcglow{background:radial-gradient(circle,rgba(110,240,230,.58),rgba(46,180,180,0) 70%);animation:teachGlow .9s ease-out forwards}
-@keyframes teachFlip{0%{transform:translate(-50%,28px) rotateY(88deg) scale(.8);opacity:0}42%{transform:translate(-50%,-6px) rotateY(0deg) scale(1.05);opacity:1}100%{transform:translate(-50%,-14px) rotateY(0deg) scale(1);opacity:1}}
-@keyframes teachGlow{0%{opacity:0;transform:scale(.7)}40%{opacity:1;transform:scale(1)}100%{opacity:.5;transform:scale(1.08)}}
+/* v6563 genji-teach v2: Genji's shadow lesson (first time) + two-hit repeat. Finite animations only, nothing loops. */
+#world .tcshadow{filter:brightness(0) invert(1) sepia(1) hue-rotate(168deg) saturate(7) brightness(1.15) drop-shadow(0 0 5px rgba(160,230,255,1)) drop-shadow(0 0 16px rgba(110,160,255,.85))!important;opacity:0;transition:opacity .45s ease-out;pointer-events:none}
+#world .tcshadow.on{opacity:.84}
+#world .tclit{z-index:9100!important}
+#world .tcshadow.tclit{z-index:9110!important}
+#teachfocus{position:absolute;left:0;top:0;pointer-events:none;z-index:9000;opacity:0;transition:opacity .8s ease}
+#world .tcfx{position:absolute;pointer-events:none;z-index:9200;left:0;top:0}
+#world .tcmote{width:5px;height:5px;margin:-2px 0 0 -2px;border-radius:50%;background:#d8f4ff;box-shadow:0 0 8px 2px rgba(130,200,255,.9)}
+#world .tcshard{width:4px;height:13px;margin:-6px 0 0 -2px;background:linear-gradient(#fff,#9ad8ff);box-shadow:0 0 8px 2px rgba(140,210,255,.95);border-radius:1px}
+#world .tcshard.f{background:linear-gradient(#fff6cf,#ff9a1a);box-shadow:0 0 8px 2px rgba(255,150,40,.95)}
+#world .tcshard.t{background:linear-gradient(#f0ffff,#2fd8e8);box-shadow:0 0 8px 2px rgba(47,216,232,.95)}
+#world .tcring{width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;border:2px solid #e4f8ff;box-shadow:0 0 12px rgba(150,220,255,.9)}
+#world .tcpool{border-radius:50%;background:radial-gradient(ellipse,rgba(150,220,255,.75),rgba(110,160,255,.28) 50%,rgba(110,160,255,0) 72%);z-index:9050}
+#tcstage{position:fixed;inset:0;z-index:84;pointer-events:none;overflow:hidden}
+#tcstage .tcflash{position:absolute;inset:0;opacity:0}
+#tcstage .tccard{position:absolute;left:0;top:0;width:168px;height:236px;transform-origin:50% 50%;opacity:0}
+#tcstage .tccard>.card{position:absolute;left:0;top:0;margin:0}
+#tcstage .tcedge{position:absolute;left:0;top:-30px;width:26px;height:296px;margin-left:-13px;border-radius:13px;opacity:0;mix-blend-mode:screen}
+#tcstage.gold .tcedge{background:linear-gradient(90deg,rgba(255,154,26,0),rgba(255,210,90,.95) 45%,#fff6cf 50%,rgba(255,154,26,.9) 60%,rgba(255,90,20,0));box-shadow:0 0 22px 8px rgba(255,150,40,.7)}
+#tcstage.teal .tcedge{background:linear-gradient(90deg,rgba(31,154,146,0),rgba(127,239,255,.95) 45%,#f0ffff 50%,rgba(47,216,232,.9) 60%,rgba(31,154,146,0));box-shadow:0 0 22px 8px rgba(47,216,232,.7)}
+#tcstage .tcbrush{position:absolute;overflow:visible}
+#tcstage .tcember{position:absolute;left:0;top:0;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%}
+#tcstage.gold .tcember{background:radial-gradient(circle,#fff6cf 0,#ffcf40 40%,rgba(255,120,20,0) 72%);box-shadow:0 0 6px 2px rgba(255,140,30,.75)}
+#tcstage.teal .tcember{background:radial-gradient(circle,#f0ffff 0,#7fefff 40%,rgba(31,154,146,0) 72%);box-shadow:0 0 6px 2px rgba(47,216,232,.75)}
+#tcstage .tcplate{position:absolute;inset:0;border-radius:14px;opacity:0}
+#tcstage.gold .tcplate{background:radial-gradient(ellipse at 50% 42%,#fffbe8 0,rgba(255,214,110,.92) 38%,rgba(255,140,30,.82) 72%,rgba(190,70,10,.9) 100%);box-shadow:0 0 0 3px rgba(255,236,170,.9),0 0 22px 8px rgba(255,150,40,.8)}
+#tcstage.teal .tcplate{background:radial-gradient(ellipse at 50% 42%,#f4ffff 0,rgba(140,240,255,.92) 38%,rgba(47,200,220,.82) 72%,rgba(20,110,120,.9) 100%);box-shadow:0 0 0 3px rgba(200,250,255,.9),0 0 22px 8px rgba(47,216,232,.8)}
+#tcstage .tchalo{position:absolute;left:-46px;top:-46px;right:-46px;bottom:-46px;border-radius:40px;opacity:0}
+#tcstage.gold .tchalo{background:radial-gradient(ellipse,rgba(255,206,80,.6),rgba(255,150,30,.18) 55%,rgba(255,150,30,0) 72%)}
+#tcstage.teal .tchalo{background:radial-gradient(ellipse,rgba(110,240,230,.6),rgba(47,216,232,.18) 55%,rgba(47,216,232,0) 72%)}
+#tcstage.gold .tccard>.card{box-shadow:0 0 0 4px var(--rc),0 0 0 6px var(--rd),0 0 26px 6px rgba(255,180,50,.85),0 6px 14px rgba(0,0,0,.7)}
+#tcstage.teal .tccard>.card{box-shadow:0 0 0 4px var(--rc),0 0 0 6px var(--rd),0 0 26px 6px rgba(47,216,232,.85),0 6px 14px rgba(0,0,0,.7)}
+#tcstage .tccap{position:absolute;left:0;right:0;text-align:center;font:900 13px/1 system-ui,sans-serif;letter-spacing:.22em;text-transform:uppercase;opacity:0;text-shadow:0 2px 0 #000,0 0 10px rgba(0,0,0,.6)}
+#tcstage.gold .tccap{color:#ffd36a}
+#tcstage.teal .tccap{color:#7fefff}
+#tcstage .tccap small{display:block;margin-top:6px;font:700 11px/1 system-ui,sans-serif;letter-spacing:.12em;color:#e7e0d2}
 body.teachcine #whud,body.teachcine #wcred,body.teachcine #wquest,body.teachcine #wcomment,body.teachcine #wban,body.teachcine #warrow,body.teachcine .wsign{visibility:hidden!important}
 
 #wpause.ph .eqacts{display:flex;gap:8px;margin:8px 0}
@@ -14702,13 +14724,24 @@ function matIntro(done) { var p = matPath(), steps = p === 'fierce' ? [{ ms: 160
 function matDrill(done) { ev('world:mat:drill'); matRun([{ ms: 700, go: matGuard }, { ms: 1500, go: matHits }, { ms: 500, go: matGuard }], done); }
 function matGenjiHits(g) { var frames = [2, 0, 2, 4, 2], i = 0, tok = W.matTok; if (typeof g5Genji === 'function') g5Genji(g, [0, 2, 3, 5, 6], 280);
   (function step() { if (W.matTok !== tok) return; var f = frames[i]; matPose(W.ryo, 'ryo_walk', f, 2, 0, 0); if (f === 2 && i < frames.length - 1) AU.play('whoosh', { gain: 0.32 }); if (f === 0 || f === 4) { AU.play('hit', { gain: 0.55, rate: 1.15 }); if (typeof g5Spark === 'function') g5Spark(300, 292, 0); } if (++i < frames.length) setTimeout(step, 280); })(); }
-/* v6563 genji-teach: first-time cine in front of the boxing ring, then a 1s repeat. Gold = evolve, teal = Learn a basic. No always-running loops. */
-function teachMarks() { return { sx: 510, sy: 725, gx: 640, gy: 725, cx: 575, cy: 700 }; }
+/* v6563 genji-teach v2. First time: "Genji's shadow lesson" in front of the ring. The room dims, a glowing shadow of Genji steps out of him
+ * (the Alley Cat shadow-form look from the Nails lesson), throws the move, the student mirrors it face to face, and on the last hit the
+ * shadow shatters and the REAL card (UI.cardEl: the card's own art and frame) bursts out of it, is burned in by a fox-fire brushstroke with
+ * embers, then settles down toward the hand. Gentle push-in on the pair, slow ease back. Repeat: same marks, a two-hit exchange (Genji's
+ * combo, then the student's), a small real card with a gold (evolve) or teal (Learn a basic) glow, ~2.3 s. Tap skips. Every animation is
+ * finite (WAAPI / rAF guarded by a token); nothing keeps running after the beat. */
+function teachMarks() { return { sx: 522, sy: 728, gx: 650, gy: 728, hx: 596, cx: 586, cy: 700 }; }
 function teachWho(opt) { var w = (opt && opt.who) || (SAVE && SAVE.act) || 'ryo'; return w === 'aoi' ? 'aoi' : 'ryo'; }
 function teachStu(who) { return who === 'aoi' ? W.aoi : W.ryo; }
 function teachPartner(who) { return who === 'aoi' ? W.ryo : W.aoi; }
-function teachPoseReady(s, who) { if (who === 'aoi') matPose(s, 'aoi_rdy', 0, 1, 0, 0); else matPose(s, 'ryo_rdy', 0, 2, 0, 0); }
-function teachPoseStrike(s, who, fr) { if (who === 'aoi') matPose(s, 'aoi_walk', fr, 1, 0, 0); else matPose(s, 'ryo_walk', fr, 2, 0, 0); }
+function teachCardOf(move, who, opt) { var C = (root.ENGINE && root.ENGINE.cards && root.ENGINE.cards()) || {}, id = opt && opt.card, pre = who === 'aoi' ? 'a_' : 'r_';
+  if (id && C[id]) return C[id]; var best = null; Object.keys(C).forEach(function (k) { var c = C[k]; if (c && c.n === move && (!best || k.indexOf(pre) === 0)) best = c; }); return best; }
+/* the student's strike poses: the Alley Cat strike sheets (ryo_amb / aoi_amb), drawn facing right = toward Genji on the right mark */
+var TEACH_POSE = { ryo: { guard: [1, 0], a: [1, 1], b: [1, 2], big: [1, 3] }, aoi: { guard: [0, 0], a: [0, 2], b: [0, 4], big: [0, 3] } };
+var TEACH_GF = { guard: 0, a: 2, b: 5, big: 7, set: 3 }; /* kurogane_spar: 0 guard, 2 jab out, 5 hook, 7 double straight */
+function teachPose(s, who, k) { if (!s || !s.el) return; var P = TEACH_POSE[who][k] || TEACH_POSE[who].guard;
+  if (!s.amb || !s.amb.opn) { s.dir = 2; if (!opnPose(s, who, false)) return; } s.amb.row = P[0]; opnFr(s, P[1]); }
+function teachGPose(g, k) { if (typeof g5Genji === 'function') g5Genji(g, [TEACH_GF[k] != null ? TEACH_GF[k] : k], 60000, null, true); }
 function teachCamTo(x, y, ms) {
   var a = [W.cam.x, W.cam.y], b = camAt(x, y), t = 0, dur = Math.max(0.05, (ms || 1000) / 1000);
   W.pan = { teach: 1, run: function (dt) {
@@ -14718,111 +14751,176 @@ function teachCamTo(x, y, ms) {
     if (u >= 1) this.hold = 1;
   } };
 }
-function teachCard(mode, title, sub) {
-  var old = document.getElementById('teachcard'); if (old) old.remove();
-  var el = document.createElement('div'); el.id = 'teachcard'; el.className = 'teachcard ' + (mode === 'learn' ? 'teal' : 'gold');
-  el.innerHTML = '<i class="tcglow"></i><div class="tcface"><i class="tcring"></i><b></b><small></small></div>';
-  el.querySelector('b').textContent = title || (mode === 'learn' ? 'A basic' : 'Evolved');
-  el.querySelector('small').textContent = sub || (mode === 'learn' ? 'Learn a basic' : 'Evolved');
-  document.body.appendChild(el);
-  void el.offsetWidth; el.classList.add('go');
-  return el;
-}
-function teachWalk(s, x, y, who, ms, tok, done) {
-  if (!s) { if (done) done(); return; }
-  var x0 = s.x, y0 = s.y, t0 = performance.now(), dx = x - x0, dy = y - y0;
-  if (Math.hypot(dx, dy) < 8) { s.x = x; s.y = y; s.dir = 2; place(s, 0); teachPoseReady(s, who); if (done) done(); return; }
-  s.dir = dx < 0 ? 1 : (dx > 0 ? 2 : s.dir); s.v = 0; s.moving = false;
-  var n = (typeof SHC === 'object' && SHC[(who === 'aoi' ? 'aoi' : 'ryo') + '_walk']) || 8;
-  (function tick() {
-    if (W.teachTok !== tok) return;
-    var u = Math.min(1, (performance.now() - t0) / Math.max(60, ms || 900));
-    s.x = x0 + dx * u; s.y = y0 + dy * u;
-    teachPoseStrike(s, who, Math.min(n - 1, (u * n * 1.2) | 0) % n);
-    if (u < 1) requestAnimationFrame(tick);
-    else { s.x = x; s.y = y; s.dir = 2; place(s, 0); teachPoseReady(s, who); if (done) done(); }
-  })();
-}
+/* push-in on #wv (the surface the Alley Cat sting zooms). Driven per frame for the length of the beat only (no loop after it);
+ * the release is always slow. */
+function teachZoom(z, ms, ease, at, tr) { var wv = document.getElementById('wv'); if (!wv || !ambStingOK()) return null; var z0 = 1, t0 = [0, 0], cs;
+  try { cs = wv.style; z0 = parseFloat(cs.scale) || 1; if (cs.translate) { var m = cs.translate.split(' '); t0 = [parseFloat(m[0]) || 0, parseFloat(m[1]) || 0]; } } catch (e) {}
+  if (at) wv.style.transformOrigin = at[0] + 'px ' + at[1] + 'px'; var t1 = tr || [0, 0], E = ease || teachEase, st = performance.now();
+  if (W.tcZ) W.tcZ.cancel(); var Z = { dead: 0, onfinish: null, cancel: function () { this.dead = 1; } }; W.tcZ = Z;
+  (function tick() { if (Z.dead) return; var u = Math.min(1, (performance.now() - st) / Math.max(1, ms)), e = E(u);
+    wv.style.scale = (z0 + (z - z0) * e).toFixed(4); wv.style.translate = (t0[0] + (t1[0] - t0[0]) * e).toFixed(1) + 'px ' + (t0[1] + (t1[1] - t0[1]) * e).toFixed(1) + 'px';
+    if (u < 1) requestAnimationFrame(tick); else if (Z.onfinish) Z.onfinish(); })();
+  return Z; }
+function teachEase(u) { return -(Math.cos(Math.PI * u) - 1) / 2; }
+function teachEaseOut(u) { return 1 - Math.pow(1 - u, 3); }
+/* push in on the pair and bring them toward the middle (y = fy of the view), clamped so the room always fills the screen */
+function teachPush(stu, g, z, ms, ease, fy) { var wv = document.getElementById('wv'); if (!wv) return null; var r = wv.getBoundingClientRect(), a = teachRect(stu, 0.5), b = teachRect(g, 0.5), p = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], o = teachWvAt(p);
+  var S = W.S || 1, sr = stu.el.getBoundingClientRect(), ox = a[0] - r.left - S * stu.x, oy = sr.bottom - r.top - S * stu.y, L = ox, R = ox + S * MW, T0 = oy, B = oy + S * MH;
+  function cl(t, lo, hi) { return lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, t)); }
+  var tx = cl(r.width / 2 - o[0], r.width - o[0] - z * (R - o[0]), -o[0] - z * (L - o[0])), ty = cl(r.height * fy - o[1], r.height - o[1] - z * (B - o[1]), -o[1] - z * (T0 - o[1]));
+  return teachZoom(z, ms, ease, o, [tx, ty]); }
+function teachZoomOff() { var wv = document.getElementById('wv'); if (W.tcZ) { W.tcZ.cancel(); W.tcZ = null; } if (wv) { wv.style.transformOrigin = ''; wv.style.scale = ''; wv.style.translate = ''; } }
+function teachGo(s, x, y, ms, tok, done) { if (!s || !s.el) { if (done) done(); return; }
+  var x0 = s.x, y0 = s.y, t0 = performance.now(), px = x0, py = y0;
+  if (Math.hypot(x - x0, y - y0) < 6) { s.x = x; s.y = y; place(s, 0); if (done) done(); return; }
+  (function tick() { if (W.teachTok !== tok) return; var u = Math.min(1, (performance.now() - t0) / ms), e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+    s.x = x0 + (x - x0) * e; s.y = y0 + (y - y0) * e; var mv = Math.hypot(s.x - px, s.y - py), dx = s.x - px, dy = s.y - py; px = s.x; py = s.y;
+    if (s.walker) { if (mv > 0.01) s.dir = faceDir(s.dir, dx, dy); animWalk(s, u < 1 ? Math.max(mv, 0.6) : 0); } else { if (mv > 0.01) s.fa = Math.atan2(dy, dx); place(s, 0); waddle(s, u < 1 ? Math.max(mv, 0.6) : 0, s.fa); }
+    if (u < 1) requestAnimationFrame(tick); else { s.x = x; s.y = y; if (s.walker) animWalk(s, 0); else waddle(s, 0, s.fa); place(s, 0); if (done) done(); } })(); }
+function teachRect(s, fy) { var r = s && s.el && s.el.getBoundingClientRect(); return r ? [r.left + r.width / 2, r.top + r.height * (fy == null ? 0.45 : fy)] : [innerWidth / 2, innerHeight / 2]; }
+function teachWvAt(p) { var wv = document.getElementById('wv'), r = wv ? wv.getBoundingClientRect() : { left: 0, top: 0 }; return [p[0] - r.left, p[1] - r.top]; }
 function matGenjiDrill(move, done, opt) {
   opt = opt || {};
-  var g = W.c2n && W.c2n.genji, who = teachWho(opt), mode = opt.mode === 'learn' ? 'learn' : 'evo';
+  var g = W.c2n && W.c2n.genji, who = teachWho(opt), mode = opt.mode === 'learn' ? 'learn' : 'evo', col = mode === 'learn' ? 'teal' : 'gold';
   var first = opt.first != null ? !!opt.first : !SAVE.genjiTeach;
-  var stu = teachStu(who), par = teachPartner(who), M = teachMarks();
-  ev('world:mat:genji:' + (move || '') + ':' + mode + ':' + who + ':' + (first ? 'first' : 'rep'));
-  var cap = document.createElement('b'); cap.id = 'matmove'; cap.innerHTML = (move || (mode === 'learn' ? 'A basic' : 'Evolved')) + '<small>' + (mode === 'learn' ? 'Learn a basic' : 'Evolve') + ' \u00b7 Genji</small>'; document.body.appendChild(cap);
-  var hid = par && par.el; if (hid) hid.style.visibility = 'hidden';
-  var timers = [], tok = (W.teachTok = (W.teachTok | 0) + 1), dead = false;
+  var stu = teachStu(who), par = teachPartner(who), M = teachMarks(), card = teachCardOf(move, who, opt);
+  ev('world:mat:genji:' + (move || '') + ':' + mode + ':' + who + ':' + (first ? 'first' : 'rep') + (card ? ':' + card.id : ':nocard'));
+  var timers = [], tok = (W.teachTok = (W.teachTok | 0) + 1), dead = false, sh = null, fx = [], stage = null, focus = null;
   function later(ms, fn) { timers.push(setTimeout(function () { if (W.teachTok === tok && !dead) fn(); }, ms)); }
-  function scrub() { var c = document.getElementById('matmove'); if (c) c.remove(); var k = document.getElementById('teachcard'); if (k) k.remove(); var sk = document.getElementById('matskip'); if (sk) sk.remove(); }
-  function end() { if (hid) hid.style.visibility = ''; if (done) done(); }
-  if (!stu || !stu.el || !g || !g.el) { scrub(); end(); return; }
-  var home = { sx: stu.x, sy: stu.y, sd: stu.dir, gx: g.x, gy: g.y, gd: g.dir };
+  function wfx(cls, x, y, css) { var e = document.createElement('i'); e.className = 'tcfx ' + cls; e.style.left = x + 'px'; e.style.top = y + 'px'; if (css) e.style.cssText += ';' + css; layer.appendChild(e); fx.push(e); return e; }
+  function sfx(cls, css) { var e = document.createElement('i'); e.className = cls; if (css) e.style.cssText = css; stage.appendChild(e); return e; }
+  function A(e, k, o) { try { return e.animate(k, o); } catch (x) { return null; } }
+  function play(n, o) { try { AU.play(n, o); } catch (e) {} }
+  if (!stu || !stu.el || !g || !g.el) { if (done) done(); return; }
+  try { if (who === 'ryo') opnRyoSheet(); } catch (eW) {} /* warm the upright punch sheet (built once) */
+  var home = { sx: stu.x, sy: stu.y, sd: stu.dir, gx: g.x, gy: g.y, gd: g.dir, gfa: g.fa };
   var prev = document.getElementById('matskip'); if (prev) prev.remove();
-  var skip = document.createElement('div'); skip.id = 'matskip'; skip.style.cssText = 'position:fixed;inset:0;z-index:75;background:transparent'; document.body.appendChild(skip);
-  W.cut = 1; W.path = []; W.dlg = false; stu.v = 0; document.body.classList.add('teachcine');
+  var old = document.getElementById('tcstage'); if (old) old.remove();
+  var skip = document.createElement('div'); skip.id = 'matskip'; skip.style.cssText = 'position:fixed;inset:0;z-index:86;background:transparent'; document.body.appendChild(skip);
+  stage = document.createElement('div'); stage.id = 'tcstage'; stage.className = col; document.body.appendChild(stage);
+  W.cut = 1; W.path = []; W.dlg = false; stu.v = 0; stu.moving = false; document.body.classList.add('teachcine');
+  function lit(on) { [stu, g, sh].forEach(function (s) { if (s && s.el) s.el.classList.toggle('tclit', !!on); }); }
+  function focusOn() { focus = document.createElement('i'); focus.id = 'teachfocus'; focus.style.cssText = 'left:-400px;top:-400px;width:2400px;height:2000px;background:radial-gradient(ellipse 340px 260px at ' + (M.cx + 400) + 'px ' + (M.sy - 40 + 400) + 'px,rgba(6,8,26,.18),rgba(3,4,16,.76) 100%)'; layer.appendChild(focus); fx.push(focus); void focus.offsetWidth; focus.style.opacity = '1'; lit(1); }
+  function focusOff() { if (focus) focus.style.opacity = '0'; }
   function finish(skipped) {
     if (dead || W.teachTok !== tok) return; dead = true; W.teachTok++;
     timers.forEach(clearTimeout); timers = [];
-    matClear(stu); if (typeof g5GenjiOff === 'function') g5GenjiOff(g);
-    scrub();
+    lit(0); try { opnPoseEnd(stu); } catch (e0) {} if (typeof g5GenjiOff === 'function') g5GenjiOff(g);
+    if (sh) { try { celLoopOff(sh); } catch (e1) {} if (sh.el && sh.el.parentNode) sh.el.remove(); sh.gone = 1; sh = null; }
+    fx.forEach(function (e) { try { e.remove(); } catch (e2) {} }); fx = [];
+    if (stage && stage.parentNode) stage.remove(); if (skip.parentNode) skip.remove();
+    if (skipped) { var zo = W.tcZ ? teachZoom(1, 480, teachEase) : null; if (zo) zo.onfinish = function () { if (W.tcZ === zo) teachZoomOff(); }; else teachZoomOff(); } else if (W.tcZ) { var z = W.tcZ; z.onfinish = null; setTimeout(function () { if (W.tcZ === z) teachZoomOff(); }, 60); }
     if (!opt.stay) {
       stu.x = home.sx; stu.y = home.sy; stu.dir = home.sd; place(stu, 0);
-      g.x = home.gx; g.y = home.gy; g.dir = home.gd; place(g, 0);
+      g.x = home.gx; g.y = home.gy; g.dir = home.gd; waddle(g, 0, home.gfa); place(g, 0);
       if (W.pan && W.pan.teach) W.pan = null;
       document.body.classList.remove('teachcine');
-      if (hid) hid.style.visibility = '';
-    }
+    } else { c2Face(stu, g.x, g.y); place(stu, 0); }
     W.cut = opt.stay ? 1 : 0;
-    if (!skipped && !opt.quiet) AU.play('pl_heal', { gain: 0.32 });
+    if (!skipped && !opt.quiet) play('pl_heal', { gain: 0.32 });
     ev('world:mat:end:' + (skipped ? 'skip' : 'play') + ':' + mode);
-    if (!SAVE.genjiTeach) { SAVE.genjiTeach = 1; try { save(); } catch (e) {} }
+    if (!SAVE.genjiTeach) { SAVE.genjiTeach = 1; try { save(); } catch (e3) {} }
     if (done) done();
   }
   skip.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); finish(true); }, true);
-  /* first: walk into place in front of the ring with a gentle cam ease. repeat: already on the marks, 1s beat. */
-  var walkMs = first ? 1000 : 0, stanceAt = first ? 1100 : 0, strikeAt = first ? 2100 : 220, cardAt = first ? 3200 : 520, doneAt = first ? 4700 : 1000;
-  if (first) teachCamTo(M.cx, M.cy, 1100);
-  else teachCamTo(M.cx, M.cy, 280);
-  if (walkMs) {
-    teachWalk(stu, M.sx, M.sy, who, 960, tok, null);
-    (function walkG() {
-      var x0 = g.x, y0 = g.y, t0 = performance.now();
-      g.dir = 1;
-      (function tick() {
-        if (W.teachTok !== tok) return;
-        var u = Math.min(1, (performance.now() - t0) / 960);
-        g.x = x0 + (M.gx - x0) * u; g.y = y0 + (M.gy - y0) * u; place(g, 0);
-        if (u < 1) requestAnimationFrame(tick);
-        else { g.x = M.gx; g.y = M.gy; g.dir = 1; place(g, 0); }
-      })();
-    })();
-  } else { stu.x = M.sx; stu.y = M.sy; stu.dir = 2; place(stu, 0); g.x = M.gx; g.y = M.gy; g.dir = 1; place(g, 0); teachPoseReady(stu, who); }
-  later(stanceAt, function () {
-    teachPoseReady(stu, who);
-    if (typeof g5Genji === 'function') g5Genji(g, first ? [0, 1, 0] : [0, 1], first ? 220 : 140);
-    AU.play('whoosh', { gain: 0.22 });
-  });
-  later(strikeAt, function () {
-    if (typeof g5Genji === 'function') g5Genji(g, [2, 3, 5], first ? 180 : 120);
-    var hits = first ? [0, 200, 420] : [0, 180];
-    hits.forEach(function (h, i) {
-      later(strikeAt + h - stanceAt >= 0 ? h : h, function () {
-        if (W.teachTok !== tok) return;
-        teachPoseStrike(stu, who, i % 2 === 0 ? 2 : 4);
-        AU.play(i ? 'hit' : 'whoosh', { gain: i ? 0.55 : 0.3, rate: i ? 1.15 : 1 });
-        if (i && typeof g5Spark === 'function') g5Spark((M.sx + M.gx) / 2 - 10, M.sy - 70, !!first && i > 1);
-      });
-    });
-    /* the later() calls above were scheduled from "now" relative to strikeAt already being inside later(strikeAt). Nest properly: */
-  });
-  later(cardAt, function () {
-    teachPoseReady(stu, who);
-    if (typeof g5Genji === 'function') g5Genji(g, [6], 200);
-    teachCard(mode, move || (mode === 'learn' ? 'A basic' : 'Evolved'), mode === 'learn' ? 'Learn a basic' : 'Evolved');
-    AU.play('buff', { gain: 0.55 });
-  });
-  later(doneAt, function () { finish(false); });
-  ev('world:mat:run:' + doneAt + ':' + (first ? 'first' : 'rep'));
+  if (par && par.el && par !== stu) { try { c2Face(par, M.hx, M.sy); } catch (eP) {} }
+  /* the real card, in the stage (screen space). k = final scale. */
+  function cardBox(k) { var w = document.createElement('div'); w.className = 'tccard'; var c = null;
+    try { if (card) { c = UI.cardEl(Object.assign({ u: 'tc' }, card), 'big'); w.appendChild(c); } } catch (eC) { c = null; }
+    if (!c) { var f = document.createElement('div'); f.className = 'card big rar-common'; f.innerHTML = '<div class="name">' + (move || '') + '</div>'; w.appendChild(f); c = f; }
+    stage.appendChild(w); return { w: w, c: c }; }
+  function embers(cx, cy, n, spread, rise, dl) { for (var i = 0; i < n; i++) { var e = sfx('tcember'), ang = Math.random() * 6.283, d = spread * (0.35 + Math.random() * 0.65), x = cx + Math.cos(ang) * d * 0.6, y = cy + Math.sin(ang) * d * 0.5, s = 0.6 + Math.random() * 0.9;
+      A(e, [{ transform: 'translate(' + x + 'px,' + y + 'px) scale(' + s + ')', opacity: 0 }, { opacity: 1, offset: 0.12 }, { transform: 'translate(' + (x + (Math.random() - 0.5) * 50) + 'px,' + (y - rise * (0.5 + Math.random() * 0.7)) + 'px) scale(' + (s * 0.3) + ')', opacity: 0 }], { duration: 700 + Math.random() * 700, delay: (dl || 0) + Math.random() * 420, easing: 'cubic-bezier(.2,.6,.3,1)', fill: 'both' }); } }
+  function flash(p, a, ms) { var f = sfx('tcflash', 'background:radial-gradient(circle at ' + p[0] + 'px ' + p[1] + 'px,rgba(255,252,236,' + a + '),' + (col === 'teal' ? 'rgba(80,230,240,.22)' : 'rgba(255,170,60,.22)') + ' 45%,rgba(0,0,0,0) 75%)'); A(f, [{ opacity: 0 }, { opacity: 1, offset: 0.18 }, { opacity: 0 }], { duration: ms || 520, easing: 'ease-out', fill: 'both' }); }
+  function spark(s, big) { /* world coords of the strike point between them */ if (typeof g5Spark === 'function') g5Spark((stu.x + (sh || g).x) / 2 + (s === stu ? -14 : 14), M.sy - 40, !!big); }
+  if (first) {
+    /* ---------------- FIRST TIME: Genji's shadow lesson ---------------- */
+    var T = { walk: 0, set: 950, zoom: 950, focus: 1150, form: 1450, step: 1900, h1: 2500, h2: 2830, big: 3260, card: 3330, settle: 5250, back: 5000, end: 7000 };
+    teachCamTo(M.cx, M.cy, 1000);
+    teachGo(stu, M.sx, M.sy, 900, tok, function () { teachPose(stu, who, 'guard'); });
+    teachGo(g, M.gx, M.gy, 900, tok, function () { waddle(g, 0, Math.PI); place(g, 0); });
+    later(T.zoom, function () { teachPush(stu, g, 1.6, 1900, teachEase, 0.64); });
+    later(T.set, function () { teachPose(stu, who, 'guard'); teachGPose(g, 'set'); play('whoosh', { gain: 0.18 }); });
+    later(T.focus, function () { focusOn(); play('whoosh_c', { gain: 0.3 }); if (root.cuMusic) try { root.cuMusic(true, 0.08, 600); } catch (eM) {} });
+    later(T.form, function () { /* the shadow steps out of Genji */
+      sh = c2Npc('kurogane', M.gx - 4, M.gy + 1, Math.PI); sh.el.classList.add('tcshadow', 'tclit'); teachGPose(sh, 'guard'); place(sh, 0); void sh.el.offsetWidth; sh.el.classList.add('on');
+      var hx = g.x - 6, hy = g.y - SPH * 0.7; for (var i = 0; i < 12; i++) { var m = wfx('tcmote', hx, hy), jx = (Math.random() - 0.5) * 40, jy = (Math.random() - 0.5) * 50;
+        A(m, [{ transform: 'translate(0,0) scale(.5)', opacity: 0 }, { opacity: 1, offset: 0.25 }, { transform: 'translate(' + (M.hx + 8 - hx + jx) + 'px,' + (jy + 20) + 'px) scale(1.1)', opacity: 0 }], { duration: 760 + i * 40, delay: i * 45, easing: 'cubic-bezier(.3,.1,.3,1)', fill: 'both' }); }
+      var pl = wfx('tcpool', M.hx - 34, M.sy - 9, 'width:72px;height:22px'); A(pl, [{ opacity: 0, transform: 'scale(.4)' }, { opacity: 1, transform: 'scale(1)' }], { duration: 700, easing: 'ease-out', fill: 'forwards' });
+      teachGo(sh, M.hx + 12, M.sy + 1, 520, tok, function () { if (sh) teachGPose(sh, 'guard'); }); play('whoosh_b', { gain: 0.3 }); });
+    later(T.step, function () { if (sh) teachGPose(sh, 'set'); teachPose(stu, who, 'guard'); });
+    later(T.h1, function () { if (sh) teachGPose(sh, 'a'); play('whoosh', { gain: 0.32 }); later(110, function () { teachPose(stu, who, 'a'); play('hit', { gain: 0.42, rate: 1.25 }); spark(stu, 0); }); });
+    later(T.h1 + 230, function () { if (sh) teachGPose(sh, 'guard'); teachPose(stu, who, 'guard'); });
+    later(T.h2, function () { if (sh) teachGPose(sh, 'b'); play('whoosh', { gain: 0.34 }); later(110, function () { teachPose(stu, who, 'b'); play('hit', { gain: 0.48, rate: 1.15 }); spark(stu, 0); }); });
+    later(T.h2 + 250, function () { if (sh) teachGPose(sh, 'guard'); teachPose(stu, who, 'guard'); });
+    later(T.big - 120, function () { if (sh) teachGPose(sh, 'big'); teachPose(stu, who, 'big'); play('whoosh_b', { gain: 0.4 }); });
+    later(T.big, function () { /* IMPACT: the shadow shatters, the card bursts out of it */
+      var p = sh ? teachRect(sh, 0.42) : teachRect(g, 0.42); play('fin_p2', { gain: 0.55 }); play('hit', { gain: 0.6, rate: 0.95 }); spark(stu, 1);
+      if (sh) { var px = sh.x, py = sh.y - SPH * 0.45; sh.el.style.visibility = 'hidden';
+        for (var i = 0; i < 18; i++) { var an = Math.random() * 6.283, d = 40 + Math.random() * 80, e = wfx('tcshard' + (i % 3 === 0 ? (col === 'teal' ? ' t' : ' f') : ''), px, py);
+          A(e, [{ transform: 'translate(0,0) rotate(' + (an * 57) + 'deg) scale(1)', opacity: 1 }, { transform: 'translate(' + Math.cos(an) * d + 'px,' + (Math.sin(an) * d * 0.7 + 10) + 'px) rotate(' + (an * 57 + 200) + 'deg) scale(.4)', opacity: 0 }], { duration: 520 + Math.random() * 260, easing: 'cubic-bezier(.1,.7,.3,1)', fill: 'forwards' }); }
+        var w = wfx('tcring', px, py); A(w, [{ transform: 'scale(.2)', opacity: 1 }, { transform: 'scale(2.8)', opacity: 0 }], { duration: 560, easing: 'ease-out', fill: 'forwards' }); }
+      flash(p, 0.62, 560); burnIn(p); });
+    later(T.big + 380, function () { teachPose(stu, who, 'guard'); teachGPose(g, 'guard'); });
+    later(T.back, function () { focusOff(); lit(0); teachZoom(1, 1900, teachEase); if (root.cuMusic) try { root.cuMusic(false); } catch (eM2) {} });
+    later(T.back + 500, function () { try { opnPoseEnd(stu); } catch (eE) {} c2Face(stu, M.gx, M.gy); if (typeof g5GenjiOff === 'function') g5GenjiOff(g); waddle(g, 0, Math.PI); place(g, 0); });
+    later(T.end, function () { finish(false); });
+    function burnIn(p) { /* the real card: shatters out of the shadow, a fox-fire brushstroke burns it in, embers; settles toward the hand */
+      var B = cardBox(1), CW = 168, CH = 236, fx0 = innerWidth / 2, fy0 = Math.round(innerHeight * 0.34), x0 = p[0] - CW / 2, y0 = p[1] - CH / 2, X = fx0 - CW / 2, Y = fy0 - CH / 2;
+      var cap = sfx('tccap', 'top:' + (Y + CH + 22) + 'px'); cap.innerHTML = (mode === 'learn' ? 'New move learned' : 'Move evolved') + '<small>Genji\u2019s shadow lesson</small>';
+      var halo = document.createElement('i'); halo.className = 'tchalo'; B.w.insertBefore(halo, B.c); var plate = document.createElement('i'); plate.className = 'tcplate'; B.w.insertBefore(plate, B.c);
+      A(plate, [{ opacity: 1 }, { opacity: 1, offset: 0.55 }, { opacity: 0 }], { duration: 1000, easing: 'ease-in', fill: 'both' }); /* the card flies out as a burning blank, the stroke burns its face in */
+      A(B.w, [{ transform: 'translate(' + x0 + 'px,' + y0 + 'px) scale(.16) rotate(-14deg)', opacity: 0 }, { opacity: 1, offset: 0.2 }, { transform: 'translate(' + X + 'px,' + (Y - 8) + 'px) scale(1.04) rotate(2deg)', opacity: 1, offset: 0.72 }, { transform: 'translate(' + X + 'px,' + Y + 'px) scale(1) rotate(0deg)', opacity: 1 }], { duration: 620, easing: 'cubic-bezier(.16,.84,.3,1)', fill: 'forwards' });
+      /* burn-in: the card is revealed behind a slanted fire edge that sweeps left to right */
+      A(B.c, [{ clipPath: 'polygon(-40% 0%,-2% 0%,-32% 100%,-40% 100%)' }, { clipPath: 'polygon(0% 0%,132% 0%,102% 100%,0% 100%)' }], { duration: 540, delay: 260, easing: 'cubic-bezier(.4,0,.3,1)', fill: 'both' });
+      A(B.c, [{ filter: 'brightness(1.9) saturate(.6)' }, { filter: 'brightness(1.9) saturate(.6)', offset: 0.45 }, { filter: 'brightness(1) saturate(1)' }], { duration: 1100, delay: 300, easing: 'ease-out', fill: 'both' });
+      var edge = sfx('tcedge'); A(edge, [{ transform: 'translate(' + (X - 10) + 'px,' + Y + 'px) rotate(13deg)', opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 1, offset: 0.8 }, { transform: 'translate(' + (X + CW + 30) + 'px,' + Y + 'px) rotate(13deg)', opacity: 0 }], { duration: 600, delay: 290, easing: 'cubic-bezier(.4,0,.3,1)', fill: 'both' });
+      for (var i = 0; i < 6; i++) embers(X + CW * (i / 5), Y + CH * 0.5, 5, 90, 120, 300 + i * 90);
+      /* the brushstroke: one wet fox-fire stroke across the card, drawn then dried away */
+      var ns = 'http://www.w3.org/2000/svg', sv = document.createElementNS(ns, 'svg'), cA = col === 'teal' ? ['#f0ffff', '#7fefff', '#1f9a92'] : ['#fff6cf', '#ffcf40', '#ff7a10'];
+      sv.setAttribute('class', 'tcbrush'); sv.setAttribute('width', CW + 120); sv.setAttribute('height', CH + 80); sv.setAttribute('viewBox', '0 0 ' + (CW + 120) + ' ' + (CH + 80)); sv.style.left = (X - 60) + 'px'; sv.style.top = (Y - 40) + 'px';
+      sv.innerHTML = '<defs><linearGradient id="tcbg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="' + cA[2] + '" stop-opacity="0"/><stop offset=".25" stop-color="' + cA[2] + '"/><stop offset=".6" stop-color="' + cA[1] + '"/><stop offset="1" stop-color="' + cA[0] + '"/></linearGradient></defs>' +
+        '<path d="M18 ' + (CH + 46) + ' C 70 ' + (CH - 20) + ', 120 ' + (CH * 0.62) + ', 170 ' + (CH * 0.44) + ' S 250 ' + (CH * 0.08) + ', ' + (CW + 104) + ' 22" fill="none" stroke="url(#tcbg)" stroke-width="30" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" style="filter:drop-shadow(0 0 8px ' + cA[1] + ')"/>' +
+        '<path d="M30 ' + (CH + 30) + ' C 84 ' + (CH - 30) + ', 128 ' + (CH * 0.58) + ', 176 ' + (CH * 0.42) + ' S 248 ' + (CH * 0.1) + ', ' + (CW + 96) + ' 30" fill="none" stroke="' + cA[0] + '" stroke-width="5" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" opacity=".9"/>';
+      stage.appendChild(sv); var P2 = sv.querySelectorAll('path');
+      A(P2[0], [{ strokeDashoffset: 100, strokeWidth: 30 }, { strokeDashoffset: 0, strokeWidth: 30, offset: 0.4 }, { strokeDashoffset: 0, strokeWidth: 22, offset: 0.62 }, { strokeDashoffset: -100, strokeWidth: 6 }], { duration: 1100, delay: 260, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' });
+      A(P2[1], [{ strokeDashoffset: 100 }, { strokeDashoffset: 0, offset: 0.42 }, { strokeDashoffset: -100 }], { duration: 1100, delay: 300, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' });
+      later(300, function () { play('whoosh_c', { gain: 0.35 }); });
+      later(720, function () { play('buff', { gain: 0.55 }); play('deal', { gain: 0.5 }); flash([fx0, fy0], 0.35, 420); embers(fx0, fy0, 14, 110, 150, 0); });
+      A(halo, [{ opacity: 0, transform: 'scale(.6)' }, { opacity: 1, transform: 'scale(1)', offset: 0.3 }, { opacity: 0.55, transform: 'scale(1.06)' }], { duration: 1200, delay: 650, easing: 'ease-out', fill: 'both' });
+      A(cap, [{ opacity: 0, transform: 'translateY(8px)' }, { opacity: 1, transform: 'translateY(0)' }], { duration: 380, delay: 860, easing: 'ease-out', fill: 'both' });
+      /* settle toward the hand: down and small, with a short ember trail */
+      later(T.settle - T.big, function () { play('place', { gain: 0.6 }); var hx = fx0 - CW / 2, hy = innerHeight - 70 - CH / 2;
+        A(cap, [{ opacity: 1 }, { opacity: 0 }], { duration: 260, fill: 'forwards' });
+        A(B.w, [{ transform: 'translate(' + X + 'px,' + Y + 'px) scale(1)', opacity: 1 }, { transform: 'translate(' + X + 'px,' + (Y - 10) + 'px) scale(1.02)', opacity: 1, offset: 0.18 }, { transform: 'translate(' + hx + 'px,' + hy + 'px) scale(.26) rotate(4deg)', opacity: 0.95, offset: 0.86 }, { transform: 'translate(' + hx + 'px,' + (hy + 16) + 'px) scale(.22) rotate(4deg)', opacity: 0 }], { duration: 820, easing: 'cubic-bezier(.5,0,.6,1)', fill: 'forwards' });
+        later(560, function () { embers(fx0, innerHeight - 70, 10, 50, 70, 0); }); });
+    }
+  } else {
+    /* ---------------- REPEAT: a two-hit exchange on the same marks, then a small real-card glow ---------------- */
+    var R = { gA: 240, gB: 490, sA: 780, sB: 1030, card: 1200, back: 1440, end: 2480 };
+    if (W.pan && W.pan.teach && W.pan.hold) {} else teachCamTo(M.cx, M.cy, 260);
+    stu.x = M.gx - 86; stu.y = M.sy; place(stu, 0); g.x = M.gx; g.y = M.gy; waddle(g, 0, Math.PI); place(g, 0); /* closer than the lesson marks: a real exchange */
+    teachPose(stu, who, 'guard'); teachGPose(g, 'guard');
+    later(280, function () { teachPush(stu, g, 1.55, 620, teachEaseOut, 0.6); }); /* after the short camera settle, so the push is framed on where the pair really is */
+    /* Genji's combo: jab, hook; the student keeps the guard up */
+    later(R.gA, function () { teachGPose(g, 'a'); play('whoosh', { gain: 0.26 }); later(90, function () { play('hit', { gain: 0.4, rate: 1.3 }); spark(g, 0); }); });
+    later(R.gB, function () { teachGPose(g, 'b'); play('whoosh', { gain: 0.28 }); later(90, function () { play('hit', { gain: 0.44, rate: 1.2 }); spark(g, 0); }); });
+    later(R.gB + 200, function () { teachGPose(g, 'guard'); });
+    /* the student's answer: the same two beats back */
+    later(R.sA, function () { teachPose(stu, who, 'a'); play('whoosh', { gain: 0.3 }); later(80, function () { play('hit', { gain: 0.48, rate: 1.15 }); spark(stu, 0); }); });
+    later(R.sA + 180, function () { teachPose(stu, who, 'guard'); });
+    later(R.sB, function () { teachPose(stu, who, 'big'); play('whoosh_b', { gain: 0.32 }); later(80, function () { play('hit', { gain: 0.55, rate: 1.05 }); spark(stu, 1); }); });
+    later(R.sB + 240, function () { teachPose(stu, who, 'guard'); teachGPose(g, 'set'); });
+    later(R.card, function () { var a = teachRect(stu, 0.0), b = teachRect(g, 0.0), B = cardBox(0.5), CW = 168, CH = 236, k = 0.56, cx = (a[0] + b[0]) / 2, cy = Math.min(a[1], b[1]) - CH * k / 2 - 18, X = cx - CW / 2, Y = cy - CH / 2;
+      var halo = document.createElement('i'); halo.className = 'tchalo'; B.w.insertBefore(halo, B.c);
+      A(B.w, [{ transform: 'translate(' + X + 'px,' + (Y + 30) + 'px) scale(' + (k * 0.6) + ')', opacity: 0 }, { transform: 'translate(' + X + 'px,' + (Y - 4) + 'px) scale(' + (k * 1.06) + ')', opacity: 1, offset: 0.3 }, { transform: 'translate(' + X + 'px,' + Y + 'px) scale(' + k + ')', opacity: 1, offset: 0.42 }, { transform: 'translate(' + X + 'px,' + (Y - 6) + 'px) scale(' + k + ')', opacity: 1, offset: 0.78 }, { transform: 'translate(' + X + 'px,' + (Y + 40) + 'px) scale(' + (k * 0.6) + ')', opacity: 0 }], { duration: 1050, easing: 'cubic-bezier(.25,.8,.3,1)', fill: 'forwards' });
+      A(halo, [{ opacity: 0 }, { opacity: 1, offset: 0.3 }, { opacity: 0.6, offset: 0.75 }, { opacity: 0 }], { duration: 1050, fill: 'both' });
+      A(B.c, [{ filter: 'brightness(1.8)' }, { filter: 'brightness(1)', offset: 0.4 }, { filter: 'brightness(1)' }], { duration: 1050, fill: 'both' });
+      embers(cx, cy, 10, 60, 70, 60); play('buff', { gain: 0.45 }); });
+    later(R.back, function () { teachZoom(1, 1020, teachEase); });
+    later(R.end, function () { finish(false); });
+  }
+  ev('world:mat:run:' + (first ? 7000 : 2480) + ':' + (first ? 'first' : 'rep'));
 }
 function matEnding(done) { var p = matPath(), steps = p === 'fierce' ? [{ ms: 1400, go: matBump }, { ms: 1200, go: matPump }] : p === 'strategic' ? [{ ms: 900, go: matNod }, { ms: 1000, go: matPoint }, { ms: 700, go: matGuard }] : p === 'balanced' ? [{ ms: 1600, go: matBow }, { ms: 900, go: matGuard }] : [{ ms: 900, go: matNod }, { ms: 800, go: matGuard }]; ev('world:mat:ending:' + (p || 'neutral')); matRun(steps, done); }
 function matEnd(done) { if (!W.matSeen) { if (done) done(); return; } W.matSeen = 0; if (!(W.inside && W.inside.id === 'train')) { if (done) done(); return; } matEnding(done); }
