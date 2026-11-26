@@ -120,8 +120,10 @@ async def t2(pg):
     # each option, each non-base choice
     dres = [(v, (await build(pg, diff=v))['foeStr']) for v in ['weak', 'normal', 'strong', 'max']]
     ok('T2 diff weak/strong/max/normal', all(a == b for a, b in dres), dres)
+    ok('T2 Classic preset preselects the current Bond path (not a Keep button)', await ev(pg, "FFF_NG.base().bond")==='strategic' and await ev(pg, "FFF_NG.fresh().bond")==='reset')
     for v in ['fierce', 'strategic', 'balanced']:
         b = await build(pg, bond=v); ok(f'T2 bond {v}', b['bond']['path'] == v and b['bond']['px'] == 500)
+    b = await build(pg, bond='reset'); ok('T2 bond Reset: path and points cleared, so Ch1 can choose again', (b['bond'] or {}).get('path') in (None, '') and (b['bond'] or {}).get('px', 0) == 0 and (b['bond'] or {}).get('picks') in (None, {}) and not (b['bond'] or {}).get('lock'), b['bond'])
     b = await build(pg, cards='fresh'); ok('T2 cards fresh: starter deck (no upgrades), Aoi reset too', b['cards'][0]['lp'] == {} and b['cards'][0]['enh'] == [] and len(b['cards']) > 0 and not (b['chars'].get('aoi') or {}).get('cards'), (b['cards'][0], b['chars'].get('aoi')))
     ok('T2 cards fresh keeps essence/yen/gear', b['ess'] == 55 and b['items'] == 777 and b['gear']['of'] == {'sukajan': 1})
     b = await build(pg, enh='fresh'); ok('T2 enhancements fresh: upgrades off everywhere, essence refunded', all(c['lp'] == {} and c['enh'] == [] for c in b['cards']) and b['sigLv'] == 0 and b['lp'] == {} and b['chars']['aoi']['sigLv'] == 0 and b['ess'] > 55, (b['ess'], b['sigLv']))
@@ -138,7 +140,7 @@ async def t2(pg):
     ok('T2 gang reset leaves Genji techniques alone', eq(b['c2les'], fx['c2les']))
     b = await build(pg, rep='reset'); ok('T2 crew rep reset: neutral', b['crewRep'] == {'arc': 0, 'neo': 0, 'bat': 0, 'dep': 0})
     b = await ev(pg, "JSON.parse(JSON.stringify(FFF_NG.build(SAVE,FFF_NG.fresh())))")
-    ok('T2 Fresh Start preset: everything reset, Codex stays', b['items'] == 0 and b['ess'] == 0 and b['gsk'] in (None, {}) and b['c2les'] in (None, {}) and b['bond']['path'] == 'balanced' and b['bond']['px'] == 0 and b['cx'] == fx['cx'] and b['tips'] == fx['tips'] and b['gear']['of'] == {} and b['crewRep'] == {'arc': 0, 'neo': 0, 'bat': 0, 'dep': 0} and b['heal'] == [], b['gsk'])
+    ok('T2 Fresh Start preset: everything reset, Codex stays', b['items'] == 0 and b['ess'] == 0 and b['gsk'] in (None, {}) and b['c2les'] in (None, {}) and not (b['bond'] or {}).get('path') and (b['bond'] or {}).get('px', 0) == 0 and b['cx'] == fx['cx'] and b['tips'] == fx['tips'] and b['gear']['of'] == {} and b['crewRep'] == {'arc': 0, 'neo': 0, 'bat': 0, 'dep': 0} and b['heal'] == [], b['gsk'])
     ok('T2 settings survive (binds, text size, ...)', eq(b['binds'], fx['binds']) and b['txtSize'] == fx['txtSize'])
     ok('T2 ngBuild does not touch the live save', await ev(pg, "SAVE.items===777&&SAVE.ngp===1&&SAVE.gsk.alley===1"))
 
@@ -219,6 +221,18 @@ async def t7(p):
     ok('T7 options screen lists all 12 options', rows == ['Difficulty', 'Bond path', 'Cards', 'Enhancements', 'Spirit essences', 'Accessories', 'Items & ingredients', 'Yen', 'Ryo & Aoi’s level', 'Genji’s techniques', 'Gang skills', 'Crew rep'], rows)
     txt = await ev(pg, "document.getElementById('ngplus').innerText")
     ok("T7 label says Compassionate, not Balanced", 'Compassionate' in txt and 'Balanced' not in txt)
+    bondBtns = json.loads(await ev(pg, "JSON.stringify([].slice.call(document.querySelectorAll('#ngplus .ngrow.ng2x2 button')).map(function(e){return [e.textContent,e.classList.contains('on'),e.getAttribute('data-v')]}))"))
+    ok('T7 Bond path is Reset / Fierce / Strategic / Compassionate, Classic preselects the current path', [b[0] for b in bondBtns]==['Reset','Fierce','Strategic','Compassionate'] and [b[2] for b in bondBtns if b[1]]==['strategic'], bondBtns)
+    await ev(pg, "document.querySelector('#ngplus [data-pre=fresh]').click()"); await pg.wait_for_timeout(200)
+    onFresh = await ev(pg, "document.querySelector('#ngplus .ngrow.ng2x2 button.on').getAttribute('data-v')")
+    modeF = await ev(pg, "v640NgMode()")
+    ok('T7 Fresh Start selects Bond Reset', onFresh=='reset' and modeF=='fresh', (onFresh, modeF))
+    await ev(pg, "document.querySelector('#ngplus [data-pre=classic]').click()"); await pg.wait_for_timeout(200)
+    await ev(pg, "document.querySelector('#ngplus .ngrow.ng2x2 [data-v=reset]').click()"); await pg.wait_for_timeout(200)
+    modeC = await ev(pg, "v640NgMode()")
+    onR = await ev(pg, "document.querySelector('#ngplus .ngrow.ng2x2 button.on').getAttribute('data-v')")
+    ok('T7 changing Bond to Reset switches Classic to Custom', modeC=='custom' and onR=='reset', (modeC, onR))
+    await ev(pg, "document.querySelector('#ngplus [data-pre=classic]').click()"); await pg.wait_for_timeout(200)
     box = '#ngplus'
     for i, y in enumerate([0, 700, 1400, 2100]):
         await ev(pg, f"document.getElementById('ngplus').scrollTop={y}"); await pg.wait_for_timeout(200)
@@ -241,16 +255,37 @@ async def t8(p):
     await pg.evaluate("document.querySelector('#ngplus [data-a=review]').click()"); await pg.wait_for_timeout(300)
     await pg.evaluate("document.querySelector('#ngplus [data-a=start]').click()"); await pg.wait_for_timeout(4000)
     s = json.loads(await ev(pg, "JSON.stringify({ngp:SAVE.ngp,on:W.on,ch:SAVE.chapter,items:SAVE.items,gsk:SAVE.gsk,bond:SAVE.bond&&SAVE.bond.path,ess:SAVE.ess,cx:SAVE.cx,intro:SAVE.intro,scr:W.scr})"))
-    ok('T8 title -> New Game+ -> Fresh Start: world entered, run reset, Codex kept', s['ngp'] == 2 and s['on'] and s['ch'] == 1 and s['items'] == 0 and not s['gsk'] and s['bond'] == 'balanced' and s['ess'] == 0 and s['cx'].get('tip_howto') == 1, s)  # intro may add more tip_* entries after the start
+    ok('T8 title -> New Game+ -> Fresh Start: world entered, run reset, Codex kept', s['ngp'] == 2 and s['on'] and s['ch'] == 1 and s['items'] == 0 and not s['gsk'] and not s['bond'] and s['ess'] == 0 and s['cx'].get('tip_howto') == 1, s)  # intro may add more tip_* entries after the start
     await pg.screenshot(path=str(SHOTS / 'title_ngp_start.png'))
     ok('T8 no page errors (title start)', not errs, errs[:3]); await b.close()
+
+async def t9(p):
+    """A Bond Reset NG+ run gets a path assigned the usual way in Chapter One (the courtyard first pick)."""
+    errs = []; b, pg = await newpage(p, errs); await boot(pg); await ev(pg, FIXTURE_JS)
+    await ev(pg, "(function(){var o=FFF_NG.base();o.bond='reset';FFF_NG.start(o);return 1})()")
+    await pg.wait_for_timeout(2500)
+    pre = json.loads(await ev(pg, "JSON.stringify({path:SAVE.bond&&SAVE.bond.path,px:SAVE.bond&&SAVE.bond.px,lock:!!(SAVE.bond&&SAVE.bond.lock),ngp:SAVE.ngp})"))
+    ok('T9 after Reset start: no path, no points, unlocked', not pre['path'] and pre['px']==0 and not pre['lock'] and pre['ngp']==2, pre)
+    # the intro's first Bond pick: FFF_BOND auto-answers, same hook the tests use
+    got = json.loads(await ev(pg, """(function(){
+      root.FFF_BOND='fierce';
+      var out={};
+      try {
+        bondAsk('first', function(L){ out.lines=L&&L.length; });
+      } catch (e) { out.err=String(e&&e.message||e); }
+      var B=STORY.bond(SAVE);
+      out.path=B.path; out.px=B.px|0; out.lock=!!B.lock; out.first=B.picks&&B.picks.first; out.askOpen=!!(document.getElementById('wdlg')&&document.getElementById('wdlg').classList.contains('on'));
+      return JSON.stringify(out);
+    })()"""))
+    ok('T9 Reset run: the Ch1 first pick assigns Fierce and locks it, the same as a new game', got.get('path')=='fierce' and got.get('first')=='fierce' and got.get('lock') and got.get('px',0)>=0 and not got.get('err'), got)
+    ok('T9 no page errors (Reset path assign)', not errs, errs[:3]); await b.close()
 
 async def main():
     serve(PORT, INDEX.parent)
     async with async_playwright() as p:
         errs = []; b, pg = await newpage(p, errs); await boot(pg); await ev(pg, FIXTURE_JS)
         await t1(pg); await t2(pg); await t6(pg); await t3(pg, errs); await b.close()
-        await t4(p, None); await t5(p); await t7(p); await t8(p)
+        await t4(p, None); await t5(p); await t7(p); await t8(p); await t9(p)
     bad = [r for r in RES if not r[0]]
     print(f'\n{len(RES) - len(bad)}/{len(RES)} passed'); sys.exit(1 if bad else 0)
 asyncio.run(main())

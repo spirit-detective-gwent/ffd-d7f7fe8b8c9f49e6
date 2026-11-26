@@ -24371,11 +24371,15 @@ function ngSkillReset(S, group) { (NG_SKILLS[group] || []).forEach(function (st)
 function ngOpt(d) { d.keys = d.keys || []; NG_OPTS.push(d); ngKeep(d.keys); return d; }
 function ngChars(S) { return [S].concat(Object.keys(S.chars || {}).map(function (k) { return S.chars[k]; }).filter(Boolean)); }
 function ngFoeNow() { var cur = (root.FFF_UI && root.FFF_UI.ST && root.FFF_UI.ST.set && root.FFF_UI.ST.set.foeStr) || 'normal'; return (cur === 'weak' || cur === 'strong' || cur === 'max') ? cur : 'normal'; }
+function ngBondNow() { var p = SAVE && SAVE.bond && SAVE.bond.path; return (p === 'fierce' || p === 'strategic' || p === 'balanced') ? p : 'reset'; } /* Classic NG+ preselects the current path; no path (or a bad one) is Reset */
 ngKeep(['cx', 'cxNew', 'cxItem', 'cxFood', 'cxSeen', 'sodaSeen', 'gseen', 'tips', 'tipsV', 'icard', 'journalLog', 'craft', 'n9craft', 'phBag', 'phMig', 'bagUp', 'wins', 'losses', 'essV', 'enhIntro']); /* Codex, tutorial tips, taught recipes, bag size, counters: always stay */
 ngOpt({ k: 'diff', sec: 'STORY &amp; CHALLENGE', title: 'Difficulty', base: ngFoeNow, fresh: 'normal', keepV: 'normal', ch: [['weak', 'Weaker'], ['normal', 'Normal'], ['strong', 'Stronger'], ['max', 'Strongest']],
   rv: { weak: 'Weaker', normal: 'Normal', strong: 'Stronger', max: 'Strongest' }, apply: function (S, v) { S.foeStr = v || 'normal'; } });
-ngOpt({ k: 'bond', sec: 'STORY &amp; CHALLENGE', title: 'Bond path', base: 'keep', fresh: 'balanced', ch: [['keep', 'Keep'], ['fierce', 'Fierce'], ['strategic', 'Strategic'], ['balanced', 'Compassionate']],
-  rv: { keep: 'Kept', fierce: 'Fierce', strategic: 'Strategic', balanced: 'Compassionate' }, keys: ['bond'], apply: function (S, v) { if (v && v !== 'keep') { S.bond = S.bond || { px: 0, picks: {} }; S.bond.path = v; } } });
+ngOpt({ k: 'bond', sec: 'STORY &amp; CHALLENGE', title: 'Bond path', base: ngBondNow, fresh: 'reset', keepV: ngBondNow, ch: [['reset', 'Reset'], ['fierce', 'Fierce'], ['strategic', 'Strategic'], ['balanced', 'Compassionate']],
+  rv: { reset: 'Reset — the new run will choose', fierce: 'Fierce', strategic: 'Strategic', balanced: 'Compassionate' }, keys: ['bond'], apply: function (S, v) {
+    if (v === 'reset') { S.bond = { path: null, px: 0, picks: {} }; }
+    else if (v === 'fierce' || v === 'strategic' || v === 'balanced') { S.bond = S.bond || { px: 0, picks: {} }; S.bond.path = v; }
+  } });
 ngOpt({ k: 'cards', sec: 'DECK &amp; CARDS', title: 'Cards', base: 'keep', fresh: 'fresh', ch: [['keep', 'Keep collection'], ['fresh', 'Fresh starter deck']], rv: { keep: 'Kept', fresh: 'Fresh starter deck' },
   keys: ['deck', 'own', 'cards', 'nk', 'chars'], apply: function (S, v) { if (v === 'fresh') { ngChars(S).forEach(function (C) { C.deck = null; C.own = null; C.cards = null; C.nk = 0; }); if (STORY && STORY.ensure) STORY.ensure(S); } } });
 ngOpt({ k: 'enh', sec: 'DECK &amp; CARDS', title: 'Enhancements', base: 'keep', fresh: 'fresh', ch: [['keep', 'Keep'], ['fresh', 'Fresh']], rv: { keep: 'Kept', fresh: 'Fresh' },
@@ -24412,7 +24416,7 @@ function ngBuild(old, o) {
   Object.keys(NG_KEEP).forEach(function (k) { if (S[k] !== undefined) N[k] = S[k]; });
   N.foeStr = S.foeStr || 'normal'; N.ngp = (old.ngp | 0) + 1;
   Object.keys(N.chars || {}).forEach(function (k) { var C = N.chars[k]; if (C) { C.gouki = 0; C.sp = 0; } });
-  if (N.bond && typeof N.bond === 'object') { N.bond.picks = {}; delete N.bond.ask; }
+  if (N.bond && typeof N.bond === 'object') { N.bond.picks = {}; delete N.bond.ask; if (!N.bond.path) { delete N.bond.lock; N.bond.px = N.bond.px | 0; } }
   try { if (STORY && STORY.ensure) STORY.ensure(N); } catch (e) {}
   return N;
 }
@@ -24437,7 +24441,7 @@ function v640NgOpen(review) {
     h += '<p class="ngalways">Codex and Journal stay with you. Side quests begin again.</p><button type="button" class="nggo" data-a="review">Review</button>';
   } else {
     h += '<p class="nglead">Here\u2019s how this run will start.</p><section class="ngrev">';
-    NG_OPTS.forEach(function (d) { var keep = o[d.k] === (d.keepV || 'keep'); h += '<p><i>' + (keep ? '\u2713' : '\u25cb') + '</i><b>' + d.title + '</b><em>' + ((d.rv && d.rv[o[d.k]]) || o[d.k]) + '</em></p>'; });
+    NG_OPTS.forEach(function (d) { var kv = typeof d.keepV === 'function' ? d.keepV() : (d.keepV || 'keep'); var keep = o[d.k] === kv; h += '<p><i>' + (keep ? '\u2713' : '\u25cb') + '</i><b>' + d.title + '</b><em>' + ((d.rv && d.rv[o[d.k]]) || o[d.k]) + '</em></p>'; });
     h += '</section><p class="ngalways">Your cleared save stays safe in its slot. Codex and Journal records stay with you. Side quests always begin again.</p>';
     h += '<button type="button" class="nggo" data-a="start">Start New Game Plus</button><button type="button" class="ngback" data-a="edit">Back</button>';
   }
