@@ -45216,6 +45216,215 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     txt(g, opt.leave || 'Later', W / 2, ly + 20, 13, '#f4ead2', '800 ', fonts);
   };
 })();
+/* v6.5.64 FFF_S2P phase 6 (GGD-51, seal 3 · Jin's turf): cel interiors drawn in-engine once per entry.
+ * Ramen Kitsuneya, Karaoke Kitsune (lobby, booth, VIP booth), Hotel Chuo (lobby, 7F hall), Izakaya Tanuki,
+ * Neon Game Center (floor, Jin's back room). Canvas2D, ink outlines, two-tone cel, same kit as the NQ rooms.
+ * No loops: every painter runs once into a cached canvas. */
+(function (root) {
+  var S2P = root.FFF_S2P = root.FFF_S2P || {};
+  var INK = '#1a1220', RW = 1280, RH = 900;
+  var JP = '"Noto Sans CJK JP","Noto Serif CJK JP",sans-serif', SER = '"Noto Serif CJK JP","BIZ UDPMincho",serif';
+  function box(g, x, y, w, h, f, lw, r) {
+    g.beginPath(); if (r) { if (g.roundRect) g.roundRect(x, y, w, h, r); else g.rect(x, y, w, h); } else g.rect(x, y, w, h);
+    if (f) { g.fillStyle = f; g.fill(); } if (lw !== 0) { g.lineWidth = lw || 3; g.strokeStyle = INK; g.stroke(); }
+  }
+  function ell(g, x, y, rx, ry, f, lw) { g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 7); if (f) { g.fillStyle = f; g.fill(); } if (lw !== 0) { g.lineWidth = lw || 3; g.strokeStyle = INK; g.stroke(); } }
+  function tx(g, s, x, y, px, col, wt, al, font) { g.font = (wt || 900) + ' ' + px + 'px ' + (font || JP); g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillStyle = col; g.fillText(s, x, y); }
+  function jp(g, s, x, y, px, col, font) { tx(g, s, x, y, px, col, 900, 'center', font || SER); }
+  function vjp(g, s, x, y, px, col, gap, font) { s.split('').forEach(function (ch, i) { jp(g, ch, x, y + i * (gap || px * 1.08), px, col, font); }); }
+  function glowAt(g, x, y, r, col) { var gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2); }
+  function neonTx(g, s, x, y, px, col, glow, font) {
+    g.save(); g.font = '900 ' + px + 'px ' + (font || JP); g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.shadowColor = glow || col; g.shadowBlur = px * 0.6; g.lineWidth = Math.max(2, px * 0.12); g.strokeStyle = glow || col; g.strokeText(s, x, y);
+    g.shadowBlur = px * 0.3; g.fillStyle = '#fff8fc'; g.fillText(s, x, y); g.restore();
+  }
+  function neonLine(g, pts, col, w) { g.save(); g.shadowColor = col; g.shadowBlur = 14; g.strokeStyle = col; g.lineWidth = w || 5; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); pts.forEach(function (p, i) { i ? g.lineTo(p[0], p[1]) : g.moveTo(p[0], p[1]); }); g.stroke(); g.shadowBlur = 0; g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = Math.max(1.5, (w || 5) * 0.35); g.stroke(); g.restore(); }
+  function plankWall(g, x, y, w, h, c1, c2, step) { g.fillStyle = c1; g.fillRect(x, y, w, h); for (var i = x; i < x + w; i += step) { g.fillStyle = ((i / step) | 0) % 2 ? c2 : c1; g.fillRect(i, y, step - 2, h); g.fillStyle = 'rgba(0,0,0,.18)'; g.fillRect(i + step - 2, y, 2, h); } }
+  function boards(g, x, y, w, h, c1, c2, bh) { for (var j = y, n = 0; j < y + h; j += bh, n++) { g.fillStyle = n % 2 ? c1 : c2; g.fillRect(x, j, w, bh); g.fillStyle = 'rgba(0,0,0,.16)'; g.fillRect(x, j + bh - 2, w, 2); for (var i = x + ((n * 97) % 220); i < x + w; i += 220) g.fillRect(i, j, 2, bh); } }
+  function tiles(g, x, y, w, h, c1, c2, s) { for (var j = y, b = 0; j < y + h; j += s, b++) for (var i = x, a = 0; i < x + w; i += s, a++) { g.fillStyle = (a + b) % 2 ? c1 : c2; g.fillRect(i, j, Math.min(s, x + w - i), Math.min(s, y + h - j)); } g.strokeStyle = 'rgba(0,0,0,.14)'; g.lineWidth = 1.5; for (var yy = y; yy <= y + h; yy += s) { g.beginPath(); g.moveTo(x, yy); g.lineTo(x + w, yy); g.stroke(); } for (var xx = x; xx <= x + w; xx += s) { g.beginPath(); g.moveTo(xx, y); g.lineTo(xx, y + h); g.stroke(); } }
+  function carpet(g, x, y, w, h, c1, c2, c3, s) { g.fillStyle = c1; g.fillRect(x, y, w, h); g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip(); for (var j = y, b = 0; j < y + h + s; j += s, b++) for (var i = x - s, a = 0; i < x + w + s; i += s, a++) { var cx = i + (b % 2 ? s / 2 : 0), cy = j; g.fillStyle = c2; g.beginPath(); g.moveTo(cx, cy - s * 0.32); g.lineTo(cx + s * 0.32, cy); g.lineTo(cx, cy + s * 0.32); g.lineTo(cx - s * 0.32, cy); g.closePath(); g.fill(); if (c3) { g.fillStyle = c3; g.fillRect(cx - 2, cy - 2, 4, 4); } } g.restore(); }
+  function shellWalls(g, wallTop, w, h, exitX) {
+    w = w || RW; h = h || RH; exitX = exitX == null ? w / 2 : exitX; var ey = h - 50;
+    g.fillStyle = '#1b1820'; g.fillRect(0, 0, 90, h); g.fillRect(w - 90, 0, 90, h); g.fillRect(0, ey, exitX - 60, 50); g.fillRect(exitX + 60, ey, w - exitX - 60, 50);
+    g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(90, wallTop, w - 180, 14);
+    g.strokeStyle = INK; g.lineWidth = 4; g.strokeRect(90, 2, w - 180, ey - 2); g.fillStyle = 'rgba(255,220,160,.10)'; g.fillRect(exitX - 60, ey, 120, 50);
+    var vg = g.createRadialGradient(w / 2, h * 0.58, 260, w / 2, h * 0.58, Math.max(w, h) * 0.66); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,6,14,.38)'); g.fillStyle = vg; g.fillRect(0, 0, w, h);
+  }
+  function stool(g, x, y, c) { g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(x, y + 18, 20, 6, 0, 0, 7); g.fill(); box(g, x - 3, y, 6, 18, '#3b2a22', 1); ell(g, x, y, 19, 9, c, 3); g.fillStyle = 'rgba(255,255,255,.25)'; g.beginPath(); g.ellipse(x - 5, y - 3, 7, 3, 0, 0, 7); g.fill(); }
+  function bowlS(g, x, y, s, c) { g.beginPath(); g.ellipse(x, y, 16 * s, 6 * s, 0, 0, 7); g.fillStyle = '#f2e8d6'; g.fill(); g.beginPath(); g.moveTo(x - 16 * s, y); g.quadraticCurveTo(x, y + 20 * s, x + 16 * s, y); g.fillStyle = c || '#b8332a'; g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); g.beginPath(); g.ellipse(x, y, 16 * s, 6 * s, 0, 0, 7); g.stroke(); }
+  function plant(g, x, y, s) { g.fillStyle = 'rgba(0,0,0,.25)'; g.beginPath(); g.ellipse(x, y + 4, 26 * s, 8 * s, 0, 0, 7); g.fill(); box(g, x - 18 * s, y - 30 * s, 36 * s, 34 * s, '#a0582e', 4);
+    ['#2f6b3a', '#3f8a4a', '#2a5a33'].forEach(function (c, i) { for (var k = 0; k < 5; k++) { var a = -Math.PI / 2 + (k - 2) * 0.45 + i * 0.12; g.beginPath(); g.ellipse(x + Math.cos(a) * 26 * s, y - 40 * s + Math.sin(a) * 30 * s, 9 * s, 22 * s, a + Math.PI / 2, 0, 7); g.fillStyle = c; g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); } }); }
+  function shade(hex, k) { var n = parseInt(hex.slice(1), 16), r = n >> 16, gg = (n >> 8) & 255, b = n & 255, f = function (c) { return Math.max(0, Math.min(255, Math.round(k < 0 ? c * (1 + k) : c + (255 - c) * k))); }; return 'rgb(' + f(r) + ',' + f(gg) + ',' + f(b) + ')'; }
+  function lantern(g, x, y, r, col, word) { g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(x, y - r * 1.6); g.lineTo(x, y - r * 1.25); g.stroke(); glowAt(g, x, y, r * 3.2, 'rgba(255,140,80,.22)'); ell(g, x, y, r, r * 1.25, col, 3); box(g, x - r * 0.55, y - r * 1.32, r * 1.1, r * 0.2, '#2a1a12', 2); box(g, x - r * 0.55, y + r * 1.12, r * 1.1, r * 0.2, '#2a1a12', 2); g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = 1.5; for (var i = -2; i <= 2; i++) { g.beginPath(); g.ellipse(x, y + i * r * 0.4, r * 0.98, r * 0.12, 0, 0, Math.PI); g.stroke(); } if (word) jp(g, word, x, y + 2, r * 0.8, '#2a0e0a'); }
+  function steamW(g, x, y, n, sp) { g.strokeStyle = 'rgba(240,240,245,.42)'; g.lineWidth = 5; g.lineCap = 'round'; for (var i = 0; i < n; i++) { var px = x + (i - (n - 1) / 2) * sp; g.beginPath(); g.moveTo(px, y); g.bezierCurveTo(px - 8, y - 16, px + 8, y - 28, px, y - 46); g.stroke(); } }
+  function chair(g, x, y, c) { box(g, x - 22, y - 30, 44, 18, c, 4); box(g, x - 22, y - 14, 44, 28, shade(c, -0.2), 4); }
+  function sofaU(g, x, y, w, h, c) { /* a U sofa seen from above, opening south */
+    box(g, x, y, w, 34, shade(c, -0.25), 3, 8); box(g, x, y, 34, h, shade(c, -0.25), 3, 8); box(g, x + w - 34, y, 34, h, shade(c, -0.25), 3, 8);
+    box(g, x + 30, y + 26, w - 60, 26, c, 3, 6); box(g, x + 26, y + 30, 26, h - 34, c, 3, 6); box(g, x + w - 52, y + 30, 26, h - 34, c, 3, 6);
+    g.fillStyle = 'rgba(255,255,255,.14)'; g.fillRect(x + 40, y + 30, w - 80, 5); }
+  function frosted(g, x, y, w, h, tint) { var lg = g.createLinearGradient(x, y, x + w, y + h); lg.addColorStop(0, 'rgba(230,240,255,.78)'); lg.addColorStop(0.5, tint || 'rgba(200,215,240,.62)'); lg.addColorStop(1, 'rgba(240,235,255,.78)'); box(g, x, y, w, h, lg, 3, 6); g.fillStyle = 'rgba(255,255,255,.5)'; g.fillRect(x + 8, y + 6, w * 0.3, 4); g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip(); g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 10; for (var i = -h; i < w; i += 46) { g.beginPath(); g.moveTo(x + i, y + h); g.lineTo(x + i + h, y); g.stroke(); } g.restore(); }
+  function arcadeCab(g, x, y, scr, trim, label, dark) { /* a sit-down cabinet seen from above-front (3/4), screen faces south */
+    g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(x + 50, y + 140, 62, 14, 0, 0, 7); g.fill();
+    box(g, x, y, 100, 132, dark ? '#24222c' : '#2c2838', 3, 6); box(g, x + 6, y + 4, 88, 22, trim, 2, 4);
+    if (label) tx(g, label, x + 50, y + 15, label.length > 8 ? 9 : 11, '#1a1220', 900);
+    box(g, x + 10, y + 32, 80, 56, dark ? '#101018' : scr, 3, 4);
+    if (!dark) { glowAt(g, x + 50, y + 60, 70, 'rgba(160,230,255,.16)'); g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(x + 14, y + 36, 30, 4); }
+    else { tx(g, '故障中', x + 50, y + 54, 12, '#e8c040', 900); tx(g, 'OUT OF ORDER', x + 50, y + 72, 7, '#e8c040', 900); }
+    box(g, x + 4, y + 94, 92, 30, shade(trim, -0.35), 3, 4); ell(g, x + 28, y + 108, 8, 6, '#e8e0d0', 2); [62, 76].forEach(function (bx, i) { ell(g, x + bx, y + 106, 6, 5, i ? '#e85050' : '#50a0e8', 2); });
+    box(g, x + 30, y + 132, 40, 18, '#3a3444', 2, 6); }
+  function crane(g, x, y, col) { g.fillStyle = 'rgba(0,0,0,.3)'; g.beginPath(); g.ellipse(x + 55, y + 168, 64, 14, 0, 0, 7); g.fill(); box(g, x, y, 110, 160, col, 3, 6); box(g, x + 8, y + 22, 94, 92, 'rgba(200,235,255,.5)', 3, 3); g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(x + 12, y + 26, 30, 4);
+    [[30, 96, '#f2a0c0'], [56, 100, '#f0d060'], [80, 94, '#90d0f0'], [44, 82, '#c8a0f0'], [70, 84, '#f2a0c0']].forEach(function (p) { ell(g, x + p[0], y + p[1], 12, 10, p[2], 2); g.fillStyle = INK; g.fillRect(x + p[0] - 4, y + p[1] - 3, 2, 2); g.fillRect(x + p[0] + 3, y + p[1] - 3, 2, 2); });
+    g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(x + 55, y + 24); g.lineTo(x + 55, y + 52); g.stroke(); g.beginPath(); g.moveTo(x + 47, y + 62); g.lineTo(x + 55, y + 52); g.lineTo(x + 63, y + 62); g.stroke();
+    box(g, x + 4, y + 4, 102, 16, '#fff0f6', 2, 4); tx(g, 'CRANE', x + 55, y + 12, 10, '#e8508a', 900); box(g, x + 6, y + 120, 98, 34, shade(col, -0.3), 2, 4); ell(g, x + 34, y + 136, 7, 6, '#e8e0d0', 2); box(g, x + 64, y + 128, 24, 16, '#e8c040', 2, 3); }
+  function medalPusher(g, x, y, w) { g.fillStyle = 'rgba(0,0,0,.3)'; g.fillRect(x + 6, y + 150, w, 14); box(g, x, y, w, 150, '#3a2c48', 3, 8); box(g, x + 10, y + 12, w - 20, 70, 'rgba(255,220,120,.35)', 3, 4);
+    for (var i = 0; i < 18; i++) ell(g, x + 22 + (i * 37 % (w - 44)), y + 30 + (i * 13 % 46), 8, 4, '#e8c040', 1.5);
+    neonTx(g, 'MEDAL', x + w / 2, y + 100, 18, '#ffd860', '#ff9020'); box(g, x + 10, y + 118, w - 20, 22, '#22182c', 2, 4); for (var k = 0; k < 4; k++) ell(g, x + 30 + k * (w - 60) / 3, y + 129, 6, 5, ['#e85050', '#50c0e8', '#e8c040', '#80e060'][k], 1.5); }
+
+  var P6 = S2P.p6 = {};
+
+  /* ---------------- 1. Ramen Kitsuneya (Tetsuo's shop) ---------------- */
+  P6.ramen = function (g) {
+    /* dark red-and-black checker floor, worn */
+    tiles(g, 90, 230, RW - 180, 620, '#3a1c1c', '#241416', 52);
+    g.fillStyle = 'rgba(255,220,180,.05)'; for (var i = 0; i < 60; i++) g.fillRect(100 + (i * 197) % 1060, 240 + (i * 131) % 600, 22, 3);
+    /* back wall: soot-dark cedar with a red band */
+    plankWall(g, 90, 0, RW - 180, 230, '#4a2a1c', '#53301f', 30); g.fillStyle = '#1f120c'; g.fillRect(90, 0, RW - 180, 16); g.fillStyle = '#9a1e22'; g.fillRect(90, 196, RW - 180, 16); g.fillStyle = '#1f120c'; g.fillRect(90, 212, RW - 180, 18);
+    /* the shop sign over the kitchen pass: らーめん 狐屋 */
+    box(g, 430, 18, 420, 62, '#1a1210', 4, 4); box(g, 436, 24, 408, 50, '#f2e6c8', 2, 2); jp(g, '\u3089\u30fc\u3081\u3093', 560, 49, 30, '#9a1e22'); jp(g, '\u72d0\u5c4b', 730, 49, 34, '#1a1210');
+    ell(g, 806, 49, 18, 18, '#9a1e22', 2); tx(g, 'KITSUNEYA', 640, 92, 12, '#f2e6c8', 900);
+    /* the menu tags (wooden plaques, red ink) left and right */
+    var M = [['\u91a4\u6cb9', 'SHOYU'], ['\u5473\u564c', 'MISO'], ['\u8c5a\u9aa8', 'TONKOTSU'], ['\u5869', 'SHIO'], ['\u9903\u5b50', 'GYOZA'], ['\u70cf\u9f8d\u8336', 'OOLONG']];
+    M.forEach(function (m, i) { var x = 120 + i * 50 + (i > 2 ? 870 : 0); box(g, x, 26, 42, 132, '#e9d8b0', 3, 2); vjp(g, m[0], x + 21, 46, m[0].length > 2 ? 15 : 19, '#7a1414'); tx(g, m[1], x + 21, 150, 6.5, '#2a1a12', 900); });
+    /* kitchen pass: the noodle boiler, the stock pots, the ladles */
+    g.fillStyle = '#140c0a'; g.fillRect(430, 96, 420, 116); glowAt(g, 640, 170, 220, 'rgba(255,190,120,.25)');
+    box(g, 446, 112, 120, 84, '#8a8e96', 4, 4); for (var b = 0; b < 3; b++) { ell(g, 470 + b * 36, 140, 14, 9, '#3a3c42', 2); g.strokeStyle = '#c9a06a'; g.lineWidth = 3; g.beginPath(); g.moveTo(470 + b * 36, 132); g.lineTo(476 + b * 36, 108); g.stroke(); }
+    steamW(g, 506, 118, 3, 26);
+    [[640, 150, 46], [740, 156, 40]].forEach(function (p) { box(g, p[0] - p[2], p[1] - 34, p[2] * 2, 64, '#7a7e86', 4, 6); ell(g, p[0], p[1] - 34, p[2], 12, '#5a3a20', 3); g.fillStyle = '#a0602a'; g.beginPath(); g.ellipse(p[0], p[1] - 34, p[2] - 6, 8, 0, 0, 7); g.fill(); steamW(g, p[0], p[1] - 44, 3, 20); });
+    box(g, 800, 110, 36, 90, '#d8d0c0', 3, 2); for (var h = 0; h < 4; h++) { g.strokeStyle = '#3a2a1c'; g.lineWidth = 2; g.beginPath(); g.moveTo(806 + h * 8, 116); g.lineTo(806 + h * 8, 160); g.stroke(); ell(g, 806 + h * 8, 164, 5, 4, '#9aa0a8', 1.5); }
+    /* paper lanterns + the fox mask charm + a poster */
+    lantern(g, 200, 214, 26, '#d6243a', '\u3089'); lantern(g, 1080, 214, 26, '#d6243a', '\u3081');
+    box(g, 300, 30, 100, 130, '#f2e6c8', 3, 2); tx(g, '\u5927\u76db\u7121\u6599', 350, 56, 15, '#9a1e22', 900); bowlS(g, 350, 102, 1.6, '#9a1e22'); tx(g, 'BIG BOWL FREE', 350, 142, 8, '#2a1a12', 900);
+    box(g, 878, 30, 92, 120, '#20161a', 3, 4); g.save(); g.translate(924, 86); ell(g, 0, 0, 32, 38, '#f4f0ea', 3); g.fillStyle = '#d6243a'; g.beginPath(); g.moveTo(-26, -22); g.lineTo(-14, -48); g.lineTo(-4, -26); g.closePath(); g.fill(); g.beginPath(); g.moveTo(26, -22); g.lineTo(14, -48); g.lineTo(4, -26); g.closePath(); g.fill(); g.strokeStyle = '#d6243a'; g.lineWidth = 3; g.beginPath(); g.moveTo(-18, -4); g.lineTo(-6, 2); g.moveTo(18, -4); g.lineTo(6, 2); g.stroke(); ell(g, 0, 18, 5, 4, INK, 0); g.restore();
+    /* the L counter: long run under the pass, return down the right side */
+    box(g, 190, 250, 820, 46, '#b8823e', 4, 3); g.fillStyle = 'rgba(255,255,255,.2)'; g.fillRect(196, 254, 808, 6); box(g, 196, 292, 808, 70, '#3a1e14', 3); for (var v = 214; v < 1000; v += 40) { g.fillStyle = 'rgba(0,0,0,.25)'; g.fillRect(v, 296, 3, 62); }
+    box(g, 1006, 250, 70, 300, '#b8823e', 4, 3); box(g, 1010, 296, 62, 254, '#3a1e14', 3);
+    /* counter top: bowls, condiment trays, the pitcher, chopstick boxes */
+    [270, 420, 560, 760, 900].forEach(function (x, i) { bowlS(g, x, 272, 0.95, i % 2 ? '#1d1a1e' : '#9a1e22'); });
+    [[340, 266], [640, 266], [840, 266]].forEach(function (p) { box(g, p[0] - 22, p[1] - 10, 44, 20, '#2a1a12', 2, 3); box(g, p[0] - 18, p[1] - 14, 10, 12, '#d6243a', 1.5); box(g, p[0] - 4, p[1] - 14, 10, 12, '#f0d060', 1.5); box(g, p[0] + 10, p[1] - 14, 8, 12, '#3a3020', 1.5); });
+    box(g, 1022, 300, 36, 46, 'rgba(200,230,255,.55)', 3, 6); box(g, 1022, 380, 36, 30, '#7a5236', 3, 2);
+    for (var t = 250; t <= 950; t += 100) stool(g, t, 400, '#9a1e22');
+    [440, 520].forEach(function (y) { stool(g, 1120, y, '#9a1e22'); });
+    /* the ticket machine by the door (left), glowing buttons */
+    box(g, 110, 600, 92, 150, '#c8ccd2', 4, 6); box(g, 118, 608, 76, 22, '#1a1220', 2, 3); tx(g, '\u98df\u5238', 156, 619, 13, '#7fe8ff', 900);
+    for (var r2 = 0; r2 < 4; r2++) for (var c2 = 0; c2 < 3; c2++) { box(g, 120 + c2 * 25, 638 + r2 * 22, 22, 18, ['#f2e6c8', '#ffd860', '#f2a0a0'][(r2 + c2) % 3], 1.5, 2); }
+    box(g, 130, 728, 52, 14, '#1a1220', 2, 3); glowAt(g, 156, 660, 70, 'rgba(180,240,255,.18)');
+    /* two booth tables on the right (the Suits like the corner) */
+    [[920, 640], [920, 790]].forEach(function (p) { box(g, p[0] - 110, p[1] - 44, 40, 88, '#5a1a1c', 3, 6); box(g, p[0] + 70, p[1] - 44, 40, 88, '#5a1a1c', 3, 6); box(g, p[0] - 64, p[1] - 34, 128, 68, '#a8743a', 4, 4); bowlS(g, p[0] - 24, p[1] - 6, 0.7, '#1d1a1e'); bowlS(g, p[0] + 28, p[1] + 4, 0.7, '#9a1e22'); });
+    /* water cooler + a plant + a stack of crates */
+    box(g, 250, 600, 70, 64, '#8e939c', 5); box(g, 266, 580, 38, 24, '#c9ccd2', 4); jp(g, '\u304a\u6c34', 285, 634, 14, '#2a211c');
+    plant(g, 1150, 800, 0.9);
+    glowAt(g, 640, 300, 420, 'rgba(255,180,110,.15)');
+    shellWalls(g, 230);
+  };
+
+  S2P.p6Paint = function (k, g, st) { var fn = P6[k]; if (!fn) return false; g.save(); try { fn(g, st || {}); } finally { g.restore(); } return true; };
+  S2P.p6Size = function (k) { var D = P6[k + '_size']; return D || [RW, RH]; };
+  S2P.p6H = { INK: INK, RW: RW, RH: RH, box: box, ell: ell, tx: tx, jp: jp, vjp: vjp, glowAt: glowAt, neonTx: neonTx, neonLine: neonLine, plankWall: plankWall, boards: boards, tiles: tiles, carpet: carpet, shellWalls: shellWalls, stool: stool, bowlS: bowlS, plant: plant, shade: shade, lantern: lantern, steamW: steamW, chair: chair, sofaU: sofaU, frosted: frosted, arcadeCab: arcadeCab, crane: crane, medalPusher: medalPusher };
+})(typeof window !== 'undefined' ? window : this);
+/* v6.5.64 FFF_S2P phase 6 UI art (GGD-51): menu boards for the strip counters, food icons, battle backdrops.
+ * Painted once into canvases on demand; no loops. */
+(function (root) {
+  var S2P = root.FFF_S2P = root.FFF_S2P || {};
+  var H = S2P.p6H; if (!H) return;
+  var INK = H.INK, box = H.box, ell = H.ell, tx = H.tx, jp = H.jp, glowAt = H.glowAt, neonTx = H.neonTx, neonLine = H.neonLine, shade = H.shade;
+  var SER = '"Noto Serif CJK JP","BIZ UDPMincho",serif';
+
+  /* ---------------- menu icons (64-unit box) ---------------- */
+  var IC = S2P.menuIcons = S2P.menuIcons || {};
+  function ramenBowl(g, broth, top) {
+    ell(g, 32, 56, 22, 5, 'rgba(40,20,10,.22)', 0);
+    g.beginPath(); g.moveTo(6, 30); g.bezierCurveTo(6, 58, 58, 58, 58, 30); g.closePath(); g.fillStyle = '#9a1e22'; g.fill(); g.lineWidth = 2.4; g.strokeStyle = INK; g.stroke();
+    g.strokeStyle = '#f2e6c8'; g.lineWidth = 2; g.beginPath(); g.moveTo(10, 40); g.lineTo(54, 40); g.stroke();
+    ell(g, 32, 30, 26, 9, broth, 2.4);
+    g.save(); g.beginPath(); g.ellipse(32, 30, 24, 7.5, 0, 0, 7); g.clip();
+    g.strokeStyle = '#ecc864'; g.lineWidth = 2.2; for (var i = 0; i < 5; i++) { g.beginPath(); g.moveTo(10 + i * 4, 28); g.bezierCurveTo(20 + i * 3, 34, 30, 25, 54 - i * 3, 31); g.stroke(); } g.restore();
+    ell(g, 40, 28, 7, 4, '#e0a888', 1.6); ell(g, 24, 31, 5, 3.4, '#f4ead0', 1.4); ell(g, 24, 31, 2.4, 1.8, '#f0a020', 0);
+    g.fillStyle = '#1c2a22'; g.fillRect(14, 16, 6, 14); g.strokeStyle = INK; g.lineWidth = 1.4; g.strokeRect(14, 16, 6, 14);
+    g.fillStyle = '#5ea83a'; [[32, 26], [35, 24], [29, 25]].forEach(function (p) { g.beginPath(); g.ellipse(p[0], p[1], 2, 1.4, 0, 0, 7); g.fill(); });
+    if (top === 'corn') { g.fillStyle = '#f2c230'; [[44, 32], [47, 30], [46, 34], [50, 32]].forEach(function (p) { g.beginPath(); g.arc(p[0], p[1], 1.6, 0, 7); g.fill(); }); }
+    g.strokeStyle = 'rgba(240,240,245,.6)'; g.lineWidth = 1.8; g.lineCap = 'round'; [26, 36].forEach(function (x) { g.beginPath(); g.moveTo(x, 14); g.bezierCurveTo(x - 3, 9, x + 3, 6, x, 1); g.stroke(); });
+  }
+  IC.r_shoyu = function (g) { ramenBowl(g, '#a0602a'); };
+  IC.r_miso = function (g) { ramenBowl(g, '#c48a3a', 'corn'); };
+  IC.r_tonkotsu = function (g) { ramenBowl(g, '#efe0c0'); };
+  IC.r_oolong = function (g) { ell(g, 32, 58, 14, 4, 'rgba(40,20,10,.2)', 0); box(g, 22, 18, 20, 38, 'rgba(160,90,40,.85)', 2.2, 4); box(g, 26, 8, 12, 12, 'rgba(200,220,230,.8)', 2, 2); box(g, 22, 30, 20, 14, '#f2e6c8', 1.6); jp(g, '\u70cf', 32, 37, 10, '#7a1414'); g.fillStyle = 'rgba(255,255,255,.4)'; g.fillRect(25, 22, 3, 30); };
+  IC.i_yakitori = function (g) { ell(g, 32, 56, 22, 5, 'rgba(40,20,10,.2)', 0); g.save(); g.translate(32, 32); g.rotate(-0.6); g.strokeStyle = INK; g.lineWidth = 4; g.beginPath(); g.moveTo(0, 28); g.lineTo(0, -30); g.stroke(); g.strokeStyle = '#e8d0a0'; g.lineWidth = 2; g.stroke(); [-18, -4, 10].forEach(function (y, i) { ell(g, 0, y, 9, 6.5, i === 1 ? '#8ab048' : '#a8501c', 2); g.fillStyle = 'rgba(40,14,4,.5)'; g.fillRect(-8, y - 1, 16, 1.6); }); g.restore(); };
+  IC.i_karaage = function (g) { ell(g, 32, 56, 22, 5, 'rgba(40,20,10,.2)', 0); [[22, 36, 13], [40, 38, 12], [31, 24, 11]].forEach(function (p) { ell(g, p[0], p[1], p[2], p[2] * 0.82, '#d08a2c', 2.2); g.fillStyle = 'rgba(132,66,12,.4)'; g.beginPath(); g.ellipse(p[0] + 3, p[1] + 2, p[2] * 0.4, p[2] * 0.3, 0, 0, 7); g.fill(); }); g.beginPath(); g.moveTo(46, 22); g.lineTo(56, 26); g.lineTo(50, 32); g.closePath(); g.fillStyle = '#f2e060'; g.fill(); g.lineWidth = 1.6; g.strokeStyle = INK; g.stroke(); };
+  IC.i_edamame = function (g) { ell(g, 32, 56, 24, 5, 'rgba(40,20,10,.2)', 0); ell(g, 32, 42, 26, 10, '#3a3020', 2); [[20, 34, -0.4], [34, 30, 0.2], [42, 38, 0.6], [26, 42, 0.1]].forEach(function (d) { g.save(); g.translate(d[0], d[1]); g.rotate(d[2]); g.beginPath(); g.ellipse(0, 0, 11, 5, 0, 0, 7); g.fillStyle = '#7ab048'; g.fill(); g.lineWidth = 1.6; g.strokeStyle = INK; g.stroke(); [-5, 0, 5].forEach(function (b) { g.beginPath(); g.arc(b, 0, 2.2, 0, 7); g.fillStyle = '#b8e080'; g.fill(); }); g.restore(); }); };
+  IC.i_onigiri = IC.onigiri;
+  IC.i_tea = function (g) { ell(g, 32, 56, 16, 4, 'rgba(40,20,10,.2)', 0); g.beginPath(); g.moveTo(16, 24); g.lineTo(48, 24); g.lineTo(44, 54); g.lineTo(20, 54); g.closePath(); g.fillStyle = '#e8e0cc'; g.fill(); g.lineWidth = 2.2; g.strokeStyle = INK; g.stroke(); ell(g, 32, 24, 16, 4, '#9ab060', 2); g.strokeStyle = 'rgba(240,240,245,.6)'; g.lineWidth = 1.8; [28, 36].forEach(function (x) { g.beginPath(); g.moveTo(x, 18); g.bezierCurveTo(x - 3, 12, x + 3, 8, x, 3); g.stroke(); }); };
+  IC.h_rest = function (g) { box(g, 8, 26, 48, 26, '#f4efe6', 2.2, 4); box(g, 8, 20, 48, 10, '#c8a0d8', 2, 3); box(g, 12, 30, 16, 10, '#ffffff', 1.6, 3); g.fillStyle = '#e8c040'; g.beginPath(); g.arc(46, 12, 7, 0, 7); g.fill(); g.fillStyle = '#f4efe6'; g.beginPath(); g.arc(49, 10, 6, 0, 7); g.fill(); };
+
+  /* ---------------- menu boards ---------------- */
+  function ramenChrome(g, W, Ht) {
+    g.fillStyle = '#2a1410'; g.fillRect(0, 0, W, Ht);
+    for (var x = 0; x < W; x += 26) { g.fillStyle = (x / 26 | 0) % 2 ? '#4a2a1c' : '#53301f'; g.fillRect(x, 0, 24, Ht); }
+    /* red noren across the top */
+    var n = 5, sw = (W - 20) / n; for (var i = 0; i < n; i++) { g.fillStyle = '#9a1e22'; g.beginPath(); g.moveTo(10 + i * sw + 2, 0); g.lineTo(10 + (i + 1) * sw - 2, 0); g.lineTo(10 + (i + 1) * sw - 2, 60); g.quadraticCurveTo(10 + (i + 0.5) * sw, 66, 10 + i * sw + 2, 60); g.closePath(); g.fill(); g.strokeStyle = INK; g.lineWidth = 2; g.stroke(); }
+    ['\u3089', '\u30fc', '\u3081', '\u3093', '\u72d0'].forEach(function (c, i) { jp(g, c, 10 + (i + 0.5) * sw, 32, 22, '#f2e6c8', SER); });
+    /* cream menu board with a red rule */
+    box(g, 16, 72, W - 32, Ht - 96, '#f2e6c8', 4, 8); g.strokeStyle = '#9a1e22'; g.lineWidth = 2; g.strokeRect(24, 80, W - 48, Ht - 112);
+    g.save(); g.translate(W - 50, Ht - 52); g.rotate(-0.15); ell(g, 0, 0, 18, 18, '#9a1e22', 1.5); jp(g, '\u72d0', 0, 1, 16, '#f2e6c8', SER); g.restore();
+  }
+  function izakChrome(g, W, Ht) {
+    g.fillStyle = '#1e1410'; g.fillRect(0, 0, W, Ht);
+    for (var y = 0; y < Ht; y += 30) { g.fillStyle = (y / 30 | 0) % 2 ? '#3a2618' : '#432c1c'; g.fillRect(0, y, W, 28); }
+    /* rope + red lanterns */
+    g.strokeStyle = '#c9a06a'; g.lineWidth = 3; g.beginPath(); g.moveTo(0, 18); g.quadraticCurveTo(W / 2, 40, W, 18); g.stroke();
+    [70, W / 2, W - 70].forEach(function (x, i) { H.lantern(g, x, 50, 18, '#d6243a', ['\u9152', '\u72f8', '\u5834'][i]); });
+    box(g, 16, 92, W - 32, Ht - 116, '#efe2c0', 4, 4); g.strokeStyle = '#3a2618'; g.lineWidth = 2; g.strokeRect(24, 100, W - 48, Ht - 132);
+    g.save(); g.translate(W - 52, Ht - 54); g.rotate(-0.12); ell(g, 0, 0, 18, 18, '#3a2618', 1.5); jp(g, '\u72f8', 0, 1, 16, '#efe2c0', SER); g.restore();
+  }
+  function hotelChrome(g, W, Ht) {
+    var lg = g.createLinearGradient(0, 0, W, Ht); lg.addColorStop(0, '#1a0e2a'); lg.addColorStop(0.5, '#2a1040'); lg.addColorStop(1, '#100820'); g.fillStyle = lg; g.fillRect(0, 0, W, Ht);
+    glowAt(g, 60, 80, 160, 'rgba(255,80,200,.25)'); glowAt(g, W - 50, 160, 160, 'rgba(80,200,255,.22)');
+    neonTx(g, 'HOTEL CHUO', W / 2, 40, 26, '#ff6ad5', '#ff3ab0');
+    tx(g, '\u30db\u30c6\u30eb\u4e2d\u592e', W / 2, 70, 11, '#c8f0ff', 700);
+    H.frosted(g, 16, 92, W - 32, Ht - 116, 'rgba(220,210,245,.72)');
+  }
+  function prizeChrome(g, W, Ht) {
+    g.fillStyle = '#120a20'; g.fillRect(0, 0, W, Ht);
+    for (var i = 0; i < 26; i++) { g.fillStyle = ['rgba(255,90,200,.10)', 'rgba(90,220,255,.10)', 'rgba(255,220,90,.10)'][i % 3]; g.beginPath(); g.arc((i * 97) % W, (i * 151) % Ht, 30 + (i % 4) * 10, 0, 7); g.fill(); }
+    neonTx(g, 'PRIZE', W / 2 - 50, 40, 26, '#ffd860', '#ff9020'); neonTx(g, '\u666f\u54c1', W / 2 + 70, 40, 24, '#7fe8ff', '#20a8ff');
+    box(g, 16, 82, W - 32, Ht - 106, '#f6f0ff', 4, 10); g.strokeStyle = '#ff6ad5'; g.lineWidth = 2; g.strokeRect(24, 90, W - 48, Ht - 122);
+  }
+  if (S2P.menuChrome && !S2P._p6Chrome) {
+    S2P._p6Chrome = 1;
+    var mc0 = S2P.menuChrome;
+    S2P.menuChrome = function (g, theme, w, h) { w = w || 390; h = h || 844;
+      if (theme === 'ramen') return ramenChrome(g, w, h);
+      if (theme === 'izak') return izakChrome(g, w, h);
+      if (theme === 'hotel') return hotelChrome(g, w, h);
+      if (theme === 'prize') return prizeChrome(g, w, h);
+      return mc0.apply(this, arguments); };
+  }
+
+  /* ---------------- battle backdrops (720 x 1280, wall to H0 = 330) ---------------- */
+  var B = {};
+  function hb() { return root.FFF_C2H; }
+  B.ramen = function (x) { var C = hb(), WD = 720, H0 = C.H0, HT = 1280;
+    H.plankWall(x, 0, 0, WD, H0, '#4a2a1c', '#53301f', 26); x.fillStyle = '#9a1e22'; x.fillRect(0, H0 - 40, WD, 14); x.fillStyle = '#1f120c'; x.fillRect(0, H0 - 26, WD, 26);
+    box(x, 200, 30, 320, 56, '#1a1210', 4, 4); box(x, 206, 36, 308, 44, '#f2e6c8', 2, 2); jp(x, '\u3089\u30fc\u3081\u3093 \u72d0\u5c4b', 360, 59, 26, '#9a1e22', SER);
+    x.fillStyle = '#140c0a'; x.fillRect(150, 100, 420, 150); glowAt(x, 360, 190, 220, 'rgba(255,190,120,.3)');
+    [[280, 200, 50], [440, 206, 44]].forEach(function (p) { box(x, p[0] - p[2], p[1] - 40, p[2] * 2, 70, '#7a7e86', 4, 6); ell(x, p[0], p[1] - 40, p[2], 12, '#a0602a', 3); H.steamW(x, p[0], p[1] - 52, 3, 22); });
+    H.lantern(x, 80, 140, 30, '#d6243a', '\u3089'); H.lantern(x, 640, 140, 30, '#d6243a', '\u3081');
+    box(x, 0, H0 - 90, WD, 50, '#b8823e', 4, 0); box(x, 0, H0 - 44, WD, 18, '#3a1e14', 3, 0);
+    [120, 260, 460, 600].forEach(function (bx, i) { H.bowlS(x, bx, H0 - 70, 1.3, i % 2 ? '#1d1a1e' : '#9a1e22'); });
+    C.floor(x, { far: '#3a1c1c', near: '#1e1012', kind: 'tile', line: 'rgba(0,0,0,.35)', n: 8, rows: 10 });
+    C.vign(x, 0.5); };
+  S2P.p6Battle = function (k, x) { var fn = B[k]; var C = hb(); if (!fn || !C) { x.fillStyle = '#1a1410'; x.fillRect(0, 0, 720, 1280); return; } x.save(); try { fn(x); } finally { x.restore(); } };
+  S2P.p6B = B;
+})(typeof window !== 'undefined' ? window : this);
 /* S2P_END */
 /* S2_BEGIN v6563-seal2 */
 /* v6.5.63 FFF_S2 (Punk-route seal 2, phase 1): Wagashi Row. Journal / Four Corners
@@ -45233,6 +45442,18 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     try { ev('world:s2:skip'); } catch (e0) {} return;
   }
   var S2 = root.FFF_S2 = { v: 1, ART: true };
+  /* GGD-51 fight-end bridge: the S2P2-P6 modules listen on onFightEnd(win, ctx), which the base never defines.
+   * Define it once on root and call it from c2Back (every Ch2 dungeon / interior fight result). Wraps only. */
+  if (typeof root.onFightEnd !== 'function') root.onFightEnd = function () {};
+  if (typeof c2Back === 'function' && !c2Back._ofe) {
+    var cbOfe = c2Back;
+    c2Back = function (win, st0) {
+      var r = cbOfe.apply(this, arguments);
+      try { if (typeof root.onFightEnd === 'function') root.onFightEnd(!!win && !(st0 && st0.escaped), (st0 && st0.ctx) || {}); } catch (eO) { ev('world:s2:err:ofe:' + (eO && eO.message)); }
+      return r;
+    };
+    c2Back._ofe = 1;
+  }
   function on() { return (typeof c2On !== 'function' || c2On()) && (typeof chN !== 'function' || chN() === 2); }
   function S() { return c2S(); }
   function E() { return c2S().e; }
@@ -49555,6 +49776,412 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   };
 })(typeof window !== 'undefined' ? window : this);
 /* S2GARDEN_END */
+/* S2P6_BEGIN v6564-jin */
+/* v6.5.64 FFF_S2P6 (Punk-route seal 3, GGD-51): Jin's turf, the neon strip.
+ * Quest cq2_s2_jin after Masa's Seal. Chain: 1 Ramen Kitsuneya (eat, overhear the Suits, fight them off Tetsuo)
+ * 2 Karaoke Kitsune (song menu, lead pick, tap-along; Lt. Kanzaki in the VIP booth) 3 Hotel Chuo (elevator to 7F,
+ * break up the deal, neon hallway fight) 4 Club Kitsune back office (Tetsu's ledger ties the deals to Jin)
+ * 5 Izakaya Tanuki (small plates; the owner tips the back room) 6 Neon Game Center (meet Jin on the floor,
+ * fight him past the staff door; the seal). Hotel ¥40 rest at Hotel Chuo and the Kitsune Hotel, once per stock cycle.
+ * Wraps only; no new always-running loops (room work rides c2Frame room changes, minigames run only while open). */
+(function () {
+  try {
+  if (typeof c2S !== 'function' || typeof C2W === 'undefined' || !C2W || typeof INT === 'undefined' || !INT.c2_town) {
+    try { ev('world:s2p6:skip'); } catch (e0) {} return;
+  }
+  var root = typeof window !== 'undefined' ? window : this;
+  var P5 = root.FFF_S2P5;
+  var P6 = root.FFF_S2P6 = { v: 1, ART: true };
+
+  function on() { return (typeof c2On !== 'function' || c2On()) && (typeof chN !== 'function' || chN() === 2); }
+  function S() { return c2S(); }
+  function E() { return c2S().e; }
+  function room() { try { return c2Room(); } catch (e) { return null; } }
+  function nailsRun() { return on() && E().run_fac === 'arc'; }
+  function busy() { return !!(W.dgFight || W.dlg || W.busy || W.cut || W.fading || W.paused); }
+  function later(ms, fn) { setTimeout(function () { try { fn(); } catch (e) { ev('world:s2p6:err:later:' + (e && e.message)); } }, ms); }
+  function talk(lines, done) { W.dlg = true; scene(null, lines, function () { W.dlg = false; if (done) done(); }); }
+  function lockIn(on1) { if (on1) { W.cut = true; W.path = []; if (W.ryo) W.ryo.v = 0; try { stickEnd(); } catch (e) {} } else W.cut = false; }
+  function sv() { try { if (typeof c2QSync === 'function') c2QSync(); } catch (e) {} save(); }
+  function path() { var p = 'balanced'; try { p = c2Path(); } catch (e) {} return p === 'fierce' || p === 'strategic' ? p : 'balanced'; }
+  function npc(id, x, y, fa) { var s = c2Npc(id, x, y, fa == null ? Math.PI / 2 : fa); s.el.classList.add('s2'); s.s2id = id; s.el.dataset.npc = id; return s; }
+  function kill(s) { if (s && s.el && s.el.parentNode) s.el.remove(); if (s) s.gone = 1; }
+  function dlgUp() { var d = document.getElementById('wdlg'); return !!(d && d.className && /\bon\b/.test(d.className)); }
+  function whenFree(fn, tries) { tries = tries || 0; if (!busy() && !dlgUp() && !document.getElementById('nqsting') && !(typeof W.c2busy !== 'undefined' && W.c2busy)) { try { fn(); } catch (e) { ev('world:s2p6:err:free:' + (e && e.message)); } return; } later(tries < 120 ? 250 : 1000, function () { whenFree(fn, tries + 1); }); }
+  function V3(pre, mid, post) { var o = {}, PP = ['fierce', 'strategic', 'balanced']; PP.forEach(function (p) { o[p] = (pre || []).concat(mid[p] || [], post || []); }); return o; }
+  function pv(x) { if (!x || Array.isArray(x)) return x || []; try { return typeof pathLines === 'function' ? pathLines(x) : (x[path()] || x.balanced || []); } catch (e) { return x[path()] || x.balanced || []; } }
+  function p5Done() { return !!(P5 && typeof P5.qDone === 'function' && P5.qDone()) || !!E().seal_depot; }
+  function toastS(m) { try { if (typeof toast === 'function') toast(m); } catch (e) {} }
+  P6.later = later; P6.talk = talk; P6.lockIn = lockIn; P6.busy = busy; P6.pv = pv; P6.V3 = V3; P6.whenFree = whenFree; P6.sv = sv; P6.path = path;
+
+  /* ---------------- state ---------------- */
+  function NS() { var e = E(); if (!e.nq || typeof e.nq !== 'object') e.nq = {}; return e.nq; }
+  function J() { var n = NS(); if (!n.jin || typeof n.jin !== 'object') n.jin = {}; return n.jin; }
+  /* stages, in order */
+  var ORDER = ['open', 'ramen', 'kara', 'hotel', 'club', 'izak', 'met', 'won', 'done'];
+  function stg() { return J().st || ''; }
+  function at(s) { return ORDER.indexOf(stg()) >= ORDER.indexOf(s); }
+  function setStg(v) { if (ORDER.indexOf(v) < ORDER.indexOf(stg())) return; J().st = v; syncSteps(); sv(); ev('world:s2p6:st:' + v); }
+  var QID = 'cq2_s2_jin';
+  var Q = { id: QID, n: 'High Score', giver: 'Tetsuo, at Ramen Kitsuneya', loc: 'Kitsune-Ch\u016b\u014d \u00b7 the neon strip' };
+  var STEP = {
+    open: 'Eat at Ramen Kitsuneya. Tetsuo hears everything on the strip.',
+    ramen: 'The Suits said booth 4. Karaoke Kitsune, next door to the ramen shop.',
+    kara: 'Kanzaki talked: the Suits close a deal tonight. Hotel Chuo, seventh floor.',
+    hotel: 'The deal sheets carry a Club Kitsune stamp. The club\u2019s back office.',
+    club: 'The money runs to Jin. Izakaya Tanuki\u2019s owner knows the Game Center.',
+    izak: 'Neon Game Center. Find Jin on the floor.',
+    met: 'Jin\u2019s back room, past the staff door. Take his seal.',
+    won: 'Take Jin\u2019s seal.',
+    done: 'Jin\u2019s seal is off the prize-room lock. The strip breathes.'
+  };
+  function stepText() { return STEP[stg()] || STEP.open; }
+  function syncSteps() { try { if (typeof C2Q !== 'undefined') C2Q[QID] = { n: Q.n, steps: [stepText()] }; } catch (e) {} }
+  if (typeof C2Q !== 'undefined') C2Q[QID] = { n: Q.n, steps: [STEP.open] };
+  if (typeof C2QLOC !== 'undefined') C2QLOC[QID] = ['town', Q.loc];
+  function qOpen() { var s = S(); if (s.q[QID] == null) s.q[QID] = 0; SAVE.qs = SAVE.qs || {}; SAVE.qs[QID] = s.q[QID] | 0; s.qa = QID; SAVE.qa = QID; SAVE.qTrack = ''; SAVE.qTrackPick = 0; syncSteps(); sv(); ev('world:s2p6:quest:open'); }
+  function qStep(n) { var s = S(); if (s.q[QID] == null || s.q[QID] === 9) return; s.q[QID] = Math.max(s.q[QID] | 0, n); SAVE.qs = SAVE.qs || {}; SAVE.qs[QID] = s.q[QID]; sv(); }
+  function qClose() { var s = S(); if (s.q[QID] == null || s.q[QID] === 9) return; s.q[QID] = 9; SAVE.qs = SAVE.qs || {}; SAVE.qs[QID] = 9;
+    SAVE.journalLog = SAVE.journalLog || []; if (SAVE.journalLog.indexOf(Q.n) < 0) SAVE.journalLog.push(Q.n);
+    if (s.qa === QID) { s.qa = (typeof CQ !== 'undefined' && CQ.locks) || ''; SAVE.qa = s.qa; } sv(); ev('world:s2p6:quest:done');
+    if (typeof window.c2QuestYen === 'function') window.c2QuestYen(QID, Q.n); }
+  function qOn() { var q = S().q[QID]; return q != null && q !== 9; }
+  function qDone() { return S().q[QID] === 9; }
+  function p6Enter() { return on() && nailsRun() && !!E().seal_sento && p5Done(); }
+  /* the strip buildings stay open after the chain (eat, rest, sing, play) */
+  function stripOpen() { return p6Enter(); }
+  P6.Q = Q; P6.QID = QID; P6.stg = stg; P6.at = at; P6.setStg = setStg; P6.qOpen = qOpen; P6.qClose = qClose; P6.qOn = qOn; P6.qDone = qDone;
+  P6.p6Enter = p6Enter; P6.stripOpen = stripOpen; P6.J = J; P6.stepText = stepText; P6.ORDER = ORDER;
+
+  /* ---------------- cast (aliases of existing sheets; provisional names pending Erik) ---------------- */
+  function alias(id, src, k, nm, fig) {
+    ['map', 'walk', 'idle', 'fig', 'run', 'hurt', 'kn', 'lie', 'fig_hurt', 'fig_down'].forEach(function (sh) { if (IMG[src + '_' + sh]) IMG[id + '_' + sh] = IMG[src + '_' + sh]; });
+    if (SHC[src + '_walk']) SHC[id + '_walk'] = SHC[src + '_walk'];
+    if (IMG[src + '_idle']) { SHC[id + '_idle'] = SHC[src + '_idle'] || 4; if (typeof SHR !== 'undefined' && SHR[src + '_idle'] != null) SHR[id + '_idle'] = SHR[src + '_idle']; }
+    if (typeof BW_IDS !== 'undefined' && BW_IDS[src]) BW_IDS[id] = 1;
+    if (typeof C2K !== 'undefined') C2K[id] = k; NM[id] = nm; PT[id] = PT[src] || (src + '_fig');
+    if (fig && typeof PT_PAINT !== 'undefined') { PT_PAINT[id] = fig; if (typeof PT_HAS !== 'undefined') PT_HAS[fig + '_neutral'] = 1; }
+  }
+  try {
+    alias('j6_tetsuo', 'npc_ramen', 1.12, 'Old Man Tetsuo', 'tetsuo');
+    alias('j6_suit', 'c2_suit', (C2K && C2K.c2_suit) || 1.15, 'Syndicate Suit', 'c2suit');
+    alias('j6_suit2', 'c2_suit', (C2K && C2K.c2_suit) || 1.15, 'Syndicate Suit', 'c2suit');
+  } catch (eA) { ev('world:s2p6:err:alias:' + (eA && eA.message)); }
+  P6.alias = alias;
+
+  /* ---------------- rooms ---------------- */
+  var RW = 1280, RH = 900;
+  var KEYS = P6.KEYS = [];
+  var RNAME = P6.RNAME = {};
+  var TOWN_DOORS = P6.TOWN_DOORS = {
+    /* strip fronts face south onto Chuo-dori (y 1580) */
+    ramen: { r: [2200, 1500, 2300, 1584], at: [2250, 1626] },
+    kara: { r: [2600, 1500, 2700, 1584], at: [2650, 1626] },
+    izak: { r: [4010, 1500, 4110, 1584], at: [4060, 1626] },
+    hchuo: { r: [4560, 1500, 4660, 1584], at: [4610, 1626] }
+  };
+  Object.keys(TOWN_DOORS).forEach(function (k) { var D = TOWN_DOORS[k]; D.to = k; D.out = [D.at[0], D.at[1] + 10]; C2W.doors['j6_' + k] = D; });
+  function roomDef(k, n, mus, extra) {
+    var id = 'c2_j6_' + k; C2R[k] = id; KEYS.push(k); RNAME[k] = n;
+    var w = (extra && extra.w) || RW, h = (extra && extra.h) || RH, ex = w / 2;
+    var D = INT[id] = Object.assign({ id: id, n: n, w: w, h: h, src: 'world/j6_' + k + '.paint', tiles: 1, cell: 15, dg: 'c2', c2: k, deep: 1, safe: 1, mus: mus || 'c2night', nq: 1, s2: 1, j6: 1,
+      open: [[90, 250, w - 90, h - 50], [ex - 60, h - 50, ex + 60, h]], 'in': [ex, h - 80, 3], back: [ex, h - 80, 3], block: [] }, extra || {});
+    D.spots = [{ id: 'exit', r: [ex - 65, h - 50, ex + 65, h], at: [ex, h - 30], face: 0 }].concat((extra && extra.spots) || []);
+    D.base = D.block; TAGS_IN[id] = {};
+    return D;
+  }
+  P6.roomDef = roomDef;
+  roomDef('ramen', 'Ramen Kitsuneya \u00b7 \u72d0\u5c4b', 'c2night', {
+    block: [[190, 250, 1076, 362], [1006, 250, 1076, 550], [110, 600, 202, 750], [250, 590, 320, 664], [810, 596, 1030, 684], [810, 746, 1030, 834], [1110, 740, 1190, 820]],
+    spots: [{ id: 'j6_ramen_order', r: [560, 250, 720, 362], at: [640, 440], face: 3, lab: 'Order' },
+      { id: 'j6_ramen_ticket', r: [110, 600, 202, 750], at: [240, 700], face: 1, lab: 'Look' }]
+  });
+  [['j6_e_ramen', 'ramen'], ['j6_e_kara', 'kara'], ['j6_e_izak', 'izak'], ['j6_e_hchuo', 'hchuo']].forEach(function (a) {
+    var D = TOWN_DOORS[a[1]]; INT.c2_town.spots.push({ id: a[0], r: D.r, at: D.at, face: 3, lab: 'Enter' }); TRANS[a[0]] = 1; });
+  delete INT.c2_town.G;
+  if (typeof c2DoorOf === 'function') { var door0 = c2DoorOf; c2DoorOf = function (k) { if (TOWN_DOORS[k]) return TOWN_DOORS[k]; if (P6.innerDoor && P6.innerDoor[k]) return P6.innerDoor[k]; return door0.apply(this, arguments); }; }
+  if (typeof c2Surf === 'function') { var surf0 = c2Surf; c2Surf = function (x, y) { var k = c2Room(); if (KEYS.indexOf(k) >= 0) return (P6.SURF && P6.SURF[k]) || 'stone'; return surf0.apply(this, arguments); }; }
+  P6.SURF = { ramen: 'stone' };
+  /* C2AMB grades for the strip interiors (read through root.FFF_AMB_X; no rain indoors) */
+  var AMB = root.FFF_AMB_X = root.FFF_AMB_X || {};
+  AMB.ramen = { top: 'rgba(255,170,110,.30)', bot: 'rgba(70,30,40,.28)', rain: 0, motes: 8, steamN: 2, lamps: [[200, 214, '255,140,80', 60, 0.34, 'lantern'], [1080, 214, '255,140,80', 60, 0.34, 'lantern'], [640, 170, '255,200,130', 80, 0.36, 'lamp']] };
+  function inJ6() { return KEYS.indexOf(room()) >= 0; }
+  P6.inJ6 = inJ6;
+  function roomOpen(k) { if (!stripOpen()) return false; var f = P6.OPEN && P6.OPEN[k]; return f ? !!f() : true; }
+  P6.OPEN = {};
+  P6.roomOpen = roomOpen;
+
+  /* ---------------- paint (once per entry, cached per state key) ---------------- */
+  var RCV = {};
+  function strip(keep) { try { [].forEach.call(document.querySelectorAll('[id^="j6Room_"]'), function (el) { if (keep && el.id === 'j6Room_' + keep) return; if (el.parentNode) el.parentNode.removeChild(el); }); } catch (e) {} }
+  function paintKey(k) { var f = P6.PKEY && P6.PKEY[k]; return k + ':' + (f ? f() : ''); }
+  P6.PKEY = {};
+  function paintRoom() {
+    var k = room(); strip(KEYS.indexOf(k) >= 0 ? k : null);
+    if (KEYS.indexOf(k) < 0) return;
+    var m = document.getElementById('wimap') || document.getElementById('world'); if (!m) return;
+    var D = INT[C2R[k]], key = paintKey(k);
+    if (!RCV[key]) {
+      var c = RCV[key] = document.createElement('canvas'); c.width = D.w; c.height = D.h;
+      try { if (P6.ART && root.FFF_S2P && root.FFF_S2P.p6Paint) root.FFF_S2P.p6Paint(k, c.getContext('2d'), { j: J(), e: E() }); } catch (e) { ev('world:s2p6:err:paint:' + k + ':' + (e && e.message)); }
+    }
+    var cv = RCV[key];
+    try { [].forEach.call(document.querySelectorAll('#j6Room_' + k), function (el) { if (el !== cv && el.parentNode) el.parentNode.removeChild(el); }); } catch (eD) {}
+    if (cv.parentNode !== m) { cv.className = 'nqprop'; cv.id = 'j6Room_' + k; cv.setAttribute('data-key', key); cv.style.cssText = 'position:absolute;left:0;top:0;width:' + D.w + 'px;height:' + D.h + 'px;z-index:1;pointer-events:none'; m.insertBefore(cv, m.firstChild); }
+  }
+  P6.paintRoom = paintRoom; P6.resetPaint = function (k) { Object.keys(RCV).forEach(function (q) { if (!k || q.indexOf(k + ':') === 0) delete RCV[q]; }); strip(null); };
+
+  /* ---------------- battle backdrops ---------------- */
+  P6.BT = {};
+  function hookBattle() {
+    if (P6._bt) return true;
+    if (!root.FFF_C2BT || !root.FFF_S2P || !root.FFF_S2P.p6Battle) return false;
+    P6._bt = 1;
+    var BT = root.FFF_C2BT;
+    Object.keys(P6.BT).forEach(function (k) { var o = P6.BT[k];
+      BT.ROOMS['j6' + k] = { name: o.name, paint: function (x) { root.FFF_S2P.p6Battle(k, x); }, lights: o.lights || [], rain: 0, mood: o.mood || 'room', feet: 52, neon: o.neon };
+      BT.KEY['c2_j6' + k] = 'j6' + k; });
+    var roomB0 = BT.room;
+    BT.room = function (story) { var ctx = (story && story.ctx) || {}; if (P6.ART && ctx.j6bt && P6.BT[ctx.j6bt]) return 'c2_j6' + ctx.j6bt; return roomB0.apply(this, arguments); };
+    return true;
+  }
+  P6.hookBattle = hookBattle;
+  P6.BT.ramen = { name: 'Ramen Kitsuneya', lights: [[200, 110, '255,170,110', 90, 0.32, 'lamp'], [520, 110, '255,170,110', 90, 0.32, 'lamp']] };
+
+  /* fights: ctx.j6k routes the result */
+  var FIGHT = P6.FIGHT = {};
+  var fighting = 0;
+  function startFight(k, ids, extra) {
+    if (fighting) return;
+    fighting = k; lockIn(0);
+    var ctx = Object.assign({ dg: 'c2', dgk: 'j6_' + k, s2: 1, j6k: k, j6bt: (extra && extra.bt) || null, flv: 6 }, (extra && extra.ctx) || {});
+    try { hookBattle(); fight(ids, false, ctx); } catch (eF) { fighting = 0; ev('world:s2p6:err:fight:' + (eF && eF.message)); }
+  }
+  P6.startFight = startFight;
+  if (typeof onFightEnd === 'function') {
+    var of0 = onFightEnd;
+    onFightEnd = function (win, c) {
+      var r = of0.apply(this, arguments);
+      try { if (c && c.j6k) { var k = c.j6k; fighting = 0; var F = FIGHT[k]; if (F) { /* let the base's post-fight beats (reward toast, first-fight 'why' talk) claim the dialog first */ if (win) later(1100, function () { whenFree(function () { F.win(c); }); }); else if (F.lose) later(1100, function () { whenFree(function () { F.lose(c); }); }); } } } catch (eE) { ev('world:s2p6:err:fend:' + (eE && eE.message)); }
+      return r;
+    };
+  }
+
+  /* ---------------- shared: menus, eat ---------------- */
+  function menus() { return root.FFF_S2MENUS; }
+  function openShop(id) { var M = menus(); if (!M || !M.SHOPS || !M.SHOPS[id]) return false; try { if (W.ryo) { W.ryo.v = 0; W.path = []; } M.open(id); return true; } catch (e) { ev('world:s2p6:err:shop:' + (e && e.message)); return false; } }
+  P6.openShop = openShop;
+  /* after a counter meal closes the menu, run any hooked follow-up once (rides ev, no loop) */
+  var afterMeal = null;
+  P6.afterMeal = function (fn) { afterMeal = fn; };
+  /* listen on FFF_UI.ev (the world's ev() forwards there); rides events, no loop */
+  function hookEv() {
+    var UI = root.FFF_UI; if (!UI || typeof UI.ev !== 'function' || UI.ev._j6) return !!(UI && UI.ev && UI.ev._j6);
+    var ev0 = UI.ev;
+    UI.ev = function (k) {
+      var r = ev0.apply(this, arguments);
+      try {
+        if (k && typeof k === 'string') {
+          if (k.indexOf('world:s2m:buy:j6_') === 0) P6._ate = 1;
+          else if (k === 'world:shop:close' && afterMeal && P6._ate) { var f = afterMeal; afterMeal = null; P6._ate = 0; setTimeout(function () { whenFree(f); }, 400); }
+          if (P6.onEv) P6.onEv(k);
+        }
+      } catch (e) {}
+      return r;
+    };
+    UI.ev._j6 = 1; return true;
+  }
+  if (!hookEv()) later(0, hookEv);
+  P6.hookEv = hookEv;
+
+  /* ---------------- 1. Ramen Kitsuneya ---------------- */
+  var RAMEN_ITEMS = [
+    { id: 'shoyu', n: 'Shoyu ramen', jp: '\u91a4\u6cb9', icon: 'r_shoyu', hp: 30, base: 14, cost: 14, eat: 'shoyu',
+      eff: '+30 HP  \u00b7  eat at the counter', flavor: 'Clear soy broth, chashu, a soft egg. Tetsuo\u2019s first bowl.' },
+    { id: 'miso', n: 'Miso ramen', jp: '\u5473\u564c', icon: 'r_miso', hp: 34, base: 16, cost: 16, eat: 'miso',
+      eff: '+34 HP  \u00b7  eat at the counter', flavor: 'Thick, sweet miso with butter-corn. Holds its heat.' },
+    { id: 'tonkotsu', n: 'Tonkotsu ramen', jp: '\u8c5a\u9aa8', icon: 'r_tonkotsu', hp: 40, base: 20, cost: 20, eat: 'tonkotsu',
+      eff: '+40 HP  \u00b7  eat at the counter', flavor: 'Pork-bone broth boiled since noon. The big one.' },
+    { id: 'oolong', n: 'Oolong tea', jp: '\u70cf\u9f8d\u8336', icon: 'r_oolong', sp: 6, base: 4, cost: 4, drink: 1,
+      eff: '+6 SP  \u00b7  drink now', flavor: 'Cold, from the glass bottle in the case.' }
+  ];
+  P6.RAMEN_ITEMS = RAMEN_ITEMS;
+  function regShops() {
+    var M = menus(); if (!M || !M.SHOPS) return false;
+    M.SHOPS.j6_ramen = { id: 'j6_ramen', theme: 'ramen', n: 'Ramen Kitsuneya', jp: '\u3089\u30fc\u3081\u3093 \u72d0\u5c4b', who: 'j6_tetsuo', leave: '\u3054\u3061\u305d\u3046\u3055\u307e  \u00b7  Done',
+      hi: { fierce: 'Sit. Eat. Don\u2019t start anything in my shop.', strategic: 'Order by the number. The machine\u2019s broken, I take yen.', balanced: 'Sit, sit. The broth\u2019s been on since noon.' },
+      nails: function () { return false; }, items: function () { return RAMEN_ITEMS; } };
+    return true;
+  }
+  P6.regShops = regShops;
+  regShops();
+  var VO = P6.VO = {};
+  VO.ramenIn = [['j6_tetsuo', 'Irasshai! Counter\u2019s free. Not the corner booth.'], ['aoi', 'Why not the corner?'], ['j6_tetsuo', '{quiet}Because it\u2019s taken. Every night this week.{/quiet}']];
+  VO.ramenIn2 = [['j6_tetsuo', 'Irasshai. Sit anywhere.']];
+  VO.overhear = V3(
+    [['', '<p class="dim">The corner booth. Two Suits, two untouched bowls. They talk like nobody else eats here.</p>'],
+      ['j6_suit', 'Jin wants the strip\u2019s cut doubled by Friday. Every door on Chuo-dori.'],
+      ['j6_suit2', 'The karaoke place is short again.'],
+      ['j6_suit', 'Then Kanzaki talks to them. He takes booth four tonight. He always takes booth four.'],
+      ['j6_suit2', 'And the old man?'],
+      ['j6_suit', 'The old man pays now.']],
+    {
+      fierce: [['ryo', '{quiet}Booth four.{/quiet}'], ['aoi', '{quiet}Finish your noodles first.{/quiet}']],
+      strategic: [['aoi', '{quiet}Booth four. Kanzaki. Friday.{/quiet}'], ['ryo', '{quiet}Got it. Eat slow.{/quiet}']],
+      balanced: [['ryo', '{quiet}They\u2019re squeezing him.{/quiet}'], ['aoi', '{quiet}Wait. Let them say it all.{/quiet}']]
+    },
+    [['j6_suit', 'Old man. Envelope.'], ['j6_tetsuo', 'I paid Tuesday.'], ['j6_suit2', 'Tuesday was last price. Jin plays for a higher score now.']]);
+  VO.ramenStep = V3([], {
+    fierce: [['ryo', 'He paid. Walk out.'], ['j6_suit', 'Kazan\u2019s schoolboys. Long way from your yard.']],
+    strategic: [['aoi', 'You\u2019re collecting twice. That never ends well.'], ['j6_suit', 'For you, girl.']],
+    balanced: [['ryo', 'Leave him be. He\u2019s cooking.'], ['j6_suit', 'Then cook this.']]
+  }, []);
+  VO.ramenWon = V3([['j6_suit', '\u2026Jin hears about this.']], {
+    fierce: [['ryo', 'Good. Tell him we\u2019re coming.']],
+    strategic: [['aoi', 'Tell him the price went down.']],
+    balanced: [['ryo', 'Tell him the old man\u2019s closed to Suits.']]
+  }, [['j6_tetsuo', '\u2026You two. You eat here free for a week.'], ['j6_tetsuo', 'Jin runs the Game Center like a high-score board. Every shop\u2019s a number. Kanzaki keeps his numbers.'],
+    ['aoi', 'Booth four. Karaoke Kitsune.'], ['j6_tetsuo', 'Next door. Kanzaki sings badly and loud. You\u2019ll find him.']]);
+  VO.ticket = [['', '<p class="dim">The ticket machine\u2019s screen says \u6545\u969c (broken). Someone taped a note: \u201cPAY TETSUO\u201d.</p>']];
+
+  var R_CAST = { t: null, a: null, b: null };
+  function popRamen() {
+    var k = room();
+    if (k !== 'ramen') { ['t', 'a', 'b'].forEach(function (q) { if (R_CAST[q]) { kill(R_CAST[q]); R_CAST[q] = null; } }); return; }
+    if (!R_CAST.t || !R_CAST.t.el || !R_CAST.t.el.parentNode) { R_CAST.t = npc('j6_tetsuo', 640, 214, Math.PI / 2); try { waddle(R_CAST.t, 0, Math.PI / 2); } catch (e) {} }
+    var suits = qOn() && stg() === 'open';
+    if (suits) {
+      if (!R_CAST.a || !R_CAST.a.el || !R_CAST.a.el.parentNode) { R_CAST.a = npc('j6_suit', 770, 640, 0); }
+      if (!R_CAST.b || !R_CAST.b.el || !R_CAST.b.el.parentNode) { R_CAST.b = npc('j6_suit2', 1070, 640, Math.PI); }
+    } else { ['a', 'b'].forEach(function (q) { if (R_CAST[q]) { kill(R_CAST[q]); R_CAST[q] = null; } }); }
+    try { if (!W.c2n) W.c2n = {}; W.c2n.j6t = R_CAST.t; } catch (eN) {}
+  }
+  P6.popRamen = popRamen; P6.R_CAST = R_CAST;
+  function ramenArrive() {
+    if (room() !== 'ramen') return;
+    var j = J();
+    whenFree(function () {
+      if (room() !== 'ramen') return;
+      lockIn(1);
+      talk(qOn() && stg() === 'open' && !j.rIn ? VO.ramenIn : VO.ramenIn2, function () { j.rIn = 1; sv(); lockIn(0); });
+    });
+  }
+  function ramenOrder() {
+    if (busy()) return true;
+    if (qOn() && stg() === 'open') { P6._ate = 0; P6.afterMeal(overhear); }
+    openShop('j6_ramen');
+    return true;
+  }
+  function overhear() {
+    if (room() !== 'ramen' || stg() !== 'open') return;
+    lockIn(1);
+    talk(pv(VO.overhear), function () {
+      var a = R_CAST.a, b = R_CAST.b, t = R_CAST.t;
+      /* the Suits get up and lean on the counter */
+      try { if (a) { a.x = 600; a.y = 420; place(a, 0); waddle(a, 0, -Math.PI / 2); } if (b) { b.x = 700; b.y = 430; place(b, 0); waddle(b, 0, -Math.PI / 2); } } catch (eM) {}
+      later(350, function () {
+        talk(pv(VO.ramenStep), function () {
+          J().rFight = 1; sv();
+          startFight('ramen', ['c2_suit', 'c2_suit'], { bt: 'ramen' });
+        });
+      });
+    });
+  }
+  FIGHT.ramen = {
+    win: function () {
+      ['a', 'b'].forEach(function (q) { if (R_CAST[q]) { kill(R_CAST[q]); R_CAST[q] = null; } });
+      lockIn(1);
+      talk(pv(VO.ramenWon), function () { lockIn(0); setStg('ramen'); qStep(1); J().freeBowls = 7; sv(); toastS('Journal: booth four, Karaoke Kitsune.'); });
+    },
+    lose: function () { J().rFight = 0; sv(); }
+  };
+  P6.overhear = overhear; P6.ramenOrder = ramenOrder;
+  /* ---------------- pin ---------------- */
+  var PIN = P6.PIN = {
+    open: function () { return { room: 'town', x: TOWN_DOORS.ramen.at[0], y: TOWN_DOORS.ramen.at[1] - 60, lab: 'Ramen', loc: 'High Score \u00b7 Ramen Kitsuneya' }; }
+  };
+  function s2Tgt() {
+    if (!p6Enter() || !qOn()) return null;
+    var f = PIN[stg()]; if (!f) return null;
+    var t = f(); if (!t) return null;
+    if (t.room !== 'town' && room() !== t.room && inJ6()) return t;
+    return t;
+  }
+  P6.s2Tgt = s2Tgt;
+  if (typeof c2LocksT === 'function') { var lt0 = c2LocksT; c2LocksT = function () { try { var t = s2Tgt(); if (t) return t; } catch (eL) {} return lt0.apply(this, arguments); }; }
+
+  function chainRepair() {
+    if (!p6Enter()) return;
+    if (!qOn() && !qDone()) { qOpen(); if (!stg()) setStg('open'); ev('world:s2p6:repair'); }
+    if (E().seal_game && !qDone() && P6.finishQuest) P6.finishQuest();
+    syncSteps();
+  }
+  P6.chainRepair = chainRepair;
+
+  /* ---------------- dispatch ---------------- */
+  var ACT = P6.ACT = {
+    j6_ramen_order: function () { return ramenOrder(); },
+    j6_ramen_ticket: function () { if (busy()) return true; lockIn(1); talk(VO.ticket, function () { lockIn(0); }); return true; }
+  };
+  var TALK = P6.TALK = { j6_tetsuo: function () { return ramenOrder(); } };
+  var ARRIVE = P6.ARRIVE = { ramen: ramenArrive };
+  var POP = P6.POP = [popRamen];
+  function enterRoom(k) { if (W.fading) return; W.path = []; W.dlg = true; ev('world:c2:enter:' + k);
+    try { intFade(function () { W.dlg = false; c2Go(k); try { AU.play('door', { gain: 0.55 }); } catch (eA) {} }, function () { var f = ARRIVE[k]; if (f) f(); }); }
+    catch (eE) { W.dlg = false; try { c2Go(k); } catch (e2) {} } }
+  P6.enterRoom = enterRoom;
+  function popAll() { POP.forEach(function (f) { try { f(); } catch (e) { ev('world:s2p6:err:pop:' + (e && e.message)); } }); }
+  P6.popAll = popAll;
+
+  if (typeof c2Tags === 'function') {
+    var tags0 = c2Tags;
+    c2Tags = function (id, D) {
+      var out = tags0.apply(this, arguments);
+      try { if (out && on()) out = out.filter(function (t) { if (!t || !t.key) return true; var m = /:j6_e_(\w+)$/.exec(t.key); if (m) return roomOpen(m[1]); return true; }); } catch (e) {}
+      return out;
+    };
+  }
+  if (typeof c2ActC === 'function') {
+    var act0 = c2ActC;
+    c2ActC = function (k, a) {
+      try {
+        if (on() && a) {
+          var m = /^j6_e_(\w+)$/.exec(a);
+          if (m) { if (roomOpen(m[1])) { chainRepair(); enterRoom(m[1]); } return true; }
+          if (a === 'exit' && inJ6() && P6.innerBack && P6.innerBack[room()]) { P6.innerBack[room()](); return true; }
+          if (ACT[a]) return ACT[a](k) !== false;
+        }
+      } catch (e) { ev('world:s2p6:err:act:' + (e && e.message)); }
+      return act0.apply(this, arguments);
+    };
+  }
+  function talkHook(s) {
+    if (!on() || !s) return null;
+    var id = s.s2id || s.id || (s.el && s.el.dataset && (s.el.dataset.npc || s.el.dataset.who));
+    if (id && TALK[id] && (inJ6() || P6.TALK_ANY && P6.TALK_ANY[id])) return TALK[id](s);
+    return null;
+  }
+  if (typeof c2Talk === 'function') { var tk0 = c2Talk; c2Talk = function (s) { try { var r = talkHook(s); if (r != null) return r; } catch (eT) {} return tk0.apply(this, arguments); }; }
+  else if (typeof talkNpc === 'function') { var tn0 = talkNpc; talkNpc = function (s) { try { var r = talkHook(s); if (r != null) return r; } catch (eT) {} return tn0.apply(this, arguments); }; }
+
+  var lastK = null;
+  if (typeof c2Frame === 'function') {
+    var fr0 = c2Frame;
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on() && p6Enter()) { var k = room(); if (k !== lastK) { lastK = k; chainRepair(); popAll(); paintRoom(); } } } catch (e) { if (!P6.ferr) { P6.ferr = 1; ev('world:s2p6:err:frame:' + (e && e.message)); } } };
+  }
+  if (typeof c2Go === 'function') {
+    var goX = c2Go;
+    c2Go = function () { var r = goX.apply(this, arguments); try { if (on()) { later(0, function () { popAll(); paintRoom(); }); } } catch (eG) {} return r; };
+  }
+  if (typeof c2Pop === 'function') {
+    var pop0 = c2Pop;
+    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); hookBattle(); popAll(); paintRoom(); } } catch (eP) {} };
+  }
+  try { chainRepair(); } catch (eC) {}
+  ev('world:s2p6:ready');
+  } catch (eS2) { try { ev('world:s2p6:err:init:' + (eS2 && eS2.message)); console.warn('S2P6 init', eS2); } catch (e2) {} }
+})();
+/* S2P6_END */
 /* CH2BOND_BEGIN v6563-bond */
 /* v6.5.63 (GGD-29) Ch2 bond moments. M1 to M5 pay 700/350/140 up to 935/468/187 (Grinder halves them through bondGain).
  * M1 = c2_goda: a staged scene after the fight with G\u014dda (Punk / Nails route; it replaces the pre-fight c2lm_sento call).
@@ -50161,7 +50788,7 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
     var rm = 'town';
     try { rm = (typeof c2Room === 'function' && c2Room()) || 'town'; } catch (e2) {}
     if (rm === 'roof') { hide(); return; }
-    var g = GRADE[rm] || GRADE.town;
+    var g = GRADE[rm] || (root.FFF_AMB_X && root.FFF_AMB_X[rm]) || GRADE.town; /* GGD-51 amb */
     if (cv.style.display === 'none') cv.style.display = '';
     var key = rm + 'x' + vw + 'x' + vh;
     if (stillKey !== key) { stillKey = key; bakeStill(g); resetParts(g, rm); }
@@ -54754,6 +55381,25 @@ var CAP = false;
 
 /* ---------------- config ---------------- */
 var ITEMS = {
+/* GGD-51 eatg */
+  shoyu: { game: 'noodles', ramen: 'shoyu', jp: '醤油らーめん', en: 'SHOYU RAMEN', tag: 'BLOW · SLURP · DON\u2019T BURN', bg: '#ffe2b0', ray1: 'rgba(200,110,50,.42)', ray2: 'rgba(140,70,30,.22)', broth: '#a0602a',
+    tapP: 0.034, tapH: 0.08, cool: 0.29, stat: 'hp', base: 30, win: 'x1.5', startHp: 4,
+    rows: { win: ['WIN', 'FULL HP', 'back to 55 / 55'], close: ['CLOSE MISS', '+30 HP', 'the normal heal'], bad: ['BAD RUN', '+15 HP', 'half of normal'] } },
+  miso: { game: 'noodles', ramen: 'miso', jp: '味噌らーめん', en: 'MISO RAMEN', tag: 'THICK BROTH HOLDS THE HEAT', bg: '#ffdca0', ray1: 'rgba(214,140,40,.42)', ray2: 'rgba(160,90,30,.22)', broth: '#c48a3a',
+    tapP: 0.032, tapH: 0.09, cool: 0.26, stat: 'hp', base: 34, win: 'x1.5', startHp: 4,
+    rows: { win: ['WIN', 'FULL HP', 'back to 55 / 55'], close: ['CLOSE MISS', '+30 HP', 'the normal heal'], bad: ['BAD RUN', '+15 HP', 'half of normal'] } },
+  tonkotsu: { game: 'noodles', ramen: 'tonkotsu', jp: '豚骨らーめん', en: 'TONKOTSU RAMEN', tag: 'MILKY BROTH · BIG BOWL', bg: '#fff0d6', ray1: 'rgba(230,190,140,.45)', ray2: 'rgba(170,120,80,.22)', broth: '#e8d4ae',
+    tapP: 0.03, tapH: 0.085, cool: 0.27, stat: 'hp', base: 40, win: 'x1.5', startHp: 4,
+    rows: { win: ['WIN', 'FULL HP', 'back to 55 / 55'], close: ['CLOSE MISS', '+30 HP', 'the normal heal'], bad: ['BAD RUN', '+15 HP', 'half of normal'] } },
+  yakitori: { game: 'bite', kind: 'yakitori', jp: '焼き鳥', en: 'YAKITORI', tag: 'MASH · TARE GLAZE OFF THE SKEWER', bg: '#f2dcc0', ray1: 'rgba(170,80,30,.3)', ray2: 'rgba(90,40,20,.16)',
+    tapP: 0.12, tapsNeed: 8, stat: 'hp', startHp: 4,
+    rows: { win: ['WIN', '+15 HP', 'a generous plate'], close: ['CLOSE MISS', '+10 HP', 'the normal heal'], bad: ['BAD RUN', '+5 HP', 'half of normal'] } },
+  karaage: { game: 'bite', kind: 'lunch', jp: '唐揚げ', en: 'KARAAGE', tag: 'MASH · CRUNCHY, STRAIGHT FROM THE OIL', bg: '#f0e0c0', ray1: 'rgba(200,160,80,.28)', ray2: 'rgba(120,90,40,.14)',
+    tapP: 0.11, tapsNeed: 9, stat: 'hp', startHp: 4,
+    rows: { win: ['WIN', '+21 HP', 'a generous plate'], close: ['CLOSE MISS', '+14 HP', 'the normal heal'], bad: ['BAD RUN', '+7 HP', 'half of normal'] } },
+  edamame: { game: 'bite', kind: 'edamame', jp: '枝豆', en: 'EDAMAME', tag: 'MASH · POP THE PODS', bg: '#e4f0d0', ray1: 'rgba(90,160,60,.28)', ray2: 'rgba(40,100,40,.14)',
+    tapP: 0.13, tapsNeed: 7, stat: 'hp', startHp: 4,
+    rows: { win: ['WIN', '+9 HP', 'a generous plate'], close: ['CLOSE MISS', '+6 HP', 'the normal heal'], bad: ['BAD RUN', '+3 HP', 'half of normal'] } },
   kitsune: { game: 'noodles', jp: 'きつねうどん', en: 'KITSUNE UDON', tag: 'FRIED TOFU BITE BEAT', bg: '#ffe9b8', ray1: 'rgba(255,170,80,.45)', ray2: 'rgba(255,120,60,.25)', broth: '#d9b77a',
     tapP: 0.0305, tapH: 0.075, cool: 0.30, tofu: true, stat: 'hp', base: 40, win: 'full', startHp: 4,
     rows: { win: ['WIN', 'FULL HP', 'back to 55 / 55'], close: ['CLOSE MISS', '+40 HP', 'the normal heal'], bad: ['BAD RUN', '+20 HP', 'half of normal'] } },
@@ -55372,6 +56018,27 @@ function hand(x, y, rot, sc) { var ch = S.ch; ctx.save(); ctx.translate(x, y); c
   for (var i = 0; i < 4; i++) { var fy = -17 + i * 11.5; rr(-6, fy - 5.5, 34 - Math.abs(i - 1.5) * 3, 11, 5.5); ctx.fillStyle = ch.skin; ctx.fill(); ctx.lineWidth = 4; ctx.strokeStyle = INK; ctx.stroke(); }
   for (var j = 0; j < 4; j++) { var fy2 = -17 + j * 11.5; ctx.beginPath(); ctx.moveTo(8, fy2 + 4); ctx.lineTo(22, fy2 + 4); ctx.strokeStyle = ch.skinD; ctx.lineWidth = 1.6; ctx.stroke(); }
   ctx.restore(); }
+/* GGD-51 eatg */
+function ramenTop(cx, cy, R, lvl, kind) {
+  var dy = -R * 0.1 - lvl * R * 0.1;
+  /* nori sheets standing at the back rim */
+  [[-0.62, -0.2, -0.25], [-0.46, -0.24, -0.08]].forEach(function (n) { ctx.save(); ctx.translate(cx + R * n[0], cy + R * n[1] + dy * 0.3); ctx.rotate(n[2]); ctx.beginPath(); ctx.rect(-R * 0.09, -R * 0.36, R * 0.18, R * 0.34); ctx.fillStyle = '#1c2a22'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.stroke(); ctx.fillStyle = 'rgba(120,170,120,.18)'; ctx.fillRect(-R * 0.07, -R * 0.33, R * 0.03, R * 0.28); ctx.restore(); });
+  /* two chashu slices */
+  [[0.18, -0.12, 0.2], [0.4, -0.02, -0.15]].forEach(function (c) { ctx.save(); ctx.translate(cx + R * c[0], cy + R * c[1] + dy * 0.5); ctx.rotate(c[2]); ctx.beginPath(); ctx.ellipse(0, 0, R * 0.2, R * 0.11, 0, 0, 7); ctx.fillStyle = kind === 'miso' ? '#d49a6a' : '#e0a888'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(0, 0, R * 0.14, R * 0.07, 0, 0, 7); ctx.strokeStyle = 'rgba(250,236,220,.85)'; ctx.lineWidth = 2.5; ctx.stroke(); ctx.beginPath(); ctx.ellipse(R * 0.03, 0, R * 0.06, R * 0.03, 0, 0, 7); ctx.fillStyle = 'rgba(150,70,40,.45)'; ctx.fill(); ctx.restore(); });
+  /* ajitama half egg */
+  ctx.save(); ctx.translate(cx - R * 0.18, cy + R * 0.06 + dy * 0.4); ctx.rotate(-0.15); ctx.beginPath(); ctx.ellipse(0, 0, R * 0.15, R * 0.1, 0, 0, 7); ctx.fillStyle = '#f4ead0'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(R * 0.01, 0, R * 0.075, R * 0.055, 0, 0, 7); ctx.fillStyle = '#f0a020'; ctx.fill(); ctx.fillStyle = 'rgba(255,240,180,.7)'; ctx.beginPath(); ctx.ellipse(-R * 0.02, -R * 0.015, R * 0.025, R * 0.012, 0, 0, 7); ctx.fill(); ctx.restore();
+  /* menma */
+  ctx.fillStyle = '#c99a4a'; for (var q = 0; q < 4; q++) { ctx.save(); ctx.translate(cx + R * (0.02 + q * 0.06), cy + R * 0.12 + dy * 0.3); ctx.rotate(0.5 + q * 0.2); ctx.fillRect(-2.5, -9, 5, 18); ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.strokeRect(-2.5, -9, 5, 18); ctx.restore(); }
+  /* scallions, sesame for tonkotsu, butter-corn for miso */
+  ctx.fillStyle = '#5ea83a'; for (var m = 0; m < 8; m++) { ctx.beginPath(); ctx.ellipse(cx - R * 0.02 + (m % 4) * 11, cy - R * 0.06 + ((m / 4) | 0) * 8 + dy * 0.6, 5, 3.4, 0, 0, 7); ctx.fill(); }
+  if (kind === 'miso') { ctx.fillStyle = '#f2c230'; for (var k2 = 0; k2 < 10; k2++) { ctx.beginPath(); ctx.arc(cx - R * 0.42 + (k2 % 5) * 8, cy + R * 0.08 + ((k2 / 5) | 0) * 7, 3.2, 0, 7); ctx.fill(); } }
+  if (kind === 'tonkotsu') { ctx.fillStyle = 'rgba(250,240,220,.95)'; for (var s2 = 0; s2 < 14; s2++) { ctx.beginPath(); ctx.ellipse(cx - R * 0.3 + (s2 * 23 % 60), cy - R * 0.02 + (s2 * 11 % 18), 1.6, 1, 0.4, 0, 7); ctx.fill(); } }
+  /* fox naruto: Ramen Kitsuneya's mark */
+  ctx.save(); ctx.translate(cx + R * 0.6, cy + R * 0.1); ctx.beginPath(); ctx.ellipse(0, 0, R * 0.12, R * 0.075, 0, 0, 7); ctx.fillStyle = '#fbf3f0'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.stroke();
+  ctx.strokeStyle = '#e8508a'; ctx.lineWidth = 3; ctx.beginPath(); for (var a = 0; a < 10; a += 0.25) { var rr2 = a * R * 0.01; ctx.lineTo(Math.cos(a) * rr2, Math.sin(a) * rr2 * 0.6); } ctx.stroke(); ctx.restore();
+}
 function bowl(cx, cy, R, rot, eaten) {
   var C = S.C, lvl = clamp(1 - S.p, 0, 1); if (eaten) lvl = 0;
   ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot || 0); ctx.translate(-cx, -cy);
@@ -55381,24 +56048,26 @@ function bowl(cx, cy, R, rot, eaten) {
   /* warm under-rim, not a flat stripe */
   ctx.beginPath(); ctx.moveTo(cx - R * 0.96, cy + 2); ctx.lineTo(cx + R * 0.96, cy + 2); ctx.lineTo(cx + R * 0.88, cy + 12); ctx.lineTo(cx - R * 0.88, cy + 12); ctx.closePath(); var rg = ctx.createLinearGradient(cx, cy, cx, cy + 14); rg.addColorStop(0, 'rgba(176,70,48,.85)'); rg.addColorStop(1, 'rgba(90,28,18,.0)'); ctx.fillStyle = rg; ctx.fill();
   ctx.beginPath(); ctx.ellipse(cx - R * 0.45, cy + R * 0.45, R * 0.18, R * 0.07, -0.6, 0, 7); ctx.fillStyle = 'rgba(255,255,255,.12)'; ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 0.34, 0, 0, 7); var br = ctx.createRadialGradient(cx - R * 0.25, cy - R * 0.08, 8, cx, cy, R); br.addColorStop(0, C.curry ? '#e8a24a' : '#f0d09a'); br.addColorStop(0.45, C.broth); br.addColorStop(1, C.curry ? '#6a3a0c' : '#8a6230'); ctx.fillStyle = br; ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = INK; ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx - R * 0.28, cy - R * 0.08, R * 0.35, R * 0.08, -0.3, 0, 7); ctx.fillStyle = 'rgba(255,240,200,.22)'; ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx, cy, R, R * 0.34, 0, 0, 7); var br = ctx.createRadialGradient(cx - R * 0.25, cy - R * 0.08, 8, cx, cy, R); br.addColorStop(0, C.curry ? '#e8a24a' : C.ramen === 'tonkotsu' ? '#fff6e4' : '#f0d09a'); br.addColorStop(0.45, C.broth); br.addColorStop(1, C.curry ? '#6a3a0c' : C.ramen === 'tonkotsu' ? '#b89a70' : C.ramen === 'shoyu' ? '#5a3010' : '#8a6230'); ctx.fillStyle = br; ctx.fill(); ctx.lineWidth = 6; ctx.strokeStyle = INK; ctx.stroke(); ctx.beginPath(); ctx.ellipse(cx - R * 0.28, cy - R * 0.08, R * 0.35, R * 0.08, -0.3, 0, 7); ctx.fillStyle = 'rgba(255,240,200,.22)'; ctx.fill();
   if (C.curry) { ctx.save(); ctx.beginPath(); ctx.ellipse(cx, cy, R * 0.93, R * 0.3, 0, 0, 7); ctx.clip(); ctx.fillStyle = 'rgba(160,90,10,.5)'; ctx.beginPath(); ctx.ellipse(cx + 10, cy + 2, R * 0.7, R * 0.2, 0, 0, 7); ctx.fill(); ctx.restore(); }
   if (lvl > 0.04) {
     ctx.save(); ctx.beginPath(); ctx.ellipse(cx, cy, R * 0.95, R * 0.31, 0, 0, 7); ctx.clip();
-    ctx.strokeStyle = '#e8d4a4'; ctx.lineWidth = 10; ctx.lineCap = 'round';
+    ctx.strokeStyle = C.ramen ? '#ecc864' : '#e8d4a4'; ctx.lineWidth = C.ramen ? 7 : 10; ctx.lineCap = 'round';/* GGD-51 eatg */
     for (var i = 0; i < 9; i++) { ctx.beginPath(); ctx.moveTo(cx - R + i * 22, cy - R * 0.2); ctx.bezierCurveTo(cx - R * 0.4 + i * 14, cy + R * 0.1, cx + i * 8, cy - R * 0.25, cx + R - i * 12, cy + R * 0.12); ctx.stroke(); }
     ctx.strokeStyle = 'rgba(42,33,28,.32)'; ctx.lineWidth = 1.5; for (var j = 0; j < 9; j++) { ctx.beginPath(); ctx.moveTo(cx - R + j * 22, cy - R * 0.2 + 4); ctx.bezierCurveTo(cx - R * 0.4 + j * 14, cy + R * 0.1 + 4, cx + j * 8, cy - R * 0.25 + 4, cx + R - j * 12, cy + R * 0.12 + 4); ctx.stroke(); }
     ctx.restore();
     /* the mound that shrinks as you eat */
-    ctx.beginPath(); ctx.ellipse(cx, cy - R * 0.1 - lvl * R * 0.1, R * (0.5 + lvl * 0.3), R * (0.07 + lvl * 0.2), 0, 0, 7); ctx.fillStyle = '#f6efd8'; ctx.fill(); ctx.lineWidth = 4; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx, cy - R * 0.1 - lvl * R * 0.1, R * (0.5 + lvl * 0.3), R * (0.07 + lvl * 0.2), 0, 0, 7); ctx.fillStyle = C.ramen ? '#f0d478' : '#f6efd8'; ctx.fill(); ctx.lineWidth = 4; ctx.stroke();
     ctx.save(); ctx.clip(); ctx.restore();
     ctx.strokeStyle = 'rgba(42,33,28,.35)'; ctx.lineWidth = 1.6; for (var k = -3; k <= 3; k++) { ctx.beginPath(); ctx.moveTo(cx + k * R * 0.1 * (0.5 + lvl * 0.3) * 2.2, cy - R * 0.1 - lvl * R * 0.1 - R * (0.05 + lvl * 0.15)); ctx.quadraticCurveTo(cx + k * 6, cy - R * 0.1 - lvl * R * 0.1, cx + k * R * 0.1 * (0.5 + lvl * 0.3) * 2.2 + 8, cy - R * 0.1 - lvl * R * 0.1 + R * (0.05 + lvl * 0.15)); ctx.stroke(); }
     if (C.curry) { [[-0.3, -0.08], [0.2, -0.12], [0.38, 0.02]].forEach(function (q) { box(cx + R * q[0] - 9, cy + R * q[1] - 7, 18, 14, '#e0892a', 3, 2.5); }); }
     if (S.name === 'kitsune' && S.tofu.st === 0) { ctx.save(); ctx.translate(cx - R * 0.38, cy - R * 0.2 - lvl * R * 0.06); ctx.rotate(-0.25); tofuShape(R * 0.34); ctx.restore(); }
+    if (C.ramen) { ramenTop(cx, cy, R, lvl, C.ramen); } else {
     /* naruto + scallions */
     ctx.save(); ctx.translate(cx + R * 0.5, cy - R * 0.06); ctx.beginPath(); ctx.ellipse(0, 0, R * 0.15, R * 0.09, 0, 0, 7); ctx.fillStyle = '#fbf3f0'; ctx.fill(); ctx.lineWidth = 3; ctx.stroke();
     ctx.strokeStyle = '#e8508a'; ctx.lineWidth = 3.5; ctx.beginPath(); for (var a = 0; a < 12; a += 0.25) { var rr2 = a * R * 0.012; ctx.lineTo(Math.cos(a) * rr2, Math.sin(a) * rr2 * 0.6); } ctx.stroke(); ctx.restore();
     ctx.fillStyle = '#5ea83a'; for (var m = 0; m < 6; m++) { ctx.beginPath(); ctx.ellipse(cx - R * 0.05 + (m % 3) * 14, cy + R * 0.02 + ((m / 3) | 0) * 8, 6, 4, 0, 0, 7); ctx.fill(); }
+    }
   } else { ctx.fillStyle = 'rgba(160,120,70,.45)'; ctx.beginPath(); ctx.ellipse(cx, cy + 4, R * 0.6, R * 0.14, 0, 0, 7); ctx.fill(); }
   ctx.restore();
 }
@@ -56043,6 +56712,29 @@ function pcDango(p, A) {
   ctx.restore();
 }
 
+/* GGD-51 eatg */
+function pcYakitori(p, A) {
+  ctx.save(); ctx.scale(1 + 0.06 * A.pop, 1 - 0.07 * A.pop); ctx.rotate(-0.55 + A.wob * 0.05);
+  seg(-6, 62, -6, -64, 5, '#e8d0a0');
+  [[-6, -40, 0], [-6, -12, 1], [-6, 16, 0], [-6, 42, 2]].forEach(function (b, bi) { var neg = b[2] === 1;
+    blobPath(b[0], b[1], neg ? 18 : 20, neg ? 11 : 13, 0.14, 1.7 + bi, 24);
+    var g = ctx.createRadialGradient(b[0] - 6, b[1] - 5, 2, b[0], b[1], 24); g.addColorStop(0, neg ? '#e8f0c0' : '#e8a050'); g.addColorStop(0.55, neg ? '#9ab850' : '#a8501c'); g.addColorStop(1, neg ? '#5a7a28' : '#6a2c0c'); ctx.fillStyle = g; ctx.fill();
+    ctx.save(); ctx.clip(); ctx.fillStyle = 'rgba(40,14,4,.55)'; for (var c = 0; c < 3; c++) ctx.fillRect(b[0] - 18, b[1] - 8 + c * 7, 36, 2.2); ctx.restore();
+    blobPath(b[0], b[1], neg ? 18 : 20, neg ? 11 : 13, 0.14, 1.7 + bi, 24); inkFood(3);
+    ctx.fillStyle = 'rgba(255,230,180,.6)'; ctx.beginPath(); ctx.ellipse(b[0] - 7, b[1] - 6, 5, 2.2, -0.4, 0, 7); ctx.fill(); });
+  ctx.fillStyle = 'rgba(255,220,150,.8)'; for (var s2 = 0; s2 < 10; s2++) { ctx.beginPath(); ctx.arc(-18 + (s2 * 13 % 26), -50 + (s2 * 23 % 100), 1.2, 0, 7); ctx.fill(); }
+  ctx.restore();
+}
+function pcEdamame(p, A) {
+  ctx.save(); ctx.scale(1 + 0.06 * A.pop, 1 - 0.07 * A.pop); ctx.rotate(A.wob * 0.05);
+  [[-22, -18, -0.5], [14, -8, 0.4], [-8, 18, -0.1]].forEach(function (d, di) { ctx.save(); ctx.translate(d[0], d[1]); ctx.rotate(d[2]);
+    ctx.beginPath(); ctx.moveTo(-34, 0); ctx.bezierCurveTo(-30, -16, -12, -12, 0, -14); ctx.bezierCurveTo(14, -16, 30, -14, 36, -2); ctx.bezierCurveTo(30, 14, 12, 12, 0, 13); ctx.bezierCurveTo(-14, 14, -30, 14, -34, 0); ctx.closePath();
+    var g = ctx.createLinearGradient(0, -14, 0, 14); g.addColorStop(0, '#a8d070'); g.addColorStop(1, '#4a8a2a'); ctx.fillStyle = g; ctx.fill(); inkFood(3);
+    [-20, 0, 20].forEach(function (bx) { ctx.beginPath(); ctx.ellipse(bx, 0, 8, 7, 0, 0, 7); ctx.fillStyle = 'rgba(200,236,140,.7)'; ctx.fill(); ctx.strokeStyle = 'rgba(42,60,20,.5)'; ctx.lineWidth = 1.5; ctx.stroke(); });
+    ctx.fillStyle = 'rgba(255,255,255,.85)'; for (var s2 = 0; s2 < 5; s2++) ctx.fillRect(-26 + s2 * 12, -10 + (s2 % 2) * 4, 2.4, 2.4);
+    ctx.restore(); });
+  ctx.restore();
+}
 var BITE_SPEC = {
   onigiri: { draw: pcOnigiri, cut: '#fffaf0', bites: [[-16, -36, 11], [-32, -10, 11], [-6, -18, 10], [-24, 14, 9]], up: 26 },
   melon: { draw: pcMelon, cut: '#fff8dc', bites: [[-34, -20, 11], [-40, 4, 10], [-14, -34, 10], [-22, 12, 9]], up: 13, steam: 0 },
@@ -56053,7 +56745,9 @@ var BITE_SPEC = {
   candy: { draw: pcCandy, cut: '#f2d8a0', bites: [[-44, 12, 11], [-36, 25, 10], [-27, 3, 10], [-24, 21, 9]], up: 11 },
   omurice: { draw: pcOmurice, cut: '#fff2b0', bites: [[-34, -16, 12], [-40, 10, 11], [-14, -34, 10], [-26, 22, 9]], up: 13, steam: 1 },
   sweetroll: { draw: pcSweetroll, cut: '#fff0c4', bites: [[-24, -10, 11], [-30, 12, 10], [10, -16, 10], [-8, 16, 9]], up: 16 },
-  dango: { draw: pcDango, cut: '#fff6e8', bites: [[-6, -28, 10], [8, 0, 10], [-8, 24, 9], [10, -8, 8]], up: 18 }
+  dango: { draw: pcDango, cut: '#fff6e8', bites: [[-6, -28, 10], [8, 0, 10], [-8, 24, 9], [10, -8, 8]], up: 18 },
+  yakitori: { draw: pcYakitori, cut: '#f6e0b8', bites: [[-20, -52, 12], [-22, -26, 12], [-16, -2, 11], [-14, 26, 10]], up: 16, steam: 1 }, /* GGD-51 eatg */
+  edamame: { draw: pcEdamame, cut: '#e8f4d0', bites: [[-44, -26, 11], [-30, -10, 10], [-4, -16, 10], [-30, 24, 9]], up: 14 }
 };
 
 function drawBitePiece(kind) {
