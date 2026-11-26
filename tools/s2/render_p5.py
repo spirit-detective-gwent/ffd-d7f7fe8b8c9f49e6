@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render Phase 5 preview canvases to /workspace/v6560-review/seal2/phase5/v1/"""
+"""Render Phase 5 preview canvases to /workspace/v6560-review/seal2/phase5/v2/"""
 import asyncio, base64, functools, io, os, threading
 from http.server import ThreadingHTTPServer as TS, SimpleHTTPRequestHandler as Q
 from pathlib import Path
@@ -7,8 +7,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parent
 OUT = Path('/workspace/v6560-review/seal2/phase5')
-V1 = OUT / 'v1'
-PORT = int(os.environ.get('PORT', '8905'))
+V1 = OUT / 'v2'
+PORT = int(os.environ.get('PORT', '8906'))
 
 def font(size):
     for p in ('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
@@ -56,12 +56,12 @@ def room_sheet():
     rows = (len(cells) + cols - 1) // cols
     sh = Image.new('RGB', (cols * W + 24, rows * H + 48), (16, 12, 20))
     d = ImageDraw.Draw(sh)
-    d.text((12, 10), "Seal 2 Phase 5  ·  Masa's Seal  ·  13 depot rooms  ·  v1", fill=(244, 234, 210), font=font(18))
+    d.text((12, 10), "Seal 2 Phase 5  ·  Masa's Seal  ·  13 depot rooms  ·  v2", fill=(244, 234, 210), font=font(18))
     for i, c in enumerate(cells):
         r, col = divmod(i, cols)
         sh.paste(c, (12 + col * W, 36 + r * H))
-    sh.save(V1 / 'phase5_rooms_v1.png')
-    sh.save(OUT / 'phase5_rooms_v1.png')
+    sh.save(V1 / 'phase5_rooms_v2.png')
+    sh.save(OUT / 'phase5_rooms_v2.png')
     print('room sheet', sh.size, 'cells', len(cells))
 
 async def main():

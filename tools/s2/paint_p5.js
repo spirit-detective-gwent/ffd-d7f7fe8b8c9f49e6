@@ -182,60 +182,260 @@
     R(g, 90, 40, 1100, 18, '#2a2e3a', INK, 2);
   }
 
+
+  function hose(g, x, y, len) {
+    g.strokeStyle = INK; g.lineWidth = 6;
+    g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + len * 0.4, y + 28, x + len, y + 8); g.stroke();
+    g.strokeStyle = '#3a4a38'; g.lineWidth = 3.5;
+    g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + len * 0.4, y + 28, x + len, y + 8); g.stroke();
+  }
+  function hoseCoil(g, cx, cy, r) {
+    g.strokeStyle = INK; g.lineWidth = 6;
+    g.beginPath(); g.arc(cx, cy, r, 0.2, Math.PI * 1.85); g.stroke();
+    g.strokeStyle = '#3a4a38'; g.lineWidth = 3.6;
+    g.beginPath(); g.arc(cx, cy, r, 0.2, Math.PI * 1.85); g.stroke();
+    g.strokeStyle = '#2a3a28'; g.lineWidth = 2.4;
+    g.beginPath(); g.arc(cx, cy, r * 0.6, 0.5, Math.PI * 1.6); g.stroke();
+  }
+  function handTruck(g, x, y) {
+    g.strokeStyle = INK; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(x, y + 40); g.lineTo(x, y - 80); g.lineTo(x + 50, y - 80); g.stroke();
+    g.beginPath(); g.moveTo(x, y + 40); g.lineTo(x + 36, y + 40); g.stroke();
+    ellipse(g, x, y + 48, 14, 14, '#1a1220', INK, 2);
+    ellipse(g, x, y + 48, 6, 6, '#6a707c', INK, 1.4);
+  }
+  function chainHang(g, x, y0, y1) {
+    var i, n = Math.max(4, Math.floor((y1 - y0) / 10));
+    g.strokeStyle = '#8a8fa0'; g.lineWidth = 3;
+    for (i = 0; i < n; i++) {
+      g.beginPath(); g.ellipse(x, y0 + i * 10, 4, 5, 0, 0, Math.PI * 2); g.stroke();
+    }
+  }
+  function chainCoil(g, cx, cy, r) {
+    g.strokeStyle = INK; g.lineWidth = 5;
+    g.beginPath(); g.arc(cx, cy, r, 0.15, Math.PI * 1.9); g.stroke();
+    g.strokeStyle = '#8a8fa0'; g.lineWidth = 3;
+    g.beginPath(); g.arc(cx, cy, r, 0.15, Math.PI * 1.9); g.stroke();
+    g.beginPath(); g.arc(cx, cy, r * 0.55, 0.4, Math.PI * 1.7); g.stroke();
+  }
+  function cableRun(g, x1, y1, x2, y2) {
+    /* low conduit along a wall or baseboard — never a mid-floor pole */
+    g.strokeStyle = '#2a2018'; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+    g.strokeStyle = '#4a3a28'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+  }
+  function floorMat(g, x, y, w, h, col) {
+    R(g, x, y, w, h, col || '#3a322c', INK, 2);
+    g.fillStyle = 'rgba(0,0,0,.12)'; g.fillRect(x + 4, y + 4, w - 8, 4);
+  }
+  function waterCooler(g, x, y) {
+    ellipse(g, x + 22, y, 18, 14, '#7ec8e8', INK, 2);
+    ellipse(g, x + 22, y - 8, 14, 8, '#8ed0f0', INK, 1.5);
+    R(g, x, y + 8, 44, 70, '#d8d0c4', INK, 2);
+    R(g, x + 8, y + 20, 28, 16, '#3a3e48', INK, 1.4);
+    R(g, x + 14, y + 50, 16, 10, '#8a8fa0', INK, 1.2);
+  }
+  function futonFold(g, x, y) {
+    R(g, x, y, 200, 56, '#c8b090', INK, 2);
+    R(g, x + 8, y + 8, 184, 18, '#efe6d2', INK, 1.4);
+    R(g, x + 8, y + 30, 184, 18, '#d8c8a0', INK, 1.2);
+    g.strokeStyle = 'rgba(90,60,40,.35)'; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(x + 20, y + 16); g.lineTo(x + 180, y + 16); g.stroke();
+  }
+  function warningBox(g, x, y, w, h) {
+    caution(g, x, y, w, 14);
+    caution(g, x, y + h - 14, w, 14);
+    caution(g, x, y, 14, h);
+    caution(g, x + w - 14, y, 14, h);
+  }
+  function papers(g, x, y) {
+    R(g, x, y, 50, 36, '#efe6d2', INK, 1.5);
+    R(g, x + 14, y + 10, 46, 32, '#e8dcc4', INK, 1.4);
+    g.strokeStyle = '#5a3a28'; g.lineWidth = 1;
+    g.beginPath(); g.moveTo(x + 20, y + 20); g.lineTo(x + 50, y + 20); g.stroke();
+  }
+  function cone(g, x, y) {
+    R(g, x, y, 28, 40, '#d46028', INK, 2);
+    R(g, x - 8, y - 8, 44, 10, '#d46028', INK, 2);
+    R(g, x + 4, y + 10, 20, 6, '#f0e4c8', 0);
+  }
+  function signPlate(g, x, y, w, h, ja, bg) {
+    R(g, x, y, w, h, bg || '#e8c040', INK, 2);
+    txt(g, ja, x + w / 2, y + h / 2, Math.max(10, h * 0.28), '#1a1220', '800 ');
+  }
+  function tires(g, tx, ty, n, r) {
+    r = r || 36;
+    var k;
+    for (k = 0; k < n; k++) {
+      ellipse(g, tx, ty - k * (r * 0.42), r, r * 0.32, '#1a1220', INK, 2);
+      g.strokeStyle = 'rgba(80,80,90,.5)'; g.lineWidth = 1.5;
+      g.beginPath(); g.ellipse(tx, ty - k * (r * 0.42), r * 0.55, r * 0.16, 0, 0, 7); g.stroke();
+    }
+  }
+  function jerry(g, x, y, sc) {
+    var s = sc || 1;
+    g.save(); g.translate(x, y); g.scale(s, s);
+    R(g, 0, 8, 28, 36, '#b43428', INK, 2);
+    R(g, 4, 0, 14, 12, '#b43428', INK, 2);
+    R(g, 16, 2, 10, 8, '#6a707c', INK, 1.4);
+    txt(g, 'F', 14, 28, 11, '#f0e4c8', '800 ');
+    g.restore();
+  }
+  function stool(g, x, y) {
+    ellipse(g, x, y, 22, 8, '#c4a060', INK, 2);
+    R(g, x - 8, y, 8, 36, '#3b2a22', INK, 2);
+    R(g, x - 16, y + 36, 12, 10, '#3b2a22', INK, 1.5);
+    R(g, x + 4, y + 36, 12, 10, '#3b2a22', INK, 1.5);
+  }
+  function mesh(g, x0, y0, w, h) {
+    g.save(); g.beginPath(); g.rect(x0, y0, w, h); g.clip();
+    g.strokeStyle = 'rgba(140,150,160,.55)'; g.lineWidth = 1.3;
+    var i;
+    for (i = -h; i < w + h; i += 14) {
+      g.beginPath(); g.moveTo(x0 + i, y0); g.lineTo(x0 + i + h, y0 + h); g.stroke();
+      g.beginPath(); g.moveTo(x0 + i, y0 + h); g.lineTo(x0 + i + h, y0); g.stroke();
+    }
+    g.restore();
+  }
+  function fence(g, x, y, w, h) {
+    R(g, x, y, 10, h, '#3a3e48', INK, 2);
+    R(g, x + w - 10, y, 10, h, '#3a3e48', INK, 2);
+    R(g, x, y, w, 10, '#3a3e48', INK, 2);
+    R(g, x, y + h - 10, w, 10, '#3a3e48', INK, 2);
+    mesh(g, x + 8, y + 8, w - 16, h - 16);
+  }
+  function toolWall(g, x, y, w, h) {
+    var i;
+    R(g, x, y, w, h, '#7a4a2e', INK, 3);
+    R(g, x + 8, y + 8, w - 16, h - 16, '#8a5a38', 0);
+    for (i = 0; i < 8; i++) {
+      for (var j = 0; j < 6; j++) ellipse(g, x + 20 + i * ((w - 36) / 7), y + 22 + j * ((h - 36) / 5), 1.6, 1.6, '#2a2018', 0);
+    }
+    g.lineCap = 'round';
+    g.strokeStyle = INK; g.lineWidth = 5;
+    g.beginPath(); g.moveTo(x + 28, y + 30); g.lineTo(x + 28, y + h - 40); g.stroke();
+    R(g, x + 16, y + h - 44, 24, 12, '#8a8fa0', INK, 1.5);
+    g.beginPath(); g.moveTo(x + 58, y + 36); g.lineTo(x + 58, y + h - 50); g.stroke();
+    ellipse(g, x + 58, y + 32, 8, 6, '#8a8fa0', INK, 1.4);
+    R(g, x + 86, y + 40, 9, 54, '#c4a060', INK, 1.5);
+    R(g, x + 76, y + 32, 28, 12, '#6a707c', INK, 1.5);
+    R(g, x + 126, y + 36, 6, 58, '#c45a3a', INK, 1.5);
+    R(g, x + 122, y + 28, 14, 10, '#8a8fa0', INK, 1.2);
+    if (w > 180) {
+      R(g, x + 160, y + 44, 14, 40, '#6a4a28', INK, 1.4);
+      R(g, x + 152, y + 34, 30, 14, '#3a3e48', INK, 1.4);
+    }
+  }
+  function liftFrame(g, x, y, w, h) {
+    /* heavy steel posts, header, pulleys — the freight lift */
+    R(g, x, y, 28, h, '#2a2c34', INK, 3);
+    R(g, x + 8, y, 8, h, '#3a3e48', 0);
+    R(g, x + w - 28, y, 28, h, '#2a2c34', INK, 3);
+    R(g, x + w - 16, y, 8, h, '#3a3e48', 0);
+    R(g, x, y, w, 28, '#2a2c34', INK, 3);
+    caution(g, x + 28, y + 6, w - 56, 16);
+    R(g, x + w / 2 - 70, y + 32, 140, 20, '#f0e4c8', INK, 2);
+    txt(g, '\u8ca0\u7269\u6607\u964d\u6a5f', x + w / 2, y + 42, 12, '#5a2a28', '800 ');
+    ellipse(g, x + 50, y + 40, 12, 12, '#6a707c', INK, 2);
+    ellipse(g, x + w - 50, y + 40, 12, 12, '#6a707c', INK, 2);
+    chainHang(g, x + 50, y + 50, y + h - 8);
+    chainHang(g, x + w - 50, y + 50, y + h - 8);
+  }
+
   /* ---------- 1. Yard gate ---------- */
   S2P.depYard = function (g, cleared) {
     rr(g);
     backWall(g, '#3a4254', '#323848');
-    /* open street door onto the quay night — rain stays in the opening */
-    R(g, 470, 58, 340, 260, '#1a1220', INK, 3);
+    /* chain-link fence across the back, with a sliding gate opened onto the rainy yard */
+    fence(g, 100, 60, 200, 250);
+    /* right fence stops before the two steel doors */
+    fence(g, 860, 60, 40, 250);
+    /* open yard in the gate gap — rain stays in this opening only */
+    R(g, 460, 58, 400, 252, '#1a1220', INK, 3);
     var sky = g.createLinearGradient(0, 62, 0, 300);
     sky.addColorStop(0, '#1a2238'); sky.addColorStop(1, '#1a2430');
-    g.fillStyle = sky; g.fillRect(474, 62, 332, 210);
-    g.fillStyle = '#5a3040'; g.fillRect(474, 230, 332, 40);
-    g.fillStyle = '#c45a62';
+    g.fillStyle = sky; g.fillRect(466, 64, 388, 200);
+    /* outdoor yard: gravel, flowers, a far lamp */
+    g.fillStyle = '#3a322c'; g.fillRect(466, 210, 388, 54);
+    g.fillStyle = '#5a3040'; g.fillRect(466, 236, 388, 28);
     var i;
-    for (i = 0; i < 20; i++) g.fillRect(480 + (i * 41) % 320, 236 + (i * 11) % 16, 3, 3);
-    g.save(); g.beginPath(); g.rect(474, 62, 332, 210); g.clip();
+    g.fillStyle = '#c45a62';
+    for (i = 0; i < 24; i++) g.fillRect(474 + (i * 41) % 372, 240 + (i * 11) % 16, 3, 3);
+    ellipse(g, 780, 200, 6, 6, '#f0d080', INK, 1.5);
+    glow(g, 780, 200, 30, 'rgba(255,200,110,.25)');
+    g.save(); g.beginPath(); g.rect(466, 64, 388, 200); g.clip();
     g.strokeStyle = 'rgba(200,220,255,.35)'; g.lineWidth = 1.2;
     var r = function (s) { var v = s; return function () { v = (v * 16807) % 2147483647; return (v - 1) / 2147483646; }; }(7);
-    for (i = 0; i < 18; i++) {
-      var rx = 474 + r() * 332, ry = 62 + r() * 210, L = 10 + r() * 16;
+    for (i = 0; i < 22; i++) {
+      var rx = 466 + r() * 388, ry = 64 + r() * 200, L = 10 + r() * 16;
       g.beginPath(); g.moveTo(rx, ry); g.lineTo(rx + 3, ry + L); g.stroke();
     }
     g.restore();
-    caution(g, 474, 270, 332, 12);
+    /* sliding bar-gate leaf parked to the left of the opening, on a track */
+    R(g, 300, 50, 170, 262, '#3a4250', INK, 3);
+    var gi;
+    for (gi = 0; gi < 8; gi++) R(g, 314 + gi * 18, 70, 12, 220, '#4a5060', INK, 1.5);
+    R(g, 300, 50, 170, 16, '#2a2c34', INK, 2);
+    R(g, 300, 296, 170, 16, '#2a2c34', INK, 2);
+    R(g, 452, 160, 14, 36, '#c4a060', INK, 2);
+    ellipse(g, 320, 312, 10, 10, '#1a1220', INK, 2);
+    ellipse(g, 450, 312, 10, 10, '#1a1220', INK, 2);
+    ellipse(g, 320, 312, 4, 4, '#8a8fa0', INK, 1.2);
+    ellipse(g, 450, 312, 4, 4, '#8a8fa0', INK, 1.2);
+    /* track */
+    R(g, 280, 314, 600, 8, '#4a4e58', INK, 2);
+    caution(g, 466, 270, 388, 12);
     R(g, 540, 44, 200, 22, '#f0e4c8', INK, 2);
     txt(g, '\u5730\u4e0b\u9244\u8ca0\u7269', 640, 55, 13, '#5a2a28');
     lamp(g, 220, 70); lamp(g, 1060, 70);
     concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 11);
-    oilStain(g, 300, 700, 50, 16); oilStain(g, 900, 640, 60, 18);
-    /* chain-link / barrier left */
-    R(g, 120, 360, 14, 280, '#3a3e48', INK, 2);
-    g.strokeStyle = '#6a707c'; g.lineWidth = 1.4;
-    for (i = 0; i < 8; i++) { g.beginPath(); g.moveTo(134, 380 + i * 32); g.lineTo(280, 380 + i * 32); g.stroke(); }
-    for (i = 0; i < 5; i++) { g.beginPath(); g.moveTo(140 + i * 30, 360); g.lineTo(140 + i * 30, 640); g.stroke(); }
-    crate(g, 160, 660, 90, 70, '\u8ca0\u7269');
-    drum(g, 260, 680, 36, 60, '#3a4a38');
-    /* meeting desk / stand, in the 640 frame — Masa waits here */
+    oilStain(g, 300, 700, 50, 16); oilStain(g, 900, 640, 60, 18); oilStain(g, 240, 500, 36, 12);
+    /* threshold puddle just inside the gate — rain stays outdoors, this is tracked-in wet */
+    g.fillStyle = 'rgba(80,110,140,.16)';
+    g.beginPath(); g.ellipse(640, 360, 90, 16, 0, 0, 7); g.fill();
+    signPlate(g, 140, 360, 90, 50, '\u7acb\u5165\u7981\u6b62', '#e8c040');
+    steelDoor(g, 900, 80, 90, 200, '\u6253\u523b');
+    steelDoor(g, 1020, 80, 90, 200, '\u8377\u5f79');
+    /* rain coats + hats */
+    R(g, 118, 200, 36, 70, '#3a463c', INK, 2);
+    R(g, 160, 210, 36, 60, '#2a3858', INK, 2);
+    hardhat(g, 200, 190);
+    /* meeting desk in the 640 frame, walk lane to the south kept clear */
     R(g, 430, 600, 220, 22, '#5c4638', INK, 3);
     R(g, 430, 622, 220, 80, '#4a3e34', INK, 3);
     R(g, 448, 608, 48, 16, '#2a2c34', INK, 1.5);
     hardhat(g, 620, 600);
-    if (!cleared) {
-      /* clipboard of the night's yard sheet */
-      R(g, 500, 636, 70, 48, '#efe6d2', INK, 2);
-    }
-    steelDoor(g, 900, 80, 90, 200, '\u6253\u523b');
-    steelDoor(g, 1020, 80, 90, 200, '\u8377\u5f79');
-    lockers(g, 880, 520, 4, 140);
-    hardhat(g, 900, 500); hardhat(g, 960, 500);
-    ellipse(g, 560, 740, 22, 8, '#c4a060', INK, 2);
-    R(g, 552, 740, 8, 36, '#3b2a22', INK, 2);
-    R(g, 360, 800, 28, 40, '#d46028', INK, 2);
-    R(g, 352, 792, 44, 10, '#d46028', INK, 2);
-    /* rain coats */
-    R(g, 118, 200, 36, 70, '#3a463c', INK, 2);
-    R(g, 160, 210, 36, 60, '#2a3858', INK, 2);
+    if (!cleared) R(g, 500, 636, 70, 48, '#efe6d2', INK, 2);
+    R(g, 430, 702, 220, 10, '#2a2826', INK, 1.5);
+    stool(g, 560, 740);
+    lockers(g, 880, 500, 4, 140);
+    hardhat(g, 900, 492); hardhat(g, 960, 492);
+    crate(g, 140, 700, 90, 70, '\u8ca0\u7269');
+    drum(g, 240, 720, 36, 60, '#3a4a38');
+    pallet(g, 140, 780, 120, 24);
+    cone(g, 360, 800);
+    cone(g, 820, 800);
+    handTruck(g, 1080, 760);
+    hose(g, 280, 820, 140);
+    chainCoil(g, 1040, 820, 20);
+    cableRun(g, 100, 328, 300, 328);
+    /* mid-side clutter — walk from the south stays open */
+    crate(g, 140, 500, 80, 60, '');
+    pallet(g, 140, 564, 100, 22);
+    crate(g, 1040, 620, 80, 56, '');
+    pallet(g, 1030, 680, 110, 22);
+    floorMat(g, 430, 720, 220, 50, '#3a322c');
+    stool(g, 560, 760);
+    jerry(g, 330, 760, 1);
+    tires(g, 1080, 600, 3, 28);
+    /* bench under the no-entry sign, painted approach to the desk */
+    R(g, 140, 400, 160, 16, '#4a3a30', INK, 2);
+    R(g, 148, 416, 10, 24, '#4a3a30', INK, 1.5);
+    R(g, 282, 416, 10, 24, '#4a3a30', INK, 1.5);
+    g.strokeStyle = 'rgba(232,192,64,.35)'; g.lineWidth = 6;
+    g.beginPath(); g.moveTo(500, 360); g.lineTo(500, 600); g.stroke();
+    g.beginPath(); g.moveTo(780, 360); g.lineTo(780, 600); g.stroke();
     shell(g, '\u9580', 'Yard gate');
     glow(g, 640, 200, 160, 'rgba(180,210,255,.08)');
   };
@@ -244,11 +444,11 @@
   S2P.depClock = function (g, cleared) {
     rr(g);
     backWall(g, '#4a5854', '#3e4c48');
-    /* window into the yard */
     R(g, 430, 70, 420, 200, '#1a1220', INK, 3);
     corrug(g, 436, 76, 408, 188, '#3a4254', '#323848', 18);
     lamp(g, 200, 70); lamp(g, 1080, 70);
     concFloor(g, 90, 320, 1100, 530, '#6e6a62', '#5a5650', 23);
+    oilStain(g, 280, 780, 40, 12); oilStain(g, 960, 700, 36, 12);
     /* card rack */
     R(g, 140, 90, 240, 200, '#3a3e48', INK, 2.5);
     txt(g, '\u30bf\u30a4\u30e0\u30ab\u30fc\u30c9', 260, 112, 12, '#f0e4c8');
@@ -257,7 +457,7 @@
       R(g, 160 + i * 40, 130 + j * 36, 32, 28, (i + j) % 3 ? '#efe6d2' : '#d8c8a0', INK, 1.2);
     }
     clockPunch(g, 400, 120);
-    /* office desk, in frame */
+    /* desk in frame */
     R(g, 400, 560, 300, 24, '#5c4638', INK, 3);
     R(g, 400, 584, 300, 100, '#4a3e34', INK, 3);
     R(g, 416, 568, 44, 16, '#2a2430', INK, 1.5);
@@ -267,465 +467,656 @@
     g.beginPath(); g.moveTo(660, 560); g.lineTo(660, 528); g.lineTo(688, 516); g.stroke();
     ellipse(g, 696, 516, 14, 10, '#f0d080', INK, 2);
     glow(g, 690, 550, 70, 'rgba(255,200,110,.3)');
-    lockers(g, 860, 400, 5, 200);
-    /* filing */
-    R(g, 160, 500, 180, 200, '#4a5060', INK, 3);
-    R(g, 170, 520, 160, 12, '#3a3e48', INK, 1.5);
-    R(g, 170, 560, 160, 12, '#3a3e48', INK, 1.5);
-    R(g, 170, 600, 160, 12, '#3a3e48', INK, 1.5);
-    txt(g, '\u53f0\u5e33', 250, 490, 12, '#f0e4c8');
+    R(g, 400, 684, 300, 12, '#2a2826', INK, 1.5);
+    stool(g, 760, 740);
+    /* coat rack + jackets, kept inside the side wall */
+    g.strokeStyle = INK; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(1120, 200); g.lineTo(1120, 360); g.stroke();
+    R(g, 1076, 200, 88, 8, '#3a3e48', INK, 2);
+    R(g, 1084, 210, 28, 70, '#3a463c', INK, 2);
+    R(g, 1120, 216, 28, 64, '#2a3858', INK, 2);
     /* notice board */
     R(g, 900, 90, 200, 180, '#d8c8a0', INK, 3);
     txt(g, '\u5f53\u756a\u8868', 1000, 112, 13, '#5a2a28');
     g.strokeStyle = '#5a3a28'; g.lineWidth = 1.4;
     for (i = 0; i < 6; i++) { g.beginPath(); g.moveTo(916, 130 + i * 20); g.lineTo(1084, 130 + i * 20); g.stroke(); }
     if (!cleared) { g.strokeStyle = '#a84838'; g.lineWidth = 3; g.beginPath(); g.moveTo(940, 150); g.lineTo(1060, 150); g.stroke(); }
-    ellipse(g, 760, 760, 22, 8, '#c4a060', INK, 2);
-    R(g, 752, 760, 8, 36, '#3b2a22', INK, 2);
+    lockers(g, 860, 400, 5, 180);
+    hardhat(g, 880, 392); hardhat(g, 940, 392);
+    /* filing */
+    R(g, 160, 480, 180, 180, '#4a5060', INK, 3);
+    R(g, 170, 500, 160, 12, '#3a3e48', INK, 1.5);
+    R(g, 170, 540, 160, 12, '#3a3e48', INK, 1.5);
+    R(g, 170, 580, 160, 12, '#3a3e48', INK, 1.5);
+    txt(g, '\u53f0\u5e33', 250, 470, 12, '#f0e4c8');
+    /* shoe bench, umbrella stand, trash, heater, cooler — sides, walk stays open */
+    R(g, 140, 700, 160, 16, '#4a3a30', INK, 2);
+    R(g, 148, 716, 10, 24, '#4a3a30', INK, 1.5);
+    R(g, 282, 716, 10, 24, '#4a3a30', INK, 1.5);
+    R(g, 160, 684, 40, 16, '#2a2430', INK, 1.5);
+    R(g, 210, 684, 36, 16, '#3a322c', INK, 1.5);
+    R(g, 340, 760, 20, 50, '#3a3e48', INK, 2);
+    g.strokeStyle = INK; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(350, 760); g.quadraticCurveTo(330, 720, 344, 700); g.stroke();
+    g.beginPath(); g.moveTo(350, 760); g.quadraticCurveTo(370, 720, 356, 694); g.stroke();
+    R(g, 1000, 700, 40, 50, '#3a3e48', INK, 2);
+    /* kerosene heater */
+    R(g, 1080, 680, 44, 50, '#8a3a28', INK, 2);
+    ellipse(g, 1102, 680, 22, 8, '#6a2a1c', INK, 2);
+    glow(g, 1102, 704, 30, 'rgba(255,140,60,.25)');
+    R(g, 1080, 760, 50, 40, '#efe6d2', INK, 1.5);
+    cableRun(g, 800, 328, 1180, 328);
+    hoseCoil(g, 240, 820, 16);
+    floorMat(g, 400, 700, 300, 46, '#3a322c');
+    papers(g, 320, 640);
+    papers(g, 1080, 640);
+    waterCooler(g, 160, 360);
     shell(g, '\u6253\u523b', 'Time clock');
   };
 
   /* ---------- 3. Loading bay ---------- */
   S2P.depBay = function (g, cleared) {
     rr(g);
-    backWall(g, '#4a5064', '#40465a');
-    /* wide dock opening onto night */
+    backWall(g, '#3a4254', '#323848');
+    /* open dock to the night yard — rain stays in the bay opening */
     R(g, 280, 50, 720, 270, '#1a1220', INK, 3);
-    var sky = g.createLinearGradient(0, 54, 0, 300);
-    sky.addColorStop(0, '#14182a'); sky.addColorStop(1, '#1a2434');
-    g.fillStyle = sky; g.fillRect(286, 56, 708, 220);
-    /* far quay hint */
-    g.fillStyle = '#5a3040'; g.fillRect(286, 230, 708, 30);
-    /* truck at the dock: trailer + cab + wheels */
-    R(g, 340, 110, 400, 150, '#3a4250', INK, 2.5);
-    R(g, 350, 120, 90, 80, '#2a323e', INK, 1.5);
-    R(g, 450, 120, 90, 80, '#2a323e', INK, 1.5);
-    R(g, 550, 120, 90, 80, '#2a323e', INK, 1.5);
-    R(g, 650, 120, 80, 80, '#2a323e', INK, 1.5);
-    txt(g, 'KITSUNE', 540, 210, 13, '#f0e4c8', '800 ');
-    R(g, 740, 140, 110, 120, '#2a3850', INK, 2.5);
-    R(g, 752, 150, 70, 44, '#7ec8e8', INK, 1.5);
-    R(g, 820, 200, 28, 36, '#e8c040', INK, 1.5);
-    ellipse(g, 400, 262, 22, 22, '#1a1220', INK, 2);
-    ellipse(g, 520, 262, 22, 22, '#1a1220', INK, 2);
-    ellipse(g, 640, 262, 22, 22, '#1a1220', INK, 2);
-    ellipse(g, 800, 262, 22, 22, '#1a1220', INK, 2);
-    caution(g, 286, 276, 708, 14);
-    lamp(g, 200, 70); lamp(g, 640, 40); lamp(g, 1080, 70);
+    var sky = g.createLinearGradient(0, 56, 0, 280);
+    sky.addColorStop(0, '#1a2238'); sky.addColorStop(1, '#1a2430');
+    g.fillStyle = sky; g.fillRect(286, 56, 708, 200);
+    g.fillStyle = '#3a322c'; g.fillRect(286, 220, 708, 54);
+    g.fillStyle = '#5a3040'; g.fillRect(286, 248, 708, 26);
+    var i, r = function (s) { var v = s; return function () { v = (v * 16807) % 2147483647; return (v - 1) / 2147483646; }; }(9);
+    g.save(); g.beginPath(); g.rect(286, 56, 708, 200); g.clip();
+    g.strokeStyle = 'rgba(200,220,255,.32)'; g.lineWidth = 1.2;
+    for (i = 0; i < 28; i++) {
+      var rx = 286 + r() * 708, ry = 56 + r() * 200, L = 10 + r() * 16;
+      g.beginPath(); g.moveTo(rx, ry); g.lineTo(rx + 3, ry + L); g.stroke();
+    }
+    g.restore();
+    caution(g, 286, 264, 708, 16);
+    lamp(g, 200, 70); lamp(g, 1080, 70);
     concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 31);
-    oilStain(g, 280, 700, 70, 20); oilStain(g, 980, 620, 60, 18);
-    pallet(g, 140, 760, 130, 28);
-    crate(g, 150, 690, 110, 70, '\u8ca0\u7269');
-    crate(g, 180, 620, 90, 70, '');
-    crate(g, 200, 560, 80, 60, '');
-    pallet(g, 1000, 760, 130, 28);
-    crate(g, 1010, 690, 110, 70, '');
-    crate(g, 1030, 630, 90, 60, '');
-    drum(g, 300, 700, 36, 60, '#6a3a28');
-    drum(g, 340, 720, 32, 50, '#3a4a38');
-    drum(g, 920, 700, 36, 60, '#3a4a38');
-    /* cones */
-    R(g, 400, 780, 28, 40, '#d46028', INK, 2);
-    R(g, 392, 772, 44, 10, '#d46028', INK, 2);
-    R(g, 850, 780, 28, 40, '#d46028', INK, 2);
-    R(g, 842, 772, 44, 10, '#d46028', INK, 2);
-    forklift(g, 700, 600, 1.15);
-    /* dock leveler, off the walking centre */
-    R(g, 500, 400, 280, 18, '#4a4e58', INK, 2);
-    caution(g, 500, 400, 280, 12);
-    /* side tire marks only */
-    g.strokeStyle = 'rgba(20,16,12,.22)'; g.lineWidth = 8;
-    g.beginPath(); g.moveTo(180, 400); g.quadraticCurveTo(240, 560, 200, 820); g.stroke();
-    g.beginPath(); g.moveTo(1060, 400); g.quadraticCurveTo(1100, 600, 1080, 820); g.stroke();
+    oilStain(g, 260, 700, 70, 20); oilStain(g, 1000, 620, 50, 16); oilStain(g, 200, 480, 40, 12);
+    /* KITUNE truck at the dock, nose-in */
+    R(g, 500, 120, 280, 140, '#3a3e48', INK, 3);
+    R(g, 510, 130, 260, 80, '#2a2c34', INK, 2);
+    R(g, 520, 140, 80, 40, '#1a2230', INK, 1.5);
+    R(g, 760, 150, 16, 70, '#c45a3a', INK, 1.5);
+    txt(g, 'KITSUNE', 640, 200, 16, '#f0e4c8', '800 ');
+    ellipse(g, 540, 266, 22, 22, '#1a1220', INK, 2);
+    ellipse(g, 740, 266, 22, 22, '#1a1220', INK, 2);
+    /* dock bumpers */
+    R(g, 300, 280, 40, 30, '#3a2a22', INK, 2);
+    R(g, 940, 280, 40, 30, '#3a2a22', INK, 2);
+    signPlate(g, 140, 360, 80, 44, '\u8377\u5f79', '#e8c040');
+    steelDoor(g, 140, 80, 90, 200, '\u6253\u523b');
+    /* forklift mid-left, walk lane from the south kept clear */
+    forklift(g, 140, 520, 1.05);
+    crate(g, 140, 700, 110, 80, '\u8ca0\u7269');
+    crate(g, 160, 630, 90, 70, '');
+    pallet(g, 140, 790, 140, 26);
+    crate(g, 1030, 700, 110, 80, '');
+    crate(g, 1040, 630, 90, 70, '');
+    drum(g, 260, 740, 36, 60, '#6a3a28');
+    drum(g, 980, 740, 32, 56, '#3a4a38');
+    cone(g, 380, 800); cone(g, 840, 800);
+    handTruck(g, 1080, 520);
+    hose(g, 280, 820, 160);
+    chainCoil(g, 200, 840, 18);
+    cableRun(g, 900, 328, 1180, 328);
+    pallet(g, 880, 480, 120, 24);
+    crate(g, 896, 420, 90, 60, '');
+    pallet(g, 160, 460, 100, 22);
+    crate(g, 180, 400, 70, 50, '');
+    drum(g, 360, 500, 32, 54, '#6a3a28');
+    tires(g, 1080, 600, 3, 26);
+    jerry(g, 380, 740, 1);
+    chainCoil(g, 360, 640, 16);
     shell(g, '\u8377\u5f79', 'Loading bay');
   };
 
   /* ---------- 4. Crate stacks ---------- */
   S2P.depCrates = function (g, cleared) {
     rr(g);
-    backWall(g, '#4a4038', '#3e3630');
-    lamp(g, 240, 70); lamp(g, 640, 50); lamp(g, 1040, 70);
-    concFloor(g, 90, 320, 1100, 530, '#6a5e54', '#5a5048', 41);
-    oilStain(g, 640, 780, 50, 14);
-    function stack(x, y, rows, label) {
-      var k;
-      for (k = 0; k < rows; k++) crate(g, x + (k % 2) * 6, y - k * 62, 110, 66, k === 0 ? label : '');
-    }
-    stack(140, 720, 4, '\u8ca0\u7269');
-    stack(280, 760, 3, '');
-    stack(420, 700, 5, '\u5317');
-    stack(860, 740, 4, '\u6771');
-    stack(1000, 700, 5, '');
-    /* open crate, packing list — in frame */
-    crate(g, 560, 640, 140, 80, '');
-    R(g, 580, 652, 100, 50, '#efe6d2', INK, 1.5);
-    txt(g, '\u7a4d\u8377', 630, 676, 12, '#5a2a28');
-    /* hand truck */
-    g.strokeStyle = INK; g.lineWidth = 4;
-    g.beginPath(); g.moveTo(740, 780); g.lineTo(740, 640); g.lineTo(800, 640); g.stroke();
-    ellipse(g, 740, 790, 14, 14, '#1a1220', INK, 2);
-    /* rope coil */
-    g.strokeStyle = '#6a4a28'; g.lineWidth = 6;
-    g.beginPath(); g.arc(780, 820, 22, 0.2, Math.PI * 1.8); g.stroke();
-    /* stencil on the back wall */
-    txt(g, '\u8ca0\u7269\u7f6e\u304d\u5834', 640, 180, 22, 'rgba(240,228,200,.2)', '900 ');
+    backWall(g, '#3a4254', '#323848');
+    lamp(g, 200, 70); lamp(g, 1080, 70);
+    concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 37);
+    oilStain(g, 300, 700, 50, 16); oilStain(g, 980, 760, 46, 14);
+    steelDoor(g, 140, 80, 90, 200, '\u8377\u5f79');
+    steelDoor(g, 1050, 80, 90, 200, '\u51b7\u51cd');
+    signPlate(g, 250, 90, 90, 40, '\u8ca0\u7269', '#d8c8a0');
+    /* stacked aisles left and right, a narrow walk down the middle */
+    var stack = function (sx, sy, rows, cols, lab) {
+      var r, c, w = 90, h = 70;
+      for (r = 0; r < rows; r++) for (c = 0; c < cols; c++) {
+        crate(g, sx + c * 96, sy - r * 62, w, h, r === rows - 1 && c === 0 ? lab : '');
+      }
+    };
+    stack(140, 740, 4, 3, '\u8ca0\u7269');
+    stack(860, 740, 4, 3, '');
+    pallet(g, 140, 810, 280, 26);
+    pallet(g, 860, 810, 280, 26);
+    /* loose mid-side crates, walk still open */
+    crate(g, 460, 760, 70, 50, '');
+    crate(g, 750, 770, 70, 50, '');
+    handTruck(g, 430, 700);
+    drum(g, 250, 500, 32, 54, '#3a4a38');
+    hoseCoil(g, 1080, 820, 18);
+    chainCoil(g, 200, 840, 16);
+    cableRun(g, 100, 328, 250, 328);
+    cone(g, 540, 820); cone(g, 720, 820);
     shell(g, '\u8ca0\u7269', 'Crate stacks');
   };
 
   /* ---------- 5. Cold store ---------- */
   S2P.depCold = function (g, cleared) {
     rr(g);
-    corrug(g, 90, 40, 1100, 280, '#3a5060', '#324850', 22);
-    R(g, 90, 40, 1100, 18, '#1a2830', INK, 2);
-    /* insulated door, left */
-    R(g, 140, 80, 120, 230, '#2a3a44', INK, 3);
-    R(g, 150, 90, 100, 16, '#8aa0b0', INK, 1.5);
-    ellipse(g, 240, 200, 8, 8, '#c4a060', INK, 1.5);
-    /* frost window */
-    R(g, 430, 80, 420, 200, '#d8e8f0', INK, 3);
-    g.fillStyle = 'rgba(180,210,230,.35)'; g.fillRect(436, 86, 408, 188);
-    var i, r = function (s) { var v = s; return function () { v = (v * 16807) % 2147483647; return (v - 1) / 2147483646; }; }(13);
-    g.fillStyle = 'rgba(255,255,255,.35)';
-    for (i = 0; i < 80; i++) g.fillRect(440 + r() * 400, 90 + r() * 180, 6 + r() * 10, 2);
-    txt(g, '-18\u00b0', 640, 160, 28, 'rgba(40,70,90,.45)', '900 ');
-    /* gauge */
-    ellipse(g, 1000, 160, 36, 36, '#efe6d2', INK, 2);
-    g.strokeStyle = INK; g.lineWidth = 2;
-    g.beginPath(); g.moveTo(1000, 160); g.lineTo(1018, 148); g.stroke();
-    txt(g, 'KEEP', 1000, 210, 11, '#f0e4c8');
-    lamp(g, 260, 60); lamp(g, 640, 50); lamp(g, 1020, 60);
-    /* cold floor, bluer */
-    concFloor(g, 90, 320, 1100, 530, '#5a6a70', '#4a5a60', 17);
-    g.fillStyle = 'rgba(200,230,255,.06)'; g.fillRect(90, 320, 1100, 530);
-    /* hanging boxes / rails */
-    g.strokeStyle = INK; g.lineWidth = 3;
-    g.beginPath(); g.moveTo(200, 320); g.lineTo(1080, 320); g.stroke();
-    function hang(x, col) {
-      g.strokeStyle = INK; g.lineWidth = 2;
-      g.beginPath(); g.moveTo(x, 320); g.lineTo(x, 380); g.stroke();
-      R(g, x - 28, 380, 56, 70, col, INK, 2);
+    /* frost-blue walls */
+    corrug(g, 90, 40, 1100, 280, '#4a6070', '#3e5464', 22);
+    R(g, 90, 40, 1100, 18, '#2a3a44', INK, 2);
+    /* frost bloom on the wall — read as ice, not just a tint */
+    g.fillStyle = 'rgba(220,236,255,.22)';
+    g.fillRect(90, 58, 1100, 260);
+    var i, j;
+    g.fillStyle = 'rgba(240,250,255,.4)';
+    for (i = 0; i < 70; i++) g.fillRect(110 + (i * 73) % 1060, 70 + (i * 29) % 230, 22 + (i % 5) * 8, 8);
+    g.fillStyle = 'rgba(255,255,255,.18)';
+    for (i = 0; i < 30; i++) {
+      g.beginPath(); g.ellipse(140 + (i * 97) % 1000, 80 + (i * 37) % 220, 18, 8, 0, 0, 7); g.fill();
     }
-    hang(300, '#6a4a48'); hang(400, '#5a4038'); hang(500, '#6a4a48');
-    hang(860, '#5a4038'); hang(960, '#6a4a48'); hang(1060, '#5a4038');
-    crate(g, 180, 700, 90, 70, '');
-    crate(g, 1000, 720, 90, 60, '');
-    /* frost pools */
-    g.fillStyle = 'rgba(220,240,255,.12)';
-    g.beginPath(); g.ellipse(640, 700, 80, 18, 0, 0, 7); g.fill();
-    g.beginPath(); g.ellipse(400, 800, 50, 12, 0, 0, 7); g.fill();
-    glow(g, 640, 200, 200, 'rgba(180,220,240,.12)');
+    lamp(g, 200, 70); lamp(g, 1080, 70);
+    /* cooler glow */
+    glow(g, 640, 200, 200, 'rgba(180,220,255,.16)');
+    concFloor(g, 90, 320, 1100, 530, '#6a7278', '#5a6268', 41);
+    /* frost on the floor, sides only */
+    g.fillStyle = 'rgba(220,236,255,.14)';
+    g.beginPath(); g.ellipse(240, 500, 90, 24, 0, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(1040, 560, 80, 20, 0, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(200, 760, 70, 18, 0, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(1080, 780, 60, 16, 0, 0, 7); g.fill();
+    /* insulated door with a rubber strip curtain */
+    R(g, 140, 70, 110, 230, '#4a6070', INK, 3);
+    for (i = 0; i < 8; i++) {
+      R(g, 148 + i * 12, 90, 10, 200, i % 2 ? '#3a4a54' : '#2a3a44', INK, 1);
+    }
+    txt(g, '\u51b7\u51cd', 195, 86, 11, '#d8e8f0');
+    /* hanging rail with stock all the way across */
+    g.strokeStyle = '#8a9aa8'; g.lineWidth = 6;
+    g.beginPath(); g.moveTo(280, 90); g.lineTo(1140, 90); g.stroke();
+    var hang = function (hx, col, w) {
+      g.strokeStyle = INK; g.lineWidth = 2;
+      g.beginPath(); g.moveTo(hx, 90); g.lineTo(hx, 130); g.stroke();
+      R(g, hx - w / 2, 130, w, 70, col, INK, 2);
+      g.fillStyle = 'rgba(220,236,255,.2)'; g.fillRect(hx - w / 2, 130, w, 10);
+    };
+    var cols = ['#8a5a50', '#6a3a38', '#9a7060', '#5a3a40', '#8a4a40', '#7a5048', '#6a4038', '#9a6058'];
+    for (i = 0; i < 10; i++) hang(320 + i * 80, cols[i % cols.length], 50 + (i % 3) * 6);
+    /* metal shelving left and right, frosted packages */
+    var shelf = function (sx) {
+      R(g, sx, 360, 160, 280, '#4a5460', INK, 3);
+      for (j = 0; j < 4; j++) {
+        R(g, sx + 8, 380 + j * 64, 144, 8, '#3a4450', INK, 1.5);
+        for (i = 0; i < 3; i++) {
+          R(g, sx + 14 + i * 46, 396 + j * 64, 40, 36, (i + j) % 2 ? '#c8d0d8' : '#d8e0e8', INK, 1.2);
+          g.fillStyle = 'rgba(220,236,255,.3)'; g.fillRect(sx + 14 + i * 46, 396 + j * 64, 40, 8);
+        }
+      }
+    };
+    shelf(140); shelf(980);
+    /* drain in the walk, thermometer, more hanging mid-sides */
+    R(g, 610, 700, 60, 40, '#3a4250', INK, 2);
+    g.strokeStyle = '#2a323c'; g.lineWidth = 1.4;
+    g.beginPath(); g.moveTo(610, 720); g.lineTo(670, 720); g.stroke();
+    g.beginPath(); g.moveTo(640, 700); g.lineTo(640, 740); g.stroke();
+    R(g, 420, 80, 24, 60, '#d8e0e8', INK, 2);
+    ellipse(g, 432, 120, 8, 8, '#c45a3a', INK, 1.4);
+    txt(g, '-18\u00b0', 432, 96, 9, '#3a2a22', '800 ');
+    crate(g, 340, 720, 80, 56, '');
+    crate(g, 860, 730, 80, 56, '');
+    pallet(g, 330, 786, 100, 22);
+    pallet(g, 850, 796, 100, 22);
+    hoseCoil(g, 240, 820, 16);
+    signPlate(g, 860, 90, 80, 40, '\u5b88\u308c', '#7ec8e8');
+    cableRun(g, 100, 328, 240, 328);
+    /* mid-side carts, more frost on the packages and floor */
+    pallet(g, 340, 500, 110, 22);
+    crate(g, 350, 440, 80, 56, '');
+    g.fillStyle = 'rgba(220,236,255,.35)'; g.fillRect(350, 440, 80, 10);
+    pallet(g, 820, 520, 110, 22);
+    crate(g, 830, 460, 80, 56, '');
+    g.fillStyle = 'rgba(220,236,255,.35)'; g.fillRect(830, 460, 80, 10);
     shell(g, '\u51b7\u51cd', 'Cold store');
   };
 
   /* ---------- 6. Parts cage ---------- */
   S2P.depCage = function (g, cleared) {
     rr(g);
-    backWall(g, '#4a5064', '#40465a');
-    lamp(g, 220, 70); lamp(g, 1060, 70);
-    concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 29);
-    oilStain(g, 400, 760, 40, 14);
-    /* chain-link cage around the shelves, in frame */
-    function mesh(x0, y0, w, h) {
-      g.save(); g.beginPath(); g.rect(x0, y0, w, h); g.clip();
-      g.strokeStyle = 'rgba(140,150,160,.55)'; g.lineWidth = 1.3;
-      var i;
-      for (i = -h; i < w + h; i += 14) {
-        g.beginPath(); g.moveTo(x0 + i, y0); g.lineTo(x0 + i + h, y0 + h); g.stroke();
-        g.beginPath(); g.moveTo(x0 + i, y0 + h); g.lineTo(x0 + i + h, y0); g.stroke();
-      }
-      g.restore();
-    }
-    R(g, 300, 80, 680, 24, '#3a3e48', INK, 2);
-    mesh(300, 104, 20, 500); mesh(960, 104, 20, 500);
-    mesh(316, 80, 644, 20);
-    R(g, 300, 80, 16, 520, '#3a3e48', INK, 2);
-    R(g, 964, 80, 16, 520, '#3a3e48', INK, 2);
+    backWall(g, '#3a4254', '#323848');
+    lamp(g, 200, 70); lamp(g, 1080, 70);
+    concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 43);
+    oilStain(g, 280, 700, 50, 16); oilStain(g, 1000, 640, 46, 14); oilStain(g, 240, 500, 30, 10);
+    /* the cage itself */
+    R(g, 300, 70, 680, 30, '#3a3e48', INK, 3);
+    R(g, 300, 100, 24, 500, '#3a3e48', INK, 3);
+    R(g, 956, 100, 24, 500, '#3a3e48', INK, 3);
+    mesh(g, 300, 104, 24, 496); mesh(g, 956, 104, 24, 496);
+    mesh(g, 324, 80, 632, 20);
+    /* shelves inside, denser */
     var i, j;
-    /* shelves inside */
-    R(g, 360, 200, 560, 14, '#4a3a30', INK, 2);
-    R(g, 360, 320, 560, 14, '#4a3a30', INK, 2);
-    R(g, 360, 440, 560, 14, '#4a3a30', INK, 2);
-    var cols = ['#c45a3a', '#3a6a8a', '#c4a030', '#4a6a3a', '#6a707c', '#8a3a28'];
-    for (i = 0; i < 6; i++) {
-      R(g, 380 + i * 88, 230, 70, 36, cols[i], INK, 2);
-      R(g, 380 + i * 88, 350, 70, 36, cols[(i + 2) % 6], INK, 2);
-      ellipse(g, 415 + i * 88, 500, 16, 12, cols[(i + 4) % 6], INK, 1.5);
+    for (j = 0; j < 5; j++) {
+      R(g, 340, 140 + j * 80, 600, 10, '#4a4e58', INK, 1.5);
+      for (i = 0; i < 8; i++) {
+        R(g, 360 + i * 70, 152 + j * 80, 50, 36, (i + j) % 3 ? '#6a707c' : '#8a5a38', INK, 1.2);
+      }
     }
-    txt(g, '\u90e8\u54c1', 640, 160, 16, '#f0e4c8');
-    /* lock + clipboard on the gate, in frame */
-    steelDoor(g, 560, 500, 80, 160, '');
-    ellipse(g, 624, 580, 8, 8, '#c4a060', INK, 2);
-    R(g, 660, 540, 40, 56, '#d8c8a0', INK, 2);
-    /* stool and grease can outside the cage */
-    ellipse(g, 240, 760, 24, 8, '#3a3e48', INK, 2);
-    R(g, 232, 764, 8, 28, '#3a3e48', INK, 1.5);
-    drum(g, 200, 700, 32, 50, '#3a4a38');
+    /* open cage door swung to the left */
+    R(g, 220, 200, 80, 280, '#3a3e48', INK, 3);
+    mesh(g, 228, 210, 64, 260);
+    signPlate(g, 540, 90, 200, 28, '\u90e8\u54c1\u30b1\u30fc\u30b8', '#d8c8a0');
+    /* workbench outside the cage, left of the walk */
+    R(g, 140, 560, 140, 18, '#5c4638', INK, 3);
+    R(g, 148, 578, 12, 50, '#4a3e34', INK, 2);
+    R(g, 260, 578, 12, 50, '#4a3e34', INK, 2);
+    R(g, 150, 544, 40, 16, '#6a707c', INK, 1.5);
+    R(g, 200, 544, 50, 16, '#3a3e48', INK, 1.5);
+    stool(g, 200, 680);
+    /* bins and spill of bolts at the edges */
+    R(g, 140, 700, 70, 40, '#c45a3a', INK, 2);
+    R(g, 220, 710, 60, 36, '#3a4a38', INK, 2);
+    g.fillStyle = '#8a8fa0';
+    for (i = 0; i < 12; i++) ellipse(g, 160 + (i * 17) % 80, 760 + (i * 7) % 16, 3, 2, '#8a8fa0', INK, 0.8);
+    drum(g, 1040, 700, 36, 60, '#6a3a28');
+    drum(g, 1084, 720, 32, 50, '#3a4a38');
+    pallet(g, 1000, 790, 140, 24);
+    crate(g, 1010, 720, 80, 50, '');
+    handTruck(g, 1080, 640);
+    hoseCoil(g, 280, 830, 16);
+    chainCoil(g, 1140, 820, 18);
+    cableRun(g, 100, 328, 220, 328);
+    steelDoor(g, 140, 80, 90, 200, '\u51b7\u51cd');
+    crate(g, 340, 760, 70, 50, '');
+    pallet(g, 330, 816, 100, 22);
+    papers(g, 280, 640);
     shell(g, '\u90e8\u54c1', 'Parts cage');
   };
 
   /* ---------- 7. Bike bay ---------- */
   S2P.depBikes = function (g, cleared) {
     rr(g);
-    backWall(g, '#4a5064', '#40465a');
-    lamp(g, 220, 70); lamp(g, 640, 50); lamp(g, 1060, 70);
-    concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 37);
-    oilStain(g, 400, 700, 60, 18); oilStain(g, 880, 720, 50, 16);
-    /* rubber mats + motos along the sides, centre walk clear */
-    R(g, 160, 700, 200, 18, '#2a2826', INK, 2);
-    moto(g, 180, 630, 1.2, '#2a3a70');
-    R(g, 920, 700, 200, 18, '#2a2826', INK, 2);
-    moto(g, 940, 630, 1.2, '#3a2a28');
-    if (!cleared) {
-      R(g, 540, 700, 200, 18, '#2a2826', INK, 2);
-      moto(g, 560, 630, 1.15, '#d46028');
-    }
-    /* helmets */
-    ellipse(g, 200, 520, 18, 14, '#2a3a70', INK, 2);
-    ellipse(g, 250, 524, 18, 14, '#3a2a28', INK, 2);
-    ellipse(g, 1040, 520, 18, 14, '#d46028', INK, 2);
-    /* tires + fuel */
-    function tires(tx, ty, n) {
-      var k;
-      for (k = 0; k < n; k++) {
-        ellipse(g, tx, ty - k * 16, 36, 12, '#1a1220', INK, 2);
-      }
-    }
-    tires(200, 820, 5); tires(1080, 800, 4);
-    R(g, 280, 760, 28, 40, '#b43428', INK, 2);
-    txt(g, 'F', 294, 780, 11, '#f0e4c8');
-    /* tool hook board */
-    R(g, 400, 90, 200, 160, '#7a4a2e', INK, 3);
-    g.strokeStyle = INK; g.lineWidth = 4;
-    g.beginPath(); g.moveTo(430, 120); g.lineTo(430, 200); g.stroke();
-    g.beginPath(); g.moveTo(470, 130); g.lineTo(470, 210); g.stroke();
-    g.beginPath(); g.moveTo(520, 120); g.lineTo(520, 190); g.stroke();
+    backWall(g, '#3a4254', '#323848');
+    lamp(g, 200, 70); lamp(g, 1080, 70);
+    concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 47);
+    oilStain(g, 300, 700, 70, 20); oilStain(g, 980, 640, 50, 16); oilStain(g, 240, 500, 36, 12);
+    /* a real tool wall, Hase-workshop density */
+    toolWall(g, 140, 70, 240, 200);
+    toolWall(g, 900, 70, 200, 180);
+    /* mats + bikes — four along the sides, one mid-left, walk lane clear */
+    R(g, 140, 620, 200, 70, '#3a322c', INK, 2);
+    moto(g, 150, 580, 1.05, '#d46028');
+    R(g, 140, 760, 200, 70, '#3a322c', INK, 2);
+    moto(g, 150, 720, 1.05, '#2a3a70');
+    R(g, 940, 620, 200, 70, '#3a322c', INK, 2);
+    moto(g, 950, 580, 1.05, '#3a8a50');
+    R(g, 940, 760, 200, 70, '#3a322c', INK, 2);
+    moto(g, 950, 720, 1.05, '#8a3a28');
+    /* a fifth bike parked against the back-left */
+    R(g, 400, 400, 180, 60, '#3a322c', INK, 2);
+    moto(g, 410, 360, 0.95, '#4a4e58');
+    tires(g, 260, 540, 5, 32);
+    tires(g, 1080, 540, 4, 32);
+    tires(g, 200, 840, 3, 28);
+    jerry(g, 360, 800, 1.2);
+    jerry(g, 400, 810, 1);
+    /* workbench */
+    R(g, 420, 760, 180, 18, '#5c4638', INK, 3);
+    R(g, 430, 778, 12, 40, '#4a3e34', INK, 2);
+    R(g, 590, 778, 12, 40, '#4a3e34', INK, 2);
+    R(g, 440, 744, 50, 16, '#6a707c', INK, 1.5);
+    R(g, 500, 744, 40, 16, '#3a3e48', INK, 1.5);
+    /* helmets on a shelf */
+    R(g, 900, 260, 200, 14, '#4a3e34', INK, 2);
+    ellipse(g, 940, 248, 16, 12, '#1a1220', INK, 2);
+    ellipse(g, 1000, 248, 16, 12, '#d46028', INK, 2);
+    ellipse(g, 1060, 248, 16, 12, '#2a3a70', INK, 2);
+    hose(g, 680, 820, 160);
+    chainCoil(g, 820, 830, 16);
+    signPlate(g, 700, 90, 80, 40, '\u99d0\u8f2a', '#d8c8a0');
+    steelDoor(g, 620, 80, 70, 180, '\u914d\u8eca');
+    tires(g, 820, 500, 4, 28);
+    jerry(g, 800, 800, 1);
+    floorMat(g, 500, 800, 140, 30, '#3a322c');
+    R(g, 720, 400, 140, 50, '#3a322c', INK, 2);
+    /* creeper + jack at the mid-right edge */
+    R(g, 800, 700, 70, 16, '#3a3e48', INK, 2);
+    ellipse(g, 812, 716, 8, 8, '#1a1220', INK, 1.4);
+    ellipse(g, 858, 716, 8, 8, '#1a1220', INK, 1.4);
     shell(g, '\u99d0\u8f2a', 'Bike bay');
   };
 
-  /* ---------- 8. Dispatcher loft ---------- */
+  /* ---------- 8. Dispatch loft ---------- */
   S2P.depLoft = function (g, cleared) {
     rr(g);
-    /* warmer wood rail, window onto the bay below */
-    corrug(g, 90, 40, 1100, 200, '#4a5064', '#40465a', 22);
-    R(g, 90, 40, 1100, 18, '#2a2e3a', INK, 2);
-    R(g, 300, 70, 680, 160, '#1a1220', INK, 3);
-    /* bay below, smaller */
-    concFloor(g, 306, 140, 668, 84, '#6a6460', '#5a5450', 5);
-    crate(g, 340, 150, 50, 36, '');
-    crate(g, 880, 160, 50, 36, '');
-    /* railing */
-    R(g, 90, 230, 1100, 14, '#6a5240', INK, 2);
+    backWall(g, '#3a4254', '#323848');
+    /* the canal window, lit — night water, lanterns, a little rain outside the glass */
+    R(g, 420, 60, 440, 240, '#1a1220', INK, 3);
+    var sky = g.createLinearGradient(0, 66, 0, 300);
+    sky.addColorStop(0, '#12182a'); sky.addColorStop(1, '#1a2438');
+    g.fillStyle = sky; g.fillRect(426, 66, 428, 160);
+    /* canal water, lit */
+    var wat = g.createLinearGradient(0, 226, 0, 296);
+    wat.addColorStop(0, '#1a3a58'); wat.addColorStop(0.5, '#2a5a80'); wat.addColorStop(1, '#1a3048');
+    g.fillStyle = wat; g.fillRect(426, 226, 428, 68);
+    g.strokeStyle = 'rgba(180,220,255,.35)'; g.lineWidth = 1.4;
     var i;
+    for (i = 0; i < 6; i++) { g.beginPath(); g.moveTo(430, 236 + i * 10); g.lineTo(850, 236 + i * 10); g.stroke(); }
+    /* window lamp reflections on the water */
+    glow(g, 520, 250, 30, 'rgba(255,200,110,.35)');
+    glow(g, 720, 252, 30, 'rgba(255,200,110,.3)');
+    g.fillStyle = '#f0d080';
+    for (i = 0; i < 10; i++) g.fillRect(450 + i * 38, 248, 3, 3);
+    /* a small barge */
+    R(g, 600, 238, 70, 16, '#3a2a22', INK, 1.5);
+    /* window panes + mullions */
+    g.strokeStyle = INK; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(640, 66); g.lineTo(640, 294); g.stroke();
+    g.beginPath(); g.moveTo(426, 180); g.lineTo(854, 180); g.stroke();
+    /* warm interior light on the glass */
+    glow(g, 640, 160, 140, 'rgba(255,200,110,.16)');
+    /* rain only on the far side of the glass, clipped to the panes */
+    g.save(); g.beginPath(); g.rect(426, 66, 428, 114); g.clip();
+    g.strokeStyle = 'rgba(200,220,255,.28)'; g.lineWidth = 1.1;
+    var r = function (s) { var v = s; return function () { v = (v * 16807) % 2147483647; return (v - 1) / 2147483646; }; }(13);
+    for (i = 0; i < 16; i++) {
+      var rx = 426 + r() * 428, ry = 66 + r() * 114, L = 8 + r() * 12;
+      g.beginPath(); g.moveTo(rx, ry); g.lineTo(rx + 2, ry + L); g.stroke();
+    }
+    g.restore();
+    lamp(g, 200, 70); lamp(g, 1080, 70);
+    concFloor(g, 90, 320, 1100, 530, '#6e6a62', '#5a5650', 53);
+    oilStain(g, 260, 760, 40, 12); oilStain(g, 1000, 700, 36, 12);
+    /* desks */
+    R(g, 200, 560, 280, 22, '#5c4638', INK, 3);
+    R(g, 200, 582, 280, 90, '#4a3e34', INK, 3);
+    R(g, 216, 546, 40, 16, '#2a2c34', INK, 1.5);
+    R(g, 270, 546, 50, 16, '#efe6d2', INK, 1.5);
+    R(g, 340, 546, 36, 16, '#3a3e48', INK, 1.5);
+    R(g, 200, 672, 280, 12, '#2a2826', INK, 1.5);
     g.strokeStyle = INK; g.lineWidth = 3;
-    for (i = 0; i < 16; i++) { g.beginPath(); g.moveTo(120 + i * 66, 230); g.lineTo(120 + i * 66, 280); g.stroke(); }
-    R(g, 90, 276, 1100, 10, '#5a4638', INK, 2);
-    lamp(g, 220, 70); lamp(g, 1060, 70);
-    concFloor(g, 90, 320, 1100, 530, '#6a5e54', '#5a5048', 43);
-    /* dispatch desk, in frame */
-    R(g, 400, 540, 300, 24, '#5c4638', INK, 3);
-    R(g, 400, 564, 300, 110, '#4a3e34', INK, 3);
-    R(g, 416, 548, 48, 16, '#2a2c34', INK, 1.5);
-    ellipse(g, 430, 556, 6, 6, '#3a6a3a', INK, 1.3);
-    ellipse(g, 448, 556, 6, 6, '#6a3a2a', INK, 1.3);
-    manifest(g, 520, 548, 90, 80, false);
-    g.strokeStyle = INK; g.lineWidth = 3;
-    g.beginPath(); g.moveTo(660, 540); g.lineTo(660, 508); g.lineTo(688, 496); g.stroke();
-    ellipse(g, 696, 496, 14, 10, '#f0d080', INK, 2);
-    glow(g, 690, 530, 70, 'rgba(255,200,110,.3)');
-    /* 配車表 */
-    R(g, 860, 360, 220, 180, '#d8c8a0', INK, 3);
-    R(g, 860, 360, 220, 24, '#5a2a28', INK, 2);
-    txt(g, '\u914d\u8eca\u8868', 970, 372, 13, '#f0e4c8');
-    g.strokeStyle = '#5a3a28'; g.lineWidth = 1.4;
-    for (i = 0; i < 7; i++) { g.beginPath(); g.moveTo(876, 396 + i * 18); g.lineTo(1064, 396 + i * 18); g.stroke(); }
-    /* canal night window, right */
-    R(g, 140, 360, 180, 140, '#1a2238', INK, 3);
-    g.fillStyle = '#1a2434'; g.fillRect(146, 430, 168, 64);
-    g.fillStyle = '#c45a62';
-    for (i = 0; i < 12; i++) g.fillRect(152 + i * 14, 460, 3, 3);
-    ellipse(g, 620, 720, 22, 8, '#c4a060', INK, 2);
-    R(g, 612, 720, 8, 36, '#3b2a22', INK, 2);
-    shell(g, '\u914d\u8eca\u30ed\u30d5\u30c8', 'Dispatch loft');
+    g.beginPath(); g.moveTo(430, 560); g.lineTo(430, 528); g.lineTo(456, 516); g.stroke();
+    ellipse(g, 464, 516, 14, 10, '#f0d080', INK, 2);
+    glow(g, 460, 550, 60, 'rgba(255,200,110,.3)');
+    R(g, 760, 520, 260, 22, '#5c4638', INK, 3);
+    R(g, 760, 542, 260, 80, '#4a3e34', INK, 3);
+    R(g, 776, 506, 40, 16, '#2a2c34', INK, 1.5);
+    R(g, 840, 506, 70, 16, '#efe6d2', INK, 1.5);
+    R(g, 760, 622, 260, 12, '#2a2826', INK, 1.5);
+    stool(g, 520, 720); stool(g, 900, 680);
+    /* radio cabinet, file crates, papers, jacket */
+    R(g, 140, 400, 80, 60, '#3a3e48', INK, 2);
+    ellipse(g, 160, 420, 6, 6, '#c45a3a', INK, 1);
+    ellipse(g, 180, 420, 6, 6, '#3a6a3a', INK, 1);
+    crate(g, 140, 700, 90, 70, '\u53f0\u5e33');
+    crate(g, 150, 640, 80, 60, '');
+    R(g, 1040, 700, 70, 50, '#efe6d2', INK, 2);
+    R(g, 1080, 740, 60, 40, '#efe6d2', INK, 2);
+    R(g, 1140, 200, 28, 70, '#3a463c', INK, 2);
+    cableRun(g, 100, 328, 400, 328);
+    cableRun(g, 880, 328, 1180, 328);
+    signPlate(g, 160, 90, 90, 40, '\u914d\u8eca', '#d8c8a0');
+    steelDoor(g, 1050, 80, 90, 200, '\u4f11\u61a9');
+    floorMat(g, 200, 690, 280, 40, '#3a322c');
+    floorMat(g, 760, 640, 260, 40, '#3a322c');
+    papers(g, 520, 640);
+    papers(g, 1040, 640);
+    crate(g, 1040, 500, 70, 50, '');
+    R(g, 1080, 400, 50, 70, '#3a3e48', INK, 2);
+    shell(g, '\u914d\u8eca', 'Dispatch loft');
   };
 
   /* ---------- 9. Break room ---------- */
   S2P.depBreak = function (g, cleared) {
     rr(g);
-    corrug(g, 90, 40, 1100, 280, '#5a4a40', '#504038', 28);
-    R(g, 90, 40, 1100, 18, '#2a2018', INK, 2);
-    /* warm lamps */
-    lamp(g, 300, 70); lamp(g, 980, 70);
-    glow(g, 640, 200, 200, 'rgba(255,180,100,.1)');
-    concFloor(g, 90, 320, 1100, 530, '#6a5a4c', '#5a4a40', 47);
-    /* table, in frame */
-    R(g, 430, 560, 280, 22, '#6a5240', INK, 3);
-    R(g, 450, 582, 16, 80, '#4a3a30', INK, 2);
-    R(g, 674, 582, 16, 80, '#4a3a30', INK, 2);
-    /* ramen cups, kettle, ashtray, magazine */
-    R(g, 460, 536, 28, 24, '#c45a3a', INK, 1.5);
-    R(g, 500, 536, 28, 24, '#3a6a8a', INK, 1.5);
-    ellipse(g, 560, 548, 14, 10, '#8a8fa0', INK, 1.5);
-    R(g, 600, 530, 50, 28, '#efe6d2', INK, 1.5);
-    ellipse(g, 680, 548, 12, 8, '#3a3e48', INK, 1.5);
-    /* benches */
-    R(g, 400, 700, 140, 16, '#4a3a30', INK, 2);
-    R(g, 600, 700, 140, 16, '#4a3a30', INK, 2);
-    /* sofa left */
-    R(g, 140, 600, 200, 80, '#4a3a48', INK, 3);
-    R(g, 140, 560, 200, 44, '#5a4a58', INK, 2);
-    /* fridge + kettle counter right */
-    R(g, 980, 480, 120, 200, '#d8d0c4', INK, 3);
-    R(g, 990, 500, 100, 50, '#3a6a8a', INK, 2);
-    txt(g, 'ICE', 1040, 525, 11, '#f0e4c8');
-    R(g, 980, 440, 120, 40, '#3e322c', INK, 2);
-    ellipse(g, 1040, 430, 16, 12, '#8a8fa0', INK, 2);
-    /* TV */
-    R(g, 560, 120, 160, 100, '#1a1220', INK, 3);
-    R(g, 568, 128, 144, 84, '#2a3850', 0);
-    /* clock + no-smoking (ignored, ashtray is out) */
-    ellipse(g, 200, 160, 22, 22, '#f4ead2', INK, 2);
+    corrug(g, 90, 40, 1100, 280, '#5a4a40', '#504038', 22);
+    R(g, 90, 40, 1100, 18, '#3a2e28', INK, 2);
+    lamp(g, 200, 70); lamp(g, 1080, 70);
+    concFloor(g, 90, 320, 1100, 530, '#6a5e54', '#5a4e44', 59);
+    oilStain(g, 260, 780, 30, 10);
+    /* clock + no smoking */
+    ellipse(g, 180, 120, 28, 28, '#efe6d2', INK, 2);
     g.strokeStyle = INK; g.lineWidth = 2;
-    g.beginPath(); g.moveTo(200, 160); g.lineTo(200, 148); g.moveTo(200, 160); g.lineTo(210, 166); g.stroke();
-    R(g, 900, 120, 90, 50, '#f4ead2', INK, 2);
-    txt(g, '\u7981\u7159', 945, 145, 13, '#a84838');
-    /* lockers */
-    lockers(g, 140, 400, 4, 120);
+    g.beginPath(); g.moveTo(180, 120); g.lineTo(180, 102); g.stroke();
+    g.beginPath(); g.moveTo(180, 120); g.lineTo(194, 126); g.stroke();
+    R(g, 520, 80, 240, 140, '#1a2030', INK, 3);
+    R(g, 532, 92, 216, 116, '#2a3850', 0);
+    signPlate(g, 900, 90, 80, 44, '\u7981\u7159', '#f0e4c8');
+    /* vending machine — a real one, with a window of cans */
+    R(g, 1020, 360, 130, 280, '#3a4a68', INK, 3);
+    R(g, 1030, 380, 110, 160, '#1a2030', INK, 2);
+    var i, j, vc = ['#c45a3a', '#3a6a3a', '#d4a830', '#2a3a70', '#8a3a50', '#4a8aa0'];
+    for (j = 0; j < 4; j++) for (i = 0; i < 4; i++) {
+      R(g, 1038 + i * 24, 390 + j * 36, 20, 28, vc[(i + j) % vc.length], INK, 1);
+    }
+    R(g, 1034, 548, 100, 16, '#2a2c34', INK, 1.5);
+    for (i = 0; i < 8; i++) ellipse(g, 1046 + i * 12, 556, 4, 4, i % 2 ? '#c45a3a' : '#3a6a3a', INK, 1);
+    R(g, 1054, 580, 60, 28, '#1a1220', INK, 2);
+    R(g, 1070, 614, 30, 14, '#c4a060', INK, 1.4);
+    txt(g, 'HOT', 1085, 372, 10, '#f0e4c8', '800 ');
+    /* kettle on a side counter, with a soft steam glow */
+    R(g, 140, 520, 180, 18, '#5c4638', INK, 3);
+    R(g, 148, 538, 12, 40, '#4a3e34', INK, 2);
+    R(g, 300, 538, 12, 40, '#4a3e34', INK, 2);
+    R(g, 160, 492, 44, 28, '#8a8fa0', INK, 2);
+    ellipse(g, 182, 492, 16, 8, '#6a707c', INK, 1.5);
+    R(g, 200, 484, 10, 10, '#4a4e58', INK, 1.4);
+    glow(g, 182, 470, 24, 'rgba(220,230,240,.35)');
+    R(g, 230, 500, 36, 20, '#efe6d2', INK, 1.5);
+    R(g, 274, 504, 22, 16, '#3a3e48', INK, 1.5);
+    /* microwave */
+    R(g, 140, 400, 70, 50, '#4a4e58', INK, 2);
+    R(g, 148, 408, 44, 30, '#1a2030', INK, 1.5);
+    /* lockers with bags and hats on top */
+    lockers(g, 140, 600, 4, 140);
+    hardhat(g, 160, 592);
+    R(g, 220, 578, 28, 20, '#3a463c', INK, 1.5);
+    /* folded futon along the left wall */
+    futonFold(g, 140, 760);
+    txt(g, '\u5e03\u56e3', 240, 754, 11, '#f0e4c8');
+    /* table, benches, cups */
+    R(g, 500, 600, 280, 18, '#5c4638', INK, 3);
+    R(g, 520, 618, 16, 70, '#4a3e34', INK, 2);
+    R(g, 744, 618, 16, 70, '#4a3e34', INK, 2);
+    R(g, 530, 580, 30, 20, '#c45a3a', INK, 1.5);
+    R(g, 570, 584, 24, 16, '#2a3a70', INK, 1.5);
+    ellipse(g, 630, 590, 12, 8, '#d8d0c4', INK, 1.4);
+    R(g, 660, 584, 40, 16, '#efe6d2', INK, 1.5);
+    R(g, 530, 700, 80, 10, '#4a3e34', INK, 2);
+    R(g, 670, 700, 80, 10, '#4a3e34', INK, 2);
+    /* slippers, trash, magazine crate */
+    R(g, 500, 780, 28, 14, '#3a2a22', INK, 1.4);
+    R(g, 536, 780, 28, 14, '#3a2a22', INK, 1.4);
+    R(g, 900, 740, 44, 50, '#3a3e48', INK, 2);
+    crate(g, 860, 700, 70, 40, '');
+    cableRun(g, 100, 328, 240, 328);
+    steelDoor(g, 1050, 80, 90, 200, '\u6a2a\u5751');
+    /* a short sofa mid-right of the walk, rug under the table */
+    floorMat(g, 500, 640, 280, 90, '#4a3a30');
+    R(g, 820, 520, 160, 60, '#5a3a40', INK, 2);
+    R(g, 828, 500, 144, 24, '#6a4a50', INK, 2);
+    papers(g, 860, 640);
     shell(g, '\u4f11\u61a9', 'Break room');
   };
 
   /* ---------- 10. Tunnel spur ---------- */
   S2P.depTunnel = function (g, cleared) {
     rr(g);
-    /* staggered wet brick, not long planks */
-    g.fillStyle = '#2a2428'; g.fillRect(90, 0, 1100, 320);
-    var i, j, xx, yy, off;
-    for (yy = 40; yy < 320; yy += 18) {
-      off = ((yy / 18) % 2) * 16;
-      for (xx = 90; xx < 1190; xx += 32) {
-        R(g, xx + off, yy, 30, 16, ((xx + yy) % 64 < 32) ? '#4a3a36' : '#3e322e', INK, 1);
+    /* brick receding into a dark arch */
+    g.fillStyle = '#2a2420'; g.fillRect(90, 40, 1100, 280);
+    var i, j;
+    for (j = 0; j < 10; j++) {
+      for (i = 0; i < 22; i++) {
+        var ox = (j % 2) ? 16 : 0;
+        R(g, 100 + i * 50 + ox, 50 + j * 26, 46, 22, (i + j) % 3 ? '#5a3e36' : '#4a322c', INK, 1.2);
       }
     }
-    /* arched mouth with a receding service tunnel */
+    /* receding arch cut into the brick wall */
+    g.fillStyle = '#121016';
     g.beginPath();
-    g.moveTo(420, 280); g.lineTo(500, 90); g.lineTo(780, 90); g.lineTo(860, 280); g.closePath();
-    g.fillStyle = '#121018'; g.fill(); g.strokeStyle = INK; g.lineWidth = 3; g.stroke();
+    g.moveTo(460, 320); g.quadraticCurveTo(640, 70, 820, 320);
+    g.closePath(); g.fill();
+    g.fillStyle = '#0a080c';
     g.beginPath();
-    g.moveTo(500, 260); g.lineTo(560, 120); g.lineTo(720, 120); g.lineTo(780, 260); g.closePath();
-    g.fillStyle = '#0a0a0e'; g.fill();
-    /* a hint of rail receding */
-    g.strokeStyle = '#3a3e48'; g.lineWidth = 3;
-    g.beginPath(); g.moveTo(560, 250); g.lineTo(620, 140); g.stroke();
-    g.beginPath(); g.moveTo(720, 250); g.lineTo(660, 140); g.stroke();
-    for (i = 0; i < 5; i++) lamp(g, 180 + i * 230, 64);
-    concFloor(g, 90, 320, 1100, 530, '#3e3a40', '#322e34', 53);
-    g.fillStyle = 'rgba(80,110,140,.08)'; g.fillRect(90, 320, 1100, 530);
-    /* wet walk, puddles */
-    g.fillStyle = 'rgba(120,160,190,.14)';
-    g.beginPath(); g.ellipse(640, 700, 160, 20, 0, 0, 7); g.fill();
-    g.beginPath(); g.ellipse(400, 800, 70, 12, 0, 0, 7); g.fill();
-    g.beginPath(); g.ellipse(860, 760, 60, 12, 0, 0, 7); g.fill();
-    /* pipes along both walls */
-    R(g, 90, 300, 1100, 16, '#4a4e58', INK, 2);
-    R(g, 110, 200, 22, 400, '#4a4e58', INK, 2);
-    R(g, 1148, 200, 22, 400, '#4a4e58', INK, 2);
-    R(g, 110, 360, 70, 14, '#4a4e58', INK, 2);
-    R(g, 1100, 420, 70, 14, '#4a4e58', INK, 2);
-    /* cables */
-    g.strokeStyle = '#2a2018'; g.lineWidth = 3;
-    g.beginPath(); g.moveTo(140, 40); g.quadraticCurveTo(200, 180, 140, 300); g.stroke();
-    g.beginPath(); g.moveTo(1140, 40); g.quadraticCurveTo(1080, 200, 1140, 300); g.stroke();
-    graySeal(g, 240, 180, 28);
-    txt(g, '\u6a2a\u5751', 240, 230, 12, 'rgba(240,228,200,.35)');
-    crate(g, 160, 700, 90, 70, '');
-    crate(g, 200, 640, 80, 60, '');
-    drum(g, 300, 720, 36, 56, '#3a4a38');
-    R(g, 1000, 720, 36, 50, '#d46028', INK, 2);
-    R(g, 992, 710, 52, 12, '#d46028', INK, 2);
-    crate(g, 1040, 640, 90, 70, '');
-    /* ladder */
+    g.moveTo(520, 320); g.quadraticCurveTo(640, 130, 760, 320);
+    g.closePath(); g.fill();
+    g.strokeStyle = INK; g.lineWidth = 4;
+    g.beginPath();
+    g.moveTo(460, 320); g.quadraticCurveTo(640, 70, 820, 320);
+    g.stroke();
+    lamp(g, 200, 70); lamp(g, 1080, 70);
+    glow(g, 640, 200, 120, 'rgba(255,200,110,.1)');
+    concFloor(g, 90, 320, 1100, 530, '#5a5450', '#4a4440', 61);
+    /* dark throat of the spur, so the arch reads on the floor */
+    g.fillStyle = '#0a080c';
+    g.beginPath(); g.moveTo(520, 320); g.lineTo(760, 320); g.lineTo(700, 400); g.lineTo(580, 400); g.closePath(); g.fill();
     g.strokeStyle = INK; g.lineWidth = 3;
-    g.beginPath(); g.moveTo(860, 320); g.lineTo(860, 820); g.moveTo(900, 320); g.lineTo(900, 820); g.stroke();
-    for (i = 0; i < 10; i++) { g.beginPath(); g.moveTo(860, 360 + i * 44); g.lineTo(900, 360 + i * 44); g.stroke(); }
-    g.strokeStyle = 'rgba(180,210,230,.4)'; g.lineWidth = 2;
-    g.beginPath(); g.moveTo(400, 316); g.lineTo(400, 360); g.stroke();
-    g.beginPath(); g.moveTo(900, 316); g.lineTo(900, 350); g.stroke();
+    g.beginPath(); g.moveTo(520, 320); g.lineTo(580, 400); g.lineTo(700, 400); g.lineTo(760, 320); g.stroke();
+    oilStain(g, 300, 700, 50, 16); oilStain(g, 980, 640, 46, 14);
+    crate(g, 340, 620, 80, 56, '');
+    pallet(g, 330, 680, 100, 22);
+    drum(g, 880, 620, 32, 54, '#6a3a28');
+    crate(g, 860, 680, 80, 56, '');
+    /* puddles along the sides */
+    g.fillStyle = 'rgba(80,110,140,.2)';
+    g.beginPath(); g.ellipse(240, 500, 70, 16, 0, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(1040, 560, 60, 14, 0, 0, 7); g.fill();
+    /* pipes and cables along the walls */
+    g.strokeStyle = '#6a707c'; g.lineWidth = 8;
+    g.beginPath(); g.moveTo(120, 80); g.lineTo(120, 500); g.quadraticCurveTo(120, 560, 200, 600); g.stroke();
+    g.strokeStyle = INK; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(120, 80); g.lineTo(120, 500); g.quadraticCurveTo(120, 560, 200, 600); g.stroke();
+    g.strokeStyle = '#4a3a28'; g.lineWidth = 6;
+    g.beginPath(); g.moveTo(1160, 80); g.lineTo(1160, 520); g.quadraticCurveTo(1160, 600, 1040, 640); g.stroke();
+    cableRun(g, 100, 328, 200, 328);
+    cableRun(g, 1080, 328, 1180, 328);
+    /* ladder, barrels, trolley, barrier */
+    R(g, 200, 200, 16, 200, '#6a707c', INK, 2);
+    for (i = 0; i < 8; i++) R(g, 200, 210 + i * 22, 16, 4, '#4a4e58', INK, 1);
+    drum(g, 160, 720, 36, 60, '#6a3a28');
+    drum(g, 200, 740, 32, 50, '#3a4a38');
+    crate(g, 1040, 700, 100, 70, '');
+    pallet(g, 1040, 780, 120, 24);
+    handTruck(g, 160, 640);
+    chainCoil(g, 280, 820, 18);
+    hose(g, 800, 820, 160);
+    cone(g, 400, 800); cone(g, 840, 800);
+    signPlate(g, 860, 90, 90, 44, '\u6ce8\u610f', '#e8c040');
+    steelDoor(g, 140, 80, 70, 180, '\u4f11\u61a9');
+    steelDoor(g, 1070, 80, 70, 180, '\u7a4d\u8377');
     shell(g, '\u6a2a\u5751', 'Tunnel spur');
   };
 
   /* ---------- 11. Manifest office ---------- */
   S2P.depManifest = function (g, cleared) {
     rr(g);
-    backWall(g, '#4a5048', '#40463e');
-    lamp(g, 220, 70); lamp(g, 1060, 70);
-    /* hanging lamp over the desk */
+    backWall(g, '#4a5060', '#40465a');
+    lamp(g, 200, 70); lamp(g, 1080, 70);
+    concFloor(g, 90, 320, 1100, 530, '#6e6a62', '#5a5650', 67);
+    oilStain(g, 260, 760, 36, 12);
+    /* file cabinets */
+    lockers(g, 140, 80, 6, 200);
+    /* a big bulletin / schedule */
+    R(g, 460, 80, 360, 200, '#d8c8a0', INK, 3);
+    txt(g, '\u7a4d\u8377\u8868', 640, 106, 16, '#5a2a28');
+    g.strokeStyle = '#5a3a28'; g.lineWidth = 1.4;
+    var i;
+    for (i = 0; i < 8; i++) { g.beginPath(); g.moveTo(480, 128 + i * 18); g.lineTo(800, 128 + i * 18); g.stroke(); }
+    if (!cleared) graySeal(g, 780, 240, 22);
+    /* clerk desk */
+    R(g, 400, 560, 320, 24, '#5c4638', INK, 3);
+    R(g, 400, 584, 320, 100, '#4a3e34', INK, 3);
+    manifest(g, 430, 500, 120, 90, !cleared);
+    R(g, 570, 544, 50, 16, '#efe6d2', INK, 1.5);
+    R(g, 630, 544, 40, 16, '#2a2c34', INK, 1.5);
+    ellipse(g, 690, 552, 10, 8, '#3a2a22', INK, 1.5);
     g.strokeStyle = INK; g.lineWidth = 3;
-    g.beginPath(); g.moveTo(640, 40); g.lineTo(640, 300); g.stroke();
-    R(g, 624, 298, 32, 12, '#3a3e48', INK, 2);
-    glow(g, 640, 360, 100, 'rgba(255,200,100,.24)');
-    concFloor(g, 90, 320, 1100, 530, '#6a5e54', '#5a5048', 59);
-    /* pigeonholes */
-    R(g, 140, 80, 280, 210, '#5c4638', INK, 3);
-    var i, j;
-    for (j = 0; j < 3; j++) for (i = 0; i < 4; i++) {
-      R(g, 156 + i * 64, 100 + j * 58, 56, 48, '#2a2018', INK, 1.5);
-      if ((i + j) % 2 === 0) R(g, 162 + i * 64, 108 + j * 58, 44, 16, '#efe6d2', 0);
-    }
-    /* main desk, in frame — the gray-seal manifest lives here until the shutter */
-    R(g, 400, 560, 360, 24, '#5c4638', INK, 3);
-    R(g, 400, 584, 360, 110, '#4a3e34', INK, 3);
-    manifest(g, 520, 500, 120, 100, true);
-    R(g, 420, 568, 50, 16, '#2a2430', INK, 1.5);
-    ellipse(g, 500, 572, 10, 8, '#3a2a22', INK, 1.5);
-    /* stamp */
-    ellipse(g, 680, 572, 14, 10, '#5a5e68', INK, 1.5);
-    /* window to the lift */
-    R(g, 860, 80, 240, 200, '#1a1220', INK, 3);
-    corrug(g, 868, 88, 224, 184, '#3a3e48', '#32363e', 16);
-    R(g, 920, 140, 120, 100, '#2a2c34', INK, 2);
-    caution(g, 920, 230, 120, 10);
-    /* filing cabinets */
-    R(g, 160, 500, 160, 220, '#4a5060', INK, 3);
-    R(g, 170, 530, 140, 14, '#3a3e48', INK, 1.5);
-    R(g, 170, 580, 140, 14, '#3a3e48', INK, 1.5);
-    R(g, 170, 630, 140, 14, '#3a3e48', INK, 1.5);
-    txt(g, '\u53f0\u5e33', 240, 490, 12, '#f0e4c8');
-    lockers(g, 900, 500, 4, 180);
-    ellipse(g, 800, 740, 22, 8, '#c4a060', INK, 2);
-    R(g, 792, 740, 8, 36, '#3b2a22', INK, 2);
+    g.beginPath(); g.moveTo(680, 560); g.lineTo(680, 528); g.lineTo(704, 516); g.stroke();
+    ellipse(g, 712, 516, 14, 10, '#f0d080', INK, 2);
+    glow(g, 706, 550, 60, 'rgba(255,200,110,.3)');
+    R(g, 400, 684, 320, 12, '#2a2826', INK, 1.5);
+    stool(g, 760, 740);
+    /* mail bins, file crates, overflowing trash, coat, stamp table, safe */
+    crate(g, 140, 700, 90, 70, '\u53f0\u5e33');
+    crate(g, 150, 640, 80, 60, '');
+    R(g, 250, 720, 50, 40, '#c45a3a', INK, 2);
+    R(g, 260, 704, 30, 16, '#efe6d2', INK, 1.2);
+    R(g, 1040, 700, 50, 60, '#3a3e48', INK, 2);
+    R(g, 1046, 686, 36, 16, '#efe6d2', INK, 1.2);
+    R(g, 1048, 672, 30, 14, '#efe6d2', INK, 1.2);
+    R(g, 900, 700, 90, 50, '#3a3e48', INK, 2);
+    R(g, 916, 680, 40, 20, '#c4a060', INK, 1.5);
+    /* small safe */
+    R(g, 1080, 500, 70, 80, '#3a3e48', INK, 2);
+    ellipse(g, 1115, 540, 8, 8, '#c4a060', INK, 1.4);
+    /* coat rack */
+    g.strokeStyle = INK; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(1180, 200); g.lineTo(1180, 380); g.stroke();
+    R(g, 1148, 210, 28, 70, '#3a463c', INK, 2);
+    handTruck(g, 160, 500);
+    cableRun(g, 880, 328, 1180, 328);
+    steelDoor(g, 900, 80, 90, 200, '\u6a2a\u5751');
+    steelDoor(g, 1020, 80, 90, 200, '\u6607\u964d');
+    signPlate(g, 250, 300, 80, 36, '\u4e8b\u52d9', '#d8c8a0');
+    floorMat(g, 400, 700, 320, 46, '#3a322c');
+    papers(g, 300, 560);
+    papers(g, 860, 560);
+    crate(g, 860, 620, 70, 50, '');
     shell(g, '\u7a4d\u8377', 'Manifest office');
   };
 
-  /* ---------- 12. Cargo-lift anteroom ---------- */
+  /* ---------- 12. Lift anteroom ---------- */
   S2P.depAntero = function (g, cleared) {
     rr(g);
     backWall(g, '#3a4254', '#323848');
-    /* lift gates ahead, the shutter beyond */
-    R(g, 400, 50, 480, 270, '#1a1220', INK, 3);
-    corrug(g, 408, 58, 464, 200, '#3a3e48', '#2e323c', 20);
-    /* inner shutter hint */
-    for (i = 0; i < 8; i++) R(g, 450, 80 + i * 16, 380, 16, i % 2 ? '#3a3e4c' : '#32364a', INK, 1.2);
-    caution(g, 408, 258, 464, 14);
-    /* gate chains */
+    R(g, 400, 80, 480, 200, '#1a1220', INK, 3);
     var i;
-    g.strokeStyle = '#8a8fa0'; g.lineWidth = 4;
-    g.beginPath(); g.moveTo(420, 70); g.lineTo(420, 250); g.stroke();
-    g.beginPath(); g.moveTo(860, 70); g.lineTo(860, 250); g.stroke();
+    for (i = 0; i < 10; i++) R(g, 408, 88 + i * 18, 464, 18, i % 2 ? '#3a3e4c' : '#32364a', INK, 1.3);
+    caution(g, 400, 272, 480, 14);
+    /* freight lift frame in front of the slats */
+    liftFrame(g, 360, 44, 560, 276);
     lamp(g, 200, 70); lamp(g, 1080, 70);
-    glow(g, 640, 180, 140, 'rgba(255,200,110,.1)');
-    concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 61);
-    oilStain(g, 300, 740, 50, 16); oilStain(g, 960, 700, 44, 14);
-    /* waiting pallet, in frame but off the walk to the lift */
-    pallet(g, 160, 700, 140, 30);
-    crate(g, 180, 630, 100, 70, '\u8ca0\u7269');
-    /* control panel */
-    R(g, 900, 400, 160, 200, '#2a2c34', INK, 3);
-    ellipse(g, 940, 460, 14, 14, '#3a6a3a', INK, 2);
-    ellipse(g, 1000, 460, 14, 14, '#6a3a2a', INK, 2);
-    R(g, 920, 500, 120, 16, '#1a2018', INK, 1.5);
-    txt(g, '\u6607\u964d\u6a5f', 980, 390, 12, '#f0e4c8');
-    /* warning */
-    R(g, 200, 400, 80, 80, '#e8c040', INK, 2);
-    txt(g, '!', 240, 440, 36, '#1a1220');
+    concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 71);
+    oilStain(g, 260, 740, 50, 16); oilStain(g, 1020, 700, 46, 14);
+    /* hanging chains at the sides of the frame */
+    chainHang(g, 200, 70, 280);
+    chainHang(g, 1080, 70, 280);
+    chainCoil(g, 240, 820, 20);
+    chainCoil(g, 1060, 820, 18);
+    /* control panel on a stand */
+    R(g, 940, 480, 80, 140, '#2a2c34', INK, 2);
+    R(g, 964, 620, 16, 50, '#2a2c34', INK, 2);
+    ellipse(g, 980, 530, 10, 10, '#3a6a3a', INK, 1.5);
+    ellipse(g, 980, 560, 10, 10, '#6a3a2a', INK, 1.5);
+    R(g, 952, 590, 56, 16, '#1a1220', INK, 1.5);
+    txt(g, '\u540a\u308a\u6a5f', 980, 470, 11, '#f0e4c8');
+    /* staged freight at the sides */
+    crate(g, 140, 700, 110, 80, '\u8ca0\u7269');
+    crate(g, 160, 630, 90, 70, '');
+    pallet(g, 140, 790, 140, 24);
+    crate(g, 1030, 700, 110, 80, '');
+    drum(g, 260, 740, 36, 60, '#6a3a28');
+    drum(g, 980, 740, 32, 56, '#3a4a38');
+    signPlate(g, 140, 360, 70, 70, '!', '#e8c040');
+    /* gray seal visible on a hanging tag */
+    graySeal(g, 320, 200, 22);
+    handTruck(g, 160, 520);
+    hose(g, 300, 820, 140);
+    cableRun(g, 100, 328, 200, 328);
+    cone(g, 360, 800); cone(g, 880, 800);
+    steelDoor(g, 140, 80, 70, 180, '\u7a4d\u8377');
+    warningBox(g, 400, 340, 480, 90);
+    crate(g, 140, 500, 80, 56, '');
+    pallet(g, 140, 560, 100, 22);
+    drum(g, 1080, 560, 32, 54, '#6a3a28');
+    chainCoil(g, 320, 640, 16);
     shell(g, '\u6607\u964d\u6a5f\u524d', 'Lift anteroom');
   };
 
@@ -735,50 +1126,52 @@
     rr(g);
     corrug(g, 90, 40, 1100, 280, '#3a4254', '#323848', 22);
     R(g, 90, 40, 1100, 18, '#2a2e3a', INK, 2);
-    /* the cargo-lift shutter */
-    R(g, 300, 50, 680, 270, '#1a1220', INK, 3);
+    R(g, 310, 70, 660, 230, '#1a1220', INK, 3);
     var i;
-    for (i = 0; i < 12; i++) {
-      R(g, 308, 58 + i * 18, 664, 18, i % 2 ? '#3a3e4c' : '#32364a', INK, 1.3);
+    for (i = 0; i < 11; i++) {
+      R(g, 318, 78 + i * 18, 644, 18, i % 2 ? '#3a3e4c' : '#32364a', INK, 1.3);
     }
-    if (mode === 'fight' || mode === 'leave') {
-      /* shutter down / mostly down */
-    } else {
-      /* a gap under the slats */
-      R(g, 308, 250, 664, 30, '#121018', 0);
+    if (!(mode === 'fight' || mode === 'leave')) {
+      R(g, 318, 250, 644, 30, '#121018', 0);
     }
-    caution(g, 308, 270, 664, 14);
-    /* the freight manifest with Kagerō's gray seal, on the shutter */
-    manifest(g, 560, 120, 160, 120, true);
-    lamp(g, 200, 70); lamp(g, 1080, 70);
+    caution(g, 318, 276, 644, 14);
+    /* freight lift frame in front of the slats */
+    liftFrame(g, 260, 40, 760, 280);
+    /* freight manifest + a large gray seal on the shutter itself */
+    manifest(g, 500, 110, 160, 120, true);
+    graySeal(g, 760, 170, 36);
+    lamp(g, 180, 70); lamp(g, 1100, 70);
     glow(g, 640, 160, 180, 'rgba(255,200,110,.16)');
     concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 67);
-    oilStain(g, 280, 780, 60, 18); oilStain(g, 1000, 740, 50, 16);
+    warningBox(g, 360, 340, 560, 90);
+    oilStain(g, 280, 780, 60, 18); oilStain(g, 1000, 740, 50, 16); oilStain(g, 220, 520, 36, 12);
     /* side props, centre lane clear for the fight */
     crate(g, 140, 700, 110, 80, '\u8ca0\u7269');
     crate(g, 160, 630, 100, 70, '');
     crate(g, 150, 560, 90, 70, '');
     drum(g, 260, 720, 36, 60, '#6a3a28');
-    pallet(g, 240, 800, 120, 24);
+    pallet(g, 140, 800, 140, 24);
     crate(g, 1030, 700, 110, 80, '');
     crate(g, 1040, 630, 90, 70, '');
     drum(g, 980, 720, 32, 56, '#3a4a38');
-    /* control panel on a stand, not floating mid-floor */
-    R(g, 900, 480, 80, 140, '#2a2c34', INK, 2);
-    R(g, 924, 620, 16, 50, '#2a2c34', INK, 2);
-    ellipse(g, 940, 530, 10, 10, '#3a6a3a', INK, 1.5);
-    ellipse(g, 940, 560, 10, 10, '#6a3a2a', INK, 1.5);
-    g.strokeStyle = '#8a8fa0'; g.lineWidth = 4;
-    g.beginPath(); g.moveTo(360, 50); g.lineTo(360, 300); g.stroke();
-    g.beginPath(); g.moveTo(920, 50); g.lineTo(920, 300); g.stroke();
+    chainHang(g, 160, 70, 300);
+    chainHang(g, 1120, 70, 300);
+    chainCoil(g, 240, 830, 20);
+    chainCoil(g, 1080, 830, 18);
+    hose(g, 300, 820, 140);
+    handTruck(g, 160, 500);
+    cone(g, 340, 800); cone(g, 900, 800);
+    /* control panel on a stand */
+    R(g, 900, 500, 80, 140, '#2a2c34', INK, 2);
+    R(g, 924, 640, 16, 50, '#2a2c34', INK, 2);
+    ellipse(g, 940, 550, 10, 10, '#3a6a3a', INK, 1.5);
+    ellipse(g, 940, 580, 10, 10, '#6a3a2a', INK, 1.5);
     if (mode === 'leave') {
-      /* knocked stool, hat on the floor */
       ellipse(g, 700, 760, 22, 8, '#c4a060', INK, 2);
       R(g, 692, 764, 36, 8, '#3b2a22', INK, 2);
       hardhat(g, 760, 780);
     }
     if (mode === 'notes') {
-      /* extra annotated sheets on the floor / desk */
       R(g, 600, 700, 90, 60, '#efe6d2', INK, 2);
       R(g, 700, 720, 70, 50, '#efe6d2', INK, 2);
       g.strokeStyle = '#3a4a6a'; g.lineWidth = 2;
@@ -804,11 +1197,13 @@
     if (!H) { g.fillStyle = '#1a1410'; g.fillRect(0, 0, WD, HT); return; }
     corrug(g, 0, 0, WD, H0, '#3a4254', '#323848', 22);
     R(g, 0, 0, WD, 18, '#2a2e3a', H.INK, 2);
-    /* shutter */
-    R(g, 80, 20, 560, 250, '#1a1220', H.INK, 3);
-    for (i = 0; i < 10; i++) R(g, 88, 28 + i * 18, 544, 18, i % 2 ? '#3a3e4c' : '#32364a', H.INK, 1.2);
+    R(g, 80, 36, 560, 220, '#1a1220', H.INK, 3);
+    for (i = 0; i < 10; i++) R(g, 88, 44 + i * 18, 544, 18, i % 2 ? '#3a3e4c' : '#32364a', H.INK, 1.2);
     caution(g, 88, 248, 544, 12);
-    manifest(g, 300, 70, 140, 100, true);
+    /* freight lift frame in front of the slats */
+    liftFrame(g, 40, 8, 640, 270);
+    manifest(g, 250, 70, 140, 100, true);
+    graySeal(g, 500, 130, 28);
     /* lamps — no indoor rain */
     g.strokeStyle = INK; g.lineWidth = 2;
     g.beginPath(); g.moveTo(120, 18); g.lineTo(120, 70); g.stroke();
@@ -830,6 +1225,9 @@
       g.beginPath(); g.moveTo(fx(20, y), y); g.lineTo(fx(180, y), y); g.stroke();
       g.beginPath(); g.moveTo(fx(540, y), y); g.lineTo(fx(700, y), y); g.stroke();
     }
+    /* warning chevrons only at the sides of the floor */
+    caution(g, 8, H0 + 8, 140, 12);
+    caution(g, 572, H0 + 8, 140, 12);
     g.restore();
     oilStain(g, 140, 700, 50, 16);
     oilStain(g, 580, 900, 60, 18);
@@ -848,17 +1246,17 @@
     R(g, 16, 1140, 70, 80, '#2a2c34', INK, 2);
     ellipse(g, 40, 1170, 8, 8, '#3a6a3a', INK, 1.5);
     ellipse(g, 40, 1200, 8, 8, '#6a3a2a', INK, 1.5);
-    function tires(tx, ty, n) {
-      var k;
-      for (k = 0; k < n; k++) ellipse(g, tx, ty - k * 14, 26, 9, '#1a1220', INK, 2);
-    }
-    tires(80, 780, 4); tires(650, 800, 3);
+    tires(g, 80, 780, 4, 26); tires(g, 650, 800, 3, 26);
+    chainCoil(g, 80, 1050, 16);
+    hose(g, 20, 820, 80);
+    cone(g, 40, 680);
     glow(g, 120, H0 + 40, 70, 'rgba(255,200,110,.16)');
     glow(g, 600, H0 + 40, 70, 'rgba(255,200,110,.16)');
     glow(g, 360, 1200, 80, 'rgba(255,210,140,.1)');
     H.vign(x, 0.58);
     H.grade(x, 'rgba(40,50,70,.18)', 'rgba(20,10,12,.28)');
   };
+
 
   /* ---------- line cards + item ---------- */
   S2P.lineCardDep = function (g, who) {
