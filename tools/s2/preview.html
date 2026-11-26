@@ -16,10 +16,26 @@
 <h1>Phase 1 preview — Wagashi Row</h1>
 <p class="note">Handmade in-engine art, not wired into the game yet. Shopkeeper is Ms. Chiyo (千代). Path cards use the proposed Flip briefing and win lines. Battle backdrop is the X3 clash on Wagashi row.</p>
 <div class="row" id="row"></div>
+<script src="c2bt_lib.js"></script>
 <script src="paint.js"></script>
 <script>
-(function(){
+(async function(){
   var P = window.FFF_S2P, row = document.getElementById('row');
+  function loadSheet(name, src) {
+    return new Promise(function (res) {
+      var im = new Image(); im.onload = function () { P.sheets[name] = im; res(im); };
+      im.onerror = function () { console.warn('missing', src); res(null); };
+      im.src = src;
+    });
+  }
+  window.__s2ready = Promise.all([
+    loadSheet('walk', 'sprites/chiyo_walk.webp'),
+    loadSheet('idle', 'sprites/chiyo_idle.webp'),
+    loadSheet('map', 'sprites/chiyo_map.webp'),
+    loadSheet('fig', 'sprites/chiyo_fig.webp')
+  ]);
+
+  await window.__s2ready;
   function add(name, w, h, paint, cap) {
     var c = document.createElement('canvas'); c.width = w; c.height = h; c.id = name;
     var g = c.getContext('2d'); paint(g);
@@ -27,14 +43,16 @@
     var fc = document.createElement('figcaption'); fc.textContent = cap || name; f.appendChild(fc);
     row.appendChild(f); return c;
   }
-  add('exterior', 900, 640, P.exterior, 'Shop exterior (new door under the noren)');
-  add('interior', 1280, 900, P.interior, 'Shop interior — counter, noren, trays of rolls and dango');
-  add('battle', 720, 1280, P.battle, 'X3 clash battle backdrop (720×1280, C2BT style)');
+  add('facadeDoor', 400, 160, function(g){ P.facadeDoor(g,400,160); }, 'Door overlay for the existing Wagashi north façade');
+  add('interior', 1280, 900, P.interior, 'Shop interior — display case, steamer, register, tea, wall menu; lanterns clear of noren');
+  add('battle', 720, 1280, P.battle, 'X3 Wagashi row at night — storefronts, lanterns, shutters, vending, wet street');
   add('sweetRoll', 160, 140, function(g){ g.fillStyle='#1a1220'; g.fillRect(0,0,160,140); P.sweetRoll(g); }, 'Sweet roll');
   add('dango', 100, 160, function(g){ g.fillStyle='#1a1220'; g.fillRect(0,0,100,160); P.dango(g); }, 'Dango (cheaper)');
   add('rollSplit', 160, 140, function(g){ g.fillStyle='#1a1220'; g.fillRect(0,0,160,140); P.rollSplit(g); }, 'Sweet roll — tap to pull apart');
-  add('chiyoIdle', 160, 200, function(g){ g.fillStyle='#2a2030'; g.fillRect(0,0,160,200); P.chiyoIdle(g); }, 'Chiyo sprite (idle, matches portrait)');
-  add('chiyoWalk', 560, 200, function(g){ g.fillStyle='#2a2030'; g.fillRect(0,0,560,200); P.chiyoWalk(g); }, 'Chiyo walk cycle (4 frames)');
+  add('chiyoIdle', 160, 200, P.chiyoIdle, 'Chiyo idle (yk / Hina rig, breathing sheet)');
+  add('chiyoWalk', 560, 200, P.chiyoWalk, 'Chiyo walk, front, 4 frames');
+  add('chiyoFacings', 720, 220, P.chiyoFacings, 'Chiyo facings: front, left, right, back');
+  add('chiyoTalk', 200, 240, P.chiyoTalk, 'Chiyo talk / overworld (map sheet)');
 
   /* path-line cards */
   var PATHS = [

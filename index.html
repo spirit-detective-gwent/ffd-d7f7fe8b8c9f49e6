@@ -45992,6 +45992,12 @@ var ITEMS = {
   omurice: { game: 'bite', kind: 'omurice', jp: 'オムライス', en: 'OMURICE', tag: 'MASH · SOFT EGG, KETCHUP RICE', bg: '#f7e8b0', ray1: 'rgba(230,180,50,.34)', ray2: 'rgba(180,40,30,.16)',
     tapP: 0.10, tapsNeed: 10, stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+42 HP', 'the cafe plate'], close: ['CLOSE MISS', '+28 HP', 'a smaller bite'], bad: ['BAD RUN', '+14 HP', 'half of the plate'] } },
+  sweetroll: { game: 'bite', kind: 'sweetroll', jp: '\u3042\u3093\u30ed\u30fc\u30eb', en: 'SWEET ROLL', tag: 'MASH, THEN TAP TO PULL APART', bg: '#f3e0c8', ray1: 'rgba(200,80,40,.28)', ray2: 'rgba(230,180,80,.14)',
+    tapP: 0.14, tapsNeed: 6, pull: 1, stat: 'hp', startHp: 4,
+    rows: { win: ['WIN', '+21 HP', '1.5x the shop heal'], close: ['CLOSE MISS', '+14 HP', 'the shop heal'], bad: ['BAD RUN', '+7 HP', 'half of the shop heal'] } },
+  dango: { game: 'bite', kind: 'dango', jp: '\u56e3\u5b50', en: 'DANGO', tag: 'MASH BEFORE TIME RUNS OUT', bg: '#f0e4d0', ray1: 'rgba(200,120,140,.22)', ray2: 'rgba(140,180,80,.14)',
+    tapP: 0.16, tapsNeed: 5, stat: 'hp', startHp: 4,
+    rows: { win: ['WIN', '+12 HP', '1.5x the shop heal'], close: ['CLOSE MISS', '+8 HP', 'the shop heal'], bad: ['BAD RUN', '+4 HP', 'half of the shop heal'] } },
   lait: { game: 'coffee', variant: 'lait', jp: 'カフェオレ', en: 'CAFÉ AU LAIT', tag: 'MILKY AND MILD. SIP, DON\'T GULP', bg: '#f3e1c9', ray1: 'rgba(205,150,100,.34)', ray2: 'rgba(150,95,60,.16)',
     sip: 0.27, base: 0.07, bit0: 0.09, bitK: 1.05, rec: 1.6, hotA: 0.17, hotB: 0.55, cool: 0.07, stat: 'sp', startSp: 6,
     rows: { win: ['WIN', 'FULL SP', 'back to 40 / 40'], close: ['CLOSE MISS', '+25 SP', 'the normal boost'], bad: ['BAD RUN', '+13 SP', 'half of normal'] } },
@@ -46065,7 +46071,7 @@ function newRun(cfgName, who, seed, script) {
   var C = ITEMS[cfgName]; rnd = mulberry(seed || 7);
   S = { name: cfgName, C: C, who: who || 'ryo', ch: CH[who || 'ryo'], t: 0, ph: 'intro', it: 0, pt: 0, rt: 0, down: false, res: null, cause: '', particles: [], letters: [], ripples: [], shake: 0, flash: 0, flashCol: '#fff',
     mood: 'neutral', moodPrev: 'neutral', moodT: 1, failA: 0, bob: 0, tapPulse: 0, tapU: -1, idle: 9, lift: 0, taps: 0, strandSeed: 0, script: script || null,
-    p: 0, heat: 0, tofu: { st: 0, t: 0, hit: 0 }, stains: [],
+    p: 0, pullT: 0, pullGo: 0, heat: 0, tofu: { st: 0, t: 0, hit: 0 }, stains: [],
     L: 1, tol: 0, sipT: 0, sips: 0, cup: 0, hotR: 0, bitR: 0, baseR: 0, temp: 1, warned: false, clinkT: -9, sipN: 0, lastSip: 0,
     hp0: C.startHp != null ? C.startHp : 0, sp0: C.startSp != null ? C.startSp : 6, hpShown: 0, spShown: 0, thumb: null, blowT: 0,
     fizz: 0, canK: 0, pose: '', poseT: -9, downT: 0, foodK: 0, burpOk: 0, biteT: -9 };
@@ -46100,14 +46106,14 @@ function mouthKeys() {
 }
 function mouthXY() { var r = poseRect(), c = MOUTH[S.who], ks = mouthKeys(), a = S.failA || 0, A = c[ks[0]] || c.happy, B = c[ks[1]] || c.fail; return [r.px + lerp(A[0], B[0], a) * r.pw / 360, r.py + lerp(A[1], B[1], a) * r.ph / 480]; }
 var EAT_IDLE = 1.5;
-function isEating() { if (!S || S.ph !== 'play') return false; if ((S.C.game === 'coffee' || S.C.game === 'soda') && S.hold) return true; if (S.C.game === 'soda' && S.pose === 'burp' && (S.t - S.poseT) < 0.62) return true; return S.idle < EAT_IDLE; }
-function showEatPose() { return S && S.ph === 'play' && (isEating() || S.lift > 0.45 || S.cup > 0.45); }
+function isEating() { if (!S || (S.ph !== 'play' && S.ph !== 'pull')) return false; if ((S.C.game === 'coffee' || S.C.game === 'soda') && S.hold) return true; if (S.C.game === 'soda' && S.pose === 'burp' && (S.t - S.poseT) < 0.62) return true; return S.idle < EAT_IDLE; }
+function showEatPose() { return S && (S.ph === 'play' || S.ph === 'pull') && (isEating() || S.ph === 'pull' || S.lift > 0.45 || S.cup > 0.45); }
 
 /* ----- inputs (human or bot call the same two functions) ----- */
 function inDown(x, y) {
   if (!S) return; var px = x == null ? 195 : x, py = y == null ? 752 : y;
   S.down = true; S.ripples.push({ x: px, y: py, t0: S.t }); S.thumb = { x: px, y: py };
-  if (S.ph !== 'play') return;
+  if (S.ph !== 'play' && S.ph !== 'pull') return;
   S.downT = S.t;
   if (S.C.game === 'noodles') noodleTap();
   else if (S.C.game === 'coffee') coffeeHold(true);
@@ -46118,7 +46124,7 @@ function inUp() {
   if (!S) return;
   var wasDown = S.down, heldFor = S.t - (S.downT || S.t);
   S.down = false; S.thumb = null;
-  if (S.ph !== 'play') return;
+  if (S.ph !== 'play' && S.ph !== 'pull') return;
   if (S.C.game === 'coffee') coffeeHold(false);
   else if (S.C.game === 'soda') {
     sodaHold(false);
@@ -46240,6 +46246,12 @@ function sodaUpdate(dt) {
 
 /* ----- QUICK BITES: mash taps before the timer runs out ----- */
 function biteTap() {
+  if (S.ph === 'pull') {
+    if (S.pullGo) return;
+    S.pullGo = 1; S.pullT = 0; S.idle = 0; S.biteT = S.t;
+    sfx('slurp'); addLetter('\u3071\u304d\u3063', 200, 190, 44, '#fff6ec', 0, 0.45);
+    return;
+  }
   if (S.ph !== 'play') return;
   var C = S.C, m = mouthXY();
   S.idle = 0; S.tapU = 0; S.taps++; S.biteT = S.t;
@@ -46247,6 +46259,8 @@ function biteTap() {
   var kind = biteKind(), n = S.taps, odd = n % 2, i;
   function crumbs(cnt, cols, sMin, sVar, spread, up) { if (loq()) cnt = Math.max(3, cnt >> 1); for (i = 0; i < cnt; i++) addP({ k: 'crumb', x: m[0], y: m[1], vx: (rnd() - 0.5) * spread, vy: -up * 0.45 - rnd() * up, life: 0.55, s: sMin + rnd() * sVar, col: cols[i % cols.length] }); }
   if (kind === 'onigiri') { sfx(n === 1 ? 'slurp' : 'crunch', n); addLetter(n === 1 ? 'ぺりっ' : (odd ? 'もぐ！' : 'ぱくっ'), odd ? 80 : 300, 190, 42, '#fff6ec', odd ? -0.15 : 0.15, 0.4); crumbs(8, ['#f8f3e8', '#f8f3e8', '#1a1f1c', '#e8dcc4'], 2, 2.4, 240, 140); }
+  else if (kind === 'sweetroll') { sfx(n === 1 ? 'slurp' : 'crunch', n); addLetter(odd ? 'もぐ！' : 'ふわっ', odd ? 80 : 300, 190, 42, '#f6d49a', odd ? -0.12 : 0.15, 0.4); crumbs(8, ['#f6e2a8', '#e8b060', '#5c1a20', '#fff4d0'], 2.2, 2.6, 220, 140); }
+  else if (kind === 'dango') { sfx('jiggle'); addLetter(odd ? 'もぐ！' : 'ぷるっ', odd ? 80 : 300, 200, 42, '#f2c4cf', 0.15, 0.4); crumbs(6, ['#f2c4cf', '#9ec27a', '#f4ead2'], 2.4, 2.4, 180, 120); }
   else if (kind === 'melon') { sfx('crunch'); addLetter(odd ? 'びりっ' : 'さくっ', odd ? 78 : 304, 188, 42, '#c6e86a', odd ? -0.15 : 0.2, 0.4); crumbs(10, ['#c8dc66', '#e8f08c', '#fff3c4', '#8aac34'], 2.4, 3.4, 280, 150); }
   else if (kind === 'yakisoba') { sfx(n % 3 === 0 ? 'slurp' : 'crunch', n); addLetter(n % 3 === 0 ? 'ずるっ' : 'もぐ！', odd ? 80 : 300, 200, 42, '#e0892a', 0.12, 0.4); crumbs(7, ['#c47228', '#e2223e', '#8a3a10', '#e8b868'], 2.4, 2.6, 210, 120); }
   else if (kind === 'pudding') { sfx('jiggle'); addLetter(odd ? 'ぷるっ' : 'とろっ', 300, 210, 42, '#f2c24a', 0.2, 0.4); crumbs(6, ['#f6c850', '#a8501a', '#fde08c'], 3, 3, 150, 100); }
@@ -46254,12 +46268,17 @@ function biteTap() {
   else if (kind === 'antoast') { sfx('crunch'); addLetter(odd ? 'サクッ' : 'とろっ', odd ? 80 : 300, 190, 42, '#f0d4a0', odd ? -0.12 : 0.15, 0.4); crumbs(8, ['#e8c070', '#5c1a20', '#f6e07c', '#9a5a1c'], 2.4, 2.8, 220, 140); }
   else if (kind === 'candy') { sfx('crunch'); addLetter(odd ? 'パキッ！' : 'ガリッ', odd ? 80 : 300, 190, 42, '#ffb070', odd ? -0.14 : 0.16, 0.4); crumbs(9, ['#5a301a', '#8a4e2a', '#e8c98a', '#d83a34'], 2.2, 2.8, 250, 150); }
   else { sfx('jiggle'); addLetter(odd ? 'ふわっ' : 'とろっ', 300, 210, 42, '#f2c24a', 0.2, 0.4); crumbs(7, ['#f6cc40', '#e8742e', '#dc2a1a', '#fff6ac'], 3, 2.8, 170, 110); }
-  if (S.p >= 1) endRun('win');
+  if (S.p >= 1) { if (S.C.pull) { S.ph = 'pull'; S.p = 1; S.pullT = 0; S.pullGo = 0; return; } endRun('win'); }
 }
 function biteUpdate(dt) {
   S.idle += dt;
   setMood(S.idle < 0.4 ? 'happy' : ((RUN_T - S.pt) < 2.2 && S.p < 0.7 ? 'angry' : 'neutral'));
   if (S.pt >= RUN_T && S.ph === 'play') endRun(S.p >= 0.7 ? 'close' : 'bad', S.p >= 0.7 ? '' : 'choke');
+}
+function pullUpdate(dt) {
+  S.pullT = (S.pullT || 0) + dt;
+  setMood('happy');
+  if (S.pullGo && S.pullT >= 0.7) endRun('win');
 }
 
 /* ----- end of run ----- */
@@ -46279,7 +46298,7 @@ function stepLogic(dt) {
   S.t += dt;
   if (S.moodT < 1) S.moodT = Math.min(1, S.moodT + dt / 0.12);
   if (S.ph === 'intro') { if (!S.wait) S.it += dt; if (S.it >= INTRO_T) { S.ph = 'play'; sfx('go'); } }
-  else if (S.ph === 'play') { S.pt += dt; if (S.script) S.script(S, dt); if (S.ph === 'play') { var g0 = S.C.game; if (g0 === 'noodles') noodleUpdate(dt); else if (g0 === 'coffee') coffeeUpdate(dt); else if (g0 === 'soda') sodaUpdate(dt); else if (g0 === 'bite') biteUpdate(dt); } }
+  else if (S.ph === 'play') { S.pt += dt; if (S.script) S.script(S, dt); if (S.ph === 'play') { var g0 = S.C.game; if (g0 === 'noodles') noodleUpdate(dt); else if (g0 === 'coffee') coffeeUpdate(dt); else if (g0 === 'soda') sodaUpdate(dt); else if (g0 === 'bite') biteUpdate(dt); } } else if (S.ph === 'pull') { if (S.script) S.script(S, dt); pullUpdate(dt); }
   else if (S.ph === 'result') {
     S.rt += dt; if (S.tofu.st === 2) S.tofu.tt += dt;
     if (S.rt > 0.9 && !S.bannerSfx) { S.bannerSfx = 1; sfx('banner'); }
@@ -46399,6 +46418,7 @@ function botBite(mode) {
     if (mode === 'fail') { if (st.n < 3 && S.pt > 0.5 && S.pt - st.last >= 1.5) { st.last = S.pt; st.n++; inDown(); inUp(); } return; }
     if (st.rest) { if (S.idle > 1.7) st.rest = false; return; }
     if (st.n === 3 && !st.didRest) { st.rest = true; st.didRest = true; return; }
+    if (S.ph === 'pull') { if (!S.pullGo && S.pullT >= 0.28 && S.t - (st.last||0) >= 0.2) { st.last = S.t; inDown(); inUp(); } return; }
     if (S.pt > 0.3 && S.pt - st.last >= 0.20) { st.last = S.pt; st.n++; inDown(); inUp(); }
   };
 }
@@ -46492,7 +46512,7 @@ function drawPanel() {
   if (S.ph === 'play' && S.C.game === 'noodles') bob = Math.sin(S.t * 22) * (S.idle < 0.25 ? 2.2 : 0.6) + (S.blowT > 0 ? 4 : 0);
   if (S.ph === 'play' && S.C.game === 'coffee') { bob = S.lift > 0.4 ? -4 + Math.sin(S.t * 12) * 1.2 : 0; }
   if (S.ph === 'play' && S.C.game === 'soda') { bob = S.canK > 0.4 ? -3 + Math.sin(S.t * 14) * 1.4 : 0; if (S.name === 'energy' && S.fizz > 0.55) { bob += Math.sin(S.t * 40) * 1.6; } }
-  if (S.ph === 'play' && S.C.game === 'bite') bob = Math.sin(S.t * 20) * (S.idle < 0.25 ? 2.0 : 0.5);
+  if ((S.ph === 'play' || S.ph === 'pull') && S.C.game === 'bite') bob = Math.sin(S.t * 20) * (S.idle < 0.25 ? 2.0 : 0.5);
   if (S.ph === 'result' && S.res === 'win') bob = -Math.abs(Math.sin(S.rt * 7)) * 9 * Math.max(0, 1 - S.rt / 1.4);
   if (S.ph === 'result' && S.cause === 'bitter') bob = Math.sin(S.rt * 40) * 3 * Math.max(0, 1 - S.rt / 1.6);
   var rc = poseRect(), pw = rc.pw * squash, ph = rc.ph * squash, px = rc.px - (pw - rc.pw) / 2, py = rc.py - (ph - rc.ph) * 0.5 + bob;
@@ -47164,6 +47184,52 @@ function pcCandy(p, A) {
   ctx.restore();
 }
 
+
+/* an-roll: a sponge swiss roll; the last beat tears it in two with a stretch of anko */
+function pcSweetroll(p, A) {
+  var split = S.pullGo ? Math.min(1, (S.pullT || 0) / 0.55) : 0;
+  var gap = 38 * (split * split * (3 - 2 * split));
+  ctx.save(); ctx.translate(0, 8); ctx.scale(1 + 0.05 * A.pop, 1 - 0.06 * A.pop); ctx.rotate(A.wob * 0.04);
+  function half(side, face) {
+    ctx.save(); ctx.translate(side * gap * 0.5, 0); ctx.rotate(side * split * 0.18);
+    ctx.beginPath(); ctx.ellipse(side * 6, 8, 34, 28, 0, 0, 7);
+    var rg = ctx.createLinearGradient(-20, -16, 20, 24); rg.addColorStop(0, '#f6e2a8'); rg.addColorStop(0.55, '#e8b060'); rg.addColorStop(1, '#c48438');
+    ctx.fillStyle = rg; ctx.fill(); inkFood(3.2);
+    /* cut face */
+    ctx.beginPath(); ctx.ellipse(side * -22, 6, 10, 22, 0, 0, 7);
+    var ag = ctx.createRadialGradient(side * -22, 4, 2, side * -22, 6, 20);
+    ag.addColorStop(0, '#8a3036'); ag.addColorStop(0.55, '#5c1a20'); ag.addColorStop(1, '#e8b060');
+    ctx.fillStyle = face ? ag : '#e2a850'; ctx.fill(); inkFood(2.2);
+    ctx.restore();
+  }
+  if (split < 0.08) {
+    ctx.beginPath(); ctx.ellipse(0, 8, 40, 30, 0, 0, 7);
+    var rg = ctx.createLinearGradient(-24, -16, 24, 26); rg.addColorStop(0, '#f6e2a8'); rg.addColorStop(0.55, '#e8b060'); rg.addColorStop(1, '#c48438');
+    ctx.fillStyle = rg; ctx.fill(); inkFood(3.2);
+    ctx.beginPath(); ctx.ellipse(-8, 0, 14, 12, -0.4, 0, 7);
+    var ag = ctx.createRadialGradient(-8, 0, 2, -4, 4, 16); ag.addColorStop(0, '#8a3036'); ag.addColorStop(1, '#5c1a20');
+    ctx.fillStyle = ag; ctx.fill(); inkFood(2);
+    ctx.beginPath(); ctx.moveTo(-28, 6); ctx.quadraticCurveTo(0, -16, 28, 4); ctx.strokeStyle = 'rgba(90,40,20,.4)'; ctx.lineWidth = 3; ctx.stroke();
+  } else {
+    half(-1, 1); half(1, 1);
+    /* anko threads */
+    ctx.strokeStyle = '#5c1a20'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    [[-4, 4], [0, 10], [4, -2]].forEach(function (t, i) {
+      ctx.globalAlpha = 1 - split * 0.7; ctx.beginPath(); ctx.moveTo(-10 - gap * 0.2, t[1]); ctx.quadraticCurveTo(t[0], t[1] + 10 + i * 3, 10 + gap * 0.2, t[1]); ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+function pcDango(p, A) {
+  ctx.save(); ctx.translate(0, 10); ctx.scale(1 + 0.05 * A.pop, 1 - 0.06 * A.pop); ctx.rotate(A.wob * 0.05);
+  ctx.lineCap = 'round'; ctx.strokeStyle = INK; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, -46); ctx.lineTo(0, 44); ctx.stroke();
+  [['#f2c4cf', -22], ['#9ec27a', 2], ['#f4ead2', 26]].forEach(function (b) {
+    ctx.beginPath(); ctx.ellipse(0, b[1], 20, 16, 0, 0, 7); ctx.fillStyle = b[0]; ctx.fill(); inkFood(2.6);
+  });
+  ctx.restore();
+}
+
 var BITE_SPEC = {
   onigiri: { draw: pcOnigiri, cut: '#fffaf0', bites: [[-16, -36, 11], [-32, -10, 11], [-6, -18, 10], [-24, 14, 9]], up: 26 },
   melon: { draw: pcMelon, cut: '#fff8dc', bites: [[-34, -20, 11], [-40, 4, 10], [-14, -34, 10], [-22, 12, 9]], up: 13, steam: 0 },
@@ -47172,7 +47238,9 @@ var BITE_SPEC = {
   lunch: { draw: pcKaraage, cut: '#fff4d8', bites: [[-26, -18, 11], [-34, 6, 10], [-8, -30, 10], [-18, 24, 9]], up: 11, steam: 1 },
   antoast: { draw: pcAnToast, cut: '#fff0c4', bites: [[-30, 12, 10], [-14, -6, 10], [6, -26, 10], [-38, 24, 9]], up: 13 },
   candy: { draw: pcCandy, cut: '#f2d8a0', bites: [[-44, 12, 11], [-36, 25, 10], [-27, 3, 10], [-24, 21, 9]], up: 11 },
-  omurice: { draw: pcOmurice, cut: '#fff2b0', bites: [[-34, -16, 12], [-40, 10, 11], [-14, -34, 10], [-26, 22, 9]], up: 13, steam: 1 }
+  omurice: { draw: pcOmurice, cut: '#fff2b0', bites: [[-34, -16, 12], [-40, 10, 11], [-14, -34, 10], [-26, 22, 9]], up: 13, steam: 1 },
+  sweetroll: { draw: pcSweetroll, cut: '#fff0c4', bites: [[-24, -10, 11], [-30, 12, 10], [10, -16, 10], [-8, 16, 9]], up: 16 },
+  dango: { draw: pcDango, cut: '#fff6e8', bites: [[-6, -28, 10], [8, 0, 10], [-8, 24, 9], [10, -8, 8]], up: 18 }
 };
 
 function drawBitePiece(kind) {
@@ -47181,7 +47249,7 @@ function drawBitePiece(kind) {
   if (!BITE_OC || BITE_OC.width !== bz) { BITE_OC = document.createElement('canvas'); BITE_OC.width = bz; BITE_OC.height = bz; BITE_OC._k = ''; }
   var g = BITE_OC.getContext('2d'), main = ctx, tt = S.t - (S.biteT == null ? -9 : S.biteT), A = { tt: tt, pop: tt < 0.6 ? Math.exp(-tt * 8) : 0 };
   A.wob = A.pop * Math.sin(tt * 34);
-  var bk = kind + '|' + Math.floor(clamp(S.p, 0, 1) * 40) + '|' + (A.pop > 0 ? 'p' + S.t : Math.floor(S.t * 30));
+  var bk = kind + '|' + Math.floor(clamp(S.p, 0, 1) * 40) + '|' + (S.ph || '') + (S.pullGo||0) + Math.floor((S.pullT||0)*20) + '|' + (A.pop > 0 ? 'p' + S.t : Math.floor(S.t * 30));
   if (BITE_OC._k === bk) { ctx.drawImage(BITE_OC, -100, -100, 200, 200); return; }
   BITE_OC._k = bk;
   g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, bz, bz); g.setTransform(bs, 0, 0, bs, 100 * bs, 100 * bs);
@@ -47344,7 +47412,7 @@ function drawIntro() {
   ctx.translate(195, 650); ctx.rotate(-0.06); ctx.scale(clamp(k, 0, 1.1), clamp(k, 0, 1.1));
   ctx.fillStyle = INK; ctx.fillRect(-260, -52, 520, 104); ctx.fillStyle = '#d9411c'; ctx.fillRect(-260, -42, 520, 84);
   jtext(C.jp, 0, -8, C.jp.length > 6 ? 36 : 44, '#fff6ec', INK, 9, 0);
-  ltext(C.tag, 0, 30, 14, '#ffe9b8', null, 0, 'center', LAT, 900);
+  ltext(S.ph === 'pull' ? 'TAP TO PULL APART' : C.tag, 0, 30, 14, '#ffe9b8', null, 0, 'center', LAT, 900);
   ctx.restore();
   ctx.save(); ctx.globalAlpha = clamp(a, 0, 1); var k2 = eb((u - 0.05) / 0.25);
   jtext('いただきます！', 195, 150 + 0, 40 * clamp(k2, 0, 1.1), '#fff', INK, 10, 0.03); ctx.restore();
