@@ -76,7 +76,16 @@ async def go_room(pg, room, x, y):
       return typeof c2Room==='function'?c2Room():null;
     }})()""")
     await ev(pg, HUSH)
-    await pg.wait_for_timeout(350)
+    # Let p5 strip its canvas, then paint the room we actually entered (waga was
+    # showing a leftover Hase board after dclock because S2.paintRoom was not called).
+    await pg.wait_for_timeout(400)
+    return await ev(pg, f"""(function(){{
+      try {{ if (root.FFF_S2P5 && FFF_S2P5.paintRoom) FFF_S2P5.paintRoom(); }} catch (e5) {{}}
+      try {{ if (root.FFF_S2 && FFF_S2.paintRoom) FFF_S2.paintRoom(); }} catch (eS) {{}}
+      try {{ if (root.FFF_S2 && FFF_S2.chiyoPop && '{room}'==='waga') FFF_S2.chiyoPop(); }} catch (eC) {{}}
+      try {{ camera(true); }} catch (eCa) {{}}
+      return typeof c2Room==='function'?c2Room():null;
+    }})()""")
 
 async def shot(pg, name):
     path = OUT / f'{name}.png'
@@ -124,6 +133,7 @@ async def start_chiyo_order(pg):
         M.SHOPS.s2_chiyo.nails=function(){return true;};
       }
       function openMenu(){ try { if (M) M.open('s2_chiyo'); } catch (e3) {} }
+      try { if (root.FFF_S2 && typeof FFF_S2.chiyoPop === 'function') FFF_S2.chiyoPop(); } catch (eP) {}
       var chi = (typeof W !== 'undefined' && W.c2n && W.c2n.s2) || null;
       if (root.FFF_S2 && typeof FFF_S2.chiyoToCounter === 'function') FFF_S2.chiyoToCounter(openMenu);
       else openMenu();
@@ -262,6 +272,9 @@ async def main():
                 if iid in ('roll', 'dango'):
                     await wait_eatg_done(pg, 14000)
                     await wait_menu(pg, 8000)
+                elif iid in ('hojicha', 'cancoffee'):
+                    await pg.wait_for_timeout(4500)
+                    await wait_menu(pg, 4000)
                 else:
                     await pg.wait_for_timeout(2000)
                     await wait_menu(pg, 4000)

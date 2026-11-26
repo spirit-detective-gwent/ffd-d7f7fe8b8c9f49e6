@@ -169,6 +169,8 @@
       '#wshop.s2m-depot .s2m-titles small{color:#8a2a28}',
       '#wshop.s2m .s2m-titles p{margin:6px 0 0;font:600 italic 12px/1.3 "Noto Serif CJK JP",serif;opacity:.9}',
       '#wshop.s2m-hase .s2m-titles p{color:#d8d0c0;font-family:"Noto Sans CJK JP",system-ui,sans-serif;font-style:normal}',
+      /* Name is lettered on the navy plate; keep the tags in the DOM for tests/a11y. */
+      '#wshop.s2m-hase .s2m-titles b.jp,#wshop.s2m-hase .s2m-titles small{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}',
       '#wshop.s2m .s2m-vit{margin-left:auto;text-align:right;font:800 11px/1.3 "Noto Sans CJK JP",system-ui,sans-serif;color:#5a2c28}',
       '#wshop.s2m-hase .s2m-vit{color:#ffe680}',
       '#wshop.s2m .s2m-vit .s2m-np{display:block;margin-top:3px;color:#8e3b52}',
@@ -248,12 +250,9 @@
     m.className = 'on s2m s2m-' + shop.theme;
     var bg = chromeUrl(shop.theme);
     var pt = ptUrl(shop.who, shop.theme);
-    var titles = shop.theme === 'hase'
-      ? '<div class="s2m-titles"><p>“' + esc(lineOf(shop)) + '”</p></div>'
-      : '<div class="s2m-titles"><b class="jp">' + esc(shop.jp) + '</b><small>' + esc(shop.n) + '</small><p>“' + esc(lineOf(shop)) + '”</p></div>';
     var head = '<div class="s2m-hd">' +
       '<i class="s2m-pt" style="' + (pt ? 'background-image:url(' + pt + ')' : '') + '"></i>' +
-      titles +
+      '<div class="s2m-titles"><b class="jp">' + esc(shop.jp) + '</b><small>' + esc(shop.n) + '</small><p>“' + esc(lineOf(shop)) + '”</p></div>' +
       '<div class="s2m-vit"><span>HP ' + ((typeof SAVE !== 'undefined' ? SAVE.hp : 0) | 0) + '/' + hpM() + '</span><br><span>SP ' + ((typeof SAVE !== 'undefined' ? SAVE.sp : 0) | 0) + '/' + spM() + '</span><br><span>¥' + yen() + '</span>' +
       (nails ? '<em class="s2m-np">Nails’ price · 20% off</em>' : '') + '</div></div>';
     var list = '<div class="s2m-list">';

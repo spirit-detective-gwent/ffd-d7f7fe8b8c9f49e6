@@ -505,6 +505,8 @@
     });
   }
   S2.chiyoToCounter = chiyoToCounter;
+  S2.chiyoPop = chiyoPop;
+  S2.paintRoom = paintRoom;
   function flipPop() {
     if (!on() || !inTown() || !qOn() || stg() !== 'open') return;
     if (FL && FL.el && FL.el.parentNode) return;
