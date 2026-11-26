@@ -34596,7 +34596,7 @@ var KEYS = ['c2x_act_suit', 'c2x_act_boso', 'c2x_cow_clerk', 'c2x_cow_attendant'
 var FILEACT = { c2x_act_punkY1: 1, c2x_act_punkY2: 1, c2x_act_punkY3: 1, c2x_act_hustlerY: 1 }, ACT_IM = {}, ACT_WAIT = [];
 Object.keys(FILEACT).forEach(function (k) { IMG[k] = wUrl(k); KEYS.push(k); });
 KEYS.forEach(function (k) { SHC[k] = 4; if (/_act_/.test(k)) SHR[k] = 5; });
-function actSheet(f) { var id = f && f.id; if (id === 'c2_punk') return 'c2x_act_' + String((f.s && f.s.ykv) || 'c2_punkY1').replace('c2_punk', 'punk'); if (id === 'c2_hustler') return 'c2x_act_hustlerY'; return 'c2x_act_' + SHEET[id]; }
+function actSheet(f) { var id = f && f.id; if (id === 'c2_punk') { var vm = f.s && (f.s.ykv || (/c2_punkY\d/.exec(f.s.src || '') || [])[0]); return 'c2x_act_' + String(vm || 'c2_punkY1').replace('c2_punk', 'punk'); } /* the act sheet always matches the look the man stands in */ if (id === 'c2_hustler') return 'c2x_act_hustlerY'; return 'c2x_act_' + SHEET[id]; }
 function sheet(k) {
 if (FILEACT[k]) {
 var im = ACT_IM[k];
@@ -36487,7 +36487,10 @@ var GINKO = (function () {
   SHC.n13flip_walk = SHC.n13flip_run = 8; SHC.n13flip_idle = SHC.n13flip_hurt = SHC.n13flip_kn = 4; C2K.n13flip = 1.26; PT.n13flip = 'n13flip_fig';
   /* one look per map sprite, picked as it spawns (a crew of three reads as three people) */
   var REG = [], nPick = 0; function pick() { var t = YW[0] + YW[1] + YW[2], r = (nPick++ * 7 + 3) % t; return r < YW[0] ? YV[0] : r < YW[0] + YW[1] ? YV[1] : YV[2]; }
-  var sprite0 = sprite; sprite = function (sheet, walker, k) { if (sheet === 'c2_punk_map' && !walker) { var v = pick(), s = sprite0.call(this, v + '_map', walker, k); s.ykv = v; REG.push(s); if (REG.length > 40) REG = REG.filter(function (q) { return q.el && q.el.isConnected; }); return s; } return sprite0.apply(this, arguments); };
+  /* one man, one look: whatever asks for 'c2_punk_*' by id (walk sheet, idle, act, hurt, kneel) gets this sprite's own Y1/Y2/Y3 sheet, never Murasaki by default */
+  function ykLock(s, v) { s.ykv = v; ['bw', 'sheet'].forEach(function (p) { var cur = s[p]; Object.defineProperty(s, p, { configurable: true, enumerable: true, get: function () { return cur; }, set: function (x) { cur = typeof x === 'string' ? x.replace(/^c2_punk_/, v + '_') : x; } }); s[p] = cur; }); }
+  var cl0 = celLoop; celLoop = function (s, sh, row, o) { if (s && s.ykv && typeof sh === 'string' && /^c2_punk_/.test(sh)) sh = sh.replace(/^c2_punk_/, s.ykv + '_'); return cl0.call(this, s, sh, row, o); };
+  var sprite0 = sprite; sprite = function (sheet, walker, k) { if (sheet === 'c2_punk_map' && !walker) { var v = pick(), s = sprite0.call(this, v + '_map', walker, k); ykLock(s, v); REG.push(s); if (REG.length > 40) REG = REG.filter(function (q) { return q.el && q.el.isConnected; }); return s; } return sprite0.apply(this, arguments); };
   function near(x, y, R) { var b = null, bd = R || 1e9; REG.forEach(function (q) { if (!q.el || !q.el.isConnected) return; var d = Math.hypot(q.x - x, q.y - y); if (d < bd) { bd = d; b = q; } }); return b; }
   var hp0 = hurtPlay; hurtPlay = function (s, id) { if (s && s.ykv && (id === 'c2_punk' || id === 'c2_punkg')) { var a = [].slice.call(arguments); a[1] = s.ykv; return hp0.apply(this, a); } return hp0.apply(this, arguments); };
   var le0 = lieEl; lieEl = function (id, x, y) { if (id === 'c2_punk' || id === 'c2_punkg') { var q = near(x, y, 90); if (q) { var a = [].slice.call(arguments); a[0] = q.ykv; return le0.apply(this, a); } } return le0.apply(this, arguments); };
