@@ -36662,6 +36662,10 @@ var GINKO = (function () {
   var fight1 = fight; fight = function (grp) { try { ['c2_suit', 'c2_boso'].forEach(function (g) { if (!(grp || []).some(function (c) { return grpOf(c) === g; })) return;
       var q = W.ryo ? near(g, W.ryo.x, W.ryo.y, 600) : null, v = q ? q.gv : g; ['fig', 'fig_hurt', 'fig_down'].forEach(function (s) { IMG[g + '_' + s] = v === g ? BASE[g + '_' + s] : IMG[v + '_' + s]; });
       var CH = root.ENGINE && root.ENGINE.chars && root.ENGINE.chars(); if (CH) [g, g + 'g'].forEach(function (c) { if (CH[c]) { if (!CH[c].gN0) CH[c].gN0 = CH[c].name; CH[c].name = GNM[v] || CH[c].gN0; } }); ev('world:gangs:fight:' + v); }); } catch (e) {} return fight1.apply(this, arguments); };
+  /* dialogue: a line spoken by a Suit / Rider comes from the man you are next to, so a Runner / Dock Hand speaks as c2_suitR / c2_bosoD
+   * (their own name and portrait, PT_PAINT on ch2-ports); plain c2_suit / c2_boso stay the Suit and Rider */
+  if (typeof scene === 'function') { var scn0 = scene; scene = function (bg, L) { var a = [].slice.call(arguments); try { if (Array.isArray(L) && W.ryo) { var pick2 = {};
+      a[1] = L.map(function (ln) { if (!Array.isArray(ln)) return ln; var g = grpOf(ln[0]); if (!g) return ln; if (!(g in pick2)) { var q = near(g, W.ryo.x, W.ryo.y, 420); pick2[g] = q && q.gv !== g ? q.gv : null; } if (!pick2[g]) return ln; var c = ln.slice(); c[0] = pick2[g]; return c; }); } } catch (e) {} return scn0.apply(this, a); }; }
   /* idle-time warm-up of the crew looks (files, fetched once when the town is up; no loop) */
   var warmed = 0; function warm() { if (warmed) return; warmed = 1; var L = []; Object.keys(GPRE).forEach(function (v) { L.push(GPRE[v] + '_map', GPRE[v] + '_walk', GPRE[v] + '_idle'); }); L.push('c2x_act_suitK1', 'c2x_act_suitK2', 'c2x_act_bosoK1', 'c2x_act_bosoK2'); var i = 0;
     (function next() { if (i >= L.length) { ev('world:gangs:warm'); return; } var im = new Image(); im.decoding = 'async'; im.onload = im.onerror = function () { (root.requestIdleCallback || setTimeout)(next, root.requestIdleCallback ? { timeout: 2000 } : 120); }; im.src = wUrl(L[i++]); })(); }
