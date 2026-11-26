@@ -42011,9 +42011,12 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
 
   /* ---------- façade: 船宿 on the east boardwalk, 360 x 220 ---------- */
   S2P.boatSouth = function (g, W0, H0) {
-    W0 = W0 || 360; H0 = H0 || 220; rr(g);
-    /* night behind the east wall cut */
+    W0 = W0 || 360; H0 = H0 || 440; rr(g);
+    /* night / water fill for the tall overlay (building + the boat below) */
     R(g, 0, 0, W0, H0, '#14101c', 0);
+    var lg = g.createLinearGradient(0, 230, 0, H0);
+    lg.addColorStop(0, '#152038'); lg.addColorStop(1, '#0c1424');
+    g.fillStyle = lg; g.fillRect(0, 230, W0, H0 - 230);
     /* tin roof */
     R(g, 4, 2, W0 - 8, 28, '#3a4048', INK, 2);
     g.fillStyle = '#4a5058';
@@ -42067,7 +42070,30 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     R(g, 12, 158, 82, 6, '#4a382c', INK, 1.5);
     /* gutter drip from the tin roof */
     R(g, 8, 30, 6, 14, '#3a4048', INK, 1.5);
-    g.strokeStyle = INK; g.lineWidth = 4; g.strokeRect(1, 1, W0 - 2, H0 - 2);
+    /* quay rail under the apron */
+    R(g, 0, 218, W0, 10, '#6a7078', INK, 2);
+    g.fillStyle = '#8a9098';
+    for (i = 0; i < 12; i++) g.fillRect(16 + i * 30, 216, 4, 14);
+    /* canal water + a clean flower boat, covering the noisy town composite under the lookout */
+    g.strokeStyle = 'rgba(160,200,230,.2)'; g.lineWidth = 1.6;
+    for (i = 0; i < 5; i++) {
+      var yy = 250 + i * 18;
+      g.beginPath(); g.moveTo(0, yy); g.quadraticCurveTo(180, yy + 4, W0, yy - 2); g.stroke();
+    }
+    /* east end of the flower boat, snug under the quay lip (hull continues west) */
+    flowerBoat(g, -40, 226, 330, 175);
+    /* gangplank from the boardwalk down onto the cargo */
+    R(g, 8, 208, 70, 14, '#6a4a36', INK, 2);
+    R(g, 16, 220, 66, 70, '#5a3e2e', INK, 2);
+    g.strokeStyle = 'rgba(0,0,0,.25)'; g.lineWidth = 1.5;
+    for (i = 0; i < 6; i++) { g.beginPath(); g.moveTo(20, 228 + i * 11); g.lineTo(76, 228 + i * 11); g.stroke(); }
+    /* mooring hook on the stern gunwale */
+    R(g, 262, 248, 6, 18, '#3a3e48', INK, 1.5);
+    g.strokeStyle = '#c4a060'; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(265, 264); g.quadraticCurveTo(278, 278, 268, 238); g.stroke();
+    /* ink the building only — do not box the water */
+    g.strokeStyle = INK; g.lineWidth = 4;
+    g.strokeRect(1, 1, W0 - 2, 218);
   };
 
   /* ---------- interior: lookout room, 1280 x 900 ---------- */
@@ -42318,10 +42344,49 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     for (i = 0; i < 4; i++) {
       H.R(x, 500 - i * 10, 700 + i * 40, 200 + i * 16, 36, i % 2 ? '#5a3e2e' : '#4a3428', H.INK, 2);
     }
-    /* wet sheen from the lamps, warm interior grade, no rain */
-    /* soft lamp pools on the wood, not tall wet columns */
+    /* ---- lower floor: wear, light pools, rope, tackle — keep the centre lane clear ---- */
+    H.pool(x, 200, 920, 80, 18, '40,24,16', 0.2);
+    H.pool(x, 480, 1080, 90, 22, '40,24,16', 0.16);
+    H.pool(x, 320, 1180, 70, 16, '40,24,16', 0.14);
+    /* worn traffic path down the aisle */
+    g.fillStyle = 'rgba(20,12,8,.12)';
+    g.beginPath(); g.ellipse(360, 1020, 90, 28, 0, 0, Math.PI * 2); g.fill();
+    g.beginPath(); g.ellipse(340, 1160, 70, 20, 0.1, 0, Math.PI * 2); g.fill();
+    /* plank scratches */
+    g.strokeStyle = 'rgba(20,12,8,.22)'; g.lineWidth = 1.4;
+    g.beginPath(); g.moveTo(80, 960); g.lineTo(200, 980); g.stroke();
+    g.beginPath(); g.moveTo(500, 1100); g.lineTo(620, 1120); g.stroke();
+    g.beginPath(); g.moveTo(100, 1140); g.lineTo(180, 1180); g.stroke();
+    /* lamp pools in the foreground, soft and short */
     glow(g, 180, H0 + 40, 70, 'rgba(255,200,110,.16)');
     glow(g, 540, H0 + 40, 70, 'rgba(255,200,110,.16)');
+    glow(g, 160, 980, 90, 'rgba(255,200,110,.18)');
+    glow(g, 560, 1040, 90, 'rgba(255,200,110,.16)');
+    glow(g, 360, 1200, 80, 'rgba(255,210,140,.1)');
+    /* rope coils, left foreground and at the foot of the stairs */
+    function ropeCoil(cx, cy, r) {
+      g.strokeStyle = INK; g.lineWidth = 5;
+      g.beginPath(); g.arc(cx, cy, r, 0.2, Math.PI * 1.85); g.stroke();
+      g.strokeStyle = '#c4a060'; g.lineWidth = 3.2;
+      g.beginPath(); g.arc(cx, cy, r, 0.2, Math.PI * 1.85); g.stroke();
+      g.strokeStyle = '#a48450'; g.lineWidth = 2.4;
+      g.beginPath(); g.arc(cx, cy, r * 0.62, 0.5, Math.PI * 1.6); g.stroke();
+      g.beginPath(); g.arc(cx, cy, r * 0.28, 0.1, Math.PI * 1.9); g.stroke();
+    }
+    ropeCoil(110, 1020, 28);
+    ropeCoil(90, 1060, 18);
+    ropeCoil(600, 980, 24);
+    /* tackle box, lower left, out of the fight lane */
+    H.R(x, 70, 1120, 110, 70, '#3a5a6a', H.INK, 2.5);
+    H.R(x, 70, 1120, 110, 16, '#2a3a44', H.INK, 2);
+    H.R(x, 78, 1142, 28, 18, '#c45a3a', H.INK, 1.5);
+    H.R(x, 112, 1142, 28, 18, '#c8b070', H.INK, 1.5);
+    H.R(x, 146, 1142, 26, 18, '#2a3858', H.INK, 1.5);
+    H.R(x, 78, 1164, 44, 18, '#1a2028', H.INK, 1.5);
+    H.R(x, 128, 1164, 44, 18, '#4a3428', H.INK, 1.5);
+    /* a second, smaller closed box by the stairs */
+    H.R(x, 80, 880, 70, 36, '#6a3a22', H.INK, 2);
+    H.R(x, 88, 886, 54, 10, '#4a2818', H.INK, 1.5);
     H.vign(x, 0.55);
     H.grade(x, 'rgba(80,50,20,.16)', 'rgba(20,10,8,.28)');
   };
@@ -43867,11 +43932,11 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (!P3.ART || !on() || !inTown() || !roomOpen()) return;
     if (document.getElementById('s2BoatSouth')) return;
     if (!FAC) {
-      FAC = document.createElement('canvas'); FAC.width = 360; FAC.height = 220;
+      FAC = document.createElement('canvas'); FAC.width = 360; FAC.height = 440;
       try { if (root.FFF_S2P && root.FFF_S2P.boatSouth) root.FFF_S2P.boatSouth(FAC.getContext('2d')); } catch (eF) { ev('world:s2p3:err:facade:' + (eF && eF.message)); }
     }
     FAC.className = 'nqprop'; FAC.id = 's2BoatSouth';
-    FAC.style.cssText = 'position:absolute;left:4540px;top:3420px;width:360px;height:220px;z-index:' + (100 + 3550) + ';pointer-events:none';
+    FAC.style.cssText = 'position:absolute;left:4540px;top:3420px;width:360px;height:440px;z-index:' + (100 + 3550) + ';pointer-events:none';
     var host = null, sample = document.querySelector('#world .nqprop, #wimap .nqprop, .nqprop');
     if (sample && sample.parentNode) host = sample.parentNode;
     else host = document.getElementById('wisp') || document.getElementById('world') || document.getElementById('wimap');
