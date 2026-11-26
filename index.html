@@ -46710,7 +46710,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
 /* v6.5.63 FFF_S2P5 (Punk-route seal 2, phase 5): Masa's Seal.
  * Quest cq2_s2_depot after Off Schedule. 13 walkable depot rooms, meet Masa
  * at the yard gate, fight him at the lift shutter with CHAR_INTRO.mb2_depot.
- * Path voice only in this file — the bond pick and east-block flip come later.
+ * After the shutter win: add-only BOND_Q.c2_masa_after, path payoffs (leave / notes
+ * / help), the shutter seal pry, and after-seal east-block tenant lines (wrap only).
  * Wraps only; no new always-running loops. Does not edit S2 / S2P2 / S2P3 / S2P4 VO
  * or the landmark depot path. */
 (function () {
@@ -46799,6 +46800,62 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   );
   VO.emptyYard = [['', 'The desk is empty. Masa is not at the gate.']];
   VO.emptyShut = [['', 'The lift shutter is quiet. The gray seal is still on the sheet.']];
+  VO.emptyShutDone = [['', 'The lift shutter is quiet. The gray seal is off the sheet.']];
+  VO.leave = V3(
+    [['', 'Masa stays on the floor. His hard hat rolls once and stops.']],
+    {
+      fierce: [['ryo', 'The yard is ours. The seal is next.']],
+      strategic: [['aoi', 'Leave him. The sheet is still on the shutter.']],
+      balanced: [['aoi', 'He is out. We take the seal and go.']]
+    },
+    []
+  );
+  VO.notes = V3(
+    [['mb2_depot', 'The dock code\u2026 first light. The time is on the sheet.']],
+    {
+      fierce: [['ryo', 'That is enough.']],
+      strategic: [['ryo', 'First light. I have it.']],
+      balanced: [['ryo', 'Thank you. Rest.']]
+    },
+    []
+  );
+  VO.help = V3(
+    [['ryo', 'Up. The yard can still send honest freight under our color.']],
+    {
+      fierce: [['mb2_depot', 'You already won. Fine. I clock out.']],
+      strategic: [['mb2_depot', 'Honest freight. I can do that.']],
+      balanced: [['mb2_depot', 'I can still run a clean dock. Go on.']]
+    },
+    []
+  );
+  VO.tenant = {
+    mori: V3([['nq_mori', 'The freight has gone quiet for good. The kettle is on. Come in when you pass.']],
+      { fierce: [['ryo', 'We will.']], strategic: [['ryo', 'Lock the door anyway.']], balanced: [['ryo', 'Thank you, Mori-san.']] }, []),
+    nao: V3([['nq_nao', 'If the nights stay like this I can keep the day job. Thank you \u2014 really.']],
+      { fierce: [['ryo', 'They will not come back.']], strategic: [['ryo', 'The schedule is done. It should hold.']], balanced: [['ryo', 'Sleep. It stays this way.']] }, []),
+    haru: V3([['nq_haru', 'The bikes are gone. Mori-san said I can sit on the sofa whenever I want now.']],
+      { fierce: [['ryo', 'Sit. The street is yours.']], strategic: [['ryo', 'The sofa is fine. Keep off the road.']], balanced: [['ryo', 'Yes. The lobby is safe now.']] }, [])
+  };
+
+  /* add-only M2: PAY / Journal name already reserved in the CH2BOND block */
+  if (typeof BOND_Q === 'object' && typeof BOND_TXT === 'object' && typeof BOND_MID === 'object') {
+    BOND_Q.c2_masa_after = { q: '<b>Aoi asks</b><p>He is down. The seal and the manifest are on the shutter. What do we do with him?</p>',
+      o: { fierce: ['Leave him. The yard is ours', 'Fierce'], strategic: ['Stay talking. I want the dock code', 'Strategic'], balanced: ['Help him up. Honest freight can still leave', 'Compassionate'] } };
+    BOND_MID.c2_masa_after = 'strategic';
+    BOND_TXT.c2_masa_after = { _mx: 1,
+      fierce: {
+        fierce: [['{LEAD}', '{shout}Leave him. The yard is ours.{/shout}', { hype: 1 }], ['{PARTNER}', 'The shutter is already ours.']],
+        strategic: [['{LEAD}', '{brisk}Stay talking. I want the dock code.{/brisk}'], ['{PARTNER}', 'The time is on that sheet too.']],
+        balanced: [['{LEAD}', 'Up. Honest freight can still leave this yard.'], ['{PARTNER}', '{quiet}Under our color.{/quiet}']] },
+      strategic: {
+        fierce: [['{LEAD}', 'He is done.{p} Leave him.'], ['{PARTNER}', 'No more questions. Fine.']],
+        strategic: [['{LEAD}', '{brisk}Stay talking. The code and the time.{/brisk}'], ['{PARTNER}', 'He wrote it on the sheet. Make him say it.']],
+        balanced: [['{LEAD}', 'Up. The yard can still run honest.'], ['{PARTNER}', 'Then we do it your way.']] },
+      balanced: {
+        fierce: [['{LEAD}', 'Leave him.{p} The yard is ours now.'], ['{PARTNER}', '{quiet}Gently.{/quiet}']],
+        strategic: [['{LEAD}', 'The sheet. The code. The time.'], ['{PARTNER}', 'He will talk, if we stay.']],
+        balanced: [['{LEAD}', '{slow}Up. Honest freight can still leave this yard under our color.{/slow}']] } };
+  }
 
   /* ---------------- rooms ---------------- */
   var RW = 1280, RH = 900;
@@ -46965,11 +47022,15 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (KEYS.indexOf(k) < 0) return;
     var m = document.getElementById('wimap') || document.getElementById('world');
     if (!m) return;
-    var key = k + ':' + (cleared() || (k === 'dshut' && won()) ? 'cleared' : 'held');
+    var fate = (k === 'dshut') ? (E().masaFate || '') : '';
+    var key = k + ':' + (cleared() || (k === 'dshut' && won()) ? (fate || 'cleared') : 'held');
     if (!RCV[key]) {
       RCV[key] = document.createElement('canvas'); RCV[key].width = RW; RCV[key].height = RH;
       var g = RCV[key].getContext('2d'), fn = PAINT[k];
-      try { if (P5.ART && root.FFF_S2P && fn && root.FFF_S2P[fn]) root.FFF_S2P[fn](g, key.indexOf('cleared') >= 0); }
+      if (k === 'dshut' && fate === 'leave') fn = 'depShutterLeave';
+      else if (k === 'dshut' && fate === 'notes') fn = 'depShutterNotes';
+      else if (k === 'dshut' && fate === 'help') fn = 'depShutterHelp';
+      try { if (P5.ART && root.FFF_S2P && fn && root.FFF_S2P[fn]) root.FFF_S2P[fn](g, key !== k + ':held'); }
       catch (e) { ev('world:s2p5:err:paint:' + (e && e.message)); }
     }
     var c = RCV[key];
@@ -47010,6 +47071,10 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       if (inDepot()) return { x: 640, y: 620, lab: 'Lift shutter', loc: 'Masa\u2019s Seal \u00b7 the shutter', room: 'dshut' };
       return { x: DEPOT_AT[0], y: DEPOT_AT[1], lab: 'Lift shutter', loc: 'Masa\u2019s Seal \u00b7 the shutter', room: 'town' };
     }
+    if (qOn() && won() && !E().seal_depot) {
+      if (inDepot()) return { x: 640, y: 400, lab: 'The shutter', loc: 'Masa\u2019s Seal \u00b7 the bond', room: 'dshut' };
+      return { x: DEPOT_AT[0], y: DEPOT_AT[1], lab: 'The shutter', loc: 'Masa\u2019s Seal \u00b7 the bond', room: 'town' };
+    }
     return null;
   }
   P5.s2Tgt = s2Tgt;
@@ -47025,6 +47090,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (!p5Enter()) return;
     var ch = 0;
     if (!qOn() && !qDone()) { qOpen(); if (!stg()) setStg('open'); ch = 1; }
+    if (E().seal_depot && !qDone()) { finishQuest(); ch = 1; }
     if (ch) ev('world:s2p5:repair');
   }
   P5.chainRepair = chainRepair;
@@ -47095,12 +47161,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   }
   function fightWon() {
     fighting = 0;
-    setStg('won');
-    qStep(2);
+    if (!won()) { setStg('won'); qStep(2); }
     whenFree(function () {
-      talk(pv(VO.wonFight), function () {
-        /* after-win beats and the east-block flip land in the next stage */
-      });
+      talk(pv(VO.wonFight), function () { askBond(); });
     });
   }
   function yardTalk() {
@@ -47118,13 +47181,154 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   }
   function shutterTalk() {
     if (busy()) return true;
-    if (won() || cleared()) { lockIn(1); talk(VO.emptyShut, function () { lockIn(0); }); return true; }
+    if (E().seal_depot || cleared()) { lockIn(1); talk(VO.emptyShutDone, function () { lockIn(0); }); return true; }
+    if (won()) { askBond(); return true; }
     if (!qOn()) return false;
     if (!met()) { setStg('met'); qStep(1); }
     lockIn(1);
     introThenFight();
     return true;
   }
+
+  function fateOf(ans) { return ans === 'fierce' ? 'leave' : ans === 'strategic' ? 'notes' : 'help'; }
+  function pickedBond() { try { return ((STORY.bond(SAVE) || {}).picks || {}).c2_masa_after; } catch (e) { return ''; } }
+  function afterSeal() { return !!(E().seal_depot || qDone() || stg() === 'done'); }
+  function refreshShutPaint() {
+    Object.keys(RCV).forEach(function (k) { if (k.indexOf('dshut') === 0) delete RCV[k]; });
+    var el = document.getElementById('s2P5Room_dshut');
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+    paintRoom();
+  }
+  function applyFateArt(f) {
+    if (MASA) { try { kill(MASA); } catch (eK) {} MASA = null; }
+    try { if (W.c2n) W.c2n.s2masa = null; } catch (eN) {}
+    if (f === 'help' && room() === 'dshut') {
+      MASA = npc('mb2_depot', 640, 620, Math.PI / 2);
+      MASA._rk = 'dshut';
+      try { if (typeof waddle === 'function') waddle(MASA, 0, Math.PI / 2); } catch (eW) {}
+      try { if (!W.c2n) W.c2n = {}; W.c2n.s2masa = MASA; } catch (eN2) {}
+    } else if (f === 'leave' && room() === 'dshut' && typeof lieEl === 'function') {
+      try {
+        var le = lieEl('mb2_depot', 640, 620, (typeof C2K === 'object' && C2K.mb2_depot) || 1);
+        if (le) { le.classList.add('c2lie'); le.dataset.npc = 'mb2_depot'; (typeof layer !== 'undefined' ? layer : document.getElementById('world')).appendChild(le); if (W.ints) W.ints.push({ el: le }); if (!W.c2n) W.c2n = {}; W.c2n.s2masaLie = le; }
+      } catch (eL) { ev('world:s2p5:err:lie:' + (eL && eL.message)); }
+    }
+    refreshShutPaint();
+  }
+  function playFate(done) {
+    var f = E().masaFate || 'help';
+    applyFateArt(f);
+    lockIn(1);
+    talk(pv(VO[f] || VO.help), function () {
+      if (f === 'help' && MASA) { try { kill(MASA); } catch (eK) {} MASA = null; try { if (W.c2n) W.c2n.s2masa = null; } catch (eN) {} }
+      lockIn(0);
+      if (done) done();
+    });
+  }
+  function askBond() {
+    if (E().seal_depot) { finishQuest(); return; }
+    var ans = pickedBond();
+    if (ans && !E().masaFate) { E().masaFate = fateOf(ans); if (ans === 'strategic') E().dockNotes = 1; sv(); }
+    if (E().masaFate) { playFate(function () { takeSeal(); }); return; }
+    lockIn(1);
+    try {
+      bondAsk('c2_masa_after', function (L2) {
+        var pk = pickedBond() || path();
+        E().masaFate = fateOf(pk);
+        if (pk === 'strategic') E().dockNotes = 1;
+        sv();
+        ev('world:s2p5:bond:' + E().masaFate);
+        function next() { playFate(function () { takeSeal(); }); }
+        if (L2 && L2.length) talk(L2, next); else next();
+      });
+    } catch (eB) { ev('world:s2p5:err:bond:' + (eB && eB.message)); lockIn(0); playFate(function () { takeSeal(); }); }
+  }
+  function takeSeal() {
+    var e = E();
+    if (e.seal_depot) { finishQuest(); return; }
+    lockIn(1);
+    W.cut = true;
+    try { if (typeof sLock === 'function') sLock(1, 'c2seal'); } catch (eL) {}
+    function pry() {
+      try { AU.play('place', { gain: 0.8 }); } catch (eA) {}
+      try { AU.play('fire_whoosh', { gain: 0.6 }); } catch (eA2) {}
+      try { if (typeof rdyOff === 'function' && W.ryo) rdyOff(W.ryo); } catch (eR) {}
+      e.seal_depot = 1;
+      var n = (typeof c2Seals === 'function') ? c2Seals() : 0;
+      var f = (typeof C2S_FAC === 'object' && C2S_FAC.depot) || 'dep';
+      var own = e.run_fac && f === e.run_fac;
+      if (!own && f) e['down_' + f] = 1;
+      if (!own && e.run_fac && !e.c2sUp) {
+        e.c2sUp = 1;
+        try { if (root.FFF_OPN) root.FFF_OPN.grant(C2S_SET[e.run_fac][1]); } catch (eG) {}
+      }
+      sv();
+      ev('world:c2:seal:depot:' + n);
+      ev('world:s2p5:seal');
+      try { if (typeof c2sLocksSync === 'function') c2sLocksSync(); } catch (eS) {}
+      W.cut = false;
+      try { if (typeof sLock === 'function') sLock(0, 'c2seal'); } catch (eL2) {}
+      try { if (W.ryo && typeof resetTrail === 'function') resetTrail(W.ryo.x, W.ryo.y, W.ryo.dir); } catch (eT) {}
+      refreshShutPaint();
+      var L2 = n >= ((typeof C2LMK !== 'undefined' && C2LMK.length) || 4)
+        ? [['', '<p class="dim">The fourth token comes free. Four serials in Ryo\u2019s pocket.</p>'], ['aoi', (e.ckSlip ? 'All four. Genji can match them to the slip.' : 'All four. Now Tetsu\u2019s slip.')]]
+        : [['', '<p class="dim">Ryo pries the gray seal off the shutter. A small engraved token. A serial on the back.</p>'], ['aoi', (typeof C2SC === 'object' && C2SC.sealN && C2SC.sealN[n]) || 'Another seal.']];
+      if (!own && f && n < ((typeof C2LMK !== 'undefined' && C2LMK.length) || 4)) {
+        try { L2.push(['ryo', 'The ' + (typeof c2sFacName === 'function' ? c2sFacName(f) : 'Riders') + ' stand down now.']); } catch (eN) {}
+      }
+      talk(L2, function () {
+        lockIn(0);
+        if (n >= ((typeof C2LMK !== 'undefined' && C2LMK.length) || 4)) {
+          try { if (typeof sayKey === 'function') sayKey('c2', 'elevator_live'); } catch (eK) {}
+        }
+        try { if (typeof c2SqRefresh === 'function') c2SqRefresh(); } catch (eQ) {}
+        finishQuest();
+      });
+    }
+    var r = W.ryo;
+    if (r && room() === 'dshut' && typeof c2Walk === 'function') {
+      try {
+        c2Walk(r, 640, 420, 150 / Math.max(0.25, (typeof cinK === 'function' ? cinK() : 1)), function () {
+          try { if (typeof c2Face === 'function') c2Face(r, 760, 180); } catch (eF) {}
+          try { if (typeof rdyOn === 'function') rdyOn(r, 3); } catch (eR) {}
+          later(Math.round(500 * (typeof cinK === 'function' ? cinK() : 1)), pry);
+        });
+        return;
+      } catch (eW) { ev('world:s2p5:err:sealing:' + (eW && eW.message)); }
+    }
+    pry();
+  }
+  function flipEast() {
+    var n = NS(); n.won = n.won || {};
+    var already = !!(n.won.east || E().vend_eastst);
+    n.won.east = 1; n.won.depot = 1; E().vend_eastst = 1; E().eastSeal = 1;
+    try {
+      var T = root.FFF_C2TURF, EAST_R = [3760, 2760, 4900, 3300];
+      if (T && T.Q && T.Q.P && !T.Q.P.some(function (r) { return r[0] === 3760 && r[1] === 2760 && r[2] === 4900; })) T.Q.P.push(EAST_R.slice());
+    } catch (eT) {}
+    try { if (root.FFF_NQ && root.FFF_NQ.BLK && !root.FFF_NQ.BLK.east) root.FFF_NQ.BLK.east = { n: 'MINATO-S\u014c', r: [3760, 2760, 4900, 3300] }; } catch (eB) {}
+    if (!already) {
+      try { var P2 = root.FFF_S2P2; if (P2 && typeof P2.takeEastTurf === 'function') P2.takeEastTurf(); } catch (eE) {}
+    }
+    sv();
+    ev('world:s2p5:east:flip');
+  }
+  function finishQuest() {
+    if (!E().seal_depot) return;
+    if (!cleared()) { setStg('done'); qClose(); }
+    flipEast();
+    ev('world:s2p5:done');
+  }
+  function tenantAfter(who) {
+    if (busy()) return true;
+    var table = VO.tenant[who];
+    if (!table) return false;
+    lockIn(1);
+    talk(pv(table), function () { lockIn(0); });
+    return true;
+  }
+  P5.askBond = askBond; P5.takeSeal = takeSeal; P5.flipEast = flipEast; P5.finishQuest = finishQuest;
+  P5.afterSeal = afterSeal; P5.fateOf = fateOf; P5.tenantAfter = tenantAfter;
 
   if (typeof onFightEnd === 'function') {
     var of0 = onFightEnd;
@@ -47152,6 +47356,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
             if (room() === 'dshut') return shutterTalk();
             return yardTalk();
           }
+          if (afterSeal() && (a === 's2_talk_mori' || a === 's2_talk_nao' || a === 's2_talk_haru')) {
+            return tenantAfter(a.replace('s2_talk_', ''));
+          }
         }
       } catch (e) { ev('world:s2p5:err:act:' + (e && e.message)); }
       return act0.apply(this, arguments);
@@ -47167,6 +47374,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
             if (room() === 'dshut') return shutterTalk();
             return yardTalk();
           }
+          if (afterSeal() && (id === 'nq_mori' || id === 'nq_nao' || id === 'nq_haru')) {
+            return tenantAfter(id.replace('nq_', ''));
+          }
         }
       } catch (eT) {}
       return tk0.apply(this, arguments);
@@ -47180,6 +47390,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
           if (id === 'mb2_depot' && inDepot()) {
             if (room() === 'dshut') return shutterTalk();
             return yardTalk();
+          }
+          if (afterSeal() && (id === 'nq_mori' || id === 'nq_nao' || id === 'nq_haru')) {
+            return tenantAfter(id.replace('nq_', ''));
           }
         }
       } catch (eT) {}

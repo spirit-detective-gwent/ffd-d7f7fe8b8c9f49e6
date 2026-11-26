@@ -157,6 +157,57 @@ async def main():
         ok('after the meeting Masa is at the shutter', walk and walk.get('masaShut') and walk.get('shutPaint'), walk)
         ok('a lost shutter fight does not set the win', walk and walk.get('afterLoss')=='met', walk)
 
+        # (c) bond question, after-win fate, seal, east-block tenant wrap
+        src_bond = 'BOND_Q.c2_masa_after' in src and 'Stay talking. I want the dock code' in src
+        ok('BOND_Q.c2_masa_after is in the built source', src_bond)
+        bond = await ev(pg, """(function(){
+          var Q=BOND_Q.c2_masa_after, T=BOND_TXT.c2_masa_after, mid=BOND_MID.c2_masa_after;
+          var pay=(STORY.BOND.PAY||{}).c2_masa_after;
+          var S={bond:{path:'fierce',picks:{},px:0,lock:1},chapter:2};
+          var r=STORY.bondPick(S,'c2_masa_after','fierce',mid);
+          var keys=['fierce','strategic','balanced'];
+          var mx=T&&T._mx&&keys.every(function(p){return keys.every(function(a){return T[p]&&T[p][a]&&T[p][a].length;});});
+          return {
+            q:Q&&Q.q, o:Q&&Q.o&&{f:Q.o.fierce&&Q.o.fierce[0],s:Q.o.strategic&&Q.o.strategic[0],b:Q.o.balanced&&Q.o.balanced[0]},
+            mid:mid, pay:pay, xp:r&&r.n, mx:!!mx, name:typeof bondCallName==='function'?bondCallName('c2_masa_after'):''
+          };
+        })()""")
+        ok('M2 question and three answers are registered', bond and bond.get('q') and 'He is down' in (bond.get('q') or '') and bond.get('o') and 'Leave him' in (bond['o'].get('f') or '') and 'dock code' in (bond['o'].get('s') or '') and 'Help him up' in (bond['o'].get('b') or ''), bond)
+        ok('M2 mid is strategic, pay is 760, fierce pick pays 760', bond and bond.get('mid')=='strategic' and bond.get('pay')=={'best':760,'mid':380,'clash':152} and bond.get('xp')==760, bond)
+        ok('M2 has a full 3x3 BOND_TXT matrix and the Journal name', bond and bond.get('mx') and 'Masa at the shutter' in (bond.get('name') or ''), bond)
+
+        after = await ev(pg, """(function(){
+          var P5=root.FFF_S2P5, st=c2S(), stung=0;
+          try { if (typeof NQ!=='undefined' && NQ.sting) { var s0=NQ.sting; NQ.sting=function(){ stung++; if(s0) return s0.apply(this,arguments); }; } } catch(eS){}
+          st.e.nq=st.e.nq||{}; st.e.nq.won=st.e.nq.won||{}; st.e.nq.won.east=1; st.e.vend_eastst=1;
+          P5.setStg('won'); st.q.cq2_s2_depot=2;
+          st.e.masaFate='leave';
+          try { c2Go('dshut', [640, 820, 3]); if (typeof c2Pop==='function') c2Pop(); } catch(eG){}
+          var leavePaint=!!document.getElementById('s2P5Room_dshut');
+          /* take the seal from town so we do not wait on the shutter walk */
+          try { c2Go('town', [4300, 3880, 0]); } catch(eT){}
+          P5.takeSeal();
+          var sealed=!!st.e.seal_depot;
+          /* hush leftover seal talk */
+          try { W.dlg=false; W.cut=false; W.busy=false; var d=document.getElementById('wdlg'); if(d){d.className='';d.innerHTML='';} } catch(eH){}
+          if (!P5.qDone()) P5.finishQuest();
+          var ten=P5.VO&&P5.VO.tenant, lines={};
+          ['mori','nao','haru'].forEach(function(w){ lines[w]=((ten[w]||{}).fierce||[]).concat((ten[w]||{}).balanced||[]).map(function(x){return (x&&x[1])||'';}); });
+          return {
+            sealed:sealed, done:P5.qDone(), stg:P5.stg(), eastSeal:!!st.e.eastSeal, depotWon:!!(st.e.nq.won&&st.e.nq.won.depot),
+            stung:stung, after:P5.afterSeal(), leavePaint:leavePaint, lines:lines, down:!!st.e.down_dep,
+            painters:!!(root.FFF_S2P&&FFF_S2P.depShutterLeave&&FFF_S2P.depShutterNotes&&FFF_S2P.depShutterHelp)
+          };
+        })()""")
+        ok('after-win leave art and shutter painters exist', after and after.get('leavePaint') and after.get('painters'), after)
+        ok('takeSeal sets seal_depot and closes Masa\u2019s Seal', after and after.get('sealed') and after.get('done') and after.get('stg')=='done', after)
+        ok('east-block flip is set without a second sting', after and after.get('eastSeal') and after.get('depotWon') and after.get('after') and after.get('stung')==0, after)
+        ok('Riders stand down after the depot seal', after and after.get('down'), after)
+        lines = (after or {}).get('lines') or {}
+        ok('after-seal Mori line is new (freight quiet)', any('quiet for good' in (x or '').lower() or 'kettle' in (x or '').lower() for x in lines.get('mori') or []), lines.get('mori'))
+        ok('after-seal Nao line is new (day job)', any('day job' in (x or '').lower() for x in lines.get('nao') or []), lines.get('nao'))
+        ok('after-seal Haru line is new (bikes gone)', any('bikes are gone' in (x or '').lower() or 'sofa' in (x or '').lower() for x in lines.get('haru') or []), lines.get('haru'))
+
         # landmark path is unchanged: not nails, c2Enter('depot') should NOT be forced if p5Enter is false
         land = await ev(pg, """(function(){
           var st=c2S(), P5=root.FFF_S2P5;
