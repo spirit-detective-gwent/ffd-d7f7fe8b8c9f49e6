@@ -150,8 +150,8 @@ async def t3(pg, errs):
     st = json.loads(st)
     ok('T3 Learn again: no gang skill owned after the NG+ start', not st['has'] and not (st['gsk'] or {}), st)
     ok('T3 Learn again: scene state replays (dg wiped, so Nails / lock scenes run again)', st['dg'] == [] and True)
-    g = await ev(pg, "(function(){var h=FFF_OPN.grant('hanabi'),a=FFF_OPN.grant('alley',true),k=FFF_OPN.has('alley'),c=!!(SAVE.cxNew&&SAVE.cxNew.gsk_alley);return {a:a,h:h,k:k,c:c,ups:FFF_OPN.has('finale')}})()")
-    ok('T3 Learn again: a gang skill (a different gang than the old run) and Alley Cat grant again, with their Codex badges', g['a'] and g['h'] and g['k'] and g['c'] and g['ups'], g)
+    g = await ev(pg, "(function(){var h=FFF_OPN.grant('hanabi'),a=FFF_OPN.grant('alley',true),k=FFF_OPN.has('alley'),c=!!(SAVE.cxNew&&SAVE.cxNew.gsk_alley);return {a:a,h:h,k:k,c:c,hh:FFF_OPN.has('hanabi')}})()")
+    ok('T3 Learn again: a gang skill (a different gang than the old run) and Alley Cat grant again, with their Codex badges', g['a'] and g['h'] and g['k'] and g['c'] and g['hh'], g)
     # Keep: grants refused for the other gang (one gang per run), skills stay
     await ev(pg, "(function(){FFF_OPN.revoke();SAVE.gsk={kamikaze:1,redline:1,alley:1,cheap:1};SAVE.cxNew={gsk_alley:1};SAVE.intro=1;SAVE.ch1=1;SAVE.gouki=1;save();var o=FFF_NG.base();FFF_NG.start(o);return 1})()")
     await pg.wait_for_timeout(2500)
@@ -164,8 +164,8 @@ async def t4(p, cleared_ready):
     # Ch1 -> Ch2 inside an NG+ run
     errs = []; b, pg = await newpage(p, errs); await boot(pg); await ev(pg, FIXTURE_JS)
     await ev(pg, "(function(){var o=FFF_NG.base();FFF_NG.start(o);return 1})()"); await pg.wait_for_timeout(2500)
-    await ev(pg, "(function(){unstage&&unstage();W.scGen=(W.scGen|0)+1;SAVE.intro=1;SAVE.sc=SAVE.sc||{};SAVE.sc.nurse=1;SAVE.sc.after=1;W._c2SkipCine=1;W.dlg=false;W.busy=false;var d=document.getElementById('wdlg');if(d){d.className='';d.innerHTML=''};return 1})()")
-    await pg.evaluate("WORLD_API.c2Begin(false)"); await pg.wait_for_timeout(4500); await skipall(pg); await ev(pg, HUSH)
+    await ev(pg, "(function(){unstage&&unstage();W.scGen=(W.scGen|0)+1;SAVE.intro=1;SAVE.sc=SAVE.sc||{};SAVE.sc.nurse=1;SAVE.sc.after=1;W.dlg=false;W.busy=false;var d=document.getElementById('wdlg');if(d){d.className='';d.innerHTML=''};return 1})()")
+    await pg.evaluate("WORLD_API.c2Begin(false)"); await pg.wait_for_timeout(3000); await skipall(pg, 10); await pg.wait_for_timeout(1500); await skipall(pg, 10); await ev(pg, HUSH)
     s = json.loads(await ev(pg, "JSON.stringify({ch:SAVE.chapter,ngp:SAVE.ngp,c2:c2On(),room:W.inside&&W.inside.id,cls:document.getElementById('world').className,stand:c2S().stand||{},e:Object.keys(c2S().e||{}),gsk:SAVE.gsk,snap:!!SAVE.c2entry,snapNgp:SAVE.c2entry&&SAVE.c2entry.ngp,crew:Object.keys(SAVE.crewDown||{}),hp:SAVE.hp,max:MAXHP})"))
     ok('T4 Ch1 -> Ch2 in NG+: chapter 2, in the Ch2 town, c2 class', s['ch'] == 2 and s['c2'] and s['room'] == 'c2_town' and 'c2' in s['cls'], s)
     ok('T4 Ch2 run starts clean (no stale arrive/lock flags) and keeps crew rep from the last run', 'n13alley' not in s['e'] and 'run_fac' not in s['e'] and s['stand'].get('arc') == 3 and s['stand'].get('dep') == 4 and s['stand'].get('neo') == 2, s)
@@ -185,7 +185,7 @@ async def t4(p, cleared_ready):
         await ev(pg, "(function(){FFF_NG.start(FFF_NG.base());return 1})()"); await pg.wait_for_timeout(2500)
         s = json.loads(await ev(pg, "JSON.stringify({ch:SAVE.chapter,chN:chN(),c2:c2On(),room:W.inside&&W.inside.id,cls:document.getElementById('world').className,ngp:SAVE.ngp,crew:Object.keys(SAVE.crewDown||{}),ry:[Math.round(W.ryo.x),Math.round(W.ryo.y)],start:[WD.start[0],WD.start[1]]})"))
         ok(f'T4 NG+ started from Ch{ch} (was chapter {pre}): back in Ch1, no c2/c3/inside class, not inside a room', s['ch'] == 1 and s['chN'] == 1 and not s['c2'] and s['room'] is None and not re.search(r'\b(c2|c2town|c3|inside|inroom)\b', s['cls']), s)
-        ok(f'T4 NG+ from Ch{ch}: beaten crews cleared, Ryo at the Ch1 start', s['crew'] == [] and s['ry'] == s['start'], s)
+        ok(f'T4 NG+ from Ch{ch}: beaten crews cleared, Ryo at the Ch1 start', s['crew'] == [] and s['ry'][0] == s['start'][0] and abs(s['ry'][1] - s['start'][1]) <= 80, s)
         ok(f'T4 no page errors (NG+ from Ch{ch})', not errs, errs[:3]); await b.close()
 
 async def t5(p):

@@ -32969,6 +32969,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     try {
       var S = typeof c2S === 'function' ? c2S() : null, e = (S && S.e) || {}, L = SAVE.c2les || {};
       if (e.arrive || e.gymIn || e.genji || e.lossArc || e.trained || e.gymDescent || (e.c2loss | 0) > 0) return false;
+      if (SAVE.ngp) return true; /* NG+: the kept Genji techniques, recipes and counters are carry-over, not Ch2 progress in this run (the e.* flags above are the run's own) */
       if (SAVE.c2kos) return false;
       if (L.sneak || L.assist || L.cover) return false;
       if (SAVE.c2lesReady) return false;
