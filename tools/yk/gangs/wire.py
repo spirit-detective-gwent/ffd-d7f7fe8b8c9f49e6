@@ -16,6 +16,8 @@ KINDS = ['walk', 'run', 'hurt', 'kn', 'lie', 'map', 'fig', 'fig_hurt', 'fig_down
 # world file prefix <- yk spec
 ART = {'mb2_gameK': 'ksJin2', 'bouncerK': 'ksBouncer2', 'c2_suitK1': 'ksSuit2', 'c2_suitK2': 'ksRun2', 'n13sbK': 'sabu2',
        'mb2_depotK': 'dpMasa2', 'c2_bosoK1': 'dpRider2', 'c2_bosoK2': 'dpDock2'}
+# club staff (portraits ckhostess_neutral / ckdealer_neutral): the hostess is on the Hina rig (no run / hurt / kneel / lie sheets; she never needs them)
+STAFF = {'ck_hostessK': ('ckHostess', ['walk', 'map', 'fig', 'fig_hurt', 'fig_down', 'idle']), 'ck_dealerK': ('ckDealer', KINDS)}
 ACT = {'c2x_act_suitK1': 'ksSuit2', 'c2x_act_suitK2': 'ksRun2', 'c2x_act_bosoK1': 'dpRider2', 'c2x_act_bosoK2': 'dpDock2'}
 B0, B1 = '/* FFF_GANGS begin */', '/* FFF_GANGS end */'
 ANCHOR = '/* v6.5.51 (t3039u'
@@ -68,6 +70,13 @@ BLOCK = B0 + r"""
   var warmed = 0; function warm() { if (warmed) return; warmed = 1; var L = []; Object.keys(GPRE).forEach(function (v) { L.push(GPRE[v] + '_map', GPRE[v] + '_walk', GPRE[v] + '_idle'); }); L.push('c2x_act_suitK1', 'c2x_act_suitK2', 'c2x_act_bosoK1', 'c2x_act_bosoK2'); var i = 0;
     (function next() { if (i >= L.length) { ev('world:gangs:warm'); return; } var im = new Image(); im.decoding = 'async'; im.onload = im.onerror = function () { (root.requestIdleCallback || setTimeout)(next, root.requestIdleCallback ? { timeout: 2000 } : 120); }; im.src = wUrl(L[i++]); })(); }
   setTimeout(function () { try { if (typeof c2On === 'function' && c2On()) (root.requestIdleCallback || setTimeout)(warm, root.requestIdleCallback ? { timeout: 4000 } : 600); } catch (e) {} }, 4000);
+  /* Club Kitsune staff: the Hostess (back-office pair + the coat check) and the Dealer (back-office count table + the bartender), their own
+   * looks instead of the Hustler / clerk / cook stand-ins */
+  wire('ck_dealer', 'ck_dealerK', C2K.c2_hustler || 1.15); NM.ck_dealer = 'Club Dealer';
+  ['walk', 'map', 'fig', 'fig_hurt', 'fig_down', 'idle'].forEach(function (s) { IMG['ck_hostess_' + s] = wUrl('ck_hostessK_' + s); });
+  SHC.ck_hostess_walk = 8; SHC.ck_hostess_idle = 4; SHR.ck_hostess_idle = 4; if (SHR.c2_punk_walk != null) SHR.ck_hostess_walk = SHR.c2_punk_walk; BW_IDS.ck_hostess = 1; C2K.ck_hostess = 1.08; PT.ck_hostess = 'ck_hostess_fig'; NM.ck_hostess = 'Club Hostess';
+  if (typeof ckChar === 'function') { var ckc0 = ckChar; ckChar = function (id, name, base) { var r = ckc0.apply(this, arguments); try { if (id === 'ck_hostess' || id === 'ck_dealer') { var CH = root.ENGINE && root.ENGINE.chars ? root.ENGINE.chars() : null;
+    if (CH) [id, id + 'g'].forEach(function (c) { if (CH[c]) { CH[c].fig = id + '_fig'; if (CH[c].art) CH[c].art = id + '_fig'; if (CH[c].alt) CH[c].alt = id + '_fig'; } }); PT[id] = id + '_fig'; } } catch (e) {} return r; }; }
   root.FFF_GANGS = { ids: Object.keys(GPRE).concat(['mb2_game', 'mb2_depot', 'bouncer', 'n13sb']), pre: GPRE, warm: warm, pick: pick };
   } catch (eG) { try { ev('world:gangs:err:init:' + (eG && eG.message)); } catch (e2) {} }
 })();
@@ -78,12 +87,26 @@ JIN_A1 = "Lime zip hoodie, shaggy black hair with green tips, headphones round h
 JIN_D0 = "CXD.mb2_game.a = 'High-Score Jin. Desire: never lose."
 JIN_D1 = "CXD.mb2_game.a = 'High-Score Jin. Lime hoodie, green-tipped shag, headphones. Desire: never lose."
 
+SWAPS = [  # the club's stand-ins -> the club staff
+    ("ckFoePut('ck2', 'c2_hustler', 500, 1420, 0);", "ckFoePut('ck2', 'ck_hostess', 500, 1420, 0);"),
+    ("ckFoePut('ck2', 'c2_hustler', 150, 1252, 0); ", "ckFoePut('ck2', 'ck_hostess', 150, 1252, 0); "),
+    ("ckFoePut('ck2', 'c2_hustler', 382, 1222, Math.PI / 2);", "ckFoePut('ck2', 'ck_hostess', 382, 1222, Math.PI / 2);"),
+    ("ckFoePut('ck3', 'c2_hustler', 508, 1100, Math.PI / 2); ", "ckFoePut('ck3', 'ck_dealer', 508, 1100, Math.PI / 2); "),
+    ("  ckFoePut('ck3', 'c2_suit', 160, 800, 0);\n  ckFoePut('ck4'", "  ckFoePut('ck3', 'c2_suit', 160, 800, 0);\n  ckFoePut('ck3', 'ck_dealer', 220, 830, 0);\n  ckFoePut('ck4'"),
+    ("ckCel('npc_clerk_idle', 96, 1844, 0);", "ckCel('ck_hostess_idle', 96, 1844, 0);"),
+    ("life(ckCel('npc_clerk_idle', 106, 1848, 0), 'stand');", "life(ckCel('ck_hostess_idle', 106, 1848, 0), 'stand');"),
+    ("ckCel('npc_ramen_idle', 170, 172, 0);", "ckCel('ck_dealer_idle', 170, 172, 0);"),
+    ("life(ckCel('npc_ramen_idle', 122, 160, 0), 'stand');", "life(ckCel('ck_dealer_idle', 122, 160, 0), 'stand');"),
+]
+
 def main():
     root = os.getcwd(); a = sys.argv[1:]
     if '--art' in a:
         src = a[a.index('--art') + 1]
         for pre, spec in ART.items():
             for k in KINDS: shutil.copyfile(os.path.join(src, f'{spec}_{k}.webp'), os.path.join(root, 'world', f'{pre}_{k}.webp'))
+        for pre, (spec, ks) in STAFF.items():
+            for k in ks: shutil.copyfile(os.path.join(src, f'{spec}_{k}.webp'), os.path.join(root, 'world', f'{pre}_{k}.webp'))
         for pre, spec in ACT.items(): shutil.copyfile(os.path.join(src, f'{spec}_act.webp'), os.path.join(root, 'world', f'{pre}.webp'))
     p = os.path.join(root, 'index.html'); s = open(p, encoding='utf-8').read(); n0 = len(s)
     key = r'(?:%s)_[a-z0-9_]+' % '|'.join(IDS)
@@ -103,6 +126,7 @@ def main():
     assert s.count(ANCHOR) == 1, 'anchor'
     s = s.replace(ANCHOR, BLOCK + ANCHOR, 1)
     s = s.replace(JIN_A0, JIN_A1).replace(JIN_D0, JIN_D1)
+    for a, b in SWAPS: s = s.replace(a, b)
     open(p, 'w', encoding='utf-8').write(s)
     print(f'stripped {nstrip} old sheet entries, {nact} act sheets; {n0 - len(s)} bytes smaller')
     left = re.findall(r'"(%s)":"(?:data:|roster/)' % key, s)

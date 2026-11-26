@@ -25647,10 +25647,10 @@ function ckCast() {
   ckCel('npc_courier_idle', 300, 372, 0);
   ckCel('npc_patron_idle', 490, 490, 1);
   /* Bartender stands at the bar, head and chest clear of the counter. */
-  ckCel('npc_ramen_idle', 170, 172, 0);
+  ckCel('ck_dealer_idle', 170, 172, 0);
   /* Cashier stands in front of the cage, not inside the bars. */
   ckCel('npc_attendant_idle', 500, 378, 0);
-  ckCel('npc_clerk_idle', 96, 1844, 0);
+  ckCel('ck_hostess_idle', 96, 1844, 0);
   /* Door guard stands to the left of the STAFF sign, clear of the curtain and the step. */
   try { c2Npc('c2_suit', 188, 96, Math.PI / 2); } catch (e) {}
 }
@@ -25692,8 +25692,9 @@ function ckBackPeople() {
   ckClearFoes();
   ckFoePut('ck1', 'c2_suit', 200, 1400, Math.PI / 2);
   ckFoePut('ck2', 'c2_suit', 430, 1220, Math.PI);
-  ckFoePut('ck2', 'c2_hustler', 500, 1420, 0);
+  ckFoePut('ck2', 'ck_hostess', 500, 1420, 0);
   ckFoePut('ck3', 'c2_suit', 160, 800, 0);
+  ckFoePut('ck3', 'ck_dealer', 220, 830, 0);
   ckFoePut('ck4', 'c2_suit', 400, 640, Math.PI);
   ckFoePut('ck4', 'c2_suit', 150, 360, Math.PI / 2);
   ckFoePut('ck5', 'bouncer', 360, 540, Math.PI / 2);
@@ -29994,11 +29995,11 @@ ckCast = function () {
   life(ckCel('npc_courier_idle', 300, 392, 0), 'stand');
   life(ckCel('kenta_sit', 236, 612, 3), 'table'); life(ckCel('pony_sit', 364, 612, 3), 'table');
   /* bar: bartender behind the counter, two patrons on the near side; cashier in front of the cage; coat-check clerk */
-  life(ckCel('npc_ramen_idle', 122, 160, 0), 'stand');
+  life(ckCel('ck_dealer_idle', 122, 160, 0), 'stand');
   life(ckCel('mio_sit', 64, 282, 3), 'table'); life(ckCel('boy_sit', 116, 282, 3), 'table');
   life(ckCel('npc_attendant_idle', 484, 300, 0), 'stand');
   life(ckCel('npc_patron_idle', 440, 640, 1), 'stand');
-  life(ckCel('npc_clerk_idle', 106, 1848, 0), 'stand');
+  life(ckCel('ck_hostess_idle', 106, 1848, 0), 'stand');
   /* the STAFF door suit stands to the right of the door, clear of the curtain */
   try { c2Npc('c2_suit', 404, 128, Math.PI / 2); } catch (e) {}
 };
@@ -30024,9 +30025,9 @@ function ck2Life(dt) {
 ckBackPeople = function () {
   var S = ckSt(); ckRepair(); ckClearFoes();
   ckFoePut('ck1', 'c2_suit', 432, 1306, Math.PI / 2);          /* right inside the door */
-  ckFoePut('ck2', 'c2_hustler', 150, 1252, 0);                  /* "Offices. Both sides." */
-  ckFoePut('ck2', 'c2_hustler', 382, 1222, Math.PI / 2);
-  ckFoePut('ck3', 'c2_hustler', 508, 1100, Math.PI / 2);        /* the dealer behind the count table */
+  ckFoePut('ck2', 'ck_hostess', 150, 1252, 0);                  /* "Offices. Both sides." */
+  ckFoePut('ck2', 'ck_hostess', 382, 1222, Math.PI / 2);
+  ckFoePut('ck3', 'ck_dealer', 508, 1100, Math.PI / 2);        /* the dealer behind the count table */
   ckFoePut('ck3', 'c2_suit', 414, 1060, Math.PI / 2);           /* and the suit in the doorway */
   ckFoePut('ck4', 'c2_suit', 196, 896, Math.PI / 2);            /* lounge, by the vendors' files */
   ckFoePut('ck4', 'c2_suit', 446, 904, Math.PI / 2);
@@ -36665,6 +36666,13 @@ var GINKO = (function () {
   var warmed = 0; function warm() { if (warmed) return; warmed = 1; var L = []; Object.keys(GPRE).forEach(function (v) { L.push(GPRE[v] + '_map', GPRE[v] + '_walk', GPRE[v] + '_idle'); }); L.push('c2x_act_suitK1', 'c2x_act_suitK2', 'c2x_act_bosoK1', 'c2x_act_bosoK2'); var i = 0;
     (function next() { if (i >= L.length) { ev('world:gangs:warm'); return; } var im = new Image(); im.decoding = 'async'; im.onload = im.onerror = function () { (root.requestIdleCallback || setTimeout)(next, root.requestIdleCallback ? { timeout: 2000 } : 120); }; im.src = wUrl(L[i++]); })(); }
   setTimeout(function () { try { if (typeof c2On === 'function' && c2On()) (root.requestIdleCallback || setTimeout)(warm, root.requestIdleCallback ? { timeout: 4000 } : 600); } catch (e) {} }, 4000);
+  /* Club Kitsune staff: the Hostess (back-office pair + the coat check) and the Dealer (back-office count table + the bartender), their own
+   * looks instead of the Hustler / clerk / cook stand-ins */
+  wire('ck_dealer', 'ck_dealerK', C2K.c2_hustler || 1.15); NM.ck_dealer = 'Club Dealer';
+  ['walk', 'map', 'fig', 'fig_hurt', 'fig_down', 'idle'].forEach(function (s) { IMG['ck_hostess_' + s] = wUrl('ck_hostessK_' + s); });
+  SHC.ck_hostess_walk = 8; SHC.ck_hostess_idle = 4; SHR.ck_hostess_idle = 4; if (SHR.c2_punk_walk != null) SHR.ck_hostess_walk = SHR.c2_punk_walk; BW_IDS.ck_hostess = 1; C2K.ck_hostess = 1.08; PT.ck_hostess = 'ck_hostess_fig'; NM.ck_hostess = 'Club Hostess';
+  if (typeof ckChar === 'function') { var ckc0 = ckChar; ckChar = function (id, name, base) { var r = ckc0.apply(this, arguments); try { if (id === 'ck_hostess' || id === 'ck_dealer') { var CH = root.ENGINE && root.ENGINE.chars ? root.ENGINE.chars() : null;
+    if (CH) [id, id + 'g'].forEach(function (c) { if (CH[c]) { CH[c].fig = id + '_fig'; if (CH[c].art) CH[c].art = id + '_fig'; if (CH[c].alt) CH[c].alt = id + '_fig'; } }); PT[id] = id + '_fig'; } } catch (e) {} return r; }; }
   root.FFF_GANGS = { ids: Object.keys(GPRE).concat(['mb2_game', 'mb2_depot', 'bouncer', 'n13sb']), pre: GPRE, warm: warm, pick: pick };
   } catch (eG) { try { ev('world:gangs:err:init:' + (eG && eG.message)); } catch (e2) {} }
 })();

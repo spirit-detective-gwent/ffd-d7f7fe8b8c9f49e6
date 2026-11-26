@@ -11,6 +11,9 @@ K={'walk':dict(src='ext/c2_punk_walk.webp',cols=8,rows=4,cw=208,ch=272),
    'fig_hurt':dict(src='ext/c2_punk_fig_hurt.webp',cols=1,rows=1,faces=['front']),
    'lie':dict(src='ext/c2_punk_lie.webp',cols=2,rows=1,faces=['left'],rot=-1),
    'act':dict(src='ext/c2x_act_punk.webp',cols=4,rows=5,cw=208,ch=272,faces=['front','left','right','front','back']),
+   'hwalk':dict(src='ext/hina_walk.webp',cols=8,rows=4,cw=208,ch=272),
+   'hmap':dict(src='ext/hina_map.webp',cols=1,rows=1,faces=['front']),
+   'hfig':dict(src='ext/hina_fig.webp',cols=1,rows=1,faces=['front']),
    'fig_down':dict(src='ext/c2_punk_fig_down.webp',cols=1,rows=1,faces=['right'],rot=1)}
 async def main():
   specs=sys.argv[1].split(','); kinds=sys.argv[2].split(',') if len(sys.argv)>2 else ['walk','fig','map']

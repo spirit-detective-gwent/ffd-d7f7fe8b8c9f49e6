@@ -10,8 +10,8 @@ import asyncio, sys, json, re, http.server, socketserver, threading, functools
 from pathlib import Path
 from playwright.async_api import async_playwright
 root = Path(sys.argv[1]); PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 52310; QUICK = len(sys.argv) > 3
-NEWBASE = r'(c2_suitK[12]|c2_bosoK[12]|mb2_gameK|mb2_depotK|bouncerK|n13sbK)'
-WHO = {'c2_suit', 'c2_boso', 'bouncer', 'mb2_game', 'mb2_depot', 'n13sb'}
+NEWBASE = r'(c2_suitK[12]|c2_bosoK[12]|mb2_gameK|mb2_depotK|bouncerK|n13sbK|ck_hostessK|ck_dealerK)'
+WHO = {'c2_suit', 'c2_boso', 'bouncer', 'mb2_game', 'mb2_depot', 'n13sb', 'ck_hostess', 'ck_dealer'}
 NEWLOOP = re.compile(r'^c2x_act_(suit|boso)(K2)?$')
 SHEETS = '(walk|run|hurt|kn|lie|map|fig|idle|fig_hurt|fig_down)'
 class TS(socketserver.ThreadingTCPServer): allow_reuse_address = True; daemon_threads = True
@@ -66,10 +66,10 @@ def analyse(tag, els):
     return nb
 async def collect(pg, tag):
     els = await pg.evaluate("(()=>{var o=[];window.__S.els.forEach(function(r){o.push(r)});return o})()"); n = analyse(tag, els); print(f'  {tag}: {n} tracked, bad so far {len(BAD)}', flush=True); return n
-AUDIT = r"""(function(){ var bad=[], n=0, re=/^(bouncer|jin|masa|mb2_game|mb2_depot|c2_suit|c2_suitR|c2_suitg|c2_boso|c2_bosoD|c2_bosog|n13sb)_/;
+AUDIT = r"""(function(){ var bad=[], n=0, re=/^(bouncer|jin|masa|mb2_game|mb2_depot|c2_suit|c2_suitR|c2_suitg|c2_boso|c2_bosoD|c2_bosog|n13sb|ck_hostess|ck_dealer)_/;
   Object.keys(IMG).forEach(function(k){ if(!re.test(k)&&!/^c2x_act_(suit|boso)/.test(k)) return; n++; var v=String(IMG[k]);
-    if(!/^world\/(c2_suitK[12]|c2_bosoK[12]|mb2_gameK|mb2_depotK|bouncerK|n13sbK)_[a-z_]+\.webp|^world\/c2x_act_(suit|boso)K[12]\.webp/.test(v)) bad.push(k+' -> '+v.slice(0,60)); });
-  ['mb2_game','mb2_depot','bouncer','n13sb','c2_suit','c2_boso','c2_suitR','c2_bosoD'].forEach(function(id){ var p=PT[id]; if(!p||!IMG[p]||!/^world\/[a-z0-9_]+K[12]?_fig\.webp/.test(IMG[p])) bad.push('PT.'+id+' -> '+p+' '+String(IMG[p]).slice(0,40)); });
+    if(!/^world\/(c2_suitK[12]|c2_bosoK[12]|mb2_gameK|mb2_depotK|bouncerK|n13sbK|ck_hostessK|ck_dealerK)_[a-z_]+\.webp|^world\/c2x_act_(suit|boso)K[12]\.webp/.test(v)) bad.push(k+' -> '+v.slice(0,60)); });
+  ['mb2_game','mb2_depot','bouncer','n13sb','c2_suit','c2_boso','c2_suitR','c2_bosoD','ck_hostess','ck_dealer'].forEach(function(id){ var p=PT[id]; if(!p||!IMG[p]||!/^world\/[a-z0-9_]+K[12]?_fig\.webp/.test(IMG[p])) bad.push('PT.'+id+' -> '+p+' '+String(IMG[p]).slice(0,40)); });
   var C=(window.CARD_DATA||{}).chars||{}; ['mb2_game','mb2_depot','bouncer','c2_suit','c2_suitg','c2_boso','c2_bosog'].forEach(function(id){ var c=C[id]; if(!c) return; var f=c.fig; if(!f||!IMG[f]||!/^world\//.test(IMG[f])) bad.push('card '+id+' fig '+f+' '+String(IMG[f]).slice(0,40)); ['_hurt','_down'].forEach(function(x){ if(IMG[f+x]&&!/^world\//.test(IMG[f+x])) bad.push('card '+id+' '+f+x); }); });
   if(typeof PC_FIG!=='undefined') PC_FIG.forEach(function(k){ if(/^(bouncer|c2_suit|c2_boso|mb2_game|mb2_depot)_fig$/.test(k)) bad.push('PC_FIG '+k); });
   ['c2x_act_suit-src','c2x_act_boso-src'].forEach(function(i){ if(document.getElementById(i)) bad.push('embedded '+i); });
@@ -100,7 +100,7 @@ async def main():
             at = await ev(pg, "G38T.BORDER['%s'].at" % bd); await tele(pg, at[0], at[1] + 140, 4500)
             ok = await ev(pg, "g38tStart('%s','test')" % bd); await pg.evaluate(SAMPLER); await pg.wait_for_timeout(9000 if QUICK else 20000)
             await collect(pg, 'gang-fight %s started=%s' % (bd, ok))
-        ids = ['c2_suit'] * 4 + ['c2_boso'] * 4 + ['bouncer', 'mb2_game', 'mb2_depot', 'n13sb']
+        ids = ['c2_suit'] * 4 + ['c2_boso'] * 4 + ['bouncer', 'mb2_game', 'mb2_depot', 'n13sb', 'ck_dealer', 'ck_hostess']
         await tele(pg, 2180, 2000, 1500)
         await ev(pg, "(function(){var r=WORLD_API.W.ryo;window.__T=[];%s.forEach(function(id,i){var s=c2Npc(id,r.x-190+i*32,r.y-80,Math.PI/2);window.__T.push([id,s])})})()" % json.dumps(ids))
         await pg.evaluate(SAMPLER)
