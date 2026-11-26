@@ -12059,14 +12059,15 @@ function ambStingHandoff() { var g = W.ambSg, wv = g && g.wv, z; if (!g || !wv) 
   }
   function encCamRestore(ms, done) {
     if (encCamBossHold()) { ev('world:enccam:skip:boss'); if (done) done(); return; }
+    W._encCamTok = (W._encCamTok | 0) + 1; var tok = W._encCamTok;
     encCamUnlock();
     if (typeof ambStingRelease === 'function' && W.ambSg) {
-      ev('world:enccam:sting'); ambStingRelease(ms || 1800, function () { if (done) done(); }); return;
+      ev('world:enccam:sting'); ambStingRelease(ms || 1800, function () { if (tok === W._encCamTok && !encCamBossHold() && done) done(); }); return;
     }
     var H = encCamRead(), v = H.v, dur;
     try {
       if (root.FFF_SCAM && FFF_SCAM.st && FFF_SCAM.st.on && !FFF_SCAM.st.boss) {
-        ev('world:enccam:scam'); FFF_SCAM.reset(Math.max(ms || 0, 1800), function () { if (done) done(); }); return;
+        ev('world:enccam:scam'); FFF_SCAM.reset(Math.max(ms || 0, 1800), function () { if (tok === W._encCamTok && !encCamBossHold() && done) done(); }); return;
       }
     } catch (eS) {}
     if (!H.held || !v) { encCamClearStyle(v); ev('world:enccam:clear'); if (done) done(); return; }
@@ -12074,7 +12075,7 @@ function ambStingHandoff() { var g = W.ambSg, wv = g && g.wv, z; if (!g || !wv) 
     ev('world:enccam:ease:' + H.z.toFixed(2) + ':' + dur);
     if (!v.animate) { encCamClearStyle(v); if (done) done(); return; }
     var a = v.animate([{ scale: H.z, translate: H.x + 'px ' + H.y + 'px' }, { scale: 1, translate: '0px 0px' }], { duration: dur, easing: 'cubic-bezier(.45,.05,.2,1)', fill: 'forwards' });
-    var fin = function () { if (fin.d) return; fin.d = 1; try { a.cancel(); } catch (eF) {} encCamClearStyle(v); if (done) done(); };
+    var fin = function () { if (fin.d) return; fin.d = 1; if (tok !== W._encCamTok || encCamBossHold()) return; try { a.cancel(); } catch (eF) {} encCamClearStyle(v); if (done) done(); };
     a.onfinish = fin; setTimeout(fin, dur + 80);
   }
   root.FFF_ENC_CAM = { restore: encCamRestore, read: encCamRead, handoff: encCamHandoffIntoFight, unlock: encCamUnlock };
