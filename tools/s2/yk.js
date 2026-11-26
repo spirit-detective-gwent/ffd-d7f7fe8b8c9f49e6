@@ -756,5 +756,28 @@
     face2: { eyes: 'soft', brow: 'soft', jaw: 'round', mouth: 'smile', mouthQ: 0.78, mouthW: 0.36, browW: 1.15, age: 1, w: 0.98 },
     skin: '#e8b898', skinRe: 1, noScar: 1, clean: 1, handsCol: '#e8b48a' };
 
+
+  /* v6.5.63 seal2 phase 2: Minato-sō tenants. Club-staff / punk proportions. */
+  SPEC.hase = { base: 'punk', glove: 0, nozig: 1, noScar: 1, clean: 1, skinRe: 1, skin: '#c9956a',
+    bulk: 0.22, bagSide: 0.12, pal: { 3: tri('#1a1816'), 4: tri('#2a4270'), 5: tri('#efe6d8'), 6: tri('#243a66'), 7: tri('#1e2430') },
+    pockets: 0.09, closeV: 0.22, stubble: 1, hair: 'slick', hairCol: '#1a1816',
+    face2: { brow: 'flat', browW: 1.45, mouth: 'flat', jaw: 'wide', w: 1.04, eyeQ: 0.44, mouthQ: 0.7 },
+    handsCol: '#c9956a' };
+  SPEC.mori = { base: 'hina', pal: { 3: tri('#c8c4bc'), 4: tri('#6b3a58'), 5: tri('#efe6d4'), 6: tri('#5a324c'), 7: tri('#4a3040') },
+    armsCol: '#e0b090', handsCol: '#e0b090', hairDress: 0.22, pinCol: '#c8b070', knotCol: '#6b3a58',
+    hands: 1, flat: [4, 5, 6], bun: { orn: '#c8b070' }, hair: 'tight', tight: 1, hairCol: '#c8c4bc',
+    face2: { eyes: 'soft', brow: 'soft', jaw: 'round', mouth: 'smile', mouthQ: 0.7, mouthW: 0.34, browW: 1.1, age: 1, w: 0.96 },
+    skin: '#e4c4a4', skinRe: 1, noScar: 1, clean: 1 };
+  SPEC.nao = { base: 'hina', pal: { 3: tri('#2a221c'), 4: tri('#2a3d6e'), 5: tri('#f2eee8'), 6: tri('#24365e'), 7: tri('#1e2430') },
+    armsCol: '#e8b49a', handsCol: '#e8b49a', hairDress: 0.24, hands: 1, flat: [4, 5, 6],
+    hairCol: '#2a221c', hairHi: '#4a3a32',
+    face2: { eyes: 'soft', brow: 'soft', jaw: 'pointed', mouth: 'flat', mouthQ: 0.55, mouthW: 0.3, browW: 1.05, w: 0.94, eyeQ: 0.4, lips: '#8a4a4a' },
+    skin: '#f0c8b0', skinRe: 1, noScar: 1, clean: 1 };
+  SPEC.haru = { base: 'hina', pal: { 3: tri('#1a1410'), 4: tri('#d4a026'), 5: tri('#f4efe6'), 6: tri('#c49220'), 7: tri('#5a3a28') },
+    armsCol: '#f0c4a0', handsCol: '#f0c4a0', hairDress: 0.22, hands: 1, flat: [4, 5, 6],
+    hair: 'bob', tight: 1, part: 0, hairPin: '#e8c04a', hairCol: '#1a1410', hairHi: '#3a2a22',
+    face2: { eyes: 'soft', brow: 'soft', jaw: 'round', mouth: 'smile', mouthQ: 0.82, mouthW: 0.32, browW: 0.95, w: 0.9, eyeQ: 0.34, lash: 1, lips: '#c47878' },
+    skin: '#f2c8ae', skinRe: 1, noScar: 1, clean: 1 };
+
   root.FFF_YK = { SPEC: SPEC, paintCell: paintCell, paintSheet: paintSheet, tri: tri };
 })(window);
