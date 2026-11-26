@@ -120,7 +120,8 @@ async def t2(pg):
     # each option, each non-base choice
     dres = [(v, (await build(pg, diff=v))['foeStr']) for v in ['weak', 'normal', 'strong', 'max']]
     ok('T2 diff weak/strong/max/normal', all(a == b for a, b in dres), dres)
-    ok('T2 Classic preset preselects the current Bond path (not a Keep button)', await ev(pg, "FFF_NG.base().bond")==='strategic' and await ev(pg, "FFF_NG.fresh().bond")==='reset')
+    baseB = await ev(pg, "FFF_NG.base().bond"); freshB = await ev(pg, "FFF_NG.fresh().bond")
+    ok('T2 Classic preset preselects the current Bond path (not a Keep button)', baseB=='strategic' and freshB=='reset', (baseB, freshB))
     for v in ['fierce', 'strategic', 'balanced']:
         b = await build(pg, bond=v); ok(f'T2 bond {v}', b['bond']['path'] == v and b['bond']['px'] == 500)
     b = await build(pg, bond='reset'); ok('T2 bond Reset: path and points cleared, so Ch1 can choose again', (b['bond'] or {}).get('path') in (None, '') and (b['bond'] or {}).get('px', 0) == 0 and (b['bond'] or {}).get('picks') in (None, {}) and not (b['bond'] or {}).get('lock'), b['bond'])
