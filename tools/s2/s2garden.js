@@ -62,7 +62,13 @@
     return h;
   }
 
+  /* enter() is what calls load(). Title boot runs first and SAVE is still fresh();
+   * writing the autosave here would wipe a cleared run and lock New Game+ on the title. */
+  function saveReady() {
+    try { return !!(typeof built !== 'undefined' && built); } catch (e) { return false; }
+  }
   function migrateGarden() {
+    if (!saveReady()) return;
     var S = cyc();
     if (S.gardenMig) return;
     S.gardenMig = 1;
@@ -687,6 +693,15 @@
       c2Go = function (k, at) {
         var r = go0.apply(this, arguments);
         if (k === 'clinic') setTimeout(gardenPop, 0);
+        return r;
+      };
+    }
+    if (typeof enter === 'function' && !G.enterWrap) {
+      G.enterWrap = 1;
+      var enter0 = enter;
+      enter = function () {
+        var r = enter0.apply(this, arguments);
+        try { migrateGarden(); } catch (eE) {}
         return r;
       };
     }

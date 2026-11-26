@@ -10258,7 +10258,7 @@ var HITEM = { candy: { n: 'Candy bar', pct: 0.1, ic: '\ud83c\udf6b', rank: 1 }, 
 var W = { guards: [], paused: false, run: false, lastTap: null, dust: 0, on: false, S: 0.7, cam: { x: 0, y: 0 }, vw: 0, vh: 0, tiles: {}, path: [], trail: [], walked: 0, rollAcc: 0, cool: 0, busy: false, foes: [], roam: [], roamT: SP.roamFirst, dlg: null, t: 0, safe: 0 };
 function freshBinds() { try { return ST.set.binds ? JSON.parse(JSON.stringify(ST.set.binds)) : null; } catch (e) { return null; } }
 function freshPad() { try { return ST.set.padBinds ? JSON.parse(JSON.stringify(ST.set.padBinds)) : null; } catch (e) { return null; } }
-function fresh() { return { crewDown: {} /* fix: beaten Ch1 crews stay down */, binds: freshBinds() /* v5.3.1 mouse + keyboard layout, per save */, padBinds: freshPad() /* v5.3.1 controller layout, per save */, padRev: (ST.set && ST.set.padRev) || 611, rumble: (ST.set && ST.set.rumble) || 'normal', autoRun: !!(ST.set && ST.set.autoRun) /* v5.3.1 */, audioMode: (ST.set && ST.set.audioMode) || 'auto' /* v5.3.1 Hi-Fi on PC / iPad */, pcScale: (ST.set && ST.set.pcScale) || '150' /* v5.3.1 PC scale, per save */, txtSize: (ST.set && ST.set.txtSize) || 'md' /* v6.0.1 Text size, per save */, musVol: (ST.set && ST.set.musVol) || 100, sfxVol: (ST.set && ST.set.sfxVol) || 100, shake: (ST.set && ST.set.shake) || 'normal', flash: (ST.set && ST.set.flash) || 'normal', deadz: (ST.set && ST.set.deadz) || 'normal' /* v6.1 comfort */, c2pre: 0, ngp: 0, journalLog: null, crewRep: null, qTrack: '', qTrackPick: 0 /* v6.5.13: listed so load() keeps them. New Game Plus, its journal and crew rep, and the tracked quest were dropped on every reload */, bond: null /* v4.13 Bond (global, both fighters) */, x: WD.start[0], y: WD.start[1], items: 0, wins: 0, losses: 0, intro: 0, gouki: 0, dbl: 0, gkPh: 0, gkRevives: 0, gkPhp: null, gkPsp: null, hp: MAXHP, sp: 0,
+function fresh() { return { crewDown: {} /* fix: beaten Ch1 crews stay down */, binds: freshBinds() /* v5.3.1 mouse + keyboard layout, per save */, padBinds: freshPad() /* v5.3.1 controller layout, per save */, padRev: (ST.set && ST.set.padRev) || 611, rumble: (ST.set && ST.set.rumble) || 'normal', autoRun: !!(ST.set && ST.set.autoRun) /* v5.3.1 */, audioMode: (ST.set && ST.set.audioMode) || 'auto' /* v5.3.1 Hi-Fi on PC / iPad */, pcScale: (ST.set && ST.set.pcScale) || '150' /* v5.3.1 PC scale, per save */, txtSize: (ST.set && ST.set.txtSize) || 'md' /* v6.0.1 Text size, per save */, musVol: (ST.set && ST.set.musVol) || 100, sfxVol: (ST.set && ST.set.sfxVol) || 100, shake: (ST.set && ST.set.shake) || 'normal', flash: (ST.set && ST.set.flash) || 'normal', deadz: (ST.set && ST.set.deadz) || 'normal' /* v6.1 comfort */, c2pre: 0, ngp: 0, journalLog: null, crewRep: null, qTrack: '', qTrackPick: 0 /* v6.5.13: listed so load() keeps them. New Game Plus, its journal and crew rep, and the tracked quest were dropped on every reload */, mealEdge: null /* v6563 GGD-50: Clean plate / sip after a counter meal; listed so load() keeps it; fresh in NG+ */, bond: null /* v4.13 Bond (global, both fighters) */, x: WD.start[0], y: WD.start[1], items: 0, wins: 0, losses: 0, intro: 0, gouki: 0, dbl: 0, gkPh: 0, gkRevives: 0, gkPhp: null, gkPsp: null, hp: MAXHP, sp: 0,
   deck: null, own: null, cards: null, nk: 0, lv: {}, lp: {}, sigLv: 0, chapter: 1, ch1: 0, ds: 0, sort: 'rarity', freeT: 0, patchT: 0, patchMig: 0, autoAdv: 0, hint: 0, soda: {}, sodaOn: 0, sodaK: '', heal: [], fights: 0, vm: vmFull(),
   act: 'ryo', chars: {}, mb: {}, sc: {}, cx: {}, int: null, dg: {}, gear: null, gseen: null, shops: {}, ch2: 0 /* v5.2 vendors' stock, Chapter Two cleared */, qs: null, qa: undefined, saved: null, sq: null, dgRf: null, qOff: null, stuT: null /* v5.3 (t1179u / t1180u / t1185u): listed here so load() / slotLoad() keep them (null / undefined = same meaning as missing) */, books: { common: 0, uncommon: 0 }, herbs: { leaf: 0, ginger: 0, gauze: 0 } /* v5.3 Skill Books, the herb pouch */, svV: 413, ess: 0, cur: 431, carry: '', seal: 0, evoLesson: 0, genjiTeach: 0 /* v6563: Genji's shadow lesson has been shown once; listed here so load() / slotLoad() keep it */, enhIntro: 0, c2hp: 0, c2acc: '', c2own: null, c2les: null, c2kos: 0, n9craft: 0, phBag: 0, foeStr: (ST.set && (ST.set.foeStr === 'weak' || ST.set.foeStr === 'strong' || ST.set.foeStr === 'max')) ? ST.set.foeStr : 'normal', ambRate: (ST.set && (ST.set.ambRate === 'few' || ST.set.ambRate === 'more')) ? ST.set.ambRate : 'normal', itemScarce: (ST.set && ST.set.itemScarce === 'scarce') ? 'scarce' : 'normal', itemSeed: 0, xpMode: (ST.set && ST.set.xpMode === 'grinder') ? 'grinder' : 'normal' /* v6.5.15 */, craft: {}, find: {}, cxNew: {}, cxItem: {}, cxFood: {}, bx: {}, sit: {}, wkit: {}, gsk: null /* v6.5.40 gang opener moves (batch 9) */ }; } /* v6.5.32: wkit looted flags kept on load */ // v4.31 ess = Spirit Essence (save key stays ess); items = yen; seal = Guardian Seals held; evoLesson = Genji's Common→Uncommon technique, unlocked once
 /* v4.3: per-character save fields. The top-level ones always belong to the ACTIVE fighter; switching parks them in SAVE.chars. */
@@ -48840,7 +48840,13 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     return h;
   }
 
+  /* enter() is what calls load(). Title boot runs first and SAVE is still fresh();
+   * writing the autosave here would wipe a cleared run and lock New Game+ on the title. */
+  function saveReady() {
+    try { return !!(typeof built !== 'undefined' && built); } catch (e) { return false; }
+  }
   function migrateGarden() {
+    if (!saveReady()) return;
     var S = cyc();
     if (S.gardenMig) return;
     S.gardenMig = 1;
@@ -49465,6 +49471,15 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       c2Go = function (k, at) {
         var r = go0.apply(this, arguments);
         if (k === 'clinic') setTimeout(gardenPop, 0);
+        return r;
+      };
+    }
+    if (typeof enter === 'function' && !G.enterWrap) {
+      G.enterWrap = 1;
+      var enter0 = enter;
+      enter = function () {
+        var r = enter0.apply(this, arguments);
+        try { migrateGarden(); } catch (eE) {}
         return r;
       };
     }
