@@ -38715,7 +38715,7 @@ function camPan(to, o, done) {
 /* v6.5.60 FFF_NQ (Nails questline, phase 2): the Punks route from Lookout Corner to Gōda's first seal.
  * Six quests (Lookout Corner rework, Hold the West Street, Cold Water, Wet Paint, The Door Man, Gōda's Seal), the street
  * layout moves (bathhouse to the Fox Mart slot by the station, the herbalist into the old Kitsune-no-Yu building, Fox Mart
- * east to the old Kampo slot), the Lantern Alley informant + his two gray-coat men, Ban's lantern post past Lucky 7,
+ * east to the old Kampo slot), the Lantern Alley informant, Ban's lantern post past Lucky 7,
  * four new cel interiors drawn in-engine once per entry (Kitsune Udon, Machi Motors, the Kitsune Hotel lobby, the
  * bathhouse walk-through), Nails' price (20% off) on won blocks, the Ginko stall openings, and the turf-gain map sting.
  * Wraps only; every hook falls through outside Chapter 2. No always-running loops: frame work rides c2Frame. */
@@ -38987,8 +38987,11 @@ function camPan(to, o, done) {
   }
   function facades2() { facades(); if (on() && inTown()) propSwap(); }
   NQ.facades = facades2;
-  /* ================= Lantern Alley: the informant's two gray-coat men, Ban's lantern post, the one way east ================= */
-  var INF = [4850, 2690], GRAYS = [[4792, 2650, Math.PI], [4800, 2734, Math.PI]], POLE = (typeof V640_POLE !== 'undefined' && V640_POLE) || [3300, 2668];
+  /* ================= Lantern Alley (Ban's lantern post, the one way east) + the two gray-coat men at Central Tower ================= */
+  var INF = [4850, 2690], POLE = (typeof V640_POLE !== 'undefined' && V640_POLE) || [3300, 2668];
+  /* placeholder: the two gray coats stand watch at Central Tower's ground-floor entrance (Kagerō's building). The informant stays in Lantern Alley. Interior path + Ban comes later. */
+  var TW = (C2W.locked && C2W.locked.tower && C2W.locked.tower.at) || [3000, 3720];
+  var GRAYS = [[TW[0] - 140, TW[1] - 24, -Math.PI / 2], [TW[0] + 140, TW[1] - 24, -Math.PI / 2]];
   var LN = { grays: [] };
   function infHere() { var e = E(); return !e.ch2done; }
   function lanternPost() { /* a wooden post with a red paper lantern, Ban leans on it */
@@ -39014,7 +39017,7 @@ function camPan(to, o, done) {
   }
   var GRAY_SAY = [
     [['c2_gray', '{quiet}Keep walking.{/quiet}']],
-    [['c2_gray', '\u2026'], ['aoi', '{quiet}Same coat as the man Genji talked about.{/quiet}'], ['ryo', '{quiet}Then why\u2019s he standing guard on a guy who talks?{/quiet}']]
+    [['c2_gray', '\u2026'], ['aoi', '{quiet}Same coat as the man Genji talked about.{/quiet}'], ['ryo', '{quiet}Then why\u2019s he standing guard on a locked tower?{/quiet}']]
   ];
   /* the one way east: before Ban's third knockout, the lane past the Lucky 7 crossing turns you back */
   var CROSS = [3470, 2610, 3730, 2780];
