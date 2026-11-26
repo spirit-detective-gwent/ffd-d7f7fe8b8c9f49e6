@@ -13491,7 +13491,7 @@ function dlgTopSlot(d) {
   var hb = 0;
   try { if (hud) hb = hud.getBoundingClientRect().bottom; } catch (eH) {}
   var slot = d.getBoundingClientRect();
-  var top = wr.top + Math.max(12, Math.round((hb || (wr.top + 52)) + 8 - wr.top));
+  var top = wr.top + Math.max(12, Math.round((hb || (wr.top + 52)) + 8 - wr.top + dlgHangH(d)));
   return { left: slot.left, right: slot.right, width: slot.width, height: slot.height, top: top, bottom: top + slot.height };
 }
 function dlgPickSide(d, who) {
@@ -13506,13 +13506,20 @@ function dlgPickSide(d, who) {
   if (botBad && topBad) return (ot.cover < ob.cover) ? 'top' : 'bottom';
   return 'bottom';
 }
+function dlgHangH(d) {
+  /* hanging painted bust is 150px + 4px gap above .sh (see #wdlg.scene .sh.pt-hang .pt2).
+   * Use the hanging size whenever a bust will hang, even before pt-up is classed. */
+  if (!d || !d.querySelector) return 0;
+  if (!(d.classList.contains('pt-up') || d.querySelector('.sh.pt-hang'))) return 0;
+  return 154;
+}
 function dlgDockTop(d) {
   var world = document.getElementById('world') || d.parentNode;
   var wr = world.getBoundingClientRect();
   var hud = document.getElementById('wstat') || document.getElementById('whud');
   var hb = 0;
   try { if (hud) hb = hud.getBoundingClientRect().bottom; } catch (eH) {}
-  var topPx = Math.max(12, Math.round((hb || (wr.top + 52)) + 8 - wr.top));
+  var topPx = Math.max(12, Math.round((hb || (wr.top + 52)) + 8 - wr.top + dlgHangH(d)));
   d.classList.add('dock-top');
   d.style.top = topPx + 'px';
   d.style.bottom = 'auto';
@@ -13855,8 +13862,11 @@ function ptFace(who, name, fig) {
 }
 function ptLift(d) {
   d = d || (typeof $ === 'function' ? $('#wdlg') : document.getElementById('wdlg'));
-  if (d && d.querySelector && d.querySelector('.sh.pt-hang')) d.classList.add('pt-up');
-  else if (d && d.classList) d.classList.remove('pt-up');
+  if (d && d.querySelector && d.querySelector('.sh.pt-hang')) {
+    d.classList.add('pt-up');
+    /* same turn as dialog() + dlgPlace, so the reserved gap is in place before first paint */
+    if (d.classList.contains('dock-top') && typeof dlgDockTop === 'function') dlgDockTop(d);
+  } else if (d && d.classList) d.classList.remove('pt-up');
 }
 function ptReduced() { try { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (eR) { return false; } }
 function ptSlam(kind) {
