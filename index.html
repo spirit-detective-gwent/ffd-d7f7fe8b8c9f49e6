@@ -21981,7 +21981,7 @@ function phItems() {
   if (!heals.length && !sodaN()) h += '<p class="dim">No items yet.</p>';
   heals.forEach(function (k) {
     var H = HITEM[k];
-    h += '<div class="item"><span><b>' + H.ic + ' ' + phEsc(H.n) + '</b><small>Restores ' + Math.round(H.pct * 100) + '% max HP. Use it from the heal slots on the map.</small></span><em class="ct">x' + st[k] + '</em></div>';
+    h += '<button type="button" class="item' + (W.phSel === k ? ' on' : '') + '" data-a="isel" data-k="' + k + '"><span><b>' + H.ic + ' ' + phEsc(H.n) + '</b><small>Restores ' + Math.round(H.pct * 100) + '% max HP' + (k === 'candy' ? ', full HP on a mini-game win' : '') + '. Used from the bag.</small></span><em class="ct">x' + st[k] + '</em></button>'; /* v6.5.63-eat */
   });
   Object.keys(SODAS).forEach(function (k) {
     if (!(SAVE.soda[k] > 0)) return;
@@ -22010,6 +22010,10 @@ function phUseBar() {
     var sk = k.slice(5), dis = !(SAVE.soda[sk] > 0) || SAVE.sodaOn;
     return '<button type="button" class="ph-use" data-a="drink" data-k="' + sk + '"' + (dis ? ' disabled' : '') + '>' + (SAVE.sodaOn ? 'A soda is already working' : 'Drink soda') + '</button>';
   }
+  if (HITEM[k]) {
+    var hdis = !(phStacks()[k] > 0) || SAVE.hp >= MAXHP;
+    return '<button type="button" class="ph-use" data-a="use" data-k="' + k + '"' + (hdis ? ' disabled' : '') + '>' + (SAVE.hp >= MAXHP ? 'HP is full' : 'Use ' + HITEM[k].n) + '</button>';
+  } /* v6.5.63-eat */
   return '';
 }
 function phCraftMax(need) { var m = 99; need.forEach(function (n) { m = Math.min(m, Math.floor(phMatN(n[0]) / n[1])); }); return m; }
