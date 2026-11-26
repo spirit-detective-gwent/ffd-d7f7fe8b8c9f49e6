@@ -425,8 +425,9 @@ async def main():
 
         flank = await ev(pg, """(function(){
           var P3=root.FFF_S2P3, st=c2S();
+          st.e.n13r=''; /* skip test above leaves n13r=dep, which hides the flank pin */
           st.q.cq2_s2_boat=0; P3.setStg('open');
-          SAVE.bond=SAVE.bond||{}; SAVE.bond.path='strategic';
+          SAVE.bond=SAVE.bond||{}; SAVE.bond.path='strategic'; SAVE.bond.lock=1;
           try { STORY.ensure(SAVE); } catch(e){}
           var t = P3.s2Tgt && P3.s2Tgt();
           /* restore the closed chain so Phase 4 tests still see a finished boat quest */
