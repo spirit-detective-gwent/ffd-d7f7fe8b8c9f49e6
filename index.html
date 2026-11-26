@@ -25647,9 +25647,9 @@ function ckCast() {
   ckCel('npc_courier_idle', 300, 372, 0);
   ckCel('npc_patron_idle', 490, 490, 1);
   /* Bartender stands at the bar, head and chest clear of the counter. */
-  ckCel('ck_dealer_idle', 170, 172, 0);
+  ckCel('ck_bartender_idle', 170, 172, 0);
   /* Cashier stands in front of the cage, not inside the bars. */
-  ckCel('npc_attendant_idle', 500, 378, 0);
+  ckCel('ck_cashier_idle', 500, 378, 0);
   ckCel('ck_hostess_idle', 96, 1844, 0);
   /* Door guard stands to the left of the STAFF sign, clear of the curtain and the step. */
   try { c2Npc('c2_suit', 188, 96, Math.PI / 2); } catch (e) {}
@@ -29995,9 +29995,9 @@ ckCast = function () {
   life(ckCel('npc_courier_idle', 300, 392, 0), 'stand');
   life(ckCel('kenta_sit', 236, 612, 3), 'table'); life(ckCel('pony_sit', 364, 612, 3), 'table');
   /* bar: bartender behind the counter, two patrons on the near side; cashier in front of the cage; coat-check clerk */
-  life(ckCel('ck_dealer_idle', 122, 160, 0), 'stand');
+  life(ckCel('ck_bartender_idle', 122, 160, 0), 'stand');
   life(ckCel('mio_sit', 64, 282, 3), 'table'); life(ckCel('boy_sit', 116, 282, 3), 'table');
-  life(ckCel('npc_attendant_idle', 484, 300, 0), 'stand');
+  life(ckCel('ck_cashier_idle', 484, 300, 0), 'stand');
   life(ckCel('npc_patron_idle', 440, 640, 1), 'stand');
   life(ckCel('ck_hostess_idle', 106, 1848, 0), 'stand');
   /* the STAFF door suit stands to the right of the door, clear of the curtain */
@@ -36672,10 +36672,14 @@ var GINKO = (function () {
   setTimeout(function () { try { if (typeof c2On === 'function' && c2On()) (root.requestIdleCallback || setTimeout)(warm, root.requestIdleCallback ? { timeout: 4000 } : 600); } catch (e) {} }, 4000);
   /* Club Kitsune staff: the Hostess (back-office pair + the coat check) and the Dealer (back-office count table + the bartender), their own
    * looks instead of the Hustler / clerk / cook stand-ins */
-  wire('ck_dealer', 'ck_dealerK', C2K.c2_hustler || 1.15); NM.ck_dealer = 'Club Dealer';
+  wire('ck_dealer', 'ck_dealerK', C2K.c2_hustler || 1.15); NM.ck_dealer = NM.ck_dealer || 'Club Dealer';
+  /* the bartender: his own figure behind the bar, drawn to the same portrait as the Dealer (ckdealer_neutral: vest, red bow tie, armband, fox pin) */
+  wire('ck_bartender', 'ck_dealerK', C2K.c2_hustler || 1.15); NM.ck_bartender = NM.ck_bartender || 'Club Bartender';
+  /* the chip-cage cashier (ckcashier_neutral: black bob, gold hairpin, white shirt, black waistcoat, fox pin, dark red tie) */
+  wire('ck_cashier', 'ck_cashierK', C2K.c2_hustler || 1.15); NM.ck_cashier = NM.ck_cashier || 'Cage Cashier';
   ['walk', 'map', 'fig', 'fig_hurt', 'fig_down', 'idle'].forEach(function (s) { IMG['ck_hostess_' + s] = wUrl('ck_hostessK_' + s); });
   SHC.ck_hostess_walk = 8; SHC.ck_hostess_idle = 4; SHR.ck_hostess_idle = 4; if (SHR.c2_punk_walk != null) SHR.ck_hostess_walk = SHR.c2_punk_walk; BW_IDS.ck_hostess = 1; C2K.ck_hostess = 1.08; PT.ck_hostess = 'ck_hostess_fig'; NM.ck_hostess = 'Club Hostess';
-  if (typeof ckChar === 'function') { var ckc0 = ckChar; ckChar = function (id, name, base) { var r = ckc0.apply(this, arguments); try { if (id === 'ck_hostess' || id === 'ck_dealer') { var CH = root.ENGINE && root.ENGINE.chars ? root.ENGINE.chars() : null;
+  if (typeof ckChar === 'function') { var ckc0 = ckChar; ckChar = function (id, name, base) { var r = ckc0.apply(this, arguments); try { if (id === 'ck_hostess' || id === 'ck_dealer' || id === 'ck_bartender' || id === 'ck_cashier') { var CH = root.ENGINE && root.ENGINE.chars ? root.ENGINE.chars() : null;
     if (CH) [id, id + 'g'].forEach(function (c) { if (CH[c]) { CH[c].fig = id + '_fig'; if (CH[c].art) CH[c].art = id + '_fig'; if (CH[c].alt) CH[c].alt = id + '_fig'; } }); PT[id] = id + '_fig'; } } catch (e) {} return r; }; }
   root.FFF_GANGS = { ids: Object.keys(GPRE).concat(['mb2_game', 'mb2_depot', 'bouncer', 'n13sb']), pre: GPRE, warm: warm, pick: pick };
   } catch (eG) { try { ev('world:gangs:err:init:' + (eG && eG.message)); } catch (e2) {} }

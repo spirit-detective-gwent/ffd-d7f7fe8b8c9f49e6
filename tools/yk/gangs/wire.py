@@ -17,7 +17,7 @@ KINDS = ['walk', 'run', 'hurt', 'kn', 'lie', 'map', 'fig', 'fig_hurt', 'fig_down
 ART = {'mb2_gameK': 'ksJin2', 'bouncerK': 'ksBouncer2', 'c2_suitK1': 'ksSuit2', 'c2_suitK2': 'ksRun2', 'n13sbK': 'sabu2',
        'mb2_depotK': 'dpMasa2', 'c2_bosoK1': 'dpRider2', 'c2_bosoK2': 'dpDock2'}
 # club staff (portraits ckhostess_neutral / ckdealer_neutral): the hostess is on the Hina rig (no run / hurt / kneel / lie sheets; she never needs them)
-STAFF = {'ck_hostessK': ('ckHostess', ['walk', 'map', 'fig', 'fig_hurt', 'fig_down', 'idle']), 'ck_dealerK': ('ckDealer', KINDS)}
+STAFF = {'ck_hostessK': ('ckHostess', ['walk', 'map', 'fig', 'fig_hurt', 'fig_down', 'idle']), 'ck_dealerK': ('ckDealer', KINDS), 'ck_cashierK': ('ckCashier', KINDS)}
 ACT = {'c2x_act_suitK1': 'ksSuit2', 'c2x_act_suitK2': 'ksRun2', 'c2x_act_bosoK1': 'dpRider2', 'c2x_act_bosoK2': 'dpDock2'}
 B0, B1 = '/* FFF_GANGS begin */', '/* FFF_GANGS end */'
 ANCHOR = '/* v6.5.51 (t3039u'
@@ -76,10 +76,14 @@ BLOCK = B0 + r"""
   setTimeout(function () { try { if (typeof c2On === 'function' && c2On()) (root.requestIdleCallback || setTimeout)(warm, root.requestIdleCallback ? { timeout: 4000 } : 600); } catch (e) {} }, 4000);
   /* Club Kitsune staff: the Hostess (back-office pair + the coat check) and the Dealer (back-office count table + the bartender), their own
    * looks instead of the Hustler / clerk / cook stand-ins */
-  wire('ck_dealer', 'ck_dealerK', C2K.c2_hustler || 1.15); NM.ck_dealer = 'Club Dealer';
+  wire('ck_dealer', 'ck_dealerK', C2K.c2_hustler || 1.15); NM.ck_dealer = NM.ck_dealer || 'Club Dealer';
+  /* the bartender: his own figure behind the bar, drawn to the same portrait as the Dealer (ckdealer_neutral: vest, red bow tie, armband, fox pin) */
+  wire('ck_bartender', 'ck_dealerK', C2K.c2_hustler || 1.15); NM.ck_bartender = NM.ck_bartender || 'Club Bartender';
+  /* the chip-cage cashier (ckcashier_neutral: black bob, gold hairpin, white shirt, black waistcoat, fox pin, dark red tie) */
+  wire('ck_cashier', 'ck_cashierK', C2K.c2_hustler || 1.15); NM.ck_cashier = NM.ck_cashier || 'Cage Cashier';
   ['walk', 'map', 'fig', 'fig_hurt', 'fig_down', 'idle'].forEach(function (s) { IMG['ck_hostess_' + s] = wUrl('ck_hostessK_' + s); });
   SHC.ck_hostess_walk = 8; SHC.ck_hostess_idle = 4; SHR.ck_hostess_idle = 4; if (SHR.c2_punk_walk != null) SHR.ck_hostess_walk = SHR.c2_punk_walk; BW_IDS.ck_hostess = 1; C2K.ck_hostess = 1.08; PT.ck_hostess = 'ck_hostess_fig'; NM.ck_hostess = 'Club Hostess';
-  if (typeof ckChar === 'function') { var ckc0 = ckChar; ckChar = function (id, name, base) { var r = ckc0.apply(this, arguments); try { if (id === 'ck_hostess' || id === 'ck_dealer') { var CH = root.ENGINE && root.ENGINE.chars ? root.ENGINE.chars() : null;
+  if (typeof ckChar === 'function') { var ckc0 = ckChar; ckChar = function (id, name, base) { var r = ckc0.apply(this, arguments); try { if (id === 'ck_hostess' || id === 'ck_dealer' || id === 'ck_bartender' || id === 'ck_cashier') { var CH = root.ENGINE && root.ENGINE.chars ? root.ENGINE.chars() : null;
     if (CH) [id, id + 'g'].forEach(function (c) { if (CH[c]) { CH[c].fig = id + '_fig'; if (CH[c].art) CH[c].art = id + '_fig'; if (CH[c].alt) CH[c].alt = id + '_fig'; } }); PT[id] = id + '_fig'; } } catch (e) {} return r; }; }
   root.FFF_GANGS = { ids: Object.keys(GPRE).concat(['mb2_game', 'mb2_depot', 'bouncer', 'n13sb']), pre: GPRE, warm: warm, pick: pick };
   } catch (eG) { try { ev('world:gangs:err:init:' + (eG && eG.message)); } catch (e2) {} }
@@ -99,8 +103,12 @@ SWAPS = [  # the club's stand-ins -> the club staff
     ("  ckFoePut('ck3', 'c2_suit', 160, 800, 0);\n  ckFoePut('ck4'", "  ckFoePut('ck3', 'c2_suit', 160, 800, 0);\n  ckFoePut('ck3', 'ck_dealer', 220, 830, 0);\n  ckFoePut('ck4'"),
     ("ckCel('npc_clerk_idle', 96, 1844, 0);", "ckCel('ck_hostess_idle', 96, 1844, 0);"),
     ("life(ckCel('npc_clerk_idle', 106, 1848, 0), 'stand');", "life(ckCel('ck_hostess_idle', 106, 1848, 0), 'stand');"),
-    ("ckCel('npc_ramen_idle', 170, 172, 0);", "ckCel('ck_dealer_idle', 170, 172, 0);"),
-    ("life(ckCel('npc_ramen_idle', 122, 160, 0), 'stand');", "life(ckCel('ck_dealer_idle', 122, 160, 0), 'stand');"),
+    ("ckCel('npc_ramen_idle', 170, 172, 0);", "ckCel('ck_bartender_idle', 170, 172, 0);"),
+    ("life(ckCel('npc_ramen_idle', 122, 160, 0), 'stand');", "life(ckCel('ck_bartender_idle', 122, 160, 0), 'stand');"),
+    ("ckCel('ck_dealer_idle', 170, 172, 0);", "ckCel('ck_bartender_idle', 170, 172, 0);"),
+    ("life(ckCel('ck_dealer_idle', 122, 160, 0), 'stand');", "life(ckCel('ck_bartender_idle', 122, 160, 0), 'stand');"),
+    ("ckCel('npc_attendant_idle', 500, 378, 0);", "ckCel('ck_cashier_idle', 500, 378, 0);"),
+    ("life(ckCel('npc_attendant_idle', 484, 300, 0), 'stand');", "life(ckCel('ck_cashier_idle', 484, 300, 0), 'stand');"),
 ]
 
 def main():
