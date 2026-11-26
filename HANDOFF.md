@@ -11,6 +11,58 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
+### 2026-11-26 — executor (Grok Bot) — v6.5.63 ch2-bond (not published, not merged)
+Erik previewed c2_goda and asked for: a staged Sato/Tome-baa carry-off (keep the quick cut to the seal), the bondAsk nameplate to say Aoi, a proper kneeling Gōda sprite (the Y sheet’s side head was split), and the post-seal pointer to go east to Masa / Wagashi row (Club Kitsune is optional, Jin’s ground). Seal 2 is Masa. FFF_BUILD was not bumped.
+
+What changed (tip will be this branch HEAD):
+- **Carry-off (Fierce):** `stageCarryIn` / `stageCarryOut` in the CH2BOND module. Old Sato (`nq_bandai`) and Tome-baa (`nq_tome`) enter from the boiler corridor (~780, 500), lift the lying sprite (it tracks between them), and walk him back out of the held camera frame. No zoom-out (`FFF_SCAM.st.keep`). Then the slip / rumor / Masa lines, then the existing `c2LmSeal` pry (the transition Erik liked).
+- **bondAsk:** `ask()` now treats a question headed “Aoi …” as Aoi. Nameplate and portrait use `asker` and pass `{ speaker:1, name, face }` into `dialog()` so the d2 choice box shows Aoi, not Ryo.
+- **Kneel sheet:** redrew `world/mb2_sentoY_kn.webp` (front/left/right heads composited from `mb2_sentoY_idle`, broken gold side-head wiped). Preview: `/workspace/v6560-review/bond/goda_kneel_sheet.png`. Old sheet backed up as `mb2_sentoY_kn_old.webp` in that folder. Back row unchanged.
+- **Story pointer (Gōda scene + post-seal only):** all three answers: Gōda names Tetsu as a rumor (“Tetsu sits in Jin’s club, but you can’t touch Jin’s ground yet”) and his last pointer is east to Masa and the Riders at Wagashi row. Path voice stays distinct (VQ + Gōda’s line). `c2LmSeal` when `n===1 && k==='sento'`: Aoi says “Wagashi row. Masa and the Riders.” / `c2sSay` “Wagashi row is next. The club will keep.” Club still opens after the first seal (`c2Bouncer` unchanged). `ckNamed` and the deal’s `ckTip` (Thursday crates, if they optionally visit) stay.
+- **M2:** slot moved to Masa’s depot shutter. Id `c2_masa_after`, Journal name “Masa at the shutter”, pay still 760/380/152. `PAY.c2_cheap` is an alias. Scene still comes with seal-2 phase 5.
+
+**Exact strings / functions touched (for a clean merge with the phase-1 journal-to-Masa branch):**
+- `bondAsk` → `ask()` (nameplate / `dialog()` args only)
+- `BCALL_NAME`, `PAY`, `BOND_CH2` (M2 id/name/pay)
+- CH2BOND: `VQ`, `seqFor`, new `stageCarryIn` / `stageCarryOut` / `carryPlace` / `carryTick`
+- Nails `c2LmSeal`: only the `n===1` Aoi line and the `c2sSay` call, gated on `k==='sento'`
+- `world/mb2_sentoY_kn.webp`
+
+**Left alone (phase 1 / other routes):** `C2LMK` order, Four Corners “next corner” text (may still list Jin’s Game Center until that branch lands), `c2sReveal(1)` (“Loud shirt. Punk Tetsu. Back office…” — not played on Punk Gōda because we replace `c2BossOut`), `c2Bouncer`.
+
+Preview recorded (not in git):
+- `/workspace/v6560-review/bond/c2_goda_preview_v2.mp4` (SHA256 90477764d59661d9d9f91b815b1d9b3fcb97fdffac26ade56863be077c2ec471, 255.6s, captioned FIERCE / STRATEGIC / COMPASSIONATE)
+- per-answer clips `c2_goda_{fierce,strategic,balanced}_v2.mp4`
+- key shots `c2_goda_*_v2.png` (carry-off, carry walk, Aoi nameplate + fixed kneel on `04_bond_choices`, rumor/Masa pointers, seal pry). Missing only the stale `20_strategic_sit_offer` needle (that line is gone).
+- kneel preview: `goda_kneel_sheet.png`
+
+**nails-art:** free-soak (`godaSoak` / first Hot soak on the house after the Compassionate answer) plus the existing `FFF_EATG_MILK` hook are now in `/workspace/nails-art/nq/h_shop.js` `sentoMenu`, so a Nails pack rebuild will not drop them. nails-art is not a git repo.
+
+Tests on this branch (re-run after the polish): bond_test 104/104. ngp pending in this entry until it finishes.
+
+### 2026-11-25 — executor (Grok Bot) — v6.5.63 ch2-bond (branch `ch2-bond`, not published, not merged into v6563-mai)
+Erik asked for the five Ch2 bond moments (spec `/workspace/v6560-review/ch2_bond_moments.md`). This branch is for him to preview **M1** (`c2_goda`) first. FFF_BUILD was not bumped.
+
+What landed (commits a2a5994 … 9cae616, tip will be this HANDOFF commit):
+- **M1 `c2_goda`**: after the Punk/Nails bathhouse fight (`c2BossOut('sento')` when `run_fac==='arc'`), a staged scene on the clay. Aoi asks what to do with a beaten Gōda. Answers: Fierce KO (`godaFate=ko`), Strategic deal (`godaFate=deal`, `ckTip=1`), Compassionate help (`godaFate=help`, Gōda later stands at the bath counter, first Hot soak is free that visit). All three name Tetsu. The pre-fight `c2lm_sento` call is skipped on this route (`bondAsk` wrapper). Lying sprite is held by `c2LieHold` until the scene ends.
+- **PAY** for M1–M5 is wired (`c2_goda` 700/350/140, `c2_cheap` 760/380/152, `c2_offer` 820/410/164, `c2_ledger` 880/440/176, `c2_eve` 935/468/187). Grinder still halves chapter ≤2 picks. `c2nq_door` now pays 120/60/24 (same as the other Ch2 landmark calls, not the 118/59/24 default).
+- **M2–M5** ids and Journal names are reserved only. Scenes are not written yet.
+  - M2 `c2_cheap`: second seal / Cheap Shot unlock (`c2LmSeal` / `C2S_SET.arc[1]`).
+  - M3 `c2_offer`: third seal, Genji turn-in or the walk back (`c2sGenjiTurn`).
+  - M4 `c2_ledger`: fourth seal, Tetsu’s book in Club Kitsune’s back office (`ckSlip`).
+  - M5 `c2_eve`: night before the roof, after the fifth line (`c2sFifth`) and Ban at the door.
+- **Journal fix** (live list is `statusBondBlock`, not the dead `bondPane`): `bondCallName` / `bondCallPay` so Ch2 calls show a title and the real PAY, not a raw id or 118/59/24. Also named `dg_gouki` and the Ch3 landmark calls (`c2lm_market` / `pier` / `dock`).
+- Tagged `/* v6.5.63 ch2-bond */`. New module between `CH2BOND_BEGIN v6563-bond` and `CH2BOND_END`, inserted just before `C2BG_BEGIN`.
+
+**Merge-back:** the free-soak patch lives in `index.html` (`FFF_NQ.sentoMenu`). It also needs to go into `/workspace/nails-art/nq/` so a Nails pack rebuild does not drop it. The `c2BossOut` / `bondAsk` / `c2LmSeal` / `c2Pop` wrappers are in the CH2BOND module on purpose, so a pack rebuild does not wipe the scene.
+
+Known skips / flags (not done):
+- Carry-off on the Fierce answer is narration only (Old Sato and Tome-baa are not staged; the KO sprite fades after the line). The old-folks wave / bigSting was skipped.
+- No dedicated “talk to Gōda” spot beyond the counter sprite after Help.
+- Do not merge into `v6563-mai` and do not publish until Erik has previewed `c2_goda`.
+
+Preview: `/workspace/v6560-review/bond/c2_goda_preview.mp4` and key-beat pngs in the same folder. Tests: `tools/bond/bond_test.py`.
+
 ### 2026-11-25 — executor (Grok Bot) — v6.5.62 (commit b16ca27) — LIVE after Ernest's OK
 Ernest asked for the entire ambush mechanic to be removed from the game, every chapter, including Chapter 2 lane jumps (`laneAmb` / `c2v2AmbTick`). Story-scripted and quest fights stay, plus walk-up fights the player starts, and the Ban Shigure losses.
 What changed (commits after the D-style dialogue work; versions still v6.5.62):

@@ -14453,6 +14453,7 @@ function scene(id, pre, done, i) {
   if (who === '@map') { close(); qMap(txt, function () { if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } }); return; } /* v4.44 */
   if (who === '@quest') { close(); if (txt === 'done') qDoneNow(); else if (txt === 'next') qNextNow(); else qStart(txt); setTimeout(function () { if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } }, Math.round(1500 * cinK())); return; } /* v4.35 the quest banner, mid-scene */
   if (who === '@splash') { close(); bossSplash(txt, function () { if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } }); return; } /* v6.5.63: boss splash art mid-scene */
+  if (who === '@fn') { close(); var fnDone = false, fnNext = function () { if (fnDone) return; fnDone = true; var more = i < pathLines(pre).concat(pathLines(SCENES[id])).length - 1; /* rows may have been spliced in by the beat */ if (more) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } }; try { txt(fnNext); } catch (eFn) { ev('world:scene:fn:err:' + (eFn && eFn.message)); fnNext(); } return; } /* v6.5.63 ch2-bond: staged beat */
   if (who === '@pan') { close(); pan(function () { if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } }); return; }
   if (ln[2] && ln[2].fire != null) setFire(ln[2].fire, id);
   if (ln[2] && ln[2].bul === 0) kneelGo();
@@ -15154,6 +15155,11 @@ function ringSvg(p, lv, cap, frac, cur) {
   return '<svg viewBox="0 0 100 100" class="bring ' + p + (cur ? ' cur' : '') + '" aria-hidden="true"><circle class="trk" cx="50" cy="50" r="' + R + '"/><circle class="arc" cx="50" cy="50" r="' + R + '" stroke-dasharray="' + (C * frac).toFixed(1) + ' ' + C.toFixed(1) + '"/>' + segs +
     '<text x="50" y="57" text-anchor="middle">' + lv + '</text></svg>';
 }
+/* v6.5.63 ch2-bond: Journal names + real pay for Aoi's calls (Ch2 ids used to print raw, and every grade printed the 118/59/24 default) */
+var BCALL_NAME = { first: 'The courtyard', c2nq_door: 'Kitsune-no-Yu door', c2_goda: 'G\u014dda on the clay', c2_masa_after: 'Masa at the shutter', c2_offer: 'The coat\u2019s offer', c2_ledger: 'Tetsu\u2019s ledger', c2_eve: 'The night before the roof', dg_gouki: 'Gouki\u2019s doors', c2lm_market: 'The cold-room door', c2lm_pier: 'The pier', c2lm_dock: 'The dock' };
+function bondCallName(id) { id = String(id); if (id.indexOf('mini_') === 0 && CD.chars[id.slice(5)]) return CD.chars[id.slice(5)].name; if (BCALL_NAME[id]) return BCALL_NAME[id];
+  if (id.indexOf('dg_') === 0 && DGS[id.slice(3)]) return DGS[id.slice(3)].n || id; var m = /^c2lm_(\w+)$/.exec(id); if (m && typeof C2LM === 'object' && C2LM[m[1]] && C2LM[m[1]].n) return C2LM[m[1]].n; return id; }
+function bondCallPay(id, g) { var BD = STORY.BOND, n = ((BD.PAY || {})[id] || BD.XP.GRADE)[g] | 0, ch3 = /^c2lm_(market|pier|dock)$/.test(id); if (SAVE.xpMode === 'grinder' && !ch3 && /^(mini_|dg_|c2)/.test(id)) n = Math.max(1, Math.round(n * 0.5)); return n; }
 function bondPane() { // v4.24: one locked path, one party level shared by Ryo, Aoi and the fox (no cap)
   if (!STORY || !STORY.bond) return '<p class="pnote">Bond is not available.</p>';
   var B = STORY.bond(SAVE), BD = STORY.BOND, ICON = { fierce: '\ud83d\udd25', strategic: '\ud83c\udf0a', balanced: '\u262f\ufe0f' }, C = root.ENGINE.cards(), p = B.path, X = STORY.bondBar(SAVE), lv = X.lv;
@@ -15164,9 +15170,9 @@ function bondPane() { // v4.24: one locked path, one party level shared by Ryo, 
       '<span class="bxp ' + p + '" role="progressbar" aria-label="Party bond XP" aria-valuemin="0" aria-valuemax="' + X.need + '" aria-valuenow="' + X.at + '"><i style="width:' + Math.round(X.frac * 100) + '%"></i><em>' + X.at + ' / ' + X.need + ' XP</em></span>' +
       '<em>Ryo: ' + rs.n + ' \u00b7 Aoi: ' + as.n + ' \u00b7 ' + STORY.bondDmg(lv) + ' dmg</em><span class="bperk">' + BD.PERK[p][Math.min(BD.PERK[p].length, lv) - 1] + '</span></div></div>'; }
   h += '<p class="bfox">\ud83e\udd8a ' + foxMood() + '</p>';
-  var picks = Object.keys(B.picks), NMS = { first: 'The courtyard' }; Object.keys(DGS).forEach(function (k) { NMS['dg_' + k] = DGS[k].n || k; });
+  var picks = Object.keys(B.picks);
   h += '<h4>Aoi\u2019s calls <small>' + picks.length + '</small></h4>' + (picks.length ? '<ul class="bpicks">' + picks.map(function (id) { var Q = bondQ(id), a = B.picks[id], g = id === 'first' ? 'path' : STORY.bondGrade(p, a, BOND_MID[id]);
-    return '<li>' + (id.indexOf('mini_') === 0 && CD.chars[id.slice(5)] ? CD.chars[id.slice(5)].name : NMS[id] || id) + ': <b>' + (Q && Q.o[a] ? Q.o[a][0] : a) + '</b> <small>(' + (id === 'first' ? 'locked ' + BD.N[a] : g === 'best' ? 'fits your path, +' + BD.XP.GRADE.best : g === 'mid' ? 'halfway, +' + BD.XP.GRADE.mid : 'off your path, +' + BD.XP.GRADE.clash) + ')</small></li>'; }).join('') + '</ul>' : '<p class="dim">None yet.</p>');
+    return '<li>' + bondCallName(id) + ': <b>' + (Q && Q.o[a] ? Q.o[a][0] : a) + '</b> <small>(' + (id === 'first' ? 'locked ' + BD.N[a] : g === 'best' ? 'fits your path, +' + bondCallPay(id, 'best') : g === 'mid' ? 'halfway, +' + bondCallPay(id, 'mid') : 'off your path, +' + bondCallPay(id, 'clash')) + ')</small></li>'; }).join('') + '</ul>' : '<p class="dim">None yet.</p>');
   h += '<p class="dim">Fierce burns at Lv 5 \u00b7 Strategic keeps Spirit after a special at Lv 5 and counters best \u00b7 Compassionate breaks guard and marks from Lv 3 and dodges best.</p></div>';
   return h;
 }
@@ -16373,10 +16379,11 @@ function bondAsk(id, cb) {
     /* v4.13.1: Ryo (v4.24: whoever you play) answers in the SAME dialogue box the story talk uses. v4.24: the first (locking)
      * choice shows each answer in its path's colour with the path named, previews the path effect around Ryo on hover /
      * focus / the first tap, and plays it when picked. Later answers stay plain lines. */
-    var qm = /<b>([\s\S]*?)<\/b>\s*<p>([\s\S]*?)<\/p>/.exec(Q.q), ql = qm ? qm[1] : '', qt = qm ? qm[2] : Q.q, pt = me === 'ryo' ? ryoPt() : PT[me];
-    var _pq = ptPaintUrl(me, ptMoodOf(me)), html = '<div class="sh' + (first ? ' bfxsh' : '') + (_pq ? ' pt-hang' : '') + '"><i class="pt2" style="background-image:url(' + (_pq || IMG[pt]) + ')"></i>' + (GEAR ? gearPt(me) : '') + '<b class="snm">' + (NM[me] || CNAME[me]) + '</b></div>' +
+    var qm = /<b>([\s\S]*?)<\/b>\s*<p>([\s\S]*?)<\/p>/.exec(Q.q), ql = qm ? qm[1] : '', qt = qm ? qm[2] : Q.q, asker = /Aoi/i.test(ql) ? 'aoi' : me, pt = asker === 'ryo' ? ryoPt() : PT[asker]; /* v6.5.63 ch2-bond: nameplate is Aoi when Aoi asks */
+    var _pq = ptPaintUrl(asker, ptMoodOf(asker)), html = '<div class="sh' + (first ? ' bfxsh' : '') + (_pq ? ' pt-hang' : '') + '"><i class="pt2" style="background-image:url(' + (_pq || IMG[pt]) + ')"></i>' + (GEAR ? gearPt(asker) : '') + '<b class="snm">' + (NM[asker] || CNAME[asker]) + '</b></div>' +
       '<div class="tw bq"><p class="dim bqq">' + (ql ? '<strong>' + ql + ':</strong> ' : '') + qt + '</p></div>';
-    dialog(html, STORY.BOND.P.map(function (p) { return [first ? '\u201c' + Q.o[p][0] + '.\u201d<small>' + Q.o[p][1] + '</small>' : '\u201c' + Q.o[p][0] + '.\u201d', function () { pick(p); }, 'bondopt bline bond-' + p + (first ? ' bcol' : '')]; }));
+    var faceKey = asker === 'ryo' ? (ryoPt() || PT.ryo) : (PT[asker] || (asker + '_fig'));
+    dialog(html, STORY.BOND.P.map(function (p) { return [first ? '\u201c' + Q.o[p][0] + '.\u201d<small>' + Q.o[p][1] + '</small>' : '\u201c' + Q.o[p][0] + '.\u201d', function () { pick(p); }, 'bondopt bline bond-' + p + (first ? ' bcol' : '')]; }), faceKey, { speaker: 1, name: NM[asker] || CNAME[asker], face: faceKey });
     $('#wdlg').classList.add('scene', 'bask'); if (first) $('#wdlg').classList.add('bfirst'); ev('world:bond:say:' + id);
     if (first) bfxWire();
     if (cxAdd('bond', 1)) setTimeout(function () { if (!W.dlg) cxNote(['bond']); }, 2400); }
@@ -19322,10 +19329,9 @@ function statusBondBlock() {
   h += '<details class="bcalls"><summary>Aoi\u2019s calls <small>' + picks.length + '</small></summary>';
   if (!picks.length) h += '<p class="dim">None yet.</p>';
   else {
-    var NMS = { first: 'The courtyard' }; Object.keys(DGS).forEach(function (k) { NMS['dg_' + k] = DGS[k].n || k; });
     h += '<ul class="bpicks">' + picks.map(function (id) {
       var Q = bondQ(id), a = B.picks[id], g = id === 'first' ? 'path' : STORY.bondGrade(p, a, BOND_MID[id]);
-      return '<li>' + (id.indexOf('mini_') === 0 && CD.chars[id.slice(5)] ? CD.chars[id.slice(5)].name : NMS[id] || id) + ': <b>' + (Q && Q.o[a] ? Q.o[a][0] : a) + '</b></li>';
+      return '<li>' + bondCallName(id) + ': <b>' + (Q && Q.o[a] ? Q.o[a][0] : a) + '</b></li>';
     }).join('') + '</ul>';
   }
   return h + '</details></div>';
@@ -20621,7 +20627,7 @@ function c2LmBoss(k) { var L = C2LM[k], S = c2S(), b = W.c2n && W.c2n.boss; if (
   var go = function () { W.c2busy = 0; c2LmFight(k); };
   if (S.e['met_' + k]) { scene(null, [[L.boss, C2SC.again[k]]], go); return; }
   S.e['met_' + k] = 1; save();
-  bossEnt(L.boss, C2SC['lm_' + k], function () { bondAsk('c2lm_' + k, function (L2) { /* v6.5.63: first meeting = MGS arrival (camera reveal, card, directed lines) */ var p = ((STORY.bond(SAVE) || {}).picks || {})['c2lm_' + k] || 'balanced';
+  bossEnt(L.boss, C2SC['lm_' + k], function () { bondAsk('c2lm_' + k, function (L2) { /* v6.5.63: first meeting = MGS arrival (camera reveal, card, directed lines) */ var p = ((STORY.bond(SAVE) || {}).picks || {})['c2lm_' + k] || (STORY.bond(SAVE) || {}).path || 'balanced'; /* v6.5.63 ch2-bond: no pick (Punk sento: c2_goda replaces it) acts out the locked path */
     c2LmAct(k, p, function () { if (L2 && L2.length) scene(null, L2, go); else go(); }); }); }); }
 /* the acted answer: they physically do what was picked before the clash */
 function c2LmAct(k, p, done) { var L = C2LM[k], b = W.c2n.boss, r = W.ryo, a = W.aoi, kk = 1 / Math.max(0.25, cinK()); ev('world:c2:lm:act:' + k + ':' + p);
@@ -20634,9 +20640,10 @@ function c2LmAct(k, p, done) { var L = C2LM[k], b = W.c2n.boss, r = W.ryo, a = W
 function c2LmFight(k) { var L = C2LM[k], b = W.c2n && W.c2n.boss; if (!b) return; ev('world:c2:lm:fight:' + k);
   var seal = (typeof SEAL_POW === 'object' && SEAL_POW[k]) || '';
   W.fwRafNext = 1; ev('world:basewalk:charge:lm_' + k); fight([L.boss], false, { dg: 'c2', dgk: 'lm_' + k + '_boss', mini: L.boss, c2lm: k, c2boss: k === 'roof' ? 1 : undefined, charge: [b], ruT: b, seal: seal, fastWalk: 1 }); W.fwRafNext = 0; }
+var c2LieHold = null; /* v6.5.63 ch2-bond: set by the c2_goda block */
 function c2LmBack(win, st) { var c = st.ctx || {}, k = c.c2lm, L = C2LM[k], b = W.c2n && W.c2n.boss; if (!L) return; W.c2busy = 0;
     if (win && !st.escaped) { if (k === 'arcade') { var gk = gearS(); gk.keys = gk.keys || {}; if (!gk.keys.locker) { gk.keys.locker = 1; ev('world:c2:locker:key:arcade'); } } if (b) { var bx = b.x, by = b.y; b.el.classList.add('out'); setTimeout(function () { b.el.remove(); }, 500); W.c2n.boss = null;
-      var le = k === 'roof' ? lieEl(L.boss, L.bat[0], L.bat[1] - 24, C2K[L.boss]) : lieEl(L.boss, bx, by, C2K[L.boss]); /* v5.3: the roof boss lies where the duel ends (no drift into the shrine rail) */ if (le) { le.classList.add('c2lie'); layer.appendChild(le); W.ints.push({ el: le }); setTimeout(function () { le.classList.add('fade'); }, 6000); setTimeout(function () { le.remove(); }, 7000); } c2Smoke(bx, by); }
+      var le = k === 'roof' ? lieEl(L.boss, L.bat[0], L.bat[1] - 24, C2K[L.boss]) : lieEl(L.boss, bx, by, C2K[L.boss]); /* v5.3: the roof boss lies where the duel ends (no drift into the shrine rail) */ if (le) { le.classList.add('c2lie'); layer.appendChild(le); W.ints.push({ el: le }); if (typeof c2LieHold === 'function' && c2LieHold(k, le, bx, by)) { /* v6.5.63 ch2-bond: c2_goda owns the lying sprite until its scene ends */ } else { setTimeout(function () { le.classList.add('fade'); }, 6000); setTimeout(function () { le.remove(); }, 7000); } } c2Smoke(bx, by); }
     ev('world:c2:lm:beaten:' + k);
     if (k === 'roof') { setTimeout(function () { c2Final(); }, 900); return; }
     setTimeout(function () { scene(null, typeof c2BossOut === 'function' ? c2BossOut(k) : C2SC['lm_' + k + '_out'], function () { c2LmSeal(k); }); }, 900); }
@@ -30447,12 +30454,12 @@ c2LmSeal = function (k) { var L = C2LM[k], S = c2S(); if (!L || S.e['seal_' + k]
       if (!own && S.e.run_fac && !S.e.c2sUp) { S.e.c2sUp = 1; try { if (root.FFF_OPN) root.FFF_OPN.grant(C2S_SET[S.e.run_fac][1]); } catch (eG) {} }
       if (n === 1) { S.e.ckNamed = 1; try { if (typeof c2MaskTetsu === 'function') c2MaskTetsu(); } catch (eM) {} }
       save(); ev('world:c2:seal:' + k + ':' + n); W.cut = false; sLock(0, 'c2seal'); resetTrail(r.x, r.y, r.dir); c2sLocksSync();
-      var L2 = n === 1 ? [['', '<p class="dim">Ryo pries the seal off the lock. A small engraved token. A serial on the back.</p>'], ['aoi', 'Club Kitsune. Let\u2019s pay Punk Tetsu a visit.']]
+      var L2 = n === 1 ? [['', '<p class="dim">Ryo pries the seal off the lock. A small engraved token. A serial on the back.</p>'], ['aoi', k === 'sento' ? 'Wagashi row. Masa and the Riders.' : 'Club Kitsune. Let\u2019s pay Punk Tetsu a visit.']] /* v6.5.63 ch2-bond: after Gōda, pointer is Masa; club stays optional */
         : n >= C2LMK.length ? [['', '<p class="dim">The fourth token comes free. Four serials in Ryo\u2019s pocket.</p>'], ['aoi', S.e.ckSlip ? 'All four. Genji can match them to the slip.' : 'All four. Now Tetsu\u2019s slip.']]
         : [['', '<p class="dim">Another engraved token. Another serial.</p>'], ['aoi', C2SC.sealN[n] || 'Another seal.']];
       if (own) L2 = [['', '<p class="dim">He sets the token in Ryo\u2019s hand. A serial on the back.</p>']].concat(L2.slice(1));
       if (!own && f && n < C2LMK.length) L2.push(['ryo', 'The ' + c2sFacName(f) + ' stand down now.']);
-      scene(null, L2, function () { if (n === 1 && !S.e.ckSlip) c2sSay('The club\u2019s open to us now. Tetsu\u2019s back office.'); else if (n >= C2LMK.length) c2sSay('Gym. Genji first.'); try { c2SqRefresh(); } catch (eR) {} }); }, Math.round(500 * cinK())); }); };
+      scene(null, L2, function () { if (n === 1 && !S.e.ckSlip) c2sSay(k === 'sento' ? 'Wagashi row is next. The club will keep.' : 'The club\u2019s open to us now. Tetsu\u2019s back office.'); /* v6.5.63 ch2-bond */ else if (n >= C2LMK.length) c2sSay('Gym. Genji first.'); try { c2SqRefresh(); } catch (eR) {} }); }, Math.round(500 * cinK())); }); };
 /* your own gang's base: no guards, and the boss hands his seal over once the other three are taken */
 var c2sLmPop0 = c2LmPop;
 c2LmPop = function (k) { c2sLmPop0(k); if (!c2sOn() || k !== c2sOwnLm()) return;
@@ -30476,9 +30483,12 @@ ckPunkIn = function () {
   var p = ckPath(), ryo = p === 'fierce' ? 'You run the coat\u2019s errands. Errand\u2019s over.' : p === 'strategic' ? 'Four crews, one middleman. You write it all down.' : 'Every boss got a seal through you. Hand over the book.';
   var punk = p === 'fierce' ? 'Big mouth. Let\'s see if the fists keep up.' : p === 'strategic' ? 'You can read. Shame you won\'t be leaving with it.' : 'Easy isn\'t how I got this office.';
   sLock(1, 'ckpunk'); W.ckBoss = 1; ev('world:c2:tetsu:in');
-  scene(null, [['chinpira1', 'Watched you on six screens, kid.{p} {slow}You fight like you owe somebody.{/slow}'], ['ryo', ryo], ['chinpira1', 'I\u2019m the guy in the middle. Middle pays best.'], ['chinpira1', punk], ['aoi', 'He\'s all yours, Ryo. I\'ll watch the door.']], function () {
+  var gf = (c2S().e || {}).godaFate, tip = !!(c2S().e || {}).ckTip; /* v6.5.63 ch2-bond: what happened to G\u014dda is felt in the back office */
+  var open0 = gf === 'ko' ? 'Watched you on six screens, kid.{p} Watched you put the big man down, too.{p} {slow}You fight like you owe somebody.{/slow}' : 'Watched you on six screens, kid.{p} {slow}You fight like you owe somebody.{/slow}';
+  var tipLn = tip ? [['chinpira1', 'My Thursday crates never showed.{p} {slow}Somebody talked.{/slow}']] : [];
+  scene(null, [['chinpira1', open0]].concat(tipLn, [['ryo', ryo], ['chinpira1', 'I\u2019m the guy in the middle. Middle pays best.'], ['chinpira1', punk], ['aoi', 'He\'s all yours, Ryo. I\'ll watch the door.']]), function () {
     sLock(0, 'ckpunk'); try { if (typeof ckSurfWall === 'function') ckSurfWall(false); AU.music('ck_backroom'); } catch (e) {}
-    fight(['chinpira1'], false, { dg: 'c2', dgk: 'ck6', flv: 7, ckOffice: 1, joinIn: { id: 'ck_dealer', round: 3, nm: 'Club Dealer', line: 'A Club Dealer joins Punk on round 3.' } }); }); };
+    fight(['chinpira1'], false, { dg: 'c2', dgk: 'ck6', flv: 7, ckOffice: 1, joinIn: tip ? undefined : { id: 'ck_dealer', round: 3, nm: 'Club Dealer', line: 'A Club Dealer joins Punk on round 3.' } }); }); };
 ckAfterPunk = function () {
   var p = ckPath(), ryo = p === 'fierce' ? 'Then you\u2019re out of a job.' : p === 'strategic' ? 'Then your books can talk for you.' : 'Go home, Tetsu. The middle\u2019s closed.';
   ckSnd('page', 0.7);
@@ -39880,7 +39890,9 @@ function camPan(to, o, done) {
   NQ.capFx = capFx;
   /* the bathhouse counter (after the seal) */
   var SENTO_MENU = [{ id: 'soak', n: 'Hot soak', jp: '\u6e6f', hp: 40, both: 15, base: 12, cost: 9 }, { id: 'cmilk', n: 'Coffee milk', jp: '\u73c8\u7432\u725b\u4e73', spOnly: 25, base: 6, cost: 5 }, { id: 'fmilk', n: 'Fruit milk', jp: '\u30d5\u30eb\u30fc\u30c4\u725b\u4e73', hp: 15, base: 5, cost: 4 }];
-  function sentoMenu() { counterMenu({ who: 'nq_bandai', name: 'Old Sato', line: 'Water\u2019s hot again. First time in a year.', items: SENTO_MENU, nails: true, buy: function (it, c) { payYen(c); ev('world:nq:sento:buy:' + it.id); if (it.id === 'soak') { soakFx(function () { applyVit(it); later(200, sentoMenu); }); return; } if (root.FFF_EATG_MILK && root.FFF_EATG_MILK(it, applyVit, function () { later(300, sentoMenu); })) return; /* v6.5.63-eat */ applyVit(it); try { actPlay('drink', W.ryo); } catch (e) {} sfx('pl_heal', { gain: 0.45 }); later(700, sentoMenu); } }); }
+  function sentoMenu() { var gFree = !!(E().godaFate === 'help' && !W.godaSoak); /* v6.5.63 ch2-bond: G\u014dda's thanks, the first Hot soak of each visit is free */
+    var sItems = gFree ? SENTO_MENU.map(function (m) { return m.id === 'soak' ? Object.assign({}, m, { cost: 0, base: 9 }) : m; }) : SENTO_MENU;
+    counterMenu({ who: 'nq_bandai', name: 'Old Sato', line: gFree ? 'G\u014dda says the first soak is on the house.' : 'Water\u2019s hot again. First time in a year.', items: sItems, nails: true, buy: function (it, c) { if (gFree && it.id === 'soak') { W.godaSoak = 1; ev('world:nq:sento:godafree'); } payYen(c); ev('world:nq:sento:buy:' + it.id); if (it.id === 'soak') { soakFx(function () { applyVit(it); later(200, sentoMenu); }); return; } if (root.FFF_EATG_MILK && root.FFF_EATG_MILK(it, applyVit, function () { later(300, sentoMenu); })) return; /* v6.5.63-eat */ applyVit(it); try { actPlay('drink', W.ryo); } catch (e) {} sfx('pl_heal', { gain: 0.45 }); later(700, sentoMenu); } }); }
   function soakFx(done) { var ov = document.createElement('div'); ov.id = 'nqsoak'; ov.innerHTML = '<b>\u2668</b><i>Hot soak\u2026</i>'; document.body.appendChild(ov); lockIn(true); sfx('swirl'); later(1500, function () { ov.classList.add('out'); later(300, function () { ov.remove(); lockIn(false); done(); }); }); }
   NQ.sentoMenu = sentoMenu;
   /* Kissa Gekko: Nails' price after the seal */
@@ -41534,6 +41546,138 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   } catch (eS2) { try { ev('world:s2:err:init:' + (eS2 && eS2.message)); console.warn('S2 init', eS2); } catch (e2) {} }
 })();
 /* S2_END */
+/* CH2BOND_BEGIN v6563-bond */
+/* v6.5.63 (GGD-29) Ch2 bond moments. M1 to M5 pay 700/350/140 up to 935/468/187 (Grinder halves them through bondGain).
+ * M1 = c2_goda: a staged scene after the fight with G\u014dda (Punk / Nails route; it replaces the pre-fight c2lm_sento call).
+ * M2 is reserved as c2_masa_after (Masa's depot shutter, after he falls; scene comes with seal-2 phase 5). PAY alias c2_cheap kept. M3..M5: c2_offer, c2_ledger, c2_eve, pay only.
+ * Source note: this block is NOT part of the nq pack. Keep it when the pack is rebuilt; the pack's c2BossOut override is wrapped, not replaced. */
+(function (root) {
+  if (typeof c2S !== 'function' || typeof BOND_Q !== 'object' || typeof BOND_TXT !== 'object' || typeof BOND_MID !== 'object' || !STORY || !STORY.BOND || typeof c2BossOut !== 'function') return;
+  var PAY = STORY.BOND.PAY;
+  PAY.c2nq_door = { best: 120, mid: 60, clash: 24 }; /* was the silent 118/59/24 default; now the Ch2 call rate */
+  PAY.c2_goda = { best: 700, mid: 350, clash: 140 }; PAY.c2_masa_after = { best: 760, mid: 380, clash: 152 }; PAY.c2_cheap = PAY.c2_masa_after /* alias: old reserved id */; PAY.c2_offer = { best: 820, mid: 410, clash: 164 };
+  PAY.c2_ledger = { best: 880, mid: 440, clash: 176 }; PAY.c2_eve = { best: 935, mid: 468, clash: 187 };
+  var BOND_CH2 = ['c2_goda', 'c2_masa_after', 'c2_offer', 'c2_ledger', 'c2_eve'];
+  root.FFF_CH2BOND = { ids: BOND_CH2, pay: PAY };
+  BOND_Q.c2_goda = { q: '<b>Aoi asks</b><p>He\u2019s getting up for the seal. What do we do with him?</p>', o: { fierce: ['Put him down, clean and fast', 'Fierce'], strategic: ['Make him a deal', 'Strategic'], balanced: ['Help him up and show him the fire\u2019s fine', 'Compassionate'] } };
+  BOND_MID.c2_goda = 'strategic';
+  BOND_TXT.c2_goda = { _mx: 1,
+    fierce: {
+      fierce: [['{LEAD}', '{shout}Sit down, \u014dzeki.{/shout}', { hype: 1 }], ['{PARTNER}', 'Gently?']],
+      strategic: [['{LEAD}', '{brisk}Hold it. Hear the offer first.{/brisk}'], ['{PARTNER}', 'A deal. From you. Huh.']],
+      balanced: [['{LEAD}', 'Stop.{p} Lean on me, old man.'], ['{PARTNER}', '{quiet}Look at you.{/quiet}']] },
+    strategic: {
+      fierce: [['{LEAD}', 'He won\u2019t stop.{p} {fast}Drop him.{/fast}', { hype: 1 }], ['{PARTNER}', 'No angle tonight. Fine. Gently.']],
+      strategic: [['{LEAD}', '{brisk}Sit. Your fire\u2019s fine. Here\u2019s what we do.{/brisk}'], ['{PARTNER}', 'He\u2019s got the numbers. Let him talk.']],
+      balanced: [['{LEAD}', 'Nobody\u2019s taking your fire.{p} Stand with us.'], ['{PARTNER}', 'Then we do it your way.']] },
+    balanced: {
+      fierce: [['{LEAD}', 'I\u2019m sorry, old man.{p} Sit down.'], ['{PARTNER}', '{quiet}Gently.{/quiet}']],
+      strategic: [['{LEAD}', 'Hear us out.{p} Then decide.'], ['{PARTNER}', 'There\u2019s a deal on that clay, if he wants it.']],
+      balanced: [['{LEAD}', '{slow}Come on. Lean on me.{/slow} You don\u2019t have to stand alone.']] } };
+
+  /* ---------- helpers ---------- */
+  function E() { return c2S().e; }
+  function nailsRun() { try { return E().run_fac === 'arc'; } catch (e) { return false; } }
+  function ck() { try { return Math.max(0.25, cinK()); } catch (e) { return 1; } }
+  function later(ms, fn) { setTimeout(function () { try { fn(); } catch (e) { ev('world:c2bond:err:' + (e && e.message)); } }, Math.round(ms * ck())); }
+  var GS = null; /* the live staging: { lie, g, x, y, fx: [elements] } */
+  function fxEl(el) { if (GS) GS.fx.push(el); return el; }
+  function glow(x, y, col, w, ms) { var d = document.createElement('i'); d.style.cssText = 'position:absolute;left:0;top:0;width:' + w + 'px;height:' + w + 'px;margin:' + (-w / 2) + 'px 0 0 ' + (-w / 2) + 'px;border-radius:50%;pointer-events:none;z-index:9000;background:radial-gradient(circle,' + col + ' 0%,rgba(255,150,60,.0) 70%);opacity:0;transform:translate3d(' + x + 'px,' + y + 'px,0)';
+    layer.appendChild(d); try { d.animate([{ opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1 }, { opacity: 0, scale: 1.25 }], { duration: ms || 1400, easing: 'ease-out' }).onfinish = function () { d.remove(); }; } catch (e) { setTimeout(function () { d.remove(); }, ms || 1400); } return d; }
+  function paper(x, y, rot, kind) { var d = document.createElement('i');
+    d.style.cssText = 'position:absolute;left:0;top:0;width:' + (kind ? 30 : 24) + 'px;height:' + (kind ? 20 : 30) + 'px;pointer-events:none;z-index:' + (100 + Math.round(y)) + ';background:#efe6cf;border:2px solid #2a211c;border-radius:2px;box-shadow:0 2px 0 rgba(0,0,0,.35);transform:translate3d(' + x + 'px,' + y + 'px,0) rotate(' + rot + 'deg);opacity:0;transition:opacity .35s';
+    d.innerHTML = kind ? '<b style="position:absolute;left:3px;top:4px;right:3px;font:900 5px/1 system-ui,sans-serif;color:#b3261e;border:1px solid #b3261e;padding:1px 0;text-align:center;letter-spacing:.04em">CONDEMNED</b><s style="position:absolute;left:4px;right:4px;bottom:4px;height:2px;background:#8a7f66;box-shadow:0 -4px 0 #8a7f66"></s>' : '<s style="position:absolute;left:3px;right:3px;top:5px;height:2px;background:#8a7f66;box-shadow:0 5px 0 #8a7f66,0 10px 0 #8a7f66,0 15px 0 #8a7f66"></s><b style="position:absolute;right:3px;bottom:3px;width:7px;height:7px;border-radius:50%;background:#b3261e"></b>';
+    layer.appendChild(d); requestAnimationFrame(function () { d.style.opacity = '1'; }); return fxEl(d); }
+  function fadeOut(el, ms) { if (!el) return; try { el.style.transition = 'opacity ' + (ms || 600) + 'ms'; el.style.opacity = '0'; } catch (e) {} setTimeout(function () { try { el.remove(); } catch (e2) {} }, (ms || 600) + 60); }
+  function gKneel(g, row) { if (g) { celLoop(g, 'mb2_sento_kn', row || 0, { ms: 360, frames: [0, 1, 2, 3, 2, 1] }); } }
+  function gStand(g, fa) { if (g) { celLoopOff(g); waddle(g, 0, fa == null ? Math.PI / 2 : fa); place(g, 0); } }
+  function mkG(x, y) { var g = c2Npc('mb2_sento', x, y, Math.PI / 2); g.el.dataset.npc = 'mb2_sento'; GS.g = g; if (W.c2n) W.c2n.godaS = g; return g; }
+  function seal() { var L = C2LM.sento; return L && L.sealAt ? L.sealAt : [880, 300]; }
+  function halfway() { var s = seal(), fx = GS.x + (s[0] - GS.x) * 0.5, fy = GS.y + (s[1] - GS.y) * 0.5; var P = c2Ok(fx, fy, GS.x, GS.y); return P; }
+  root.FFF_CH2BOND.gs = function () { return GS; };
+
+  /* the lying sprite is held through the scene (c2LmBack calls this) */
+  c2LieHold = function (k, le, bx, by) { if (k !== 'sento' || !nailsRun()) return false; GS = { lie: le, g: null, x: bx, y: by, fx: [], fate: null }; le.classList.remove('fade'); le.dataset.npc = 'mb2_sento'; return true; };
+
+  /* ---------- the stagings ---------- */
+  function godaRise(next) { if (!GS || !GS.lie) { next(); return; }
+    later(350, function () { try { GS.lie.lieFr(1); } catch (e) {} });
+    later(1150, function () { var g = mkG(GS.x, GS.y); gKneel(g, 0); try { GS.lie.remove(); } catch (e) {} GS.lie = null; AU.play('place', { gain: 0.5 });
+      later(1300, function () { /* up on the bad knee, then the slow, limping walk for the seal */
+        gStand(g, -Math.PI / 4); var P = halfway(); c2Walk(g, P[0], P[1], 44 / ck(), function () { gKneel(g, 2); later(500, next); }); }); }); }
+  function ryoTo(dx, dy, sp, done) { var r = W.ryo, g = GS.g || { x: GS.x, y: GS.y }; var P = c2Ok(g.x + dx, g.y + dy, r.x, r.y); c2Walk(r, P[0], P[1], sp / ck(), function () { c2Face(r, g.x, g.y); if (done) done(); }); }
+  function aoiTo(dx, dy, sp, done) { var a = W.aoi, g = GS.g || { x: GS.x, y: GS.y }; if (!a) { if (done) done(); return; } var P = c2Ok(g.x + dx, g.y + dy, a.x, a.y); c2Walk(a, P[0], P[1], sp / ck(), function () { c2Face(a, g.x, g.y); if (done) done(); }); }
+  /* Fierce: one right hook, then he is caught on the way down */
+  function stageKO(next) { var r = W.ryo, g = GS.g;
+    aoiTo(70, 42, 150, null);
+    ryoTo(-62, 10, 240, function () { rdyOn(r, 2); later(260, function () { rdyOff(r);
+      c2Walk(r, r.x + 40, r.y, 520 / ck(), function () { AU.play('fist', { gain: 1 }); setTimeout(function () { AU.play('hit', { gain: 0.8 }); }, 80); try { wSparks(); wShake(); } catch (e) {}
+        glow(g.x, g.y - 90, 'rgba(255,240,200,.95)', 170, 520); var le = lieEl('mb2_sento', g.x, g.y, C2K.mb2_sento); if (le) { le.classList.add('c2lie'); le.dataset.npc = 'mb2_sento'; layer.appendChild(le); W.ints.push({ el: le }); GS.lie = le; le.lieFr(0); }
+        try { g.el.remove(); } catch (e2) {} GS.g = null; ev('world:c2:goda:ko'); later(700, next); }); }); }); }
+  /* Strategic: the two letters go down on the clay between them */
+  function stageDeal(next) { var g = GS.g, a = W.aoi;
+    aoiTo(-70, 34, 130, function () { AU.play('place', { gain: 0.6 }); paper(g.x - 46, g.y + 10, -8, 1); later(260, function () { paper(g.x - 22, g.y + 22, 6, 0); AU.play('place', { gain: 0.5 }); }); });
+    ryoTo(64, 30, 130, function () { later(900, next); }); }
+  function stageDealWalk(next) { var g = GS.g, s = seal(), P = c2Ok(s[0] - 40, s[1] + 40, g.x, g.y); gStand(g, -Math.PI / 4);
+    c2Walk(g, P[0], P[1], 56 / ck(), function () { c2Face(g, s[0], s[1]); try { bubbleOn(g, '\u2026'); } catch (e) {} glow(s[0], C2LM.sento.seal ? C2LM.sento.seal[1] + 30 : s[1], 'rgba(255,190,90,.9)', 150, 1300); glow(g.x, g.y - 74, 'rgba(255,210,140,.9)', 80, 1100); AU.play('pl_heal', { gain: 0.5 }); later(1200, next); }); }
+  /* Compassionate: a hand, a shoulder, and the walk to the boiler */
+  function stageHelp(next) { var g = GS.g; ryoTo(-46, 8, 110, function () { try { bubbleOn(W.ryo, '\u2026'); } catch (e) {} later(900, function () { gStand(g, 0); later(450, next); }); }); aoiTo(60, 40, 130, null); }
+  function stageHelpWalk(next) { var g = GS.g, r = W.ryo, a = W.aoi, s = seal(), P = c2Ok(s[0] - 50, s[1] + 46, g.x, g.y); gStand(g, 0);
+    var done = 0, one = function () { if (++done < 2) return; c2Face(g, s[0], s[1]); c2Face(r, s[0], s[1]); later(500, next); };
+    c2Walk(g, P[0], P[1], 50 / ck(), one); c2Walk(r, P[0] - 34, P[1] + 8, 50 / ck(), one);
+    if (a) c2Walk(a, P[0] - 72, P[1] + 30, 62 / ck(), null); }
+  function stageHelpPalm(next) { var s = seal(), gy = C2LM.sento.seal ? C2LM.sento.seal[1] + 30 : s[1], g = GS.g; glow(s[0] - 14, gy, 'rgba(255,170,80,.95)', 170, 1700); if (g) glow(g.x - 18, g.y - 74, 'rgba(255,200,120,.95)', 90, 1500); AU.play('fire_whoosh', { gain: 0.35 }); later(260, function () { AU.play('pl_heal', { gain: 0.6 }); }); later(1500, next); }
+
+  /* ---------- the rows ---------- */
+  /* Fierce: Sato and Tome-baa enter from the boiler-corridor door, lift Gōda, and walk him back out (up toward the stairs). Camera stays held; they leave the frame. */
+  function carryPlace(x, y) { var e = GS && GS.lie, k = C2K.mb2_sento || 1, sc = SPH * k / 256, C = LIEC; if (!e || !C) return;
+    e.style.transform = 'translate3d(' + (x - C.w * sc / 2).toFixed(1) + 'px,' + (y - C.base * sc).toFixed(1) + 'px,0)'; e.style.zIndex = 100 + Math.round(y); }
+  function carryTick() { if (!GS || !GS.sato || !GS.tome) return; carryPlace((GS.sato.x + GS.tome.x) / 2, Math.max(GS.sato.y, GS.tome.y) - 6); }
+  function stageCarryIn(next) { if (!GS) { next(); return; }
+    var doorX = 780, doorY = 500, x = GS.x, y = GS.y;
+    try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {}
+    var sato = c2Npc('nq_bandai', doorX, doorY - 14, Math.PI), tome = c2Npc('nq_tome', doorX + 24, doorY + 20, Math.PI);
+    GS.sato = sato; GS.tome = tome; if (sato && sato.el) { sato.el.dataset.npc = 'nq_bandai'; GS.fx.push(sato.el); }
+    if (tome && tome.el) { tome.el.dataset.npc = 'nq_tome'; GS.fx.push(tome.el); }
+    ev('world:c2:goda:carry:in');
+    c2WalkAll([[sato, x - 36, y + 8, 70 / ck()], [tome, x + 40, y + 16, 70 / ck()]], function () {
+      c2Face(sato, x, y); c2Face(tome, x, y); later(320, function () { carryTick(); later(280, next); }); }); }
+  function stageCarryOut(next) { if (!GS || !GS.sato) { fadeLie(next); return; }
+    try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {}
+    var doorX = 820, doorY = 500; if (GS.carryT) clearInterval(GS.carryT); GS.carryT = setInterval(carryTick, 40); var ticks = GS.carryT;
+    ev('world:c2:goda:carry:out');
+    c2WalkAll([[GS.sato, doorX, doorY - 14, 62 / ck()], [GS.tome, doorX + 24, doorY + 20, 62 / ck()]], function () {
+      clearInterval(ticks); fadeOut(GS.sato && GS.sato.el, 500); fadeOut(GS.tome && GS.tome.el, 500); fadeLie(function () { GS.sato = GS.tome = null; next(); }); }); }
+
+  var VQ = { fierce: [['aoi', 'East. Wagashi row. The Riders.'], ['ryo', '{shout}Masa, then.{/shout}', { hype: 1 }]], strategic: [['aoi', 'Wagashi row first. The club can wait.'], ['ryo', 'We take the street. Then Masa.']], balanced: [['aoi', 'Wagashi row. East of here.'], ['ryo', 'We\u2019ll see them. The club can wait.']] };
+  function CF(z, o) { return Object.assign({ cam: 'frame', at: 'mb2_sento', at2: 'ryo', z: z || 1.7, f: 0.3, ms: 1500 }, o || {}); }
+  function F(fn) { return ['@fn', function (next) { try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {} /* no dialogue box during a staged beat: the camera frame holds (no watchdog zoom-out) */ fn(next); }]; }
+  function fadeLie(next) { if (GS && GS.lie) { fadeOut(GS.lie, 1100); GS.lie = null; } later(1100, next); }
+  /* the answer's rows are spliced into the SAME scene after the pick, so the camera frame, bars and dialogue dock run as one scene */
+  function seqFor(ans, P) {
+    var vq = VQ[P] || VQ.balanced;
+    if (ans === 'fierce') return [F(stageKO), ['ryo', '{quiet}Gently enough.{/quiet}', CF(1.7)], ['aoi', '\u2026He\u2019s breathing. Out cold, but breathing.'], F(stageCarryIn), ['', '<p class="dim">Old Sato and Tome-baa carry him up the stairs. He doesn\u2019t open his eyes.</p>'], F(stageCarryOut), ['', '<p class="dim">A gray-coat pickup slip is pinned under the boiler lamp. One name in pencil: <b>TETSU</b>. Club Kitsune, back office.</p>'], ['aoi', 'Tetsu sits in Jin\u2019s club.{p} {quiet}We can\u2019t touch Jin\u2019s ground yet.{/quiet}'], ['ryo', 'Then we don\u2019t.']].concat(vq);
+    if (ans === 'strategic') return [F(stageDeal), ['aoi', 'Condemned by March. The parts never came. They don\u2019t want your fire lit. They want your basement.', CF(1.7)], ['ryo', '{brisk}You give us the crates, the route, the nights. We give the city a boiler with no parts.{/brisk}'], ['mb2_sento', '\u2026{p=500}{slow}A deal.{/slow} Nobody\u2019s offered me one that wasn\u2019t a loan.'], F(stageDealWalk), ['mb2_sento', 'Tetsu sits in Jin\u2019s club. You can\u2019t walk Jin\u2019s ground yet.{p} The crates used to run east. Masa\u2019s Riders. Wagashi row.', CF(1.7, { at2: null })]].concat(vq);
+    return [F(stageHelp), ['mb2_sento', '\u2026{p=600}An \u014dzeki doesn\u2019t take a hand.', CF(1.7)], ['ryo', 'Then take it as a favor to me.'], ['aoi', '{quiet}Tome-baa! Towels. Hot water.{/quiet}'], F(stageHelpWalk), ['ryo', 'The fire\u2019s lit. It\u2019s been lit all along. The seal\u2019s only chalk.', CF(1.7)], ['ryo', 'Break it {slow}with{/slow} me.'], F(stageHelpPalm), ['aoi', 'The alley can pay for the parts. {quiet}It\u2019s been paying for the water for thirty years.{/quiet}'], ['mb2_sento', 'Tetsu sits in Jin\u2019s club.{p} {slow}Leave that ground alone for now.{/slow} East. Wagashi row. Masa and the Riders.{p} {slow}Tome-baa will tell you the rest.{/slow}']].concat(vq); }
+  function pathNow() { try { return STORY.bond(SAVE).path || 'balanced'; } catch (e) { return 'balanced'; } }
+  function branch(rows, self, next) { var ans = ((STORY.bond(SAVE) || {}).picks || {}).c2_goda || pathNow(), e = E(); if (GS) GS.fate = ans; ev('world:c2:goda:' + ans);
+    e.godaFate = ans === 'fierce' ? 'ko' : ans === 'strategic' ? 'deal' : 'help'; if (ans === 'strategic') e.ckTip = 1; save();
+    var seq = seqFor(ans, pathNow()); Array.prototype.splice.apply(rows, [rows.indexOf(self) + 1, 0].concat(seq)); next(); }
+  function godaRows() { var e = E(); e.ckNamed = 1; e.nq = e.nq && typeof e.nq === 'object' ? e.nq : {}; e.nq.named = 1; try { save(); } catch (x) {}
+    var rows = [], self = F(function (next) { branch(rows, self, next); });
+    rows.push(['mb2_sento', '\u2026{p=600}{slow}Thirty years since anyone put me on the clay.{/slow}', { cam: 'bars+push', at: 'mb2_sento', z: 1.7, f: 0.3, ms: 2600 }], F(godaRise),
+      ['mb2_sento', '\u2026Not the seal.{p} {slow}It keeps the fire lit.{/slow}', CF(1.7)], ['aoi', 'He\u2019s going to throw himself on it.'], ['@bond', 'c2_goda'], self);
+    return rows; }
+
+  /* ---------- wiring ---------- */
+  var bo1 = c2BossOut; c2BossOut = function (k) { if (k === 'sento' && nailsRun() && GS && GS.lie) return godaRows(); return bo1.apply(this, arguments); };
+  var ba1 = bondAsk; bondAsk = function (id, cb) { if (id === 'c2lm_sento' && nailsRun()) { ev('world:c2:goda:skipold'); cb([]); return; } return ba1.apply(this, arguments); }; /* the Punk run asks c2_goda after the fight instead */
+  var sl1 = c2LmSeal; c2LmSeal = function (k) { if (GS) { var g = GS; if (g.carryT) clearInterval(g.carryT); GS = null; fadeOut(g.lie, 700); fadeOut(g.g && g.g.el, 700); g.fx.forEach(function (d) { fadeOut(d, 500); }); if (W.c2n && W.c2n.godaS === g.g) W.c2n.godaS = null; } return sl1.apply(this, arguments); };
+  /* Gōda stands at the bath counter after the Compassionate answer; the free-soak flag resets on each visit */
+  var cp1 = c2Pop; c2Pop = function () { var r = cp1.apply(this, arguments); try { if (nailsRun() && c2Room() === 'sento') { W.godaSoak = 0; var e = E();
+    if (e.godaFate === 'help' && e.seal_sento && W.c2n && !W.c2n.godaC) { var g = c2Npc('mb2_sento', 650, 925, Math.PI / 2); g.el.dataset.npc = 'mb2_sento'; W.c2n.godaC = g; } } } catch (e2) { ev('world:c2bond:err:pop:' + (e2 && e2.message)); } return r; };
+})(window);
+/* CH2BOND_END */
 
 /* C2BG_BEGIN v6561-cam */
 /* v6.5.61 FFF_C2BT: Ch2 living battle backdrops, painted in-engine with Canvas2D in the flat cel style
