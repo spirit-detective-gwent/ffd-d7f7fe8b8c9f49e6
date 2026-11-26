@@ -330,13 +330,17 @@
     if (!ITEMS.etape) ITEMS.etape = { n: 'Electrical tape', k: 'herb', hb: 'tape', d: 'For wiring, or a knuckle.' };
     if (!ITEMS.patch) ITEMS.patch = { n: 'Patch kit', k: 'heal', h: 'bandage', hp: 6, d: 'A cheap roadside repair kit.' };
     if (!ITEMS.bpart) ITEMS.bpart = { n: 'Spare tube', k: 'heal', h: 'bandage', hp: 10, d: 'A patched inner tube. You can wrap a cut with it.' };
+    if (!ITEMS.chainoil) ITEMS.chainoil = { n: 'Chain oil', k: 'herb', hb: 'oil', d: 'Keeps a bike quiet. Or a hinge.' }; /* provisional */
+    if (!ITEMS.cancoffee) ITEMS.cancoffee = { n: 'Canned coffee', k: 'soda', d: 'Hot from the machine in the bay. +6 SP.' }; /* provisional */
   }
   function nailsOn() { return qDone() || !!(NS().won && NS().won.east); }
   function shopCost(base) { var c = base; if (nailsOn()) c = Math.max(1, Math.round(base * 0.8)); return c; }
   P2.MENU = [
     { id: 'etape', k: 'herb', hb: 'tape', n: 'Electrical tape', base: 3, cost: 2, stock: 3, d: 'For wiring, or a knuckle.' },
     { id: 'patch', k: 'heal', h: 'bandage', n: 'Patch kit', base: 4, cost: 3, stock: 3, hp: 6, d: 'A cheap roadside repair kit. +6 HP.' },
-    { id: 'bpart', k: 'heal', h: 'bandage', n: 'Spare tube', base: 6, cost: 5, stock: 2, hp: 10, d: 'A patched inner tube. +10 HP.' }
+    { id: 'bpart', k: 'heal', h: 'bandage', n: 'Spare tube', base: 6, cost: 5, stock: 2, hp: 10, d: 'A patched inner tube. +10 HP.' },
+    { id: 'chainoil', k: 'herb', hb: 'oil', n: 'Chain oil', base: 5, cost: 4, stock: 2, d: 'Keeps a bike quiet. Or a hinge.' }, /* provisional */
+    { id: 'cancoffee', n: 'Canned coffee', base: 4, cost: 3, sp: 6, drink: 1, d: 'Hot from the machine in the bay. +6 SP.' } /* provisional */
   ];
   function menuNow() { return P2.MENU.map(function (it) { var o = {}; Object.keys(it).forEach(function (k) { o[k] = it[k]; }); o.cost = shopCost(it.base); return o; }); }
   if (typeof SHOPS !== 'undefined') {

@@ -352,6 +352,7 @@
     var nails = qDone(), y = yen(), hpFull = SAVE.hp >= MAXHP, NP = '<i class="nqnp">Nails\u2019 price</i>';
     var line = nails ? (path() === 'balanced' ? 'Sit. The kettle\u2019s on. Eat something warm.' : 'Nails said the row is yours. The prices are too.') : 'I can\u2019t sell with them on the step.';
     if (!nails) { talk(pv(VO.shopCold)); return; }
+    if (root.FFF_S2MENUS && typeof root.FFF_S2MENUS.open === 'function') { root.FFF_S2MENUS.open('s2_chiyo'); return; }
     var NQd = root.FFF_NQ;
     /* reuse NQ counter if present; otherwise a simple dialog list */
     var rows = WAGA_MENU.map(function (it) {

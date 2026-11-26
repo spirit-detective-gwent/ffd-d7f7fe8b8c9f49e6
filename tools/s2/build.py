@@ -14,6 +14,9 @@ if p3p.exists():
 p4p = HERE / 'paint_p4.js'
 if p4p.exists():
     paint = paint + '\n' + p4p.read_text(encoding='utf8').rstrip('\n')
+pmp = HERE / 'paint_menus.js'
+if pmp.exists():
+    paint = paint + '\n' + pmp.read_text(encoding='utf8').rstrip('\n')
 mod = (HERE / 's2.js').read_text(encoding='utf8').rstrip('\n')
 BP, EP = '/* S2P_BEGIN v6563-seal2 */\n', '\n/* S2P_END */\n'
 B, E = '/* S2_BEGIN v6563-seal2 */\n', '\n/* S2_END */\n'
@@ -86,6 +89,21 @@ if p4.exists():
     else:
         raise SystemExit('S2P3_END missing; cannot inject S2P4')
     print('injected S2P4', len(mod4))
+
+# Themed shop menus (Chiyo, Hase, depot art/data). After S2P4.
+pm = HERE / 's2menus.js'
+BM, EM = '/* S2MENUS_BEGIN v6563-shopmenus */\n', '\n/* S2MENUS_END */\n'
+if pm.exists():
+    modm = pm.read_text(encoding='utf8').rstrip('\n')
+    if BM in s:
+        i = s.index(BM); j = s.index(EM, i) + len(EM)
+        s = s[:i] + BM + modm + EM + s[j:]
+    elif E4 in s:
+        i = s.index(E4) + len(E4)
+        s = s[:i] + BM + modm + EM + s[i:]
+    else:
+        raise SystemExit('S2P4_END missing; cannot inject S2MENUS')
+    print('injected S2MENUS', len(modm))
 
 INDEX.write_text(s, encoding='utf8')
 print('injected S2P+S2 into', INDEX, 'paint', len(paint), 's2', len(mod))

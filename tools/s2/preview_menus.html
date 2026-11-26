@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>FFF Seal 2 — shop menus</title>
+<style>
+  html,body{margin:0;background:#161018;color:#f4ead2;font:14px/1.4 "Noto Sans CJK JP",Georgia,sans-serif}
+  h1{font-size:18px;margin:16px 24px 4px;letter-spacing:.04em}
+  p.note{margin:0 24px 16px;opacity:.8;max-width:920px}
+  .row{display:flex;flex-wrap:wrap;gap:20px;padding:8px 24px 32px}
+  figure{margin:0;background:#241c28;padding:8px;border-radius:8px}
+  figcaption{font-size:12px;padding:6px 4px 0;letter-spacing:.03em;max-width:390px}
+  .phone{width:390px;height:844px;position:relative;overflow:hidden;background:#000;border-radius:4px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+  .phone #wshop{position:absolute;inset:0}
+  .icons{display:flex;flex-wrap:wrap;gap:8px;padding:8px}
+  .icons canvas{background:#1a1220;border-radius:8px}
+</style>
+</head>
+<body>
+<h1>Seal 2 shop menus — preview</h1>
+<p class="note">Hand-drawn in-engine boards at 390×844. Left of each pair is the regular price; right is Nails’ price (20% off, base struck through). New items are marked provisional. Funayado and Sada’s garage have no shop counter, so they are not here. The depot menu is art and data only — not wired.</p>
+<div class="row" id="row"></div>
+<script src="paint_menus.js"></script>
+<script src="s2menus.js"></script>
+<script>
+(async function () {
+  var P = window.FFF_S2P, M = window.FFF_S2MENUS, row = document.getElementById('row');
+  function loadImg(src) {
+    return new Promise(function (res) {
+      var im = new Image(); im.onload = function () { res(im); };
+      im.onerror = function () { res(null); };
+      im.src = src;
+    });
+  }
+  var chiyoPt = await loadImg('../../portraits/chiyo_neutral.webp');
+  var hasePt = await loadImg('../../portraits/hase_neutral.webp');
+
+  function addFig(el, cap) {
+    var f = document.createElement('figure'); f.appendChild(el);
+    var fc = document.createElement('figcaption'); fc.textContent = cap; f.appendChild(fc);
+    row.appendChild(f); return f;
+  }
+  function addCanvas(id, w, h, paint, cap) {
+    var c = document.createElement('canvas'); c.width = w; c.height = h; c.id = id;
+    var g = c.getContext('2d'); paint(g); addFig(c, cap); return c;
+  }
+
+  /* icon sheet */
+  var ids = ['sweetroll','dango','hojicha','etape','patch','bpart','chainoil','cancoffee','onigiri','ptape','gauze'];
+  (function () {
+    var c = document.createElement('canvas'); c.width = 64*ids.length + 16; c.height = 80; c.id = 'icons';
+    var g = c.getContext('2d'); g.fillStyle = '#1a1220'; g.fillRect(0,0,c.width,c.height);
+    ids.forEach(function (id, i) { g.save(); g.translate(8 + i*64, 8); P.menuIcon(g, id, 64); g.restore(); });
+    addFig(c, 'Item icons (left to right): sweet roll, dango, hojicha, tape, patch kit, spare tube, chain oil, canned coffee, onigiri, packing tape, gauze');
+  })();
+
+  var chiyoItems = M.CHIYO_ITEMS;
+  var haseItems = M.HASE_ITEMS;
+  var depotItems = M.DEPOT_ITEMS;
+
+  function preview(id, theme, opt, cap, nails) {
+    addCanvas(id, 390, 844, function (g) {
+      P.menuPreview(g, theme, Object.assign({
+        w: 390, h: 844, nails: nails, yen: 40, hp: 40, maxhp: 55, sp: 20, maxsp: 40,
+        items: opt.items, jp: opt.jp, en: opt.en, line: nails ? opt.lineNails : opt.line, who: opt.who,
+        portrait: opt.portrait, leave: opt.leave
+      }, {}));
+    }, cap);
+  }
+
+  preview('chiyo_full', 'chiyo', {
+    items: chiyoItems, jp: '千代和菓子', en: 'Chiyo Wagashi', who: 'Chiyo', portrait: chiyoPt,
+    line: 'I can’t sell with them on the step.', lineNails: 'Sit. The kettle’s on. Eat something warm.',
+    leave: 'また来る  ·  Later'
+  }, 'Chiyo Wagashi — regular prices (the shop only opens after the row is taken, so this board is the pre-Nails layout)', false);
+
+  preview('chiyo_nails', 'chiyo', {
+    items: chiyoItems, jp: '千代和菓子', en: 'Chiyo Wagashi', who: 'Chiyo', portrait: chiyoPt,
+    line: 'Sit. The kettle’s on. Eat something warm.', lineNails: 'Sit. The kettle’s on. Eat something warm.',
+    leave: 'また来る  ·  Later'
+  }, 'Chiyo Wagashi — Nails’ price (¥8→¥6 roll, ¥5→¥4 dango, ¥4→¥3 hojicha). Hojicha is provisional.', true);
+
+  preview('hase_full', 'hase', {
+    items: haseItems, jp: '長谷 整備', en: 'Hase Repair', who: 'Hase', portrait: hasePt,
+    line: 'Parts, tape, a cheap patch.', lineNails: 'Nails prices, if that is the deal.',
+    leave: '戻る  ·  Leave'
+  }, 'Hase Repair — regular prices (sold while the Riders still hold the block)', false);
+
+  preview('hase_nails', 'hase', {
+    items: haseItems, jp: '長谷 整備', en: 'Hase Repair', who: 'Hase', portrait: hasePt,
+    line: 'Nails prices, if that is the deal.', lineNails: 'Nails prices, if that is the deal.',
+    leave: '戻る  ·  Leave'
+  }, 'Hase Repair — Nails’ price (¥3→¥2 tape, ¥4→¥3 patch, ¥6→¥5 tube, ¥5→¥4 oil, ¥4→¥3 coffee). Oil and coffee are provisional.', true);
+
+  preview('depot_full', 'depot', {
+    items: depotItems, jp: '出庫窓口', en: 'Depot Counter', who: 'Clerk',
+    line: 'Window’s shut until the seal is broken.', lineNails: 'You ended the gray schedule. Sit a minute.',
+    leave: '閉じる  ·  Close'
+  }, 'Depot Counter — regular prices (art and data only, not wired). All four items are provisional.', false);
+
+  preview('depot_nails', 'depot', {
+    items: depotItems, jp: '出庫窓口', en: 'Depot Counter', who: 'Clerk',
+    line: 'You ended the gray schedule. Sit a minute.', lineNails: 'You ended the gray schedule. Sit a minute.',
+    leave: '閉じる  ·  Close'
+  }, 'Depot Counter — Nails’ price after Masa’s seal. Compassionate line on the header.', true);
+
+  window.__s2menus_ready = true;
+})();
+</script>
+</body></html>
