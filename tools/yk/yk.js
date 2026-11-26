@@ -96,6 +96,7 @@
       var hs = document.createElement('canvas'); hs.width = w; hs.height = h; var hsx = hs.getContext('2d', { willReadFrequently: true }); hsx.drawImage(src, sx, sy, w, h, 0, 0, w, h);
       var hd0 = hsx.getImageData(0, 0, w, h).data, hya = -1, hyb = 0; for (var hy = 0; hy < h; hy++) { var hn = 0; for (var hxx = 0; hxx < w; hxx++) if (hd0[(hy * w + hxx) * 4 + 3] > 150) hn++; if (hn >= 2) { if (hya < 0) hya = hy; hyb = hy; } }
       if (hya >= 0) { var yN = Math.round(hya + (hyb - hya) * (spec.neckQ || 0.165)), ha = w, hb = 0; for (var hy2 = hya; hy2 < yN; hy2++) for (var hx2 = 0; hx2 < w; hx2++) if (hd0[(hy2 * w + hx2) * 4 + 3] > 150) { if (hx2 < ha) ha = hx2; if (hx2 > hb) hb = hx2; }
+        if (spec.headClamp) hk = Math.max(1, Math.min(hk, (yN + 2 - spec.headClamp) / Math.max(1, yN + 2 - hya)));
         var hcxN = (ha + hb) / 2, hc2 = document.createElement('canvas'); hc2.width = w; hc2.height = h; var hcx3 = hc2.getContext('2d'); hcx3.drawImage(hs, 0, yN, w, h - yN, 0, yN, w, h - yN);
         hcx3.imageSmoothingEnabled = true; hcx3.drawImage(hs, 0, 0, w, yN + 2, hcxN - hcxN * hk, yN + 2 - (yN + 2) * hk, w * hk, (yN + 2) * hk);
         src = hc2; sx = 0; sy = 0; } }
@@ -371,7 +372,7 @@
         [-1, 1].forEach(function (sd) { lockD([c6 + sd * R6 * 0.7, t6 + capRy * 0.7, c6 + sd * R6 * 1.0, t6 + capRy * 1.25, c6 + sd * R6 * 1.34, t6 + capRy * 1.75, sd * 1 * sc], 0.42);
           lockD([c6 + sd * R6 * 0.68, t6 + capRy * 0.9, c6 + sd * R6 * 1.12, t6 + capRy * 0.95, c6 + sd * R6 * 1.14, chinH - 1 * sc, sd * 1.5 * sc], 0.42); });
         x.beginPath(); x.ellipse(c6, t6 + capRy * 0.62, R6 * 1.1, capRy * 0.72, 0, 0, 7); x.fillStyle = rgb(ht.b); x.fill(); x.beginPath(); x.ellipse(c6, t6 + capRy * 0.62, R6 * 1.1, capRy * 0.72, 0, Math.PI * 0.92, Math.PI * 2.08); x.lineWidth = 2 * sc; x.strokeStyle = rgb(INK); x.stroke();
-        [[-0.6, -0.5], [0.05, -0.75], [0.55, -0.45]].forEach(function (u) { lockD([c6 + u[0] * R6 - R6 * 0.22, t6 + capRy * 0.3, c6 + u[0] * R6 + R6 * 0.22, t6 + capRy * 0.3, c6 + u[0] * R6 - R6 * 0.25, t6 + capRy * u[1] * 0.25, 0], 0); });
+        if (t6 - capRy * 0.3 > 2) [[-0.6, -0.5], [0.05, -0.75], [0.55, -0.45]].forEach(function (u) { lockD([c6 + u[0] * R6 - R6 * 0.22, t6 + capRy * 0.3, c6 + u[0] * R6 + R6 * 0.22, t6 + capRy * 0.3, c6 + u[0] * R6 - R6 * 0.25, t6 + capRy * u[1] * 0.25, 0], 0); });
         [-1, 1].forEach(function (sd) { lockD([c6 + sd * R6 * 0.5, t6 + capRy * 1.0, c6 + sd * R6 * 0.98, t6 + capRy * 1.0, c6 + sd * R6 * 0.94, faceTop + (chinH - faceTop) * 0.62, sd * 1 * sc], 0.4); });
         x.strokeStyle = rgb(ht.h); x.lineWidth = 1.1 * sc; x.beginPath(); x.ellipse(c6 - R6 * 0.25, t6 + capRy * 0.45, R6 * 0.45, capRy * 0.28, -0.3, Math.PI * 1.1, Math.PI * 1.7); x.stroke();
         [[-0.85, -0.38, -0.5], [-0.5, -0.02, -0.12], [-0.12, 0.36, 0.3], [0.26, 0.7, 0.62], [0.6, 0.98, 0.9]].forEach(function (b, n7) { lockD([c6 + b[0] * R6, t6 + capRy * 0.95, c6 + b[1] * R6, t6 + capRy * 0.95, c6 + b[2] * R6, br6 + (n7 === 1 ? 2.5 : n7 % 2 ? 1 : 0) * sc, -1 * sc], n7 === 4 ? 0.3 : 0); }); }
@@ -537,7 +538,7 @@
   SPEC.ksJin2 = { base: 'punk', glove: 1, nozig: 1, noScar: 1, clean: 1, pal: { 3: tri('#141217'), 4: tri('#8ccf2a'), 5: tri('#1b1920'), 6: tri('#1f1d24'), 7: tri('#1b1920') }, happi: { eri: '#1b1920', hemCol: '#5f9a18' }, zip: '#c9ccd2',
     hood: '#8ccf2a', phones: { cup: '#1d1c22', band: '#1a1820', ring: '#8ccf2a' }, bag: 2, hair: 'shag', hairCol: '#141217', hairCol2: '#9be03a', face2: { eyes: 'soft', brow: 'soft', mouth: 'smirk', mouthW: 0.32, jaw: 'pointed', w: 0.95 } };
   /* the Black-Suit Bouncer (portraits/bouncer_neutral): slicked side-parted black hair, black shades, tanned, a black single-breasted suit, a white shirt open at the collar, no tie; head drawn bigger */
-  SPEC.ksBouncer2 = { base: 'punk', glove: 1, nozig: 1, noScar: 1, clean: 1, skinRe: 1, skin: '#dca673', bulk: 0.62, bagSide: 0.5, headFront: 1.2, headSide: 1.28, neckQ: 0.15,
+  SPEC.ksBouncer2 = { base: 'punk', glove: 1, nozig: 1, noScar: 1, clean: 1, skinRe: 1, skin: '#dca673', bulk: 0.62, bagSide: 0.5, headFront: 1.2, headSide: 1.28, headClamp: 9, neckQ: 0.15,
     pal: { 3: tri('#121115'), 4: tri('#1f1e24'), 5: tri('#f2f1ec'), 6: tri('#1f1e24'), 7: tri('#0f0e12') }, suit: { lapel: '#2b2a31', db: 0, btn: '#2b2a31', collar: 1, v: 0.7 }, bag: 2, hair: 'slick', tight: 1, part: 1, hairCol: '#121115', hairHi: '#33323d', hairClr: 18, shades: 1, face2: { mouth: 'flat', mouthW: 0.42, jaw: 'square', w: 1.05 } };
   /* Kitsune "Suit", uniform A (portraits/c2suit_neutral): black baseball cap, black shades, charcoal pinstripe double-breasted suit with silver buttons, dark maroon shirt, no tie, stocky */
   SPEC.ksSuit2 = { base: 'punk', glove: 1, nozig: 1, noScar: 1, clean: 1, bulk: 0.3, bagSide: 0.5, pal: { 3: tri('#141217'), 4: tri('#2f2e36'), 5: tri('#6a1b27'), 6: tri('#2f2e36'), 7: tri('#141217') }, pin: '#77757f',
