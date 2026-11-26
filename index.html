@@ -15026,7 +15026,7 @@ function ringSvg(p, lv, cap, frac, cur) {
     '<text x="50" y="57" text-anchor="middle">' + lv + '</text></svg>';
 }
 /* v6.5.63 ch2-bond: Journal names + real pay for Aoi's calls (Ch2 ids used to print raw, and every grade printed the 118/59/24 default) */
-var BCALL_NAME = { first: 'The courtyard', c2nq_door: 'Kitsune-no-Yu door', c2_goda: 'G\u014dda on the clay', c2_cheap: 'The Cheap Shot job', c2_offer: 'The coat\u2019s offer', c2_ledger: 'Tetsu\u2019s ledger', c2_eve: 'The night before the roof', dg_gouki: 'Gouki\u2019s doors', c2lm_market: 'The cold-room door', c2lm_pier: 'The pier', c2lm_dock: 'The dock' };
+var BCALL_NAME = { first: 'The courtyard', c2nq_door: 'Kitsune-no-Yu door', c2_goda: 'G\u014dda on the clay', c2_masa_after: 'Masa at the shutter', c2_offer: 'The coat\u2019s offer', c2_ledger: 'Tetsu\u2019s ledger', c2_eve: 'The night before the roof', dg_gouki: 'Gouki\u2019s doors', c2lm_market: 'The cold-room door', c2lm_pier: 'The pier', c2lm_dock: 'The dock' };
 function bondCallName(id) { id = String(id); if (id.indexOf('mini_') === 0 && CD.chars[id.slice(5)]) return CD.chars[id.slice(5)].name; if (BCALL_NAME[id]) return BCALL_NAME[id];
   if (id.indexOf('dg_') === 0 && DGS[id.slice(3)]) return DGS[id.slice(3)].n || id; var m = /^c2lm_(\w+)$/.exec(id); if (m && typeof C2LM === 'object' && C2LM[m[1]] && C2LM[m[1]].n) return C2LM[m[1]].n; return id; }
 function bondCallPay(id, g) { var BD = STORY.BOND, n = ((BD.PAY || {})[id] || BD.XP.GRADE)[g] | 0, ch3 = /^c2lm_(market|pier|dock)$/.test(id); if (SAVE.xpMode === 'grinder' && !ch3 && /^(mini_|dg_|c2)/.test(id)) n = Math.max(1, Math.round(n * 0.5)); return n; }
@@ -16249,8 +16249,8 @@ function bondAsk(id, cb) {
     /* v4.13.1: Ryo (v4.24: whoever you play) answers in the SAME dialogue box the story talk uses. v4.24: the first (locking)
      * choice shows each answer in its path's colour with the path named, previews the path effect around Ryo on hover /
      * focus / the first tap, and plays it when picked. Later answers stay plain lines. */
-    var qm = /<b>([\s\S]*?)<\/b>\s*<p>([\s\S]*?)<\/p>/.exec(Q.q), ql = qm ? qm[1] : '', qt = qm ? qm[2] : Q.q, pt = me === 'ryo' ? ryoPt() : PT[me];
-    var _pq = ptPaintUrl(me, ptMoodOf(me)), html = '<div class="sh' + (first ? ' bfxsh' : '') + (_pq ? ' pt-hang' : '') + '"><i class="pt2" style="background-image:url(' + (_pq || IMG[pt]) + ')"></i>' + (GEAR ? gearPt(me) : '') + '<b class="snm">' + (NM[me] || CNAME[me]) + '</b></div>' +
+    var qm = /<b>([\s\S]*?)<\/b>\s*<p>([\s\S]*?)<\/p>/.exec(Q.q), ql = qm ? qm[1] : '', qt = qm ? qm[2] : Q.q, asker = /Aoi/i.test(ql) ? 'aoi' : me, pt = asker === 'ryo' ? ryoPt() : PT[asker]; /* v6.5.63 ch2-bond: nameplate is Aoi when Aoi asks */
+    var _pq = ptPaintUrl(asker, ptMoodOf(asker)), html = '<div class="sh' + (first ? ' bfxsh' : '') + (_pq ? ' pt-hang' : '') + '"><i class="pt2" style="background-image:url(' + (_pq || IMG[pt]) + ')"></i>' + (GEAR ? gearPt(asker) : '') + '<b class="snm">' + (NM[asker] || CNAME[asker]) + '</b></div>' +
       '<div class="tw bq"><p class="dim bqq">' + (ql ? '<strong>' + ql + ':</strong> ' : '') + qt + '</p></div>';
     dialog(html, STORY.BOND.P.map(function (p) { return [first ? '\u201c' + Q.o[p][0] + '.\u201d<small>' + Q.o[p][1] + '</small>' : '\u201c' + Q.o[p][0] + '.\u201d', function () { pick(p); }, 'bondopt bline bond-' + p + (first ? ' bcol' : '')]; }));
     $('#wdlg').classList.add('scene', 'bask'); if (first) $('#wdlg').classList.add('bfirst'); ev('world:bond:say:' + id);
@@ -30327,12 +30327,12 @@ c2LmSeal = function (k) { var L = C2LM[k], S = c2S(); if (!L || S.e['seal_' + k]
       if (!own && S.e.run_fac && !S.e.c2sUp) { S.e.c2sUp = 1; try { if (root.FFF_OPN) root.FFF_OPN.grant(C2S_SET[S.e.run_fac][1]); } catch (eG) {} }
       if (n === 1) { S.e.ckNamed = 1; try { if (typeof c2MaskTetsu === 'function') c2MaskTetsu(); } catch (eM) {} }
       save(); ev('world:c2:seal:' + k + ':' + n); W.cut = false; sLock(0, 'c2seal'); resetTrail(r.x, r.y, r.dir); c2sLocksSync();
-      var L2 = n === 1 ? [['', '<p class="dim">Ryo pries the seal off the lock. A small engraved token. A serial on the back.</p>'], ['aoi', 'Club Kitsune. Let\u2019s pay Punk Tetsu a visit.']]
+      var L2 = n === 1 ? [['', '<p class="dim">Ryo pries the seal off the lock. A small engraved token. A serial on the back.</p>'], ['aoi', k === 'sento' ? 'Wagashi row. Masa and the Riders.' : 'Club Kitsune. Let\u2019s pay Punk Tetsu a visit.']] /* v6.5.63 ch2-bond: after Gōda, pointer is Masa; club stays optional */
         : n >= C2LMK.length ? [['', '<p class="dim">The fourth token comes free. Four serials in Ryo\u2019s pocket.</p>'], ['aoi', S.e.ckSlip ? 'All four. Genji can match them to the slip.' : 'All four. Now Tetsu\u2019s slip.']]
         : [['', '<p class="dim">Another engraved token. Another serial.</p>'], ['aoi', C2SC.sealN[n] || 'Another seal.']];
       if (own) L2 = [['', '<p class="dim">He sets the token in Ryo\u2019s hand. A serial on the back.</p>']].concat(L2.slice(1));
       if (!own && f && n < C2LMK.length) L2.push(['ryo', 'The ' + c2sFacName(f) + ' stand down now.']);
-      scene(null, L2, function () { if (n === 1 && !S.e.ckSlip) c2sSay('The club\u2019s open to us now. Tetsu\u2019s back office.'); else if (n >= C2LMK.length) c2sSay('Gym. Genji first.'); try { c2SqRefresh(); } catch (eR) {} }); }, Math.round(500 * cinK())); }); };
+      scene(null, L2, function () { if (n === 1 && !S.e.ckSlip) c2sSay(k === 'sento' ? 'Wagashi row is next. The club will keep.' : 'The club\u2019s open to us now. Tetsu\u2019s back office.'); /* v6.5.63 ch2-bond */ else if (n >= C2LMK.length) c2sSay('Gym. Genji first.'); try { c2SqRefresh(); } catch (eR) {} }); }, Math.round(500 * cinK())); }); };
 /* your own gang's base: no guards, and the boss hands his seal over once the other three are taken */
 var c2sLmPop0 = c2LmPop;
 c2LmPop = function (k) { c2sLmPop0(k); if (!c2sOn() || k !== c2sOwnLm()) return;
@@ -40289,15 +40289,15 @@ function camPan(to, o, done) {
 /* CH2BOND_BEGIN v6563-bond */
 /* v6.5.63 (GGD-29) Ch2 bond moments. M1 to M5 pay 700/350/140 up to 935/468/187 (Grinder halves them through bondGain).
  * M1 = c2_goda: a staged scene after the fight with G\u014dda (Punk / Nails route; it replaces the pre-fight c2lm_sento call).
- * M2..M5 ids are reserved here (c2_cheap, c2_offer, c2_ledger, c2_eve): only their pay is wired, the scenes come later.
+ * M2 is reserved as c2_masa_after (Masa's depot shutter, after he falls; scene comes with seal-2 phase 5). PAY alias c2_cheap kept. M3..M5: c2_offer, c2_ledger, c2_eve, pay only.
  * Source note: this block is NOT part of the nq pack. Keep it when the pack is rebuilt; the pack's c2BossOut override is wrapped, not replaced. */
 (function (root) {
   if (typeof c2S !== 'function' || typeof BOND_Q !== 'object' || typeof BOND_TXT !== 'object' || typeof BOND_MID !== 'object' || !STORY || !STORY.BOND || typeof c2BossOut !== 'function') return;
   var PAY = STORY.BOND.PAY;
   PAY.c2nq_door = { best: 120, mid: 60, clash: 24 }; /* was the silent 118/59/24 default; now the Ch2 call rate */
-  PAY.c2_goda = { best: 700, mid: 350, clash: 140 }; PAY.c2_cheap = { best: 760, mid: 380, clash: 152 }; PAY.c2_offer = { best: 820, mid: 410, clash: 164 };
+  PAY.c2_goda = { best: 700, mid: 350, clash: 140 }; PAY.c2_masa_after = { best: 760, mid: 380, clash: 152 }; PAY.c2_cheap = PAY.c2_masa_after /* alias: old reserved id */; PAY.c2_offer = { best: 820, mid: 410, clash: 164 };
   PAY.c2_ledger = { best: 880, mid: 440, clash: 176 }; PAY.c2_eve = { best: 935, mid: 468, clash: 187 };
-  var BOND_CH2 = ['c2_goda', 'c2_cheap', 'c2_offer', 'c2_ledger', 'c2_eve'];
+  var BOND_CH2 = ['c2_goda', 'c2_masa_after', 'c2_offer', 'c2_ledger', 'c2_eve'];
   root.FFF_CH2BOND = { ids: BOND_CH2, pay: PAY };
   BOND_Q.c2_goda = { q: '<b>Aoi asks</b><p>He\u2019s getting up for the seal. What do we do with him?</p>', o: { fierce: ['Put him down, clean and fast', 'Fierce'], strategic: ['Make him a deal', 'Strategic'], balanced: ['Help him up and show him the fire\u2019s fine', 'Compassionate'] } };
   BOND_MID.c2_goda = 'strategic';
@@ -40369,16 +40369,36 @@ function camPan(to, o, done) {
   function stageHelpPalm(next) { var s = seal(), gy = C2LM.sento.seal ? C2LM.sento.seal[1] + 30 : s[1], g = GS.g; glow(s[0] - 14, gy, 'rgba(255,170,80,.95)', 170, 1700); if (g) glow(g.x - 18, g.y - 74, 'rgba(255,200,120,.95)', 90, 1500); AU.play('fire_whoosh', { gain: 0.35 }); later(260, function () { AU.play('pl_heal', { gain: 0.6 }); }); later(1500, next); }
 
   /* ---------- the rows ---------- */
-  var VQ = { fierce: [['aoi', 'Club Kitsune. The door that wouldn\u2019t let us in.'], ['ryo', '{shout}It will now.{/shout}', { hype: 1 }]], strategic: [['aoi', 'Club Kitsune. The door that wouldn\u2019t let us in.'], ['ryo', 'It will. Tetsu just lost his warehouse.']], balanced: [['aoi', 'Club Kitsune. The door that wouldn\u2019t let us in.'], ['ryo', 'It will now.', { hype: 1 }]] };
+  /* Fierce: Sato and Tome-baa enter from the boiler-corridor door, lift Gōda, and walk him back out (up toward the stairs). Camera stays held; they leave the frame. */
+  function carryPlace(x, y) { var e = GS && GS.lie, k = C2K.mb2_sento || 1, sc = SPH * k / 256, C = LIEC; if (!e || !C) return;
+    e.style.transform = 'translate3d(' + (x - C.w * sc / 2).toFixed(1) + 'px,' + (y - C.base * sc).toFixed(1) + 'px,0)'; e.style.zIndex = 100 + Math.round(y); }
+  function carryTick() { if (!GS || !GS.sato || !GS.tome) return; carryPlace((GS.sato.x + GS.tome.x) / 2, Math.max(GS.sato.y, GS.tome.y) - 6); }
+  function stageCarryIn(next) { if (!GS) { next(); return; }
+    var doorX = 780, doorY = 500, x = GS.x, y = GS.y;
+    try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {}
+    var sato = c2Npc('nq_bandai', doorX, doorY - 14, Math.PI), tome = c2Npc('nq_tome', doorX + 24, doorY + 20, Math.PI);
+    GS.sato = sato; GS.tome = tome; if (sato && sato.el) { sato.el.dataset.npc = 'nq_bandai'; GS.fx.push(sato.el); }
+    if (tome && tome.el) { tome.el.dataset.npc = 'nq_tome'; GS.fx.push(tome.el); }
+    ev('world:c2:goda:carry:in');
+    c2WalkAll([[sato, x - 36, y + 8, 70 / ck()], [tome, x + 40, y + 16, 70 / ck()]], function () {
+      c2Face(sato, x, y); c2Face(tome, x, y); later(320, function () { carryTick(); later(280, next); }); }); }
+  function stageCarryOut(next) { if (!GS || !GS.sato) { fadeLie(next); return; }
+    try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {}
+    var doorX = 820, doorY = 500, ticks = setInterval(carryTick, 40);
+    ev('world:c2:goda:carry:out');
+    c2WalkAll([[GS.sato, doorX, doorY - 14, 62 / ck()], [GS.tome, doorX + 24, doorY + 20, 62 / ck()]], function () {
+      clearInterval(ticks); fadeOut(GS.sato && GS.sato.el, 500); fadeOut(GS.tome && GS.tome.el, 500); fadeLie(function () { GS.sato = GS.tome = null; next(); }); }); }
+
+  var VQ = { fierce: [['aoi', 'East. Wagashi row. The Riders.'], ['ryo', '{shout}Masa, then.{/shout}', { hype: 1 }]], strategic: [['aoi', 'Wagashi row first. The club can wait.'], ['ryo', 'We take the street. Then Masa.']], balanced: [['aoi', 'Wagashi row. East of here.'], ['ryo', 'We\u2019ll see them. The club can wait.']] };
   function CF(z, o) { return Object.assign({ cam: 'frame', at: 'mb2_sento', at2: 'ryo', z: z || 1.7, f: 0.3, ms: 1500 }, o || {}); }
   function F(fn) { return ['@fn', function (next) { try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {} /* no dialogue box during a staged beat: the camera frame holds (no watchdog zoom-out) */ fn(next); }]; }
   function fadeLie(next) { if (GS && GS.lie) { fadeOut(GS.lie, 1100); GS.lie = null; } later(1100, next); }
   /* the answer's rows are spliced into the SAME scene after the pick, so the camera frame, bars and dialogue dock run as one scene */
   function seqFor(ans, P) {
     var vq = VQ[P] || VQ.balanced;
-    if (ans === 'fierce') return [F(stageKO), ['ryo', '{quiet}Gently enough.{/quiet}', CF(1.7)], ['aoi', '\u2026He\u2019s breathing. Out cold, but breathing.'], ['', '<p class="dim">A gray-coat pickup slip is pinned under the boiler lamp. One name in pencil: <b>TETSU</b>. Club Kitsune, back office.</p>'], ['aoi', 'Tetsu. The back office at Club Kitsune.']].concat(vq, [['mb2_sento', '\u2026Hnh. A fist. A real one.{p} {slow}Thirty years.{/slow}'], ['', '<p class="dim">Old Sato and Tome-baa carry him up the stairs. He doesn\u2019t open his eyes.</p>'], F(fadeLie)]);
-    if (ans === 'strategic') return [F(stageDeal), ['aoi', 'Condemned by March. The parts never came. They don\u2019t want your fire lit. They want your basement.', CF(1.7)], ['ryo', '{brisk}You give us the crates, the route, the nights. We give the city a boiler with no parts.{/brisk}'], ['mb2_sento', '\u2026{p=500}{slow}A deal.{/slow} Nobody\u2019s offered me one that wasn\u2019t a loan.'], F(stageDealWalk), ['mb2_sento', 'Tetsu. Back office. Thursdays the crates go up.{p} Door\u2019s behind the coat check.', CF(1.7, { at2: null })]].concat(vq);
-    return [F(stageHelp), ['mb2_sento', '\u2026{p=600}An \u014dzeki doesn\u2019t take a hand.', CF(1.7)], ['ryo', 'Then take it as a favor to me.'], ['aoi', '{quiet}Tome-baa! Towels. Hot water.{/quiet}'], F(stageHelpWalk), ['ryo', 'The fire\u2019s lit. It\u2019s been lit all along. The seal\u2019s only chalk.', CF(1.7)], ['ryo', 'Break it {slow}with{/slow} me.'], F(stageHelpPalm), ['aoi', 'The alley can pay for the parts. {quiet}It\u2019s been paying for the water for thirty years.{/quiet}'], ['mb2_sento', 'Tetsu. The back office at Club Kitsune.{p} {slow}Tome-baa will tell you the rest.{/slow}']].concat(vq); }
+    if (ans === 'fierce') return [F(stageKO), ['ryo', '{quiet}Gently enough.{/quiet}', CF(1.7)], ['aoi', '\u2026He\u2019s breathing. Out cold, but breathing.'], F(stageCarryIn), ['', '<p class="dim">Old Sato and Tome-baa carry him up the stairs. He doesn\u2019t open his eyes.</p>'], F(stageCarryOut), ['', '<p class="dim">A gray-coat pickup slip is pinned under the boiler lamp. One name in pencil: <b>TETSU</b>. Club Kitsune, back office.</p>'], ['aoi', 'Tetsu sits in Jin\u2019s club.{p} {quiet}We can\u2019t touch Jin\u2019s ground yet.{/quiet}'], ['ryo', 'Then we don\u2019t.']].concat(vq);
+    if (ans === 'strategic') return [F(stageDeal), ['aoi', 'Condemned by March. The parts never came. They don\u2019t want your fire lit. They want your basement.', CF(1.7)], ['ryo', '{brisk}You give us the crates, the route, the nights. We give the city a boiler with no parts.{/brisk}'], ['mb2_sento', '\u2026{p=500}{slow}A deal.{/slow} Nobody\u2019s offered me one that wasn\u2019t a loan.'], F(stageDealWalk), ['mb2_sento', 'Tetsu sits in Jin\u2019s club. You can\u2019t walk Jin\u2019s ground yet.{p} The crates used to run east. Masa\u2019s Riders. Wagashi row.', CF(1.7, { at2: null })]].concat(vq);
+    return [F(stageHelp), ['mb2_sento', '\u2026{p=600}An \u014dzeki doesn\u2019t take a hand.', CF(1.7)], ['ryo', 'Then take it as a favor to me.'], ['aoi', '{quiet}Tome-baa! Towels. Hot water.{/quiet}'], F(stageHelpWalk), ['ryo', 'The fire\u2019s lit. It\u2019s been lit all along. The seal\u2019s only chalk.', CF(1.7)], ['ryo', 'Break it {slow}with{/slow} me.'], F(stageHelpPalm), ['aoi', 'The alley can pay for the parts. {quiet}It\u2019s been paying for the water for thirty years.{/quiet}'], ['mb2_sento', 'Tetsu sits in Jin\u2019s club.{p} {slow}Leave that ground alone for now.{/slow} East. Wagashi row. Masa and the Riders.{p} {slow}Tome-baa will tell you the rest.{/slow}']].concat(vq); }
   function pathNow() { try { return STORY.bond(SAVE).path || 'balanced'; } catch (e) { return 'balanced'; } }
   function branch(rows, self, next) { var ans = ((STORY.bond(SAVE) || {}).picks || {}).c2_goda || pathNow(), e = E(); if (GS) GS.fate = ans; ev('world:c2:goda:' + ans);
     e.godaFate = ans === 'fierce' ? 'ko' : ans === 'strategic' ? 'deal' : 'help'; if (ans === 'strategic') e.ckTip = 1; save();
