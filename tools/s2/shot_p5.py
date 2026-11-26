@@ -84,6 +84,7 @@ async def boot(pg):
       try { STORY.ensure(SAVE); } catch(e){}
       var st=c2S(); st.e=st.e||{}; st.e.run_fac='arc'; st.e.seal_sento=1; st.e.sealKnown=1; st.e.c2sRep=1; st.e.c2lMap=1;
       st.e.n13='done'; st.e.arrive=1; st.e.gymIn=1; st.e.genji=1; st.e.nq=st.e.nq||{};
+      st.q.cq2_arrive=9; st.q.cq2_hq=9; st.q.cq2_scout=9;
       st.q=st.q||{}; st.q.cq2_nq_west=9; st.q.cq2_nq_cold=9; st.q.cq2_nq_paint=9; st.q.cq2_nq_door=9; st.q.cq2_nq_seal=9;
       st.q.cq2_locks=0; st.qa='cq2_locks';
       st.q.cq2_s2_waga=9; if (root.FFF_S2&&root.FFF_S2.setStg) root.FFF_S2.setStg('done');
@@ -243,18 +244,34 @@ async def main():
         await ev(pg, HUSH)
         await shot(pg, '20_shutter_sealed')
 
-        # Genji / city map after down_dep: SE quarter Punk red, X4 Punk vs Syndicate
+        # Genji / city map after down_dep: SE quarter Punk red, X4 Punk vs Syndicate,
+        # Masa/Riders (and already-beaten Gōda/Hustlers) stood down. Hide leftover Ch2-start banners
+        # (Downtown Arrival is a c2Begin harness leftover, z-index 60 over the map).
         mmap = await ev(pg, """(function(){
           var P5=root.FFF_S2P5, st=c2S();
           st.e.run_fac='arc'; st.e.down_dep=1; st.e.seal_depot=1; st.e.eastSeal=1;
+          st.e.down_bat=1; st.e.seal_sento=1;
           st.e.masaFate='help'; P5.setStg('done'); st.q.cq2_s2_depot=9;
+          st.q.cq2_arrive=9; st.q.cq2_hq=9; st.q.cq2_scout=9;
           try { if (P5.applySeTurf) P5.applySeTurf(); else if (P5.flipEast) P5.flipEast(); } catch(e){}
-          try { if (root.FFF_C2LMAP && FFF_C2LMAP.openAll) FFF_C2LMAP.openAll({ focus:'city' }); } catch(e2){ return {err:String(e2)}; }
-          var T=root.FFF_C2TURF, col=FFF_C2LMAP&&FFF_C2LMAP.ownerCol&&FFF_C2LMAP.ownerCol('masa');
-          return { col:col, x4:T&&T.B&&T.B.X4&&T.B.X4.g, map:!!document.getElementById('c2citymap'), rlen:T&&T.Q&&T.Q.R&&T.Q.R.length };
+          try {
+            var o=document.getElementById('wquest');
+            if (o) { o._qgen=(o._qgen|0)+1; o.className=''; o.style.visibility='hidden'; o.dataset.k=''; o.dataset.done='1'; }
+          } catch(eQ){}
+          try { if (root.FFF_C2LMAP && FFF_C2LMAP.openAll) FFF_C2LMAP.openAll({ focus:'masa' }); } catch(e2){ return {err:String(e2)}; }
+          var T=root.FFF_C2TURF, M=root.FFF_C2LMAP;
+          return {
+            col: M&&M.ownerCol&&M.ownerCol('masa'),
+            x4: T&&T.B&&T.B.X4&&T.B.X4.g,
+            map: !!document.getElementById('c2citymap'),
+            rlen: T&&T.Q&&T.Q.R&&T.Q.R.length,
+            pin: M&&M.pinLab&&M.pinLab('masa'),
+            chip: M&&M.chipLab&&M.chipLab('masa'),
+            gChip: M&&M.chipLab&&M.chipLab('goda'),
+            banner: (function(){ var q=document.getElementById('wquest'); return q&&q.style.visibility!=='hidden'?q.textContent.slice(0,80):''; })()
+          };
         })()""")
         print('map', mmap, flush=True)
-        # let the board img and layout settle
         await pg.wait_for_timeout(800)
         try:
             await pg.wait_for_function("() => { var b=document.querySelector('#c2citymap.on .c2cm-board img'); return b && b.complete && b.naturalWidth>0; }", timeout=4000)
