@@ -30,7 +30,15 @@ What changed (tip will be this branch HEAD):
 
 **Left alone (phase 1 / other routes):** `C2LMK` order, Four Corners “next corner” text (may still list Jin’s Game Center until that branch lands), `c2sReveal(1)` (“Loud shirt. Punk Tetsu. Back office…” — not played on Punk Gōda because we replace `c2BossOut`), `c2Bouncer`.
 
-Preview: `/workspace/v6560-review/bond/c2_goda_preview_v2.mp4` and `*_v2.png` key shots, once recorded.
+Preview recorded (not in git):
+- `/workspace/v6560-review/bond/c2_goda_preview_v2.mp4` (SHA256 90477764d59661d9d9f91b815b1d9b3fcb97fdffac26ade56863be077c2ec471, 255.6s, captioned FIERCE / STRATEGIC / COMPASSIONATE)
+- per-answer clips `c2_goda_{fierce,strategic,balanced}_v2.mp4`
+- key shots `c2_goda_*_v2.png` (carry-off, carry walk, Aoi nameplate + fixed kneel on `04_bond_choices`, rumor/Masa pointers, seal pry). Missing only the stale `20_strategic_sit_offer` needle (that line is gone).
+- kneel preview: `goda_kneel_sheet.png`
+
+**nails-art:** free-soak (`godaSoak` / first Hot soak on the house after the Compassionate answer) plus the existing `FFF_EATG_MILK` hook are now in `/workspace/nails-art/nq/h_shop.js` `sentoMenu`, so a Nails pack rebuild will not drop them. nails-art is not a git repo.
+
+Tests on this branch (re-run after the polish): bond_test 104/104. ngp pending in this entry until it finishes.
 
 ### 2026-11-25 — executor (Grok Bot) — v6.5.63 ch2-bond (branch `ch2-bond`, not published, not merged into v6563-mai)
 Erik asked for the five Ch2 bond moments (spec `/workspace/v6560-review/ch2_bond_moments.md`). This branch is for him to preview **M1** (`c2_goda`) first. FFF_BUILD was not bumped.
