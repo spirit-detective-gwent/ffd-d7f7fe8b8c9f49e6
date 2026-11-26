@@ -8,6 +8,7 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = Path(__file__).resolve().parent
 OUT = Path('/workspace/v6560-review/seal2/phase3')
 V1 = OUT / 'v1'
+V2 = OUT / 'v2'
 PORT = 8895
 
 def font(size):
@@ -22,6 +23,7 @@ def font(size):
 
 def sheet():
     V1.mkdir(parents=True, exist_ok=True)
+    V2.mkdir(parents=True, exist_ok=True)
     cells, labels = [], [
         ('boatSouth', 'Façade 船宿'),
         ('boatLookout', 'Interior'),
@@ -53,7 +55,8 @@ def sheet():
         r, col = divmod(i, cols)
         sh.paste(c, (12 + col * W, 36 + r * H))
     sh.save(V1 / 'phase3_sheet_v1.png')
-    sh.save(OUT / 'phase3_sheet_v1.png')
+    sh.save(V2 / 'phase3_sheet_v2.png')
+    sh.save(OUT / 'phase3_sheet_v2.png')
     print('sheet', sh.size, 'cells', len(cells))
 
 async def main():
@@ -79,6 +82,7 @@ async def main():
                 continue
             im = Image.open(io.BytesIO(base64.b64decode(data.split(',', 1)[1]))).convert('RGB')
             im.save(V1 / f'{cid}.png')
+            im.save(V2 / f'{cid}.png')
             print(cid, im.size)
         await b.close()
     sheet()

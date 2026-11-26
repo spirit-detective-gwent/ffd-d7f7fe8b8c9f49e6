@@ -47,7 +47,7 @@
     <img class="pt" src="portraits/kaji_angry.webp" alt="kaji angry">
     <img class="pt" src="portraits/kaji_calm.webp" alt="kaji calm">
   </div>
-  <div class="card"><label>portrait next to sprite sheet</label><canvas id="sheet_kaji" width="900" height="480"></canvas></div>
+  <div class="card"><label>portrait next to sprite sheet</label><canvas id="sheet_kaji" width="1100" height="900"></canvas></div>
 </div>
 
 <h2>Path-voice line cards</h2>
@@ -113,16 +113,22 @@
         }
       }
       strip(idle || walk, 210, 36, 4, 'idle / walk col0');
-      strip(walk, 210, 230, 8, 'walk 4 facings');
+      if (walk) {
+        var cw = walk.naturalWidth / 8, ch = walk.naturalHeight / 4, r, i;
+        g.fillStyle = '#c8b898'; g.fillText('walk, four facings (front / right / left / back)', 210, 230);
+        for (r = 0; r < 4; r++) {
+          for (i = 0; i < 4; i++) {
+            g.drawImage(walk, (i * 2) * cw, r * ch, cw, ch, 210 + i * (cw * 0.7 + 4), 240 + r * (ch * 0.7 + 6), cw * 0.7, ch * 0.7);
+          }
+        }
+      }
       if (map) {
-        var mw = map.naturalWidth / 4, mh = map.naturalHeight;
-        g.drawImage(map, 0, 0, mw, mh, 560, 36, mw, mh);
-        g.fillStyle = '#c8b898'; g.fillText('map', 560, 30);
+        g.fillStyle = '#c8b898'; g.fillText('map', 12, 280);
+        g.drawImage(map, 12, 286);
       }
       if (fig) {
-        var fw = fig.naturalWidth, fh = fig.naturalHeight / 4;
-        g.drawImage(fig, 0, 0, fw, fh, 560, 200, fw, fh);
-        g.fillStyle = '#c8b898'; g.fillText('fig', 560, 194);
+        g.fillStyle = '#c8b898'; g.fillText('fig', 12, 286 + (map ? map.naturalHeight : 0) + 16);
+        g.drawImage(fig, 12, 306 + (map ? map.naturalHeight : 0));
       }
     });
   }
