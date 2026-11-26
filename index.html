@@ -36356,24 +36356,102 @@ var GINKO = (function () {
     setTimeout(function () { if (root.EATG && root.EATG.busy()) root.EATG.after(function () { root.c2GekkoShop(true); }); else root.c2GekkoShop(true); }, 0); /* v6.5.63-eat */
   }
 
+  /* v6.5.63-eat gkmenu begin */
+  /* v6.5.63-eat: Kissa Gekko menu: a cozy retro kissaten card (walnut, cream paper, brass, burgundy awning, a hand-drawn cup per drink) */
+  var GKM_JP = { antoast: '\u30a2\u30f3\u30c8\u30fc\u30b9\u30c8', omurice: '\u30aa\u30e0\u30e9\u30a4\u30b9', blend: '\u30d6\u30ec\u30f3\u30c9', iced: '\u30a2\u30a4\u30b9\u30b3\u30fc\u30d2\u30fc', lait: '\u30ab\u30d5\u30a7\u30aa\u30ec', wiener: '\u30a6\u30a4\u30f3\u30ca\u30fc\u30b3\u30fc\u30d2\u30fc' };
+  var GKM_IC = {
+    blend: '<svg viewBox="0 0 44 44"><g fill="none" stroke="#2a211c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 9c-3 3 3 5 0 8M23 8c-3 3 3 5 0 9" stroke="#e9dcc2" stroke-width="2"/><ellipse cx="22" cy="37" rx="17" ry="4" fill="#d9c9a8"/><path d="M33 22c6-1 6 8-1 8" /><path d="M9 20h24c0 11-5 16-12 16S9 31 9 20z" fill="#f6ecd8"/><ellipse cx="21" cy="20" rx="12" ry="3.2" fill="#4a2a16"/><path d="M12 24c0 4 2 7 4 9" stroke="#fff" stroke-width="1.6" opacity=".7"/></g></svg>',
+    iced: '<svg viewBox="0 0 44 44"><g stroke="#2a211c" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M25 3l-4 22" fill="none" stroke-width="3.4"/><path d="M25 3l-4 22" fill="none" stroke="#f4efe4" stroke-width="1.6"/><path d="M10 12h24l-3 25q-9 3-18 0z" fill="#d6edf5" fill-opacity=".8"/><path d="M11.4 22h21.2l-1.6 15q-9 3-18 0z" fill="#5a3820"/><rect x="14" y="14" width="8" height="8" rx="2" fill="#f2fbff" fill-opacity=".9" transform="rotate(-12 18 18)"/><rect x="23" y="17" width="7" height="7" rx="2" fill="#f2fbff" fill-opacity=".9" transform="rotate(14 26 20)"/><path d="M13 14l2 20" stroke="#fff" stroke-width="1.6" opacity=".75" fill="none"/></g></svg>',
+    lait: '<svg viewBox="0 0 44 44"><g stroke="#2a211c" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M14 8c-3 3 3 5 0 8M22 7c-3 3 3 5 0 9" fill="none" stroke="#e9dcc2" stroke-width="2"/><ellipse cx="22" cy="38" rx="14" ry="3.4" fill="#d9c9a8"/><path d="M5 19h34c0 12-7 18-17 18S5 31 5 19z" fill="#f8efdc"/><path d="M6 25h32l-.8 3H6.8z" fill="#2d4380" stroke="none"/><ellipse cx="22" cy="19" rx="17" ry="3.6" fill="#b98652"/><path d="M22 21c-5-3-3-6 0-4 3-2 5 1 0 4z" fill="#fff6e8" stroke="none"/></g></svg>',
+    wiener: '<svg viewBox="0 0 44 44"><g stroke="#2a211c" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="22" cy="38" rx="17" ry="3.6" fill="#d9c9a8"/><path d="M33 24c6-1 6 8-1 8" fill="none"/><path d="M9 22h24c0 10-5 15-12 15S9 32 9 22z" fill="#fff"/><path d="M9.6 27h22.8" stroke="#d8aa44" stroke-width="2.2" fill="none"/><ellipse cx="21" cy="22" rx="12" ry="3" fill="#3a2112"/><path d="M11 21c0-5 5-6 10-6s10 1 10 6c-4 2-16 2-20 0z" fill="#fffefa"/><path d="M14 16c1-5 5-7 7-7s6 2 7 7c-4 1-10 1-14 0z" fill="#fff"/><path d="M19 9c1-3 3-4 4-3s0 3-1 4z" fill="#fff"/><path d="M13 20c3 2 9 2 13 0" fill="none" stroke="#7a4426" stroke-width="1.5"/></g></svg>',
+    antoast: '<svg viewBox="0 0 44 44"><g stroke="#2a211c" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M5 34L33 8q5-2 6 3l1 22q0 4-4 4H9q-6 0-4-3z" fill="#d4a05a"/><path d="M8 33L33 11q3-1 4 1l1 20q0 2-2 2H10q-3 0-2-1z" fill="#efc47a"/><path d="M12 30c3-4 12-12 21-17 3 1 3 5 3 8s-1 8-3 10c-8 1-17 1-21-1z" fill="#6a2128"/><circle cx="20" cy="26" r="1.6" fill="#b86a6a" stroke="none"/><circle cx="29" cy="22" r="1.6" fill="#b86a6a" stroke="none"/><circle cx="25" cy="29" r="1.4" fill="#b86a6a" stroke="none"/><rect x="21" y="17" width="10" height="8" rx="2" fill="#fff0a0" transform="rotate(-14 26 21)"/></g></svg>',
+    omurice: '<svg viewBox="0 0 44 44"><g stroke="#2a211c" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><ellipse cx="22" cy="35" rx="19" ry="5" fill="#f4efe6"/><path d="M6 33C6 17 14 11 23 11s16 7 16 22c-10 3-23 3-33 0z" fill="#f6cc40"/><path d="M8 24C13 16 19 13 24 13" fill="none" stroke="#fff6b8" stroke-width="2.2" opacity=".8"/><path d="M10 25l5-6 4 6 5-7 4 6 6-5" fill="none" stroke="#dc2a1a" stroke-width="3.4"/><path d="M10 25l5-6 4 6 5-7 4 6 6-5" fill="none" stroke="#ff7a62" stroke-width="1" opacity=".8"/></g></svg>'
+  };
+  function gkmCss() {
+    if (document.getElementById('gkm-css')) return; var st = document.createElement('style'); st.id = 'gkm-css';
+    st.textContent = [
+      '#wdlg.d2.gkm{--gkw:#2a1710;--gkw2:#43271a;--gkc:#f5e9cf;--gkc2:#e8d6b0;--gkb:#c9953b;--gkr:#8a2a34;--gki:#2a1d14}',
+      '#wdlg.d2.gkm .d2-veil{background:linear-gradient(180deg,rgba(24,12,8,.2) 0%,rgba(24,12,8,.38) 26%,rgba(34,18,12,.86) 52%,rgba(26,13,9,.97) 100%)}',
+      '#wdlg.d2.gkm .d2-body{padding-bottom:max(22px,calc(14px + env(safe-area-inset-bottom,0px)));font-family:Georgia,"Hiragino Mincho ProN","Noto Serif CJK JP",serif}',
+      /* awning */
+      '#wdlg.gkm .gk-awn{height:26px;margin:0 0 0;background:repeating-linear-gradient(90deg,#8a2a34 0 22px,#f5e9cf 22px 44px);position:relative;box-shadow:0 3px 0 rgba(0,0,0,.4);border-bottom:3px solid #2a1710}',
+      '#wdlg.gkm .gk-awn:after{content:"";position:absolute;left:0;right:0;top:100%;height:11px;background:radial-gradient(circle at 11px 0,#8a2a34 10.5px,transparent 11.5px) 0 0/44px 11px repeat-x,radial-gradient(circle at 33px 0,#e9dcc0 10.5px,transparent 11.5px) 0 0/44px 11px repeat-x;filter:drop-shadow(0 2px 0 rgba(0,0,0,.35))}',
+      '#wdlg.gkm .gk-sign{display:flex;align-items:center;gap:12px;padding:16px 20px 6px}',
+      '#wdlg.gkm .gk-moon{flex:0 0 52px;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font:900 28px/1 "Hiragino Mincho ProN","Noto Serif CJK JP",serif;color:#f6e2a0;background:radial-gradient(circle at 35% 30%,#a8323c,#6a1a24 70%);box-shadow:0 0 0 2.5px #c9953b,0 0 0 5px #2a1710,0 4px 8px rgba(0,0,0,.5);font-style:normal}',
+      '#wdlg.gkm .gk-sign b{display:block;font:900 italic 26px/1 Georgia,"Times New Roman",serif;color:#f6dca0;text-shadow:0 2px 0 #2a1710,0 0 12px rgba(201,149,59,.35);letter-spacing:.01em}',
+      '#wdlg.gkm .gk-sign small{display:block;margin-top:5px;font:700 11px/1.1 Georgia,serif;letter-spacing:.22em;text-transform:uppercase;color:#c9a66a}',
+      '#wdlg.d2.gkm .d2-title{display:none}',
+      '#wdlg.d2.gkm .d2-q{margin:0 20px 10px;padding:0 0 0 12px;border-left:3px solid #c9953b;font:italic 500 17px/1.35 Georgia,"Times New Roman",serif;color:#f1e3c4;text-shadow:0 1px 0 rgba(0,0,0,.7)}',
+      '#wdlg.d2.gkm .d2-rest{margin:0 20px 8px}',
+      '#wdlg.d2.gkm .d2-rest .vst{display:flex;gap:8px;margin:0}',
+      '#wdlg.d2.gkm .d2-rest .vst span{flex:1;text-align:center;padding:5px 6px;border-radius:8px;background:#f5e9cf;color:#4a3524;font:700 12px/1.2 Georgia,serif;letter-spacing:.04em;box-shadow:inset 0 0 0 1.5px #c9953b,0 2px 0 #1a0d08;text-shadow:none}',
+      '#wdlg.d2.gkm .d2-rest .vst b{color:#8a2a34;font-size:14px}',
+      '#wdlg.gkm .gk-sec{display:flex;align-items:center;gap:8px;margin:6px 2px 0;font:900 11px/1 Georgia,serif;letter-spacing:.24em;color:#e0bb78;text-transform:uppercase}',
+      '#wdlg.gkm .gk-sec:before,#wdlg.gkm .gk-sec:after{content:"";height:1.5px;flex:1;background:linear-gradient(90deg,transparent,#c9953b)}#wdlg.gkm .gk-sec:after{background:linear-gradient(270deg,transparent,#c9953b)}',
+      '#wdlg.gkm .gk-sec i{font-style:normal;font-weight:700;letter-spacing:.1em;color:#f1d9a0}',
+      '#wdlg.d2.gkm .d2-list{gap:7px;padding:0 16px}',
+      '#wdlg.d2.gkm .d2-opt{min-height:57px}',
+      '#wdlg.d2.gkm .d2-opt .rib{transform:none;min-height:57px;padding:6px 10px 6px 8px;gap:10px;border-radius:9px;background:linear-gradient(180deg,#f8eed8,#ecdcb8)!important;box-shadow:inset 0 0 0 1.5px #c9953b,inset 0 0 0 4px #f8eed8,inset 0 0 0 5px rgba(138,42,52,.35),0 3px 0 #1a0d08!important;position:relative}',
+      '#wdlg.d2.gkm .d2-opt .rib>*{transform:none}',
+      '#wdlg.d2.gkm .d2-opt i{display:none}',
+      '#wdlg.d2.gkm .d2-opt .rib>span{display:flex;align-items:center;gap:10px;width:100%;color:#2a1d14;font:inherit}',
+      '#wdlg.gkm .gk-ic{flex:0 0 46px;width:46px;height:46px;border-radius:50%;background:radial-gradient(circle at 40% 30%,#fffaf0,#e8d6b0);box-shadow:inset 0 0 0 1.5px #c9953b,0 1px 0 rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center}',
+      '#wdlg.gkm .gk-ic svg{width:36px;height:36px}',
+      '#wdlg.gkm .gk-nm{flex:1;min-width:0;display:block;text-align:left}',
+      '#wdlg.gkm .gk-nm em{display:block;font:700 11px/1.1 "Hiragino Mincho ProN","Noto Serif CJK JP",serif;font-style:normal;letter-spacing:.14em;color:#8a2a34}',
+      '#wdlg.gkm .gk-nm u{display:block;text-decoration:none;font:900 17px/1.15 Georgia,"Times New Roman",serif;color:#2a1d14;margin-top:2px}',
+      '#wdlg.gkm .gk-nm small{display:block;margin-top:2px;font:italic 600 11.5px/1.2 Georgia,serif;color:#6b5238;letter-spacing:.02em}',
+      '#wdlg.gkm .gk-nm small b{font-style:normal;color:#1f6a4a;font-weight:900}',
+      '#wdlg.gkm .gk-pr{flex:0 0 auto;min-width:50px;padding:6px 9px 6px 14px;text-align:center;font:900 16px/1 Georgia,serif;color:#fff3d6;background:linear-gradient(180deg,#a8323c,#7a1f2a);clip-path:polygon(9px 0,100% 0,100% 100%,9px 100%,0 50%);box-shadow:inset 0 0 0 1.5px #c9953b}',
+      '#wdlg.gkm .gk-pr s{display:block;font-size:10px;font-weight:700;opacity:.7;margin-bottom:2px}',
+      '#wdlg.d2.gkm .d2-opt i.gk-stamp{color:#b8222c;font-size:9px}#wdlg.gkm .gk-stamp{position:absolute;right:62px;top:-7px;width:44px;height:44px;border-radius:50%;border:2px solid #b8222c;color:#b8222c;font:900 9px/1.15 "Hiragino Mincho ProN","Noto Serif CJK JP",serif;display:flex;align-items:center;justify-content:center;text-align:center;transform:rotate(-12deg);background:rgba(245,233,207,.75);letter-spacing:.04em;pointer-events:none}',
+      '#wdlg.d2.gkm .d2-opt.on .rib,#wdlg.d2.gkm .d2-opt:focus-visible .rib,#wdlg.d2.gkm .d2-opt:active .rib{background:linear-gradient(180deg,#fff6e0,#f4e2b8)!important;box-shadow:inset 0 0 0 2px #8a2a34,inset 0 0 0 5px #fff6e0,0 3px 0 #1a0d08,0 0 16px rgba(246,200,110,.45)!important;transform:translateY(-1px)}',
+      '#wdlg.d2.gkm .d2-opt.on .rib:before{content:"\\25B6";position:absolute;left:-1px;top:50%;transform:translate(-50%,-50%);font-size:12px;color:#f6dca0}',
+      '#wdlg.d2.gkm .d2-opt[disabled]{opacity:1}',
+      '#wdlg.d2.gkm .d2-opt[disabled] .rib{filter:saturate(.35) brightness(.86);box-shadow:inset 0 0 0 1.5px #a89066,inset 0 0 0 4px #efe3c6,0 2px 0 #1a0d08!important}',
+      '#wdlg.d2.gkm .d2-opt[disabled] .gk-pr{background:linear-gradient(180deg,#7a6a58,#5a4c3e)}',
+      '#wdlg.d2.gkm .d2-opt.gk-later{min-height:46px}',
+      '#wdlg.d2.gkm .d2-opt.gk-later .rib{min-height:44px;justify-content:center;background:linear-gradient(180deg,#43271a,#2a1710)!important;box-shadow:inset 0 0 0 1.5px #c9953b,0 3px 0 #120904!important}',
+      '#wdlg.d2.gkm .d2-opt.gk-later .rib>span{justify-content:center;color:#f1d9a0;font:700 14px/1 Georgia,serif;letter-spacing:.14em}',
+      '#wdlg.gkm .gk-npl{margin:0 20px 6px;font:700 11px/1.2 Georgia,serif;letter-spacing:.08em;color:#f6dca0}#wdlg.gkm .gk-npl b{background:#d3223a;color:#fff;padding:2px 7px;border-radius:3px;margin-right:6px;font-style:normal}',
+      '@media (max-height:700px){#wdlg.gkm .gk-sign{padding-top:14px}#wdlg.d2.gkm .d2-opt,#wdlg.d2.gkm .d2-opt .rib{min-height:54px}}'
+    ].join('\n'); document.head.appendChild(st);
+  }
   root.c2GekkoShop = function (won) {
-    var fig = gkFig(), spM = spMax(), hpFull = SAVE.hp >= MAXHP, spFull = (SAVE.sp | 0) >= spM, y = yenN();
+    var fig = gkFig(), spM = spMax(), hpFull = SAVE.hp >= MAXHP, spFull = (SAVE.sp | 0) >= spM, y = yenN(), sale = false;
     var line = won ? 'We\u2019re square. Order something or go.' : 'Coffee\u2019s hot. Sit anywhere.';
-    var rows = GK_MENU.map(function (it) {
-      var poor = y < it.cost, full = it.kind === 'hp' ? hpFull : spFull;
-      var why = full ? (it.kind === 'hp' ? ' (HP full)' : ' (SP full)') : (poor ? ' (need \u00a5' + it.cost + ')' : '');
-      var lab = (it.kind === 'hp' ? (it.ic + ' ' + it.n + '  +' + it.hp + ' HP') : (it.full ? it.ic + ' ' + it.n + '  full SP' : it.ic + ' ' + it.n + '  +' + it.sp + ' SP')) + '  \u00b7 \u00a5' + it.cost + why;
-      return [lab, function () { gkBuy(it); }, it.id === 'omurice' || it.id === 'wiener' ? 'hot' : '', poor || full];
+    var order = ['blend', 'iced', 'lait', 'wiener', 'antoast', 'omurice'], by = {}; GK_MENU.forEach(function (it) { by[it.id] = it; });
+    var rows = [], marks = [];
+    order.forEach(function (id) {
+      var it = by[id]; if (!it) return; var poor = y < it.cost, full = it.kind === 'hp' ? hpFull : spFull;
+      var eff = it.kind === 'hp' ? '+' + it.hp + ' HP' : (it.full ? 'full SP' : '+' + it.sp + ' SP');
+      var why = full ? (it.kind === 'hp' ? 'HP is full' : 'SP is full') : (poor ? 'need \u00a5' + it.cost : '');
+      var strike = it.base0 && it.base0 > it.cost; if (strike) sale = true;
+      var lab = '<span class="rib"><i></i><span><b class="gk-ic">' + (GKM_IC[id] || '') + '</b><b class="gk-nm"><em>' + (GKM_JP[id] || '') + '</em><u>' + it.n + '</u><small>' + (why ? why : '<b>' + eff + '</b> \u00b7 ' + (it.full ? 'botch the mini-game: half' : 'win the mini-game: full')) + '</small></b><b class="gk-pr">' + (strike ? '<s>\u00a5' + it.base0 + '</s>' : '') + '\u00a5' + it.cost + '</b></span></span>';
+      rows.push([lab, function () { gkBuy(it); }, '', poor || full]); marks.push({ id: id, chef: id === 'omurice' || id === 'wiener' });
     });
     rows.push(['Later', null]);
     var head = '<div class="sh"><i class="pt2" style="background-image:url(' + fig + ')"></i><b class="snm">Gekko</b></div>' +
       '<div class="tw"><p class="q">\u201c' + line + '\u201d</p>' +
-      '<p class="vst"><span>HP <b>' + (SAVE.hp | 0) + '/' + MAXHP + '</b></span><span>SP <b>' + (SAVE.sp | 0) + '/' + spM + '</b></span><span>\u00a5' + y + '</span></p></div>';
+      '<p class="vst"><span>HP <b>' + (SAVE.hp | 0) + '/' + MAXHP + '</b></span><span>SP <b>' + (SAVE.sp | 0) + '/' + spM + '</b></span><span>\u00a5<b>' + y + '</b></span></p></div>';
     dialog(head, rows);
     var d = typeof $ === 'function' ? $('#wdlg') : document.getElementById('wdlg');
-    if (d) d.classList.add('scene');
+    if (d) { d.classList.add('scene');
+      try {
+        gkmCss(); d.classList.add('gkm'); var body = d.querySelector('.d2-body'), list = d.querySelector('.d2-list'), btns = list ? list.querySelectorAll('button.d2-opt') : [];
+        if (body && list) {
+          body.insertAdjacentHTML('afterbegin', '<div class="gk-awn"></div><div class="gk-sign"><i class="gk-moon">\u6708</i><div><b>Gekko</b><small>\u55ab\u8336 \u30b2\u30c3\u30b3\u30fc \u00b7 Kissa Gekko</small></div></div>');
+          if (sale) { var rest = d.querySelector('.d2-rest'); if (rest) rest.insertAdjacentHTML('beforebegin', '<p class="gk-npl"><b>Nails\u2019 price</b>20% off on Nails\u2019 turf</p>'); }
+          marks.forEach(function (m, i) { var b = btns[i]; if (!b) return; b.innerHTML = rows[i][0]; b.setAttribute('data-gk', m.id); if (m.chef) { var rb = b.querySelector('.rib'); if (rb) rb.insertAdjacentHTML('beforeend', '<i class="gk-stamp" style="display:flex">\u304a\u3059\u3059\u3081</i>'); } });
+          var lb = btns[marks.length]; if (lb) { lb.classList.add('gk-later'); lb.innerHTML = '<span class="rib"><i></i><span>\u3054\u3061\u305d\u3046\u3055\u307e \u00b7 Later</span></span>'; }
+          if (btns[0]) btns[0].insertAdjacentHTML('beforebegin', '<div class="gk-sec"><i>\u73c8\u7432</i>COFFEE</div>');
+          if (btns[4]) btns[4].insertAdjacentHTML('beforebegin', '<div class="gk-sec"><i>\u304a\u98df\u4e8b</i>MEALS</div>');
+        }
+      } catch (eG) {}
+    }
     ev('world:c2:gekko:menu');
   };
+  /* v6.5.63-eat gkmenu end */
 
   /* ========================================================================
      3) Tsukikage Kampo recipe: restore offer → choose → fetch both → hand-in.
