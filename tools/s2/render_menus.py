@@ -17,13 +17,13 @@ class TS(socketserver.ThreadingTCPServer):
     daemon_threads = True
 
 async def main():
-    s = TS(('127.0.0.1', PORT), functools.partial(Q, directory=str(HERE)))
+    s = TS(('127.0.0.1', PORT), functools.partial(Q, directory=str(HERE.parent.parent)))
     threading.Thread(target=s.serve_forever, daemon=True).start()
     async with async_playwright() as p:
         b = await p.chromium.launch(args=['--use-gl=swiftshader', '--enable-unsafe-swiftshader'])
         ctx = await b.new_context(viewport={'width': 1800, 'height': 3200}, device_scale_factor=1)
         pg = await ctx.new_page()
-        await pg.goto(f'http://127.0.0.1:{PORT}/preview_menus.html')
+        await pg.goto(f'http://127.0.0.1:{PORT}/tools/s2/preview_menus.html')
         await pg.wait_for_function('() => window.__s2menus_ready === true', timeout=20000)
         await pg.wait_for_timeout(400)
         ids = await pg.evaluate("()=>[...document.querySelectorAll('canvas')].map(c=>c.id)")

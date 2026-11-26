@@ -80,17 +80,20 @@
     ellipse(g, 28, 14, 3, 2.4, 'rgba(255,255,255,.5)', 0);
   };
   ICONS.hojicha = function (g) {
-    ellipse(g, 30, 54, 20, 5, 'rgba(40,20,10,.22)', 0);
-    /* yunomi */
-    g.beginPath(); g.moveTo(14, 28); g.lineTo(18, 50); g.quadraticCurveTo(30, 56, 42, 50); g.lineTo(46, 28);
-    g.closePath(); g.fillStyle = '#c8b49a'; g.fill(); g.strokeStyle = INK; g.lineWidth = 2.2; g.stroke();
-    g.beginPath(); g.ellipse(30, 28, 16, 5, 0, 0, 7); g.fillStyle = '#5a3a22'; g.fill(); g.stroke();
-    g.beginPath(); g.ellipse(30, 28, 11, 3.2, 0, 0, 7); g.fillStyle = '#7a5a30'; g.fill();
-    /* handle */
-    g.beginPath(); g.arc(46, 38, 7, -0.8, 2.2); g.strokeStyle = INK; g.lineWidth = 2.2; g.stroke();
+    ellipse(g, 32, 56, 18, 5, 'rgba(40,20,10,.22)', 0);
+    /* handle-less yunomi, toasted-tea brown */
+    g.beginPath(); g.moveTo(16, 26); g.lineTo(14, 48); g.quadraticCurveTo(32, 58, 50, 48); g.lineTo(48, 26);
+    g.closePath(); g.fillStyle = '#c4a882'; g.fill(); g.strokeStyle = INK; g.lineWidth = 2.2; g.stroke();
+    /* foot ring */
+    g.beginPath(); g.ellipse(32, 50, 12, 3.2, 0, 0, 7); g.fillStyle = '#a88860'; g.fill(); g.stroke();
+    /* tea surface */
+    g.beginPath(); g.ellipse(32, 26, 16, 5, 0, 0, 7); g.fillStyle = '#5a3a1c'; g.fill(); g.stroke();
+    g.beginPath(); g.ellipse(32, 25, 10, 3, 0, 0, 7); g.fillStyle = '#7a5428'; g.fill();
+    /* rim highlight */
+    g.beginPath(); g.ellipse(32, 26, 16, 5, 0, Math.PI * 1.1, Math.PI * 1.85); g.strokeStyle = 'rgba(255,240,210,.45)'; g.lineWidth = 1.6; g.stroke();
     /* steam */
     g.strokeStyle = 'rgba(230,230,235,.7)'; g.lineWidth = 2; g.lineCap = 'round';
-    [[22, 22], [30, 18], [38, 22]].forEach(function (p) {
+    [[22, 20], [32, 16], [42, 20]].forEach(function (p) {
       g.beginPath(); g.moveTo(p[0], p[1]); g.bezierCurveTo(p[0] - 4, p[1] - 6, p[0] + 4, p[1] - 10, p[0], p[1] - 16); g.stroke();
     });
   };
@@ -344,66 +347,106 @@
     var fonts = theme === 'depot' ? GOTH : theme === 'hase' ? FONT : SERIF;
     var ink = theme === 'chiyo' ? '#5a2c28' : theme === 'hase' ? '#f0e4c0' : '#2a2a28';
     var accent = theme === 'chiyo' ? '#8e3b52' : theme === 'hase' ? '#e8c040' : '#8a2a28';
-    var titleY = theme === 'depot' ? 150 : theme === 'hase' ? 72 : 100;
+    var titleY = theme === 'depot' ? 148 : theme === 'hase' ? 70 : 100;
     txt(g, opt.jp || '', W / 2, titleY, theme === 'hase' ? 20 : 22, theme === 'hase' ? '#f4ead2' : ink, '900 ', fonts);
-    txt(g, opt.en || '', W / 2, titleY + 22, 12, theme === 'hase' ? '#c8d0e8' : accent, '700 ', fonts);
-    if (opt.line) txt(g, '“' + opt.line + '”', W / 2, titleY + 44, 11, theme === 'hase' ? '#d8d0c0' : ink, '600 ', fonts);
-    /* portrait frame */
-    var px = 36, py = theme === 'depot' ? 178 : theme === 'hase' ? 118 : 148;
-    ellipse(g, px + 28, py + 28, 28, 28, theme === 'chiyo' ? '#f4ead2' : '#2a2b44', INK, 2.5);
+    txt(g, opt.en || '', W / 2, titleY + 20, 11, theme === 'hase' ? '#c8d0e8' : accent, '700 ', fonts);
+    /* portrait + quote + vit, kept on separate columns so nothing collides */
+    var px = 32, py = titleY + 36;
+    var pcx = px + 30, pcy = py + 30;
     g.save();
-    g.beginPath(); g.arc(px + 28, py + 28, 26, 0, 7); g.clip();
-    if (opt.portrait) {
-      try { g.drawImage(opt.portrait, px + 2, py - 6, 52, 70); } catch (eP) {}
+    g.beginPath();
+    if (theme === 'chiyo') g.arc(pcx, pcy, 30, 0, 7);
+    else { var r = 6; g.moveTo(px + r, py); g.lineTo(px + 60 - r, py); g.quadraticCurveTo(px + 60, py, px + 60, py + r); g.lineTo(px + 60, py + 60 - r); g.quadraticCurveTo(px + 60, py + 60, px + 60 - r, py + 60); g.lineTo(px + r, py + 60); g.quadraticCurveTo(px, py + 60, px, py + 60 - r); g.lineTo(px, py + r); g.quadraticCurveTo(px, py, px + r, py); }
+    g.closePath(); g.fillStyle = theme === 'chiyo' ? '#f4ead2' : theme === 'depot' ? '#4a5458' : '#2a2b44'; g.fill();
+    g.clip();
+    if (opt.portrait && opt.portrait.width) {
+      try { g.drawImage(opt.portrait, px - 4, py - 10, 68, 90); } catch (eP) {}
+    } else if (theme === 'depot') {
+      /* stencil clerk: hard hat + work shoulders, until p5 supplies a portrait */
+      g.fillStyle = '#2a323e'; g.fillRect(px, py, 60, 60);
+      g.fillStyle = '#e8c040';
+      g.beginPath(); g.moveTo(pcx - 14, pcy - 2); g.lineTo(pcx - 12, pcy - 16); g.lineTo(pcx + 12, pcy - 16); g.lineTo(pcx + 16, pcy - 2); g.closePath(); g.fill();
+      g.fillRect(pcx - 18, pcy - 4, 36, 4);
+      g.strokeStyle = INK; g.lineWidth = 1.6; g.stroke();
+      g.fillStyle = '#c4a882';
+      g.beginPath(); g.ellipse(pcx, pcy + 6, 10, 9, 0, 0, 7); g.fill(); g.stroke();
+      g.fillStyle = '#3a4a70';
+      g.beginPath(); g.moveTo(pcx - 16, pcy + 30); g.lineTo(pcx - 12, pcy + 14); g.lineTo(pcx + 12, pcy + 14); g.lineTo(pcx + 16, pcy + 30); g.closePath(); g.fill(); g.stroke();
     } else {
-      g.fillStyle = theme === 'depot' ? '#4a5458' : '#3a3a48';
-      g.fillRect(px + 2, py + 2, 52, 52);
-      txt(g, (opt.who || '?').charAt(0), px + 28, py + 28, 18, '#f4ead2', '900 ', fonts);
+      txt(g, (opt.who || '?').charAt(0), pcx, pcy, 18, '#f4ead2', '900 ', fonts);
     }
     g.restore();
-    if (theme === 'chiyo') { g.strokeStyle = '#8e3b52'; g.lineWidth = 3; g.beginPath(); g.arc(px + 28, py + 28, 28, 0, 7); g.stroke(); }
-    /* vit */
-    var vit = 'HP ' + (opt.hp || 40) + '/' + (opt.maxhp || 55) + '   ¥' + (opt.yen != null ? opt.yen : 40);
-    txt(g, vit, W - 28, py + 16, 11, theme === 'hase' ? '#ffe680' : ink, '800 ', FONT, 'right');
-    if (nails) txt(g, 'Nails’ price  ·  20% off', W - 28, py + 34, 10, accent, '800 ', FONT, 'right');
+    g.strokeStyle = theme === 'chiyo' ? '#8e3b52' : INK; g.lineWidth = theme === 'chiyo' ? 3 : 2.4;
+    g.beginPath();
+    if (theme === 'chiyo') g.arc(pcx, pcy, 30, 0, 7);
+    else { rr(g, px, py, 60, 60, 6, 0, INK, 2.4); }
+    if (theme === 'chiyo') g.stroke();
+    /* vit, right column */
+    var vitC = theme === 'hase' ? '#ffe680' : ink;
+    txt(g, 'HP ' + (opt.hp || 40) + '/' + (opt.maxhp || 55), W - 28, py + 10, 11, vitC, '800 ', FONT, 'right');
+    txt(g, '¥' + (opt.yen != null ? opt.yen : 40), W - 28, py + 26, 12, vitC, '900 ', FONT, 'right');
+    if (nails) txt(g, 'Nails’ price', W - 28, py + 42, 10, accent, '800 ', FONT, 'right');
+    if (nails) txt(g, '20% off', W - 28, py + 56, 10, accent, '700 ', FONT, 'right');
+    /* quote sits between the portrait and the yen, wrapped */
+    if (opt.line) {
+      var qx = px + 72, qw = W - 28 - 80 - qx, qy = py + 14;
+      g.font = '600 italic 11px ' + fonts; g.fillStyle = theme === 'hase' ? '#d8d0c0' : ink;
+      g.textAlign = 'left'; g.textBaseline = 'top';
+      var words = ('“' + opt.line + '”').split(' '), line = '', ly = qy;
+      words.forEach(function (wrd) {
+        var t = line ? line + ' ' + wrd : wrd;
+        if (g.measureText(t).width > qw && line) { g.fillText(line, qx, ly); ly += 14; line = wrd; }
+        else line = t;
+      });
+      if (line) g.fillText(line, qx, ly);
+    }
 
-    var y0 = py + 68;
+    var y0 = py + 76;
+    var rowH = items.length > 4 ? 102 : 108;
+    var priceW = 72;
     items.forEach(function (it, i) {
-      var y = y0 + i * 108;
+      var y = y0 + i * rowH, rh = rowH - 8;
       if (theme === 'chiyo') {
-        rr(g, 28, y, W - 56, 98, 8, 'rgba(255,255,255,.35)', '#8e3b52', 1.6);
+        rr(g, 24, y, W - 48, rh, 8, 'rgba(255,255,255,.35)', '#8e3b52', 1.6);
       } else if (theme === 'hase') {
-        /* price tag */
-        rr(g, 28, y, W - 56, 98, 6, '#d8c49a', INK, 2);
-        ellipse(g, 44, y + 16, 5, 5, '#6a6860', INK, 1.4);
-        stain(g, W - 80, y + 80, 20, 8, 'rgba(40,30,10,.18)');
+        rr(g, 24, y, W - 48, rh, 6, '#d8c49a', INK, 2);
+        ellipse(g, 40, y + 14, 5, 5, '#6a6860', INK, 1.4);
+        stain(g, W - 80, y + rh - 16, 20, 8, 'rgba(40,30,10,.18)');
       } else {
-        /* ledger row */
-        R(g, 28, y, W - 56, 98, 'rgba(255,255,255,.2)', 0, 0);
+        R(g, 24, y, W - 48, rh, 'rgba(255,255,255,.18)', 0, 0);
         g.strokeStyle = 'rgba(40,70,90,.35)'; g.lineWidth = 1;
-        g.beginPath(); g.moveTo(28, y + 98); g.lineTo(W - 28, y + 98); g.stroke();
+        g.beginPath(); g.moveTo(24, y + rh); g.lineTo(W - 24, y + rh); g.stroke();
       }
-      /* icon plate */
-      rr(g, 36, y + 16, 66, 66, 8, theme === 'hase' ? '#3a3a40' : '#fff8ee', INK, 1.8);
-      g.save(); g.translate(37, y + 17); paintIcon(g, it.icon || it.id, 64); g.restore();
-      var tx = 112;
-      txt(g, (it.jp || '') + '  ' + (it.n || ''), tx, y + 22, 14, ink, '800 ', fonts, 'left');
-      txt(g, it.eff || '', tx, y + 42, 11, accent, '700 ', FONT, 'left');
+      rr(g, 32, y + 14, 62, 62, 8, theme === 'hase' ? '#3a3a40' : '#fff8ee', INK, 1.8);
+      g.save(); g.translate(31, y + 13); paintIcon(g, it.icon || it.id, 64); g.restore();
+      var tx = 104, textR = W - 28 - priceW - 8;
+      txt(g, it.jp || '', tx, y + 18, 13, accent, '800 ', fonts, 'left');
+      txt(g, it.n || '', tx, y + 36, 12, ink, '700 ', FONT, 'left');
+      txt(g, it.eff || '', tx, y + 52, 10, accent, '700 ', FONT, 'left');
       if (it.flavor) {
-        g.font = '600 10px ' + FONT; g.textAlign = 'left'; g.fillStyle = ink; g.globalAlpha = 0.8;
-        g.fillText(it.flavor, tx, y + 60, W - 170); g.globalAlpha = 1;
+        g.font = '600 10px ' + FONT; g.textAlign = 'left'; g.textBaseline = 'top'; g.fillStyle = ink; g.globalAlpha = 0.8;
+        var fw = textR - tx, fl = '', fy = y + 64, fwords = it.flavor.split(' ');
+        fwords.forEach(function (wrd) {
+          var t = fl ? fl + ' ' + wrd : wrd;
+          if (g.measureText(t).width > fw && fl) { g.fillText(fl, tx, fy); fy += 12; fl = wrd; }
+          else fl = t;
+        });
+        if (fl) g.fillText(fl, tx, fy);
+        g.globalAlpha = 1;
       }
-      /* price stamp */
-      var prx = W - 74, pry = y + 50;
+      /* reserved price column */
+      var prx = W - 28 - priceW / 2, pry = y + rh / 2;
       if (nails && it.base > it.cost) {
         txt(g, '¥' + it.base, prx, pry - 16, 12, ink, '700 ', FONT);
+        var tw = g.measureText ? 0 : 0;
+        g.font = '700 12px ' + FONT; var sw = g.measureText('¥' + it.base).width;
         g.strokeStyle = accent; g.lineWidth = 1.8;
-        g.beginPath(); g.moveTo(prx - 22, pry - 16); g.lineTo(prx + 22, pry - 16); g.stroke();
+        g.beginPath(); g.moveTo(prx - sw / 2 - 2, pry - 16); g.lineTo(prx + sw / 2 + 2, pry - 16); g.stroke();
         txt(g, '¥' + it.cost, prx, pry + 8, 18, accent, '900 ', FONT);
       } else {
         txt(g, '¥' + (nails ? it.cost : it.base), prx, pry, 18, accent, '900 ', FONT);
       }
-      if (it.prov) txt(g, 'provisional', prx, pry + 28, 8, ink, '700 ', FONT);
+      if (it.prov) txt(g, 'prov.', prx, pry + 26, 8, ink, '700 ', FONT);
     });
     /* leave */
     var ly = H - 64;

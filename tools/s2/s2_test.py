@@ -545,6 +545,78 @@ async def main():
         ok('after the win the pin is the Subway Freight Depot', win4 and win4.get('pin') and 'depot' in str(win4['pin']).lower(), win4)
         ok('Phase 5 is still not opened after the win', win4 and win4.get('p5'), win4)
 
+        # -------- Shop menus (Chiyo, Hase, depot data) --------
+        src2 = INDEX.read_text(encoding='utf-8')
+        ok('S2MENUS module injected', 'S2MENUS_BEGIN' in src2 and 'FFF_S2MENUS' in src2)
+        ok('menu painters injected', 'menuChrome' in src2 and 'menuIcons' in src2)
+        ok('Chiyo eat hooks still call EATG', 'EATG.open' in src2.split('S2MENUS_BEGIN')[-1].split('S2MENUS_END')[0])
+        ok('food handoff does not move the player', 'stayPut' in src2 and 'c2Go(' not in src2.split('S2MENUS_BEGIN')[-1].split('S2MENUS_END')[0])
+        ok('depot shop stays unwired', 's2_depot' in src2 and 'wired: false' in src2.split('S2MENUS_BEGIN')[-1].split('S2MENUS_END')[0])
+
+        menu = await ev(pg, """(function(){
+          var M=root.FFF_S2MENUS, P=root.FFF_S2P;
+          if (W.ryo){ W.ryo.x=640; W.ryo.y=700; W.ryo.v=0; W.path=[]; }
+          var x0=W.ryo&&W.ryo.x, y0=W.ryo&&W.ryo.y;
+          var ch=M&&M.CHIYO_ITEMS, hs=M&&M.HASE_ITEMS, dp=M&&M.DEPOT_ITEMS;
+          var nailsCh=M&&M.SHOPS.s2_chiyo.nails();
+          M.open('s2_chiyo');
+          var el=document.getElementById('wshop');
+          var html=el?el.innerHTML:'';
+          var struck=html.indexOf('<s>')>=0 && html.indexOf('¥6')>=0;
+          var x1=W.ryo&&W.ryo.x, y1=W.ryo&&W.ryo.y;
+          var depotTried=false;
+          try{ M.open('s2_depot'); depotTried=true; }catch(e){}
+          var el2=document.getElementById('wshop');
+          var depotOpen=el2&&/s2m-depot/.test(el2.className)&&el2.classList.contains('on');
+          return {
+            has:!!(M&&M.has&&M.has('s2_chiyo')&&M.has('s2_hase')&&!M.has('s2_depot')),
+            art:!!(P&&P.menuIcon&&P.menuChrome),
+            chiyoN: ch&&ch.length, hoji: ch&&ch.some(function(i){return i.id==='hojicha'&&i.prov&&i.drink&&i.base===4&&i.cost===3;}),
+            roll: ch&&ch[0]&&ch[0].eat==='sweetroll'&&ch[0].base===8&&ch[0].cost===6,
+            haseN: hs&&hs.length, oil: hs&&hs.some(function(i){return i.id==='chainoil'&&i.prov;}),
+            tape: hs&&hs[0]&&hs[0].base===3&&hs[0].cost===2,
+            depN: dp&&dp.length, depOnigiri: dp&&dp[0]&&dp[0].eat==='onigiri',
+            openClass: el&&el.className, jp: html.indexOf('千代和菓子')>=0, struck:struck,
+            posOk: x0===x1 && y0===y1, depotOpen:!!depotOpen, nailsCh:!!nailsCh
+          };
+        })()""")
+        ok('S2MENUS is present and depot stays unhas()', menu and menu.get('has') and menu.get('art'), menu)
+        ok('Chiyo menu keeps sweet-roll prices and adds provisional hojicha', menu and menu.get('roll') and menu.get('hoji'), menu)
+        ok('Hase menu keeps tape prices and adds provisional chain oil', menu and menu.get('tape') and menu.get('oil'), menu)
+        ok('depot catalog has an onigiri eat-in (unwired)', menu and menu.get('depOnigiri'), menu)
+        ok('Chiyo themed menu opens with JP header and Nails strikethrough', menu and menu.get('jp') and menu.get('struck') and menu.get('nailsCh') and 's2m-chiyo' in str(menu.get('openClass')), menu)
+        ok('opening the menu does not move the player', menu and menu.get('posOk'), menu)
+        ok('depot open() is a no-op until phase 5 wires it', menu and menu.get('depotTried', True) is not False and not menu.get('depotOpen'), menu)
+        await ev(pg, """(function(){ try{ root.FFF_S2MENUS.close(); }catch(e){} return 1; })()""")
+
+        # Hase: full price then Nails price
+        hase = await ev(pg, """(function(){
+          var M=root.FFF_S2MENUS, P2=root.FFF_S2P2;
+          try{
+            var n=c2S().e.nq||{};
+            var east=n.won&&n.won.east; if(n.won) delete n.won.east;
+            var q=c2S().q.cq2_s2_runs;
+            c2S().q.cq2_s2_runs=0;
+            M.syncShops&&M.syncShops();
+            if(typeof c2Shop==='function') c2Shop('s2_hase');
+            var el=document.getElementById('wshop');
+            var html=el?el.innerHTML:'';
+            var full=!/<s>/.test(html) && html.indexOf('¥3')>=0 && html.indexOf('長谷')>=0;
+            M.close();
+            n.won=n.won||{}; n.won.east=1; c2S().q.cq2_s2_runs=9;
+            M.syncShops&&M.syncShops();
+            c2Shop('s2_hase');
+            var el2=document.getElementById('wshop');
+            var html2=el2?el2.innerHTML:'';
+            var nails=/<s>/.test(html2) && html2.indexOf('¥2')>=0;
+            M.close();
+            if(east) n.won.east=east; else if(n.won) delete n.won.east;
+            c2S().q.cq2_s2_runs=q;
+            return { full:!!full, nails:!!nails, cls:el&&el.className, cls2:el2&&el2.className };
+          }catch(e){ return { err:String(e&&e.message||e) }; }
+        })()""")
+        ok('Hase themed menu shows full price, then Nails strikethrough after takeover', hase and hase.get('full') and hase.get('nails'), hase)
+
         # no page errors
         ok('no page errors', not errs, errs[:4])
         await b.close()

@@ -277,7 +277,7 @@
     } catch (e3) {}
   }
 
-  /* Keep the player on the customer side of the counter. Never walk or c2Go. */
+  /* Keep the player on the customer side of the counter. Never walk them or change rooms. */
   function stayPut() {
     try {
       if (typeof W !== 'undefined' && W.ryo) { W.ryo.v = 0; W.path = []; }
