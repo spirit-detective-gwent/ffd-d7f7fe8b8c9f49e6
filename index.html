@@ -20971,7 +20971,7 @@ function c2SumireD(wake) { if (c2Room() !== 'clinic') return; var S = c2S(); c2C
   c2SumireMenu(); }
 function c2SumireMenu() { var S = c2Cyc(), full = SAVE.hp >= MAXHP, poor = (SAVE.items | 0) < C2_TEA, m = S.mugLeft | 0;
   var b = [[full ? 'Full Heal Tea \u00b7 \u00a5' + C2_TEA + ' (HP full)' : 'Full Heal Tea \u00b7 \u00a5' + C2_TEA + (poor ? ' (need \u00a5' + C2_TEA + ')' : ''), function () { c2Heal(C2_TEA); }, 'hot', full || poor],
-    ['Buy Herbs \u00b7 ' + m + '/' + C2_MUG + ' bundles', function () { setTimeout(c2MugShop, 0); }], ['Later', null]];
+    ['Buy Herbs \u00b7 ' + m + '/' + C2_MUG + ' bundles', function () { setTimeout(c2MugShop, 0); }], ['Later', null]]; if (window.FFF_TEA_OFF && window.FFF_TEA_OFF()) b.shift(); /* GGD-51 tea */
   dialog(ptFace('tsukikage', 'Dr. Tsukikage', IMG.tsukikage_fig) + '<div class="tw"><p class="q">\u201c' + C2_TEA_SAY[(S.tsi = ((S.tsi | 0) + 1)) % C2_TEA_SAY.length] + '\u201d</p><p class="vst"><span>HP <b>' + SAVE.hp + '/' + MAXHP + '</b></span><span>\u00a5' + (SAVE.items | 0) + '</span><span>\ud83c\udf3f ' + herbN('leaf') + ' \u00b7 ginger ' + herbN('ginger') + ' \u00b7 gauze ' + herbN('gauze') + '</span></p></div>', b);
   $('#wdlg').classList.add('scene'); ptLift(); ev('world:c2:sumire:menu:' + (full ? 'full' : 'hurt') + ':' + m); }
 function c2MugShop() { var S = c2Cyc(), m = S.mugLeft | 0, y = SAVE.items | 0, all = Math.min(m, y);
@@ -23804,7 +23804,7 @@ function v630PotOffer() {
     SAVE.sc.pot = 'gather'; save(); ev('world:pot:gather');
     g38gTeach(); /* v6.5.38 b3: she gives 1 Mugwort Leaf; the quest only waits on ginger */
   }, 'hot']];
-  if (SAVE.hp < MAXHP) b.push(['Tea \u00b7 \u00a5' + (typeof C2_TEA !== 'undefined' ? C2_TEA : 6), function () { c2HealAsk(false); }]);
+  if (SAVE.hp < MAXHP && !(window.FFF_TEA_OFF && window.FFF_TEA_OFF())) /* GGD-51 tea */ b.push(['Tea \u00b7 \u00a5' + (typeof C2_TEA !== 'undefined' ? C2_TEA : 6), function () { c2HealAsk(false); }]);
   dialog('<b>Dr. Tsukikage</b><p class="q">\u201cI can teach the bitter one. Kampo. I have the mugwort. You fetch the ginger.\u201d</p>', b, 'tsukikage_fig');
 }
 function v630PotGatherTalk() {
@@ -37203,7 +37203,7 @@ var GINKO = (function () {
         var h = potHeldNow();
         scene(null, [['tsukikage', potGiftLine(h)]]);
       }, 'hot']];
-      if (SAVE.hp < MAXHP) b.push(['Tea \u00b7 \u00a5' + (typeof C2_TEA !== 'undefined' ? C2_TEA : 26), function () { c2HealAsk(false); }]);
+      if (SAVE.hp < MAXHP && !(window.FFF_TEA_OFF && window.FFF_TEA_OFF())) /* GGD-51 tea */ b.push(['Tea \u00b7 \u00a5' + (typeof C2_TEA !== 'undefined' ? C2_TEA : 26), function () { c2HealAsk(false); }]);
       dialog('<b>Dr. Tsukikage</b><p class="q">\u201cI can teach the bitter one. Kampo. You fetch, I brew.\u201d</p>', b, 'tsukikage_fig');
     };
   }
@@ -45458,7 +45458,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     box(g, 90, 330, RW - 180, 300, '#3a1430', 0); for (var i = 100; i < RW - 90; i += 60) { g.fillStyle = 'rgba(255,90,200,.10)'; g.beginPath(); g.moveTo(i, 340); g.lineTo(i + 30, 480); g.lineTo(i, 620); g.lineTo(i - 30, 480); g.closePath(); g.fill(); }
     neonLine(g, [[90, 330], [RW - 90, 330]], '#ff4ab0', 4); neonLine(g, [[90, 630], [RW - 90, 630]], '#4ac8ff', 4);
     var wg = g.createLinearGradient(0, 0, 0, 230); wg.addColorStop(0, '#0a0610'); wg.addColorStop(1, '#22102e'); g.fillStyle = wg; g.fillRect(90, 0, RW - 180, 230); g.fillStyle = '#d8b060'; g.fillRect(90, 222, RW - 180, 5);
-    [[200, '701'], [400, '702'], [600, '703'], [800, '705'], [1050, '707']].forEach(function (d, k) { var x = d[0], last = d[1] === '707';
+    [[170, '701'], [310, '702'], [450, '703'], [590, '705'], [820, '707']].forEach(function (d, k) { var x = d[0], last = d[1] === '707';
       box(g, x - 56, 40, 112, 186, last ? '#3a1a10' : '#2a1a2a', 4, 4); box(g, x - 48, 48, 96, 178, last ? '#5a2a18' : '#3a2238', 3, 2); ell(g, x + 34, 140, 6, 6, '#d8b060', 2);
       box(g, x - 30, 14, 60, 24, '#0c0a0e', 2, 6); neonTx(g, d[1], x, 26, 16, '#fff', last ? '#ffb040' : '#c87aff');
       if (last && !cleared) { g.fillStyle = 'rgba(255,200,120,.35)'; g.beginPath(); g.moveTo(x - 48, 226); g.lineTo(x + 20, 226); g.lineTo(x + 110, 420); g.lineTo(x - 90, 420); g.closePath(); g.fill(); box(g, x - 48, 48, 30, 178, '#1a0a06', 2, 2); }
@@ -45466,12 +45466,72 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     tx(g, '7F', 1180, 120, 40, '#f0d080', 900); tx(g, '\u2192 701-707', 1180, 160, 11, '#f0d080', 900);
     /* room-service cart and a mirror bench */
     box(g, 300, 660, 120, 60, '#c8ccd4', 3, 4); box(g, 312, 646, 40, 16, '#f2ecd8', 2, 3); ell(g, 380, 652, 16, 9, '#c8ccd4', 2); [[310, 724], [410, 724]].forEach(function (w) { ell(g, w[0], w[1], 8, 8, '#2a2a30', 2); });
-    box(g, 820, 680, 200, 40, '#5a1a40', 3, 10); frosted(g, 840, 236, 160, 70, 'rgba(255,200,240,.4)');
+    box(g, 820, 680, 200, 40, '#5a1a40', 3, 10); frosted(g, 980, 60, 160, 130, 'rgba(255,200,240,.4)'); tx(g, '✦', 1060, 125, 26, 'rgba(255,255,255,.6)', 900);
     /* the elevator (bottom left of the corridor = the room exit) */
     box(g, 560, 780, 160, 70, '#3a2a14', 3, 4); tx(g, 'ELEVATOR', 640, 815, 12, '#f0d080', 900);
     for (var c = 0; c < 6; c++) spotCone(g, 160 + c * 200, 0, 400, c % 2 ? '74,200,255' : '255,74,176', 60);
     shellWalls(g, 230);
   };
+
+  /* ---------------- 4. Club Kitsune back office ---------------- */
+  function cctv(g, x, y, w, h, kind, k) { box(g, x, y, w, h, '#0c0a10', 3, 3); var lg = g.createLinearGradient(x, y, x, y + h); lg.addColorStop(0, kind === 'static' ? '#5a5a60' : '#2a3a4a'); lg.addColorStop(1, kind === 'static' ? '#2a2a30' : '#101820'); box(g, x + 4, y + 4, w - 8, h - 8, lg, 0, 2);
+    if (kind === 'static') { for (var i = 0; i < 40; i++) { g.fillStyle = 'rgba(255,255,255,' + (0.15 + (i * 37 % 10) / 20) + ')'; g.fillRect(x + 6 + (i * 53) % (w - 14), y + 6 + (i * 29) % (h - 14), 4, 2); } tx(g, 'GAME CTR', x + w / 2, y + h - 10, 8, '#ff8ae0', 900); return; }
+    for (var p = 0; p < 4; p++) { g.fillStyle = ['#ff5ac8', '#5ad8ff', '#ffd860', '#c87aff'][(p + k) % 4]; g.globalAlpha = 0.7; g.beginPath(); g.ellipse(x + 14 + p * (w - 28) / 3, y + h * 0.6, 4, 6, 0, 0, 7); g.fill(); g.globalAlpha = 1; }
+    tx(g, ['FLOOR', 'BAR', 'CAGE', 'COAT', 'ALLEY'][k % 5], x + w / 2, y + 12, 8, '#9fe0ff', 900); g.fillStyle = '#ff3030'; g.beginPath(); g.arc(x + w - 10, y + 10, 3, 0, 7); g.fill(); }
+  P6.ckoff = function (g, st) { var W2 = 1000, H2 = 900;
+    boards(g, 90, 230, W2 - 180, 620, '#3a2418', '#33200f', 40);
+    box(g, 300, 430, 400, 200, '#3a1450', 3, 6); g.strokeStyle = '#d8b060'; g.lineWidth = 3; g.strokeRect(312, 442, 376, 176);
+    g.fillStyle = '#ff5ac8'; g.beginPath(); g.moveTo(500, 470); g.lineTo(560, 530); g.lineTo(530, 530); g.lineTo(500, 590); g.lineTo(470, 530); g.lineTo(440, 530); g.closePath(); g.globalAlpha = 0.5; g.fill(); g.globalAlpha = 1;
+    plankWall(g, 90, 0, W2 - 180, 230, '#2a1626', '#311a2c', 34); g.fillStyle = '#d8b060'; g.fillRect(90, 220, W2 - 180, 6);
+    /* the window: Club Kitsune's fox through the glass, the bass leaks in */
+    box(g, 120, 30, 200, 150, '#0a0612', 4, 4); neonTx(g, '\u72d0', 220, 100, 70, '#ffd0f0', '#ff2ab0'); g.strokeStyle = INK; g.lineWidth = 3; g.beginPath(); g.moveTo(220, 30); g.lineTo(220, 180); g.moveTo(120, 105); g.lineTo(320, 105); g.stroke();
+    tx(g, 'CLUB KITSUNE \u00b7 OFFICE', 220, 200, 11, '#f0d080', 900);
+    /* six screens */
+    for (var i = 0; i < 6; i++) cctv(g, 570 + (i % 3) * 110, 34 + ((i / 3) | 0) * 84, 104, 78, i === 5 ? 'static' : 'feed', i);
+    /* the desk: cash counter, ledger, phone, ashtray */
+    box(g, 330, 300, 340, 80, '#4a2a18', 4, 6); box(g, 330, 300, 340, 14, '#6a3a20', 3, 6);
+    box(g, 360, 322, 70, 40, '#2a2a30', 3, 4); box(g, 372, 314, 46, 10, '#f2ecd8', 1.5, 1); tx(g, '\u00a5', 395, 344, 14, '#7aff9a', 900);
+    var led = !(st && st.j && st.j.ckLink); if (led) { box(g, 470, 318, 80, 50, '#7a1e22', 3, 3); g.fillStyle = '#f2ecd8'; g.fillRect(478, 324, 64, 38); for (var l = 0; l < 6; l++) { g.fillStyle = INK; g.fillRect(484, 330 + l * 5, 50 - (l % 2) * 14, 1.6); } } else { box(g, 478, 330, 60, 30, '#7a1e22', 3, 3); }
+    box(g, 590, 322, 40, 30, '#1a1a1a', 3, 6); ell(g, 646, 360, 12, 7, '#9aa0a8', 2);
+    chair(g, 500, 286, '#5a1a40');
+    /* safe, filing cabinets, sofa, a cage of fox masks */
+    box(g, 800, 250, 90, 110, '#4a4e56', 4, 4); ell(g, 845, 300, 16, 16, '#9aa0a8', 3); box(g, 806, 256, 30, 98, '#3a3e46', 2, 2);
+    for (var c = 0; c < 2; c++) { box(g, 110 + c * 46, 250, 44, 170, '#5a5e66', 3, 2); for (var d = 0; d < 3; d++) { box(g, 116 + c * 46, 262 + d * 52, 32, 40, '#6a6e76', 2, 2); box(g, 126 + c * 46, 278 + d * 52, 12, 4, '#2a2a30', 1, 1); } }
+    box(g, 110, 640, 220, 30, '#4a1a3a', 3, 10); box(g, 110, 666, 220, 54, '#6a2a5a', 3, 10);
+    box(g, 780, 660, 110, 100, '#2a1a12', 3, 4); for (var mk = 0; mk < 4; mk++) { var mx = 800 + (mk % 2) * 46, my = 680 + ((mk / 2) | 0) * 40; ell(g, mx + 10, my + 12, 14, 12, '#f2ecd8', 2); g.fillStyle = '#e04040'; g.fillRect(mx + 2, my + 8, 6, 3); g.fillRect(mx + 12, my + 8, 6, 3); }
+    plant(g, 740, 300, 0.9);
+    glowAt(g, 500, 320, 260, 'rgba(255,90,200,.10)'); glowAt(g, 730, 120, 200, 'rgba(90,200,255,.12)');
+    shellWalls(g, 230, W2, H2);
+  };
+  /* ---------------- 5. Izakaya Tanuki ---------------- */
+  function skewer(g, x, y, a, col) { g.save(); g.translate(x, y); g.rotate(a); g.strokeStyle = '#d8b880'; g.lineWidth = 2.5; g.beginPath(); g.moveTo(-26, 0); g.lineTo(26, 0); g.stroke(); for (var i = 0; i < 3; i++) ell(g, -14 + i * 12, 0, 6, 5, col, 1.6); g.restore(); }
+  P6.izak = function (g) {
+    boards(g, 90, 230, RW - 180, 620, '#5a3a22', '#50331e', 46);
+    plankWall(g, 90, 0, RW - 180, 230, '#4a2c18', '#54321c', 28); g.fillStyle = '#1f120c'; g.fillRect(90, 0, RW - 180, 14); g.fillStyle = '#1f120c'; g.fillRect(90, 214, RW - 180, 16);
+    /* red lanterns, noren and the sake shelf */
+    lantern(g, 160, 120, 30, '#d6243a', '\u9152'); lantern(g, 300, 120, 30, '#d6243a', '\u7126');
+    box(g, 380, 34, 440, 150, '#3a2010', 3, 4); for (var r = 0; r < 3; r++) { box(g, 384, 74 + r * 44, 432, 6, '#2a160a', 1.5, 0);
+      for (var b = 0; b < 10; b++) { var bx = 400 + b * 42, col = ['#2a6a3a', '#7a4a1a', '#e8e0d0', '#2a3a6a'][(b + r) % 4]; box(g, bx, 44 + r * 44, 18, 30, col, 2, 4); box(g, bx + 5, 36 + r * 44, 8, 10, col, 1.5, 2); box(g, bx + 2, 54 + r * 44, 14, 10, '#f2ecd8', 1, 1); } }
+    /* menu tags, tanzaku */
+    var T = ['\u713c\u304d\u9ce5', '\u5510\u63da\u3052', '\u679d\u8c46', '\u304a\u306b\u304e\u308a', '\u751f\u30d3\u30fc\u30eb', '\u71b1\u71d7'];
+    for (var t = 0; t < 6; t++) { var tx0 = 890 + t * 48; box(g, tx0, 30, 38, 150, '#f2e6c8', 2, 2); vjp(g, T[t], tx0 + 19, 48, 15, INK, 17); tx(g, '\u00a5' + [6, 8, 3, 5, 9, 7][t], tx0 + 19, 168, 11, '#9a1e22', 900); }
+    /* the robata counter: grill pit with skewers, the owner's side */
+    box(g, 190, 250, 900, 112, '#7a4a28', 4, 6); box(g, 190, 250, 900, 20, '#9a6a3a', 3, 6);
+    box(g, 440, 272, 400, 56, '#1a1210', 3, 4); g.fillStyle = '#e8501a'; for (var e = 0; e < 18; e++) { g.globalAlpha = 0.5 + (e % 3) * 0.15; g.fillRect(450 + e * 21, 300 + (e % 2) * 6, 12, 8); } g.globalAlpha = 1;
+    for (var s = 0; s < 8; s++) skewer(g, 470 + s * 46, 296, 0.06 * (s % 2 ? 1 : -1), s % 3 ? '#a85a2a' : '#e8d090');
+    steamW(g, 560, 268, 3, 34); steamW(g, 740, 268, 2, 34); glowAt(g, 640, 300, 240, 'rgba(255,110,40,.22)');
+    [[260, 330], [330, 330], [940, 330], [1010, 330]].forEach(function (p, i) { bowlS(g, p[0], p[1], 0.9, i % 2 ? '#1d1a1e' : '#9a1e22'); });
+    [300, 420, 540, 740, 860, 980].forEach(function (x) { stool(g, x, 396, '#2a1a12'); });
+    /* tables (regulars only), beer crates, the clay tanuki at the door */
+    box(g, 110, 600, 190, 90, '#6a4020', 3, 6); box(g, 980, 600, 190, 90, '#6a4020', 3, 6); [[150, 640], [260, 640], [1020, 640], [1130, 640]].forEach(function (p) { ell(g, p[0], p[1], 12, 8, '#e8c060', 2); });
+    for (var cr = 0; cr < 3; cr++) { box(g, 520 + cr * 80, 640, 76, 80, '#c8302a', 3, 4); for (var bo = 0; bo < 4; bo++) ell(g, 536 + cr * 80 + (bo % 2) * 40, 660 + ((bo / 2) | 0) * 34, 9, 9, '#5a3a10', 2); }
+    ell(g, 170, 826, 30, 8, 'rgba(0,0,0,.3)', 0); ell(g, 170, 800, 28, 30, '#8a6a4a', 3); ell(g, 170, 768, 20, 18, '#9a7a5a', 3); ell(g, 170, 754, 30, 8, '#d8b060', 2.5); ell(g, 162, 768, 4, 4, INK, 0); ell(g, 178, 768, 4, 4, INK, 0); box(g, 188, 790, 14, 20, '#e8e0d0', 2, 3);
+    /* noren over the door */
+    for (var n = 0; n < 3; n++) { box(g, 582 + n * 40, 812, 36, 38, '#2a3a6a', 2, 1); } tx(g, '\u305f\u306c\u304d', 640, 830, 13, '#f2ecd8', 900);
+    glowAt(g, 160, 120, 140, 'rgba(255,90,60,.12)');
+    shellWalls(g, 230);
+  };
+  S2P.p6Door = function (g) { box(g, 4, 6, 56, 84, '#4a4e56', 3, 3); box(g, 10, 14, 44, 70, '#5a5e66', 2, 2); box(g, 14, 20, 36, 14, '#c8302a', 2, 2); tx(g, 'STAFF', 32, 27, 9, '#fff', 900); ell(g, 46, 54, 3, 3, '#d8b060', 1.5); glowAt(g, 32, 4, 30, 'rgba(255,90,200,.4)'); };
 
   S2P.p6Paint = function (k, g, st) { var fn = P6[k]; if (!fn) return false; g.save(); try { fn(g, st || {}); } finally { g.restore(); } return true; };
   S2P.p6Size = function (k) { var D = P6[k + '_size']; return D || [RW, RH]; };
@@ -45592,6 +45652,15 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     neonLine(x, [[0, H0 - 10], [290, H0 - 120]], '#ff4ab0', 5); neonLine(x, [[WD, H0 - 10], [430, H0 - 120]], '#4ac8ff', 5);
     neonLine(x, [[0, 6], [290, 92]], '#c87aff', 3); neonLine(x, [[WD, 6], [430, 92]], '#c87aff', 3);
     C.floor(x, { far: '#4a1838', near: '#1a0814', kind: 'tile', line: 'rgba(255,90,200,.22)', n: 8, rows: 10 });
+    C.vign(x, 0.55); };
+  B.ckoff = function (x) { var C = hb(), WD = 720, H0 = C.H0;
+    x.fillStyle = '#1a0e1a'; x.fillRect(0, 0, WD, H0); for (var i = 0; i < WD; i += 40) { x.fillStyle = i % 80 ? '#221222' : '#1e0f1e'; x.fillRect(i, 0, 38, H0); }
+    for (var s = 0; s < 6; s++) { var sx = 150 + (s % 3) * 145, sy = 40 + ((s / 3) | 0) * 100; box(x, sx, sy, 130, 88, '#0c0a10', 3, 3); var lg = x.createLinearGradient(0, sy, 0, sy + 88); lg.addColorStop(0, s === 5 ? '#5a5a60' : '#2a3a4a'); lg.addColorStop(1, '#101820'); box(x, sx + 5, sy + 5, 120, 78, lg, 0, 2);
+      if (s === 5) { for (var q = 0; q < 50; q++) { x.fillStyle = 'rgba(255,255,255,.4)'; x.fillRect(sx + 8 + (q * 53) % 110, sy + 8 + (q * 29) % 70, 4, 2); } } else { x.fillStyle = '#ff3030'; x.beginPath(); x.arc(sx + 118, sy + 14, 4, 0, 7); x.fill(); } }
+    glowAt(x, 360, 130, 300, 'rgba(90,200,255,.16)');
+    neonLine(x, [[0, H0 - 34], [WD, H0 - 34]], '#ff5ac8', 5);
+    box(x, 120, H0 - 120, 480, 70, '#4a2a18', 4, 6);
+    C.floor(x, { far: '#3a2418', near: '#160c08', kind: 'board', line: 'rgba(0,0,0,.35)', n: 8, rows: 10 });
     C.vign(x, 0.55); };
   S2P.p6Battle = function (k, x) { var fn = B[k]; var C = hb(); if (!fn || !C) { x.fillStyle = '#1a1410'; x.fillRect(0, 0, 720, 1280); return; } x.save(); try { fn(x); } finally { x.restore(); } };
   S2P.p6B = B;
@@ -49585,9 +49654,10 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
         if (!met()) return menu0.apply(this, arguments);
         var S = cyc(), full = SAVE.hp >= (typeof MAXHP !== 'undefined' ? MAXHP : 55), tea = typeof C2_TEA !== 'undefined' ? C2_TEA : 26;
         var poor = (SAVE.items | 0) < tea, m = S.mugLeft | 0;
-        /* GGD-51: the Full Heal Tea is gone (full rests moved to the hotels: Hotel Chuo / Kitsune Hotel, ¥40 once per job). Seeds and herbs stay. */
-        var b = [['Seeds · ' + m + '/' + (typeof C2_MUG !== 'undefined' ? C2_MUG : 3) + ' packets', function () { setTimeout(c2MugShop, 0); }],
-          ['Later', null]];
+        /* GGD-51: the Full Heal Tea goes once a hotel rest is reachable (Hotel Chuo / Kitsune Hotel, ¥40 once per job). Seeds and herbs stay. */
+        var b = [[full ? 'Full Heal Tea · ¥' + tea + ' (HP full)' : 'Full Heal Tea · ¥' + tea + (poor ? ' (need ¥' + tea + ')' : ''), function () { c2Heal(tea); }, 'hot', full || poor],
+          ['Seeds · ' + m + '/' + (typeof C2_MUG !== 'undefined' ? C2_MUG : 3) + ' packets', function () { setTimeout(c2MugShop, 0); }],
+          ['Later', null]]; if (window.FFF_TEA_OFF && window.FFF_TEA_OFF()) b.shift();
         var say = (typeof C2_TEA_SAY !== 'undefined' ? C2_TEA_SAY[(S.tsi = ((S.tsi | 0) + 1)) % C2_TEA_SAY.length] : 'Sit. Drink.');
         dialog(ptFace('tsukikage', 'Dr. Tsukikage', IMG.tsukikage_fig) +
           '<div class="tw"><p class="q">“' + say + '”</p><p class="vst"><span>HP <b>' + SAVE.hp + '/' + (typeof MAXHP !== 'undefined' ? MAXHP : 55) + '</b></span><span>¥' + (SAVE.items | 0) + '</span></p></div>', b);
@@ -50485,8 +50555,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       { id: 'j6_h_lift', r: [996, 40, 1164, 236], at: [1080, 300], face: 3, lab: 'Lift' }] });
   roomDef('hhall', 'Hotel Chuo \u00b7 7F', 'ck_backroom', {
     block: [[300, 646, 420, 732], [820, 680, 1020, 720]],
-    spots: [{ id: 'j6_h_707', r: [994, 40, 1106, 226], at: [1050, 290], face: 3, lab: '707' },
-      { id: 'j6_h_door', r: [544, 40, 656, 226], at: [600, 290], face: 3, lab: '703' }] });
+    spots: [{ id: 'j6_h_707', r: [764, 40, 876, 226], at: [820, 290], face: 3, lab: '707' },
+      { id: 'j6_h_door', r: [394, 40, 506, 226], at: [450, 290], face: 3, lab: '703' }] });
   P6.SURF.hchuo = 'stone'; P6.SURF.hhall = 'wood';
   AMB.hchuo = { top: 'rgba(255,120,210,.22)', bot: 'rgba(40,20,80,.30)', rain: 0, motes: 10, lamps: [[100, 120, '255,74,176', 70, 0.28, 'neon'], [290, 120, '74,200,255', 70, 0.24, 'neon']] };
   AMB.hhall = { top: 'rgba(200,120,255,.24)', bot: 'rgba(20,10,40,.34)', rain: 0, motes: 6, lamps: [[195, 120, '255,176,64', 60, 0.26, 'lamp']] };
@@ -50529,8 +50599,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (k !== 'hhall') { ['a', 'b', 'o'].forEach(function (q) { if (H_CAST[q]) { kill(H_CAST[q]); H_CAST[q] = null; } }); return; }
     if (!hallLive()) return;
     function alive(s) { return s && s.el && s.el.parentNode; }
-    if (!J().h1) { if (!alive(H_CAST.a)) H_CAST.a = npc('j6_hsuit', 960, 330, Math.PI); if (!alive(H_CAST.b)) H_CAST.b = npc('j6_hsuit', 1140, 340, 0); }
-    if (!alive(H_CAST.o)) { H_CAST.o = npc('j6_dealer', 1050, 250, Math.PI / 2); try { waddle(H_CAST.o, 0, Math.PI / 2); } catch (e) {} }
+    if (!J().h1) { if (!alive(H_CAST.a)) H_CAST.a = npc('j6_hsuit', 730, 340, Math.PI); if (!alive(H_CAST.b)) H_CAST.b = npc('j6_hsuit', 920, 350, 0); }
+    if (!alive(H_CAST.o)) { H_CAST.o = npc('j6_dealer', 820, 262, Math.PI / 2); try { waddle(H_CAST.o, 0, Math.PI / 2); } catch (e) {} }
   }
   P6.H_CAST = H_CAST; P6.popHotel = popHotel;
   function ding(up) { try { var X = root.FFF_S2ARC; var c = X && X.actx && X.actx(); if (c && X.tone) { var t = c.currentTime + 0.02; X.tone(up ? 784 : 659, t, 0.35, 'sine', 0.12); X.tone(up ? 1047 : 523, t + 0.18, 0.5, 'sine', 0.12); } } catch (e) {} }
@@ -50598,18 +50668,142 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (typeof restFinishArm === 'function') restFinishArm(o, (root.FFF_REST_MS || rs * 1000), done); else later(root.FFF_REST_MS || rs * 1000, done);
   }
   P6.hotelRest = hotelRest; P6.doRest = doRest;
+  /* the herbalist's paid Full Heal Tea leaves once a hotel rest is reachable on this run (Kitsune Hotel lobby open, or the strip) */
+  function restReach() { try { if (!on()) return false; var NQ = root.FFF_NQ; if (NQ && typeof NQ.roomOpen === 'function' && NQ.roomOpen('hotel')) return true; return stripOpen(); } catch (e) { return false; } }
+  root.FFF_TEA_OFF = restReach; P6.restReach = restReach;
+
   /* the Kitsune Hotel desk gets the same rest (all Chapter 2 runs; the herbalist's Full Heal Tea is gone) */
   try { var KH = INT[C2R.hotel] || INT.c2_nq_hotel; if (KH && KH.spots && !KH.spots.some(function (q) { return q.id === 'j6_rest_kh'; })) KH.spots.push({ id: 'j6_rest_kh', r: [740, 250, 840, 362], at: [790, 400], face: 0, lab: 'Rest \u00a5' + REST_PRICE }); } catch (eKH) { ev('world:s2p6:err:kh:' + (eKH && eKH.message)); }
 
   ACT.j6_rest_kh = function () { return hotelRest('kh'); };
   ACT.j6_h_desk = function () { if (busy()) return true; lockIn(1); talk(VO.hDesk, function () { lockIn(0); later(100, function () { hotelRest('hc'); }); }); return true; };
   ACT.j6_h_panel = function () { if (busy()) return true; lockIn(1); talk(VO.hPanel, function () { lockIn(0); }); return true; };
-  ACT.j6_h_lift = function () { if (busy()) return true; if (at('kara')) { lift('hhall', [640, 760, 0], '\u25b2 7F'); return true; } lockIn(1); talk(VO.hLift0, function () { lockIn(0); }); return true; };
+  ACT.j6_h_lift = function () { if (busy()) return true; if (at('kara')) { lift('hhall', [700, 700, 0], '\u25b2 7F'); return true; } lockIn(1); talk(VO.hLift0, function () { lockIn(0); }); return true; };
   ACT.j6_h_door = function () { if (busy()) return true; lockIn(1); talk(VO.hDoor, function () { lockIn(0); }); return true; };
   ACT.j6_h_707 = function () { if (busy()) return true; if (hallLive()) { hallArrive(); return true; } lockIn(1); talk(VO.hDone, function () { lockIn(0); }); return true; };
   ARRIVE.hchuo = hotelArrive; ARRIVE.hhall = hallArrive;
   POP.push(popHotel);
   PIN.kara = function () { if (room() === 'hchuo') return { room: 'hchuo', x: 1080, y: 250, lab: 'Lift', loc: 'High Score \u00b7 Hotel Chuo, 7F' }; return { room: 'town', x: TOWN_DOORS.hchuo.at[0], y: TOWN_DOORS.hchuo.at[1] - 60, lab: 'Hotel Chuo', loc: 'High Score \u00b7 Hotel Chuo, 7F' }; };
+
+  /* ---------------- 4. Club Kitsune back office (own room; the base club chain is untouched) ---------------- */
+  try { alias('j6_tetsu', 'chinpira1', (C2K && C2K.chinpira1) || 1.1, 'Punk Tetsu'); alias('j6_cdealer', 'ck_dealer', (C2K && C2K.ck_dealer) || 1.1, 'Club Dealer'); } catch (eC) { ev('world:s2p6:err:alias4:' + (eC && eC.message)); }
+  TOWN_DOORS.ckoff = { r: [3196, 1500, 3256, 1584], at: [3226, 1626] }; TOWN_DOORS.ckoff.to = 'ckoff'; TOWN_DOORS.ckoff.out = [3226, 1636]; C2W.doors.j6_ckoff = TOWN_DOORS.ckoff;
+  INT.c2_town.spots.push({ id: 'j6_e_ckoff', r: TOWN_DOORS.ckoff.r, at: TOWN_DOORS.ckoff.at, face: 3, lab: 'Staff door' }); TRANS.j6_e_ckoff = 1;
+  roomDef('ckoff', 'Club Kitsune \u00b7 back office', 'ck_backroom', { w: 1000, h: 900, open: [[90, 230, 910, 850], [440, 850, 560, 900]],
+    block: [[330, 300, 670, 380], [110, 250, 200, 420], [800, 250, 890, 360], [110, 640, 330, 720], [780, 660, 890, 760]],
+    spots: [{ id: 'j6_ck_desk', r: [330, 300, 670, 380], at: [500, 440], face: 3, lab: 'Desk' },
+      { id: 'j6_ck_tv', r: [560, 30, 900, 200], at: [730, 290], face: 3, lab: 'Screens' },
+      { id: 'j6_ck_safe', r: [800, 250, 890, 360], at: [780, 420], face: 0, lab: 'Safe' }] });
+  P6.SURF.ckoff = 'wood';
+  AMB.ckoff = { top: 'rgba(200,90,255,.22)', bot: 'rgba(30,10,40,.34)', rain: 0, motes: 6, lamps: [[195, 160, '255,90,200', 60, 0.26, 'neon'], [195, 300, '255,200,120', 50, 0.24, 'lamp']] };
+  P6.PKEY.ckoff = function () { return tetsuDone() ? 'beat' : 'tetsu'; };
+  P6.OPEN.ckoff = function () { return at('hotel'); };
+  P6.BT.ckoff = { name: 'Club Kitsune \u00b7 back office', lights: [[360, 110, '200,90,255', 100, 0.3, 'neon']] };
+  function tetsuDone() { try { return !!J().tetsu || (typeof c2PunkDealt === 'function' && c2PunkDealt()); } catch (e) { return !!J().tetsu; } }
+  P6.tetsuDone = tetsuDone;
+  function clubLive() { return qOn() && stg() === 'hotel'; }
+  VO.ckShut = [['', '<p class="dim">A steel door, \u201cSTAFF ONLY\u201d in fox-red. Locked. Nothing back here for you yet.</p>']];
+  VO.ckIn = V3([['', '<p class="dim">The club\u2019s back office. Six screens of the dance floor. A cash counter still warm. Punk Tetsu at the desk, feet up.</p>'],
+    ['j6_tetsu', 'Staff door means staff, kids.']], {
+    fierce: [['ryo', 'Ogata\u2019s deal sheets. Your stamp. Explain.']],
+    strategic: [['aoi', 'The hotel deal went through your books. We want the page after it.']],
+    balanced: [['ryo', 'We came about the hotel.']]
+  }, [['j6_tetsu', 'You want my ledger, you take it off me.']]);
+  VO.ckBeatNow = V3([['j6_tetsu', '\u2026Okay! Okay. Ow.'], ['j6_tetsu', 'You think this is my club? I rent the fox. Every yen goes up the street.']], {
+    fierce: [['ryo', 'To who?']],
+    strategic: [['aoi', 'The ledger, Tetsu. Last page.']],
+    balanced: [['ryo', 'Up the street to who?']]
+  }, [['', '<p class="dim">The last page: \u201cJ. \u2014 Thursdays. Envelope via Tanuki.\u201d A Neon Game Center prize token is taped to it.</p>'],
+    ['j6_tetsu', 'Jin. The Game Center. He keeps score on all of us.'], ['aoi', 'And Tanuki?'], ['j6_tetsu', 'Izakaya Tanuki. The old owner walks the envelope over. Ask him. Not me.']]);
+  VO.ckBeatOld = V3([['', '<p class="dim">Punk Tetsu at the desk, an ice pack on the jaw you gave him.</p>'], ['j6_tetsu', 'You again. I\u2019m paid up with you. What now?']], {
+    fierce: [['ryo', 'Hotel Chuo. The deal sheets carry your stamp.']],
+    strategic: [['aoi', 'The Suits\u2019 deal at Hotel Chuo went through your books.']],
+    balanced: [['ryo', 'Ogata says ask the club where the money goes.']]
+  }, [['j6_tetsu', '\u2026Fine. Take the page. I never liked the guy.'], ['', '<p class="dim">The last page: \u201cJ. \u2014 Thursdays. Envelope via Tanuki.\u201d A Neon Game Center prize token is taped to it.</p>'],
+    ['j6_tetsu', 'Jin. The Game Center. Izakaya Tanuki\u2019s owner walks the envelope over. Ask him.']]);
+  VO.ckDone = [['j6_tetsu', 'Door\u2019s that way. Close it on your way out.']];
+  VO.ckTv = [['', '<p class="dim">Six screens: the dance floor, the bar, the cage, the coat check, the alley, and one labelled GAME CENTER that shows only static.</p>']];
+  VO.ckSafe = [['', '<p class="dim">The safe is open and empty. Thursday already happened.</p>']];
+  var C_CAST = { t: null, d: null };
+  function staffDoor(show) { var el = document.getElementById('j6ckdoor'); if (!show) { if (el && el.parentNode) el.parentNode.removeChild(el); return; } if (el) return;
+    var m = document.getElementById('wimap') || document.getElementById('world'); if (!m) return; var c = document.createElement('canvas'); c.width = 64; c.height = 92; c.id = 'j6ckdoor'; c.className = 'nqprop';
+    c.style.cssText = 'position:absolute;left:3194px;top:1494px;width:64px;height:92px;z-index:2;pointer-events:none';
+    try { if (root.FFF_S2P && root.FFF_S2P.p6Door) root.FFF_S2P.p6Door(c.getContext('2d')); } catch (e) {} m.appendChild(c); }
+  function popClub() {
+    var k = room();
+    try { staffDoor(k === 'town' && stripOpen() && at('hotel')); } catch (eD) {}
+    if (k !== 'ckoff') { ['t', 'd'].forEach(function (q) { if (C_CAST[q]) { kill(C_CAST[q]); C_CAST[q] = null; } }); return; }
+    if (!C_CAST.t || !C_CAST.t.el || !C_CAST.t.el.parentNode) { C_CAST.t = npc('j6_tetsu', 500, 270, Math.PI / 2); try { waddle(C_CAST.t, 0, Math.PI / 2); } catch (e) {} }
+    if (clubLive() && !tetsuDone() && (!C_CAST.d || !C_CAST.d.el || !C_CAST.d.el.parentNode)) C_CAST.d = npc('j6_cdealer', 220, 520, 0);
+  }
+  P6.popClub = popClub; P6.C_CAST = C_CAST;
+  function clubLink(kind) { lockIn(1); talk(pv(kind === 'now' ? VO.ckBeatNow : VO.ckBeatOld), function () { lockIn(0); J().ckLink = 1; setStg('club'); qStep(4); sv(); P6.resetPaint('ckoff'); paintRoom(); toastS('Journal: Izakaya Tanuki, on the strip.'); }); }
+  function clubArrive() {
+    if (!clubLive()) return;
+    whenFree(function () {
+      if (room() !== 'ckoff' || !clubLive()) return;
+      if (tetsuDone()) { clubLink('old'); return; }
+      lockIn(1);
+      talk(pv(VO.ckIn), function () { startFight('ckoff', ['chinpira1'], { bt: 'ckoff', ctx: { flv: 7, j6nm: 'Punk Tetsu', joinIn: { id: 'ck_dealer', round: 3, nm: 'Club Dealer', line: 'A Club Dealer joins Punk on round 3.' } } }); });
+    });
+  }
+  FIGHT.ckoff = {
+    win: function () { J().tetsu = 1; sv(); if (C_CAST.d) { kill(C_CAST.d); C_CAST.d = null; } P6.resetPaint('ckoff'); paintRoom(); clubLink('now'); },
+    lose: function () { }
+  };
+  ACT.j6_ck_desk = function () { if (busy()) return true; if (clubLive()) { clubArrive(); return true; } lockIn(1); talk(VO.ckDone, function () { lockIn(0); }); return true; };
+  ACT.j6_ck_tv = function () { if (busy()) return true; lockIn(1); talk(VO.ckTv, function () { lockIn(0); }); return true; };
+  ACT.j6_ck_safe = function () { if (busy()) return true; lockIn(1); talk(VO.ckSafe, function () { lockIn(0); }); return true; };
+  TALK.j6_tetsu = function () { return ACT.j6_ck_desk(); };
+  ARRIVE.ckoff = clubArrive; POP.push(popClub);
+  PIN.hotel = function () { return { room: 'town', x: TOWN_DOORS.ckoff.at[0], y: TOWN_DOORS.ckoff.at[1] - 60, lab: 'Staff door', loc: 'High Score \u00b7 Club Kitsune, back office' }; };
+
+  /* ---------------- 5. Izakaya Tanuki ---------------- */
+  try { alias('j6_ponta', 'npc_attendant', 1.08, 'Ponta (owner)'); } catch (eI) { ev('world:s2p6:err:alias5:' + (eI && eI.message)); }
+  var IZAK_ITEMS = [
+    { id: 'yakitori', n: 'Yakitori', jp: '\u713c\u304d\u9ce5', icon: 'i_yakitori', hp: 10, base: 6, cost: 6, eat: 'yakitori', eff: '+10 HP  \u00b7  at the counter', flavor: 'Two skewers off the grill, tare glaze, a pinch of shichimi.' },
+    { id: 'karaage', n: 'Karaage', jp: '\u5510\u63da\u3052', icon: 'i_karaage', hp: 14, base: 8, cost: 8, eat: 'karaage', eff: '+14 HP  \u00b7  at the counter', flavor: 'Ginger-soy chicken, fried twice. Lemon on the side.' },
+    { id: 'edamame', n: 'Edamame', jp: '\u679d\u8c46', icon: 'i_edamame', hp: 6, base: 3, cost: 3, eat: 'edamame', eff: '+6 HP  \u00b7  at the counter', flavor: 'Salted pods, still warm. Everyone orders these.' },
+    { id: 'onigiri', n: 'Onigiri', jp: '\u304a\u306b\u304e\u308a', icon: 'i_onigiri', hp: 12, base: 5, cost: 5, eat: 'onigiri', eff: '+12 HP  \u00b7  at the counter', flavor: 'Grilled rice ball, miso brushed, nori wrap.' }
+  ];
+  P6.IZAK_ITEMS = IZAK_ITEMS;
+  (function regIz() { var M = menus(); if (!M || !M.SHOPS) { later(0, regIz); return; }
+    M.SHOPS.j6_izak = { id: 'j6_izak', theme: 'izak', n: 'Izakaya Tanuki', jp: '\u5c45\u9152\u5c4b \u305f\u306c\u304d', who: 'j6_ponta', leave: '\u3054\u3061\u305d\u3046\u3055\u307e  \u00b7  Done',
+      hi: { fierce: 'Sit at the counter. Elbows in.', strategic: 'Small plates, small prices. Grill\u2019s hot.', balanced: 'Irasshai! Counter seats only tonight.' },
+      nails: function () { return false; }, items: function () { return IZAK_ITEMS; } }; })();
+  roomDef('izak', 'Izakaya Tanuki \u00b7 \u5c45\u9152\u5c4b\u305f\u306c\u304d', 'c2night', {
+    block: [[190, 250, 1090, 362], [110, 600, 300, 690], [980, 600, 1170, 690], [520, 640, 760, 720], [140, 770, 200, 830]],
+    spots: [{ id: 'j6_izak_order', r: [560, 250, 720, 362], at: [640, 430], face: 3, lab: 'Order' },
+      { id: 'j6_izak_tags', r: [880, 30, 1180, 200], at: [1000, 420], face: 3, lab: 'Menu' },
+      { id: 'j6_izak_tanuki', r: [140, 770, 200, 830], at: [240, 800], face: 1, lab: 'Look' }] });
+  P6.SURF.izak = 'wood';
+  AMB.izak = { top: 'rgba(255,150,90,.28)', bot: 'rgba(60,24,20,.30)', rain: 0, motes: 8, steamN: 2, lamps: [[120, 120, '255,90,60', 60, 0.32, 'lantern'], [280, 120, '255,90,60', 60, 0.32, 'lantern']] };
+  P6.OPEN.izak = function () { return true; };
+  VO.izIn = [['j6_ponta', 'Irasshai! Counter only. The tables are for my regulars and my regulars are dead.']];
+  VO.izIn2 = [['j6_ponta', 'Irasshai. Grill\u2019s hot.']];
+  VO.izTip = V3([['j6_ponta', '\u2026You\u2019re the two from the hotel. The whole strip heard.']], {
+    fierce: [['ryo', 'The envelope. You walk it to Jin.'], ['j6_ponta', 'Every Thursday. Since my wife passed and he paid the funeral.']],
+    strategic: [['aoi', 'Thursdays, via Tanuki. Tetsu\u2019s ledger says you carry the money.'], ['j6_ponta', 'I carry it. I don\u2019t count it.']],
+    balanced: [['aoi', 'We\u2019re not here to hurt you.'], ['j6_ponta', 'I know. That\u2019s why I\u2019m going to tell you.']]
+  }, [['j6_ponta', 'Jin plays the floor every night, top of the shooter board. His real room is past the staff door at the back. The prize room.'],
+    ['j6_ponta', 'Tell him the old tanuki says the funeral\u2019s paid off.']]);
+  VO.izTags = [['', '<p class="dim">Paper tags on the wall: \u713c\u304d\u9ce5 \u00a56, \u5510\u63da\u3052 \u00a58, \u679d\u8c46 \u00a53, \u304a\u306b\u304e\u308a \u00a55. One old tag, crossed out: \u300c\u30c4\u30b1\u300d (on credit).</p>']];
+  VO.izTanuki = [['', '<p class="dim">A clay tanuki in a straw hat holds a sake flask and an IOU. Someone rubbed its belly shiny.</p>']];
+  var I_CAST = { p: null };
+  function popIzak() { var k = room(); if (k !== 'izak') { if (I_CAST.p) { kill(I_CAST.p); I_CAST.p = null; } return; }
+    if (!I_CAST.p || !I_CAST.p.el || !I_CAST.p.el.parentNode) { I_CAST.p = npc('j6_ponta', 640, 214, Math.PI / 2); try { waddle(I_CAST.p, 0, Math.PI / 2); } catch (e) {} } }
+  P6.popIzak = popIzak; P6.I_CAST = I_CAST;
+  function izTipLive() { return qOn() && stg() === 'club'; }
+  function izArrive() { var j = J(); whenFree(function () { if (room() !== 'izak') return; lockIn(1); talk(!j.izIn ? VO.izIn : VO.izIn2, function () { j.izIn = 1; sv(); lockIn(0); }); }); }
+  function izTip() { if (room() !== 'izak' || !izTipLive()) return; lockIn(1); talk(pv(VO.izTip), function () { lockIn(0); setStg('izak'); qStep(5); sv(); toastS('Journal: Neon Game Center. Find Jin on the floor.'); }); }
+  function izOrder() { if (busy()) return true; if (izTipLive()) { P6._ate = 0; P6.afterMeal(izTip); } openShop('j6_izak'); return true; }
+  P6.izOrder = izOrder; P6.izTip = izTip;
+  ACT.j6_izak_order = function () { return izOrder(); };
+  ACT.j6_izak_tags = function () { if (busy()) return true; lockIn(1); talk(VO.izTags, function () { lockIn(0); }); return true; };
+  ACT.j6_izak_tanuki = function () { if (busy()) return true; lockIn(1); talk(VO.izTanuki, function () { lockIn(0); }); return true; };
+  TALK.j6_ponta = function () { return izOrder(); };
+  ARRIVE.izak = izArrive; POP.push(popIzak);
+  PIN.club = function () { return { room: 'town', x: TOWN_DOORS.izak.at[0], y: TOWN_DOORS.izak.at[1] - 60, lab: 'Izakaya', loc: 'High Score \u00b7 Izakaya Tanuki' }; };
 
   if (typeof c2Tags === 'function') {
     var tags0 = c2Tags;

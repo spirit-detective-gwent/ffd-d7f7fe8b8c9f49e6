@@ -535,8 +535,8 @@
       { id: 'j6_h_lift', r: [996, 40, 1164, 236], at: [1080, 300], face: 3, lab: 'Lift' }] });
   roomDef('hhall', 'Hotel Chuo \u00b7 7F', 'ck_backroom', {
     block: [[300, 646, 420, 732], [820, 680, 1020, 720]],
-    spots: [{ id: 'j6_h_707', r: [994, 40, 1106, 226], at: [1050, 290], face: 3, lab: '707' },
-      { id: 'j6_h_door', r: [544, 40, 656, 226], at: [600, 290], face: 3, lab: '703' }] });
+    spots: [{ id: 'j6_h_707', r: [764, 40, 876, 226], at: [820, 290], face: 3, lab: '707' },
+      { id: 'j6_h_door', r: [394, 40, 506, 226], at: [450, 290], face: 3, lab: '703' }] });
   P6.SURF.hchuo = 'stone'; P6.SURF.hhall = 'wood';
   AMB.hchuo = { top: 'rgba(255,120,210,.22)', bot: 'rgba(40,20,80,.30)', rain: 0, motes: 10, lamps: [[100, 120, '255,74,176', 70, 0.28, 'neon'], [290, 120, '74,200,255', 70, 0.24, 'neon']] };
   AMB.hhall = { top: 'rgba(200,120,255,.24)', bot: 'rgba(20,10,40,.34)', rain: 0, motes: 6, lamps: [[195, 120, '255,176,64', 60, 0.26, 'lamp']] };
@@ -579,8 +579,8 @@
     if (k !== 'hhall') { ['a', 'b', 'o'].forEach(function (q) { if (H_CAST[q]) { kill(H_CAST[q]); H_CAST[q] = null; } }); return; }
     if (!hallLive()) return;
     function alive(s) { return s && s.el && s.el.parentNode; }
-    if (!J().h1) { if (!alive(H_CAST.a)) H_CAST.a = npc('j6_hsuit', 960, 330, Math.PI); if (!alive(H_CAST.b)) H_CAST.b = npc('j6_hsuit', 1140, 340, 0); }
-    if (!alive(H_CAST.o)) { H_CAST.o = npc('j6_dealer', 1050, 250, Math.PI / 2); try { waddle(H_CAST.o, 0, Math.PI / 2); } catch (e) {} }
+    if (!J().h1) { if (!alive(H_CAST.a)) H_CAST.a = npc('j6_hsuit', 730, 340, Math.PI); if (!alive(H_CAST.b)) H_CAST.b = npc('j6_hsuit', 920, 350, 0); }
+    if (!alive(H_CAST.o)) { H_CAST.o = npc('j6_dealer', 820, 262, Math.PI / 2); try { waddle(H_CAST.o, 0, Math.PI / 2); } catch (e) {} }
   }
   P6.H_CAST = H_CAST; P6.popHotel = popHotel;
   function ding(up) { try { var X = root.FFF_S2ARC; var c = X && X.actx && X.actx(); if (c && X.tone) { var t = c.currentTime + 0.02; X.tone(up ? 784 : 659, t, 0.35, 'sine', 0.12); X.tone(up ? 1047 : 523, t + 0.18, 0.5, 'sine', 0.12); } } catch (e) {} }
@@ -648,18 +648,142 @@
     if (typeof restFinishArm === 'function') restFinishArm(o, (root.FFF_REST_MS || rs * 1000), done); else later(root.FFF_REST_MS || rs * 1000, done);
   }
   P6.hotelRest = hotelRest; P6.doRest = doRest;
+  /* the herbalist's paid Full Heal Tea leaves once a hotel rest is reachable on this run (Kitsune Hotel lobby open, or the strip) */
+  function restReach() { try { if (!on()) return false; var NQ = root.FFF_NQ; if (NQ && typeof NQ.roomOpen === 'function' && NQ.roomOpen('hotel')) return true; return stripOpen(); } catch (e) { return false; } }
+  root.FFF_TEA_OFF = restReach; P6.restReach = restReach;
+
   /* the Kitsune Hotel desk gets the same rest (all Chapter 2 runs; the herbalist's Full Heal Tea is gone) */
   try { var KH = INT[C2R.hotel] || INT.c2_nq_hotel; if (KH && KH.spots && !KH.spots.some(function (q) { return q.id === 'j6_rest_kh'; })) KH.spots.push({ id: 'j6_rest_kh', r: [740, 250, 840, 362], at: [790, 400], face: 0, lab: 'Rest \u00a5' + REST_PRICE }); } catch (eKH) { ev('world:s2p6:err:kh:' + (eKH && eKH.message)); }
 
   ACT.j6_rest_kh = function () { return hotelRest('kh'); };
   ACT.j6_h_desk = function () { if (busy()) return true; lockIn(1); talk(VO.hDesk, function () { lockIn(0); later(100, function () { hotelRest('hc'); }); }); return true; };
   ACT.j6_h_panel = function () { if (busy()) return true; lockIn(1); talk(VO.hPanel, function () { lockIn(0); }); return true; };
-  ACT.j6_h_lift = function () { if (busy()) return true; if (at('kara')) { lift('hhall', [640, 760, 0], '\u25b2 7F'); return true; } lockIn(1); talk(VO.hLift0, function () { lockIn(0); }); return true; };
+  ACT.j6_h_lift = function () { if (busy()) return true; if (at('kara')) { lift('hhall', [700, 700, 0], '\u25b2 7F'); return true; } lockIn(1); talk(VO.hLift0, function () { lockIn(0); }); return true; };
   ACT.j6_h_door = function () { if (busy()) return true; lockIn(1); talk(VO.hDoor, function () { lockIn(0); }); return true; };
   ACT.j6_h_707 = function () { if (busy()) return true; if (hallLive()) { hallArrive(); return true; } lockIn(1); talk(VO.hDone, function () { lockIn(0); }); return true; };
   ARRIVE.hchuo = hotelArrive; ARRIVE.hhall = hallArrive;
   POP.push(popHotel);
   PIN.kara = function () { if (room() === 'hchuo') return { room: 'hchuo', x: 1080, y: 250, lab: 'Lift', loc: 'High Score \u00b7 Hotel Chuo, 7F' }; return { room: 'town', x: TOWN_DOORS.hchuo.at[0], y: TOWN_DOORS.hchuo.at[1] - 60, lab: 'Hotel Chuo', loc: 'High Score \u00b7 Hotel Chuo, 7F' }; };
+
+  /* ---------------- 4. Club Kitsune back office (own room; the base club chain is untouched) ---------------- */
+  try { alias('j6_tetsu', 'chinpira1', (C2K && C2K.chinpira1) || 1.1, 'Punk Tetsu'); alias('j6_cdealer', 'ck_dealer', (C2K && C2K.ck_dealer) || 1.1, 'Club Dealer'); } catch (eC) { ev('world:s2p6:err:alias4:' + (eC && eC.message)); }
+  TOWN_DOORS.ckoff = { r: [3196, 1500, 3256, 1584], at: [3226, 1626] }; TOWN_DOORS.ckoff.to = 'ckoff'; TOWN_DOORS.ckoff.out = [3226, 1636]; C2W.doors.j6_ckoff = TOWN_DOORS.ckoff;
+  INT.c2_town.spots.push({ id: 'j6_e_ckoff', r: TOWN_DOORS.ckoff.r, at: TOWN_DOORS.ckoff.at, face: 3, lab: 'Staff door' }); TRANS.j6_e_ckoff = 1;
+  roomDef('ckoff', 'Club Kitsune \u00b7 back office', 'ck_backroom', { w: 1000, h: 900, open: [[90, 230, 910, 850], [440, 850, 560, 900]],
+    block: [[330, 300, 670, 380], [110, 250, 200, 420], [800, 250, 890, 360], [110, 640, 330, 720], [780, 660, 890, 760]],
+    spots: [{ id: 'j6_ck_desk', r: [330, 300, 670, 380], at: [500, 440], face: 3, lab: 'Desk' },
+      { id: 'j6_ck_tv', r: [560, 30, 900, 200], at: [730, 290], face: 3, lab: 'Screens' },
+      { id: 'j6_ck_safe', r: [800, 250, 890, 360], at: [780, 420], face: 0, lab: 'Safe' }] });
+  P6.SURF.ckoff = 'wood';
+  AMB.ckoff = { top: 'rgba(200,90,255,.22)', bot: 'rgba(30,10,40,.34)', rain: 0, motes: 6, lamps: [[195, 160, '255,90,200', 60, 0.26, 'neon'], [195, 300, '255,200,120', 50, 0.24, 'lamp']] };
+  P6.PKEY.ckoff = function () { return tetsuDone() ? 'beat' : 'tetsu'; };
+  P6.OPEN.ckoff = function () { return at('hotel'); };
+  P6.BT.ckoff = { name: 'Club Kitsune \u00b7 back office', lights: [[360, 110, '200,90,255', 100, 0.3, 'neon']] };
+  function tetsuDone() { try { return !!J().tetsu || (typeof c2PunkDealt === 'function' && c2PunkDealt()); } catch (e) { return !!J().tetsu; } }
+  P6.tetsuDone = tetsuDone;
+  function clubLive() { return qOn() && stg() === 'hotel'; }
+  VO.ckShut = [['', '<p class="dim">A steel door, \u201cSTAFF ONLY\u201d in fox-red. Locked. Nothing back here for you yet.</p>']];
+  VO.ckIn = V3([['', '<p class="dim">The club\u2019s back office. Six screens of the dance floor. A cash counter still warm. Punk Tetsu at the desk, feet up.</p>'],
+    ['j6_tetsu', 'Staff door means staff, kids.']], {
+    fierce: [['ryo', 'Ogata\u2019s deal sheets. Your stamp. Explain.']],
+    strategic: [['aoi', 'The hotel deal went through your books. We want the page after it.']],
+    balanced: [['ryo', 'We came about the hotel.']]
+  }, [['j6_tetsu', 'You want my ledger, you take it off me.']]);
+  VO.ckBeatNow = V3([['j6_tetsu', '\u2026Okay! Okay. Ow.'], ['j6_tetsu', 'You think this is my club? I rent the fox. Every yen goes up the street.']], {
+    fierce: [['ryo', 'To who?']],
+    strategic: [['aoi', 'The ledger, Tetsu. Last page.']],
+    balanced: [['ryo', 'Up the street to who?']]
+  }, [['', '<p class="dim">The last page: \u201cJ. \u2014 Thursdays. Envelope via Tanuki.\u201d A Neon Game Center prize token is taped to it.</p>'],
+    ['j6_tetsu', 'Jin. The Game Center. He keeps score on all of us.'], ['aoi', 'And Tanuki?'], ['j6_tetsu', 'Izakaya Tanuki. The old owner walks the envelope over. Ask him. Not me.']]);
+  VO.ckBeatOld = V3([['', '<p class="dim">Punk Tetsu at the desk, an ice pack on the jaw you gave him.</p>'], ['j6_tetsu', 'You again. I\u2019m paid up with you. What now?']], {
+    fierce: [['ryo', 'Hotel Chuo. The deal sheets carry your stamp.']],
+    strategic: [['aoi', 'The Suits\u2019 deal at Hotel Chuo went through your books.']],
+    balanced: [['ryo', 'Ogata says ask the club where the money goes.']]
+  }, [['j6_tetsu', '\u2026Fine. Take the page. I never liked the guy.'], ['', '<p class="dim">The last page: \u201cJ. \u2014 Thursdays. Envelope via Tanuki.\u201d A Neon Game Center prize token is taped to it.</p>'],
+    ['j6_tetsu', 'Jin. The Game Center. Izakaya Tanuki\u2019s owner walks the envelope over. Ask him.']]);
+  VO.ckDone = [['j6_tetsu', 'Door\u2019s that way. Close it on your way out.']];
+  VO.ckTv = [['', '<p class="dim">Six screens: the dance floor, the bar, the cage, the coat check, the alley, and one labelled GAME CENTER that shows only static.</p>']];
+  VO.ckSafe = [['', '<p class="dim">The safe is open and empty. Thursday already happened.</p>']];
+  var C_CAST = { t: null, d: null };
+  function staffDoor(show) { var el = document.getElementById('j6ckdoor'); if (!show) { if (el && el.parentNode) el.parentNode.removeChild(el); return; } if (el) return;
+    var m = document.getElementById('wimap') || document.getElementById('world'); if (!m) return; var c = document.createElement('canvas'); c.width = 64; c.height = 92; c.id = 'j6ckdoor'; c.className = 'nqprop';
+    c.style.cssText = 'position:absolute;left:3194px;top:1494px;width:64px;height:92px;z-index:2;pointer-events:none';
+    try { if (root.FFF_S2P && root.FFF_S2P.p6Door) root.FFF_S2P.p6Door(c.getContext('2d')); } catch (e) {} m.appendChild(c); }
+  function popClub() {
+    var k = room();
+    try { staffDoor(k === 'town' && stripOpen() && at('hotel')); } catch (eD) {}
+    if (k !== 'ckoff') { ['t', 'd'].forEach(function (q) { if (C_CAST[q]) { kill(C_CAST[q]); C_CAST[q] = null; } }); return; }
+    if (!C_CAST.t || !C_CAST.t.el || !C_CAST.t.el.parentNode) { C_CAST.t = npc('j6_tetsu', 500, 270, Math.PI / 2); try { waddle(C_CAST.t, 0, Math.PI / 2); } catch (e) {} }
+    if (clubLive() && !tetsuDone() && (!C_CAST.d || !C_CAST.d.el || !C_CAST.d.el.parentNode)) C_CAST.d = npc('j6_cdealer', 220, 520, 0);
+  }
+  P6.popClub = popClub; P6.C_CAST = C_CAST;
+  function clubLink(kind) { lockIn(1); talk(pv(kind === 'now' ? VO.ckBeatNow : VO.ckBeatOld), function () { lockIn(0); J().ckLink = 1; setStg('club'); qStep(4); sv(); P6.resetPaint('ckoff'); paintRoom(); toastS('Journal: Izakaya Tanuki, on the strip.'); }); }
+  function clubArrive() {
+    if (!clubLive()) return;
+    whenFree(function () {
+      if (room() !== 'ckoff' || !clubLive()) return;
+      if (tetsuDone()) { clubLink('old'); return; }
+      lockIn(1);
+      talk(pv(VO.ckIn), function () { startFight('ckoff', ['chinpira1'], { bt: 'ckoff', ctx: { flv: 7, j6nm: 'Punk Tetsu', joinIn: { id: 'ck_dealer', round: 3, nm: 'Club Dealer', line: 'A Club Dealer joins Punk on round 3.' } } }); });
+    });
+  }
+  FIGHT.ckoff = {
+    win: function () { J().tetsu = 1; sv(); if (C_CAST.d) { kill(C_CAST.d); C_CAST.d = null; } P6.resetPaint('ckoff'); paintRoom(); clubLink('now'); },
+    lose: function () { }
+  };
+  ACT.j6_ck_desk = function () { if (busy()) return true; if (clubLive()) { clubArrive(); return true; } lockIn(1); talk(VO.ckDone, function () { lockIn(0); }); return true; };
+  ACT.j6_ck_tv = function () { if (busy()) return true; lockIn(1); talk(VO.ckTv, function () { lockIn(0); }); return true; };
+  ACT.j6_ck_safe = function () { if (busy()) return true; lockIn(1); talk(VO.ckSafe, function () { lockIn(0); }); return true; };
+  TALK.j6_tetsu = function () { return ACT.j6_ck_desk(); };
+  ARRIVE.ckoff = clubArrive; POP.push(popClub);
+  PIN.hotel = function () { return { room: 'town', x: TOWN_DOORS.ckoff.at[0], y: TOWN_DOORS.ckoff.at[1] - 60, lab: 'Staff door', loc: 'High Score \u00b7 Club Kitsune, back office' }; };
+
+  /* ---------------- 5. Izakaya Tanuki ---------------- */
+  try { alias('j6_ponta', 'npc_attendant', 1.08, 'Ponta (owner)'); } catch (eI) { ev('world:s2p6:err:alias5:' + (eI && eI.message)); }
+  var IZAK_ITEMS = [
+    { id: 'yakitori', n: 'Yakitori', jp: '\u713c\u304d\u9ce5', icon: 'i_yakitori', hp: 10, base: 6, cost: 6, eat: 'yakitori', eff: '+10 HP  \u00b7  at the counter', flavor: 'Two skewers off the grill, tare glaze, a pinch of shichimi.' },
+    { id: 'karaage', n: 'Karaage', jp: '\u5510\u63da\u3052', icon: 'i_karaage', hp: 14, base: 8, cost: 8, eat: 'karaage', eff: '+14 HP  \u00b7  at the counter', flavor: 'Ginger-soy chicken, fried twice. Lemon on the side.' },
+    { id: 'edamame', n: 'Edamame', jp: '\u679d\u8c46', icon: 'i_edamame', hp: 6, base: 3, cost: 3, eat: 'edamame', eff: '+6 HP  \u00b7  at the counter', flavor: 'Salted pods, still warm. Everyone orders these.' },
+    { id: 'onigiri', n: 'Onigiri', jp: '\u304a\u306b\u304e\u308a', icon: 'i_onigiri', hp: 12, base: 5, cost: 5, eat: 'onigiri', eff: '+12 HP  \u00b7  at the counter', flavor: 'Grilled rice ball, miso brushed, nori wrap.' }
+  ];
+  P6.IZAK_ITEMS = IZAK_ITEMS;
+  (function regIz() { var M = menus(); if (!M || !M.SHOPS) { later(0, regIz); return; }
+    M.SHOPS.j6_izak = { id: 'j6_izak', theme: 'izak', n: 'Izakaya Tanuki', jp: '\u5c45\u9152\u5c4b \u305f\u306c\u304d', who: 'j6_ponta', leave: '\u3054\u3061\u305d\u3046\u3055\u307e  \u00b7  Done',
+      hi: { fierce: 'Sit at the counter. Elbows in.', strategic: 'Small plates, small prices. Grill\u2019s hot.', balanced: 'Irasshai! Counter seats only tonight.' },
+      nails: function () { return false; }, items: function () { return IZAK_ITEMS; } }; })();
+  roomDef('izak', 'Izakaya Tanuki \u00b7 \u5c45\u9152\u5c4b\u305f\u306c\u304d', 'c2night', {
+    block: [[190, 250, 1090, 362], [110, 600, 300, 690], [980, 600, 1170, 690], [520, 640, 760, 720], [140, 770, 200, 830]],
+    spots: [{ id: 'j6_izak_order', r: [560, 250, 720, 362], at: [640, 430], face: 3, lab: 'Order' },
+      { id: 'j6_izak_tags', r: [880, 30, 1180, 200], at: [1000, 420], face: 3, lab: 'Menu' },
+      { id: 'j6_izak_tanuki', r: [140, 770, 200, 830], at: [240, 800], face: 1, lab: 'Look' }] });
+  P6.SURF.izak = 'wood';
+  AMB.izak = { top: 'rgba(255,150,90,.28)', bot: 'rgba(60,24,20,.30)', rain: 0, motes: 8, steamN: 2, lamps: [[120, 120, '255,90,60', 60, 0.32, 'lantern'], [280, 120, '255,90,60', 60, 0.32, 'lantern']] };
+  P6.OPEN.izak = function () { return true; };
+  VO.izIn = [['j6_ponta', 'Irasshai! Counter only. The tables are for my regulars and my regulars are dead.']];
+  VO.izIn2 = [['j6_ponta', 'Irasshai. Grill\u2019s hot.']];
+  VO.izTip = V3([['j6_ponta', '\u2026You\u2019re the two from the hotel. The whole strip heard.']], {
+    fierce: [['ryo', 'The envelope. You walk it to Jin.'], ['j6_ponta', 'Every Thursday. Since my wife passed and he paid the funeral.']],
+    strategic: [['aoi', 'Thursdays, via Tanuki. Tetsu\u2019s ledger says you carry the money.'], ['j6_ponta', 'I carry it. I don\u2019t count it.']],
+    balanced: [['aoi', 'We\u2019re not here to hurt you.'], ['j6_ponta', 'I know. That\u2019s why I\u2019m going to tell you.']]
+  }, [['j6_ponta', 'Jin plays the floor every night, top of the shooter board. His real room is past the staff door at the back. The prize room.'],
+    ['j6_ponta', 'Tell him the old tanuki says the funeral\u2019s paid off.']]);
+  VO.izTags = [['', '<p class="dim">Paper tags on the wall: \u713c\u304d\u9ce5 \u00a56, \u5510\u63da\u3052 \u00a58, \u679d\u8c46 \u00a53, \u304a\u306b\u304e\u308a \u00a55. One old tag, crossed out: \u300c\u30c4\u30b1\u300d (on credit).</p>']];
+  VO.izTanuki = [['', '<p class="dim">A clay tanuki in a straw hat holds a sake flask and an IOU. Someone rubbed its belly shiny.</p>']];
+  var I_CAST = { p: null };
+  function popIzak() { var k = room(); if (k !== 'izak') { if (I_CAST.p) { kill(I_CAST.p); I_CAST.p = null; } return; }
+    if (!I_CAST.p || !I_CAST.p.el || !I_CAST.p.el.parentNode) { I_CAST.p = npc('j6_ponta', 640, 214, Math.PI / 2); try { waddle(I_CAST.p, 0, Math.PI / 2); } catch (e) {} } }
+  P6.popIzak = popIzak; P6.I_CAST = I_CAST;
+  function izTipLive() { return qOn() && stg() === 'club'; }
+  function izArrive() { var j = J(); whenFree(function () { if (room() !== 'izak') return; lockIn(1); talk(!j.izIn ? VO.izIn : VO.izIn2, function () { j.izIn = 1; sv(); lockIn(0); }); }); }
+  function izTip() { if (room() !== 'izak' || !izTipLive()) return; lockIn(1); talk(pv(VO.izTip), function () { lockIn(0); setStg('izak'); qStep(5); sv(); toastS('Journal: Neon Game Center. Find Jin on the floor.'); }); }
+  function izOrder() { if (busy()) return true; if (izTipLive()) { P6._ate = 0; P6.afterMeal(izTip); } openShop('j6_izak'); return true; }
+  P6.izOrder = izOrder; P6.izTip = izTip;
+  ACT.j6_izak_order = function () { return izOrder(); };
+  ACT.j6_izak_tags = function () { if (busy()) return true; lockIn(1); talk(VO.izTags, function () { lockIn(0); }); return true; };
+  ACT.j6_izak_tanuki = function () { if (busy()) return true; lockIn(1); talk(VO.izTanuki, function () { lockIn(0); }); return true; };
+  TALK.j6_ponta = function () { return izOrder(); };
+  ARRIVE.izak = izArrive; POP.push(popIzak);
+  PIN.club = function () { return { room: 'town', x: TOWN_DOORS.izak.at[0], y: TOWN_DOORS.izak.at[1] - 60, lab: 'Izakaya', loc: 'High Score \u00b7 Izakaya Tanuki' }; };
 
   if (typeof c2Tags === 'function') {
     var tags0 = c2Tags;

@@ -114,6 +114,15 @@
     neonLine(x, [[0, 6], [290, 92]], '#c87aff', 3); neonLine(x, [[WD, 6], [430, 92]], '#c87aff', 3);
     C.floor(x, { far: '#4a1838', near: '#1a0814', kind: 'tile', line: 'rgba(255,90,200,.22)', n: 8, rows: 10 });
     C.vign(x, 0.55); };
+  B.ckoff = function (x) { var C = hb(), WD = 720, H0 = C.H0;
+    x.fillStyle = '#1a0e1a'; x.fillRect(0, 0, WD, H0); for (var i = 0; i < WD; i += 40) { x.fillStyle = i % 80 ? '#221222' : '#1e0f1e'; x.fillRect(i, 0, 38, H0); }
+    for (var s = 0; s < 6; s++) { var sx = 150 + (s % 3) * 145, sy = 40 + ((s / 3) | 0) * 100; box(x, sx, sy, 130, 88, '#0c0a10', 3, 3); var lg = x.createLinearGradient(0, sy, 0, sy + 88); lg.addColorStop(0, s === 5 ? '#5a5a60' : '#2a3a4a'); lg.addColorStop(1, '#101820'); box(x, sx + 5, sy + 5, 120, 78, lg, 0, 2);
+      if (s === 5) { for (var q = 0; q < 50; q++) { x.fillStyle = 'rgba(255,255,255,.4)'; x.fillRect(sx + 8 + (q * 53) % 110, sy + 8 + (q * 29) % 70, 4, 2); } } else { x.fillStyle = '#ff3030'; x.beginPath(); x.arc(sx + 118, sy + 14, 4, 0, 7); x.fill(); } }
+    glowAt(x, 360, 130, 300, 'rgba(90,200,255,.16)');
+    neonLine(x, [[0, H0 - 34], [WD, H0 - 34]], '#ff5ac8', 5);
+    box(x, 120, H0 - 120, 480, 70, '#4a2a18', 4, 6);
+    C.floor(x, { far: '#3a2418', near: '#160c08', kind: 'board', line: 'rgba(0,0,0,.35)', n: 8, rows: 10 });
+    C.vign(x, 0.55); };
   S2P.p6Battle = function (k, x) { var fn = B[k]; var C = hb(); if (!fn || !C) { x.fillStyle = '#1a1410'; x.fillRect(0, 0, 720, 1280); return; } x.save(); try { fn(x); } finally { x.restore(); } };
   S2P.p6B = B;
 })(typeof window !== 'undefined' ? window : this);

@@ -415,9 +415,10 @@
         if (!met()) return menu0.apply(this, arguments);
         var S = cyc(), full = SAVE.hp >= (typeof MAXHP !== 'undefined' ? MAXHP : 55), tea = typeof C2_TEA !== 'undefined' ? C2_TEA : 26;
         var poor = (SAVE.items | 0) < tea, m = S.mugLeft | 0;
-        /* GGD-51: the Full Heal Tea is gone (full rests moved to the hotels: Hotel Chuo / Kitsune Hotel, ¥40 once per job). Seeds and herbs stay. */
-        var b = [['Seeds · ' + m + '/' + (typeof C2_MUG !== 'undefined' ? C2_MUG : 3) + ' packets', function () { setTimeout(c2MugShop, 0); }],
-          ['Later', null]];
+        /* GGD-51: the Full Heal Tea goes once a hotel rest is reachable (Hotel Chuo / Kitsune Hotel, ¥40 once per job). Seeds and herbs stay. */
+        var b = [[full ? 'Full Heal Tea · ¥' + tea + ' (HP full)' : 'Full Heal Tea · ¥' + tea + (poor ? ' (need ¥' + tea + ')' : ''), function () { c2Heal(tea); }, 'hot', full || poor],
+          ['Seeds · ' + m + '/' + (typeof C2_MUG !== 'undefined' ? C2_MUG : 3) + ' packets', function () { setTimeout(c2MugShop, 0); }],
+          ['Later', null]]; if (window.FFF_TEA_OFF && window.FFF_TEA_OFF()) b.shift();
         var say = (typeof C2_TEA_SAY !== 'undefined' ? C2_TEA_SAY[(S.tsi = ((S.tsi | 0) + 1)) % C2_TEA_SAY.length] : 'Sit. Drink.');
         dialog(ptFace('tsukikage', 'Dr. Tsukikage', IMG.tsukikage_fig) +
           '<div class="tw"><p class="q">“' + say + '”</p><p class="vst"><span>HP <b>' + SAVE.hp + '/' + (typeof MAXHP !== 'undefined' ? MAXHP : 55) + '</b></span><span>¥' + (SAVE.items | 0) + '</span></p></div>', b);
