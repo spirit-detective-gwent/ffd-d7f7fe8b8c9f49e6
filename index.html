@@ -354,6 +354,8 @@ body.cuc .sparks{z-index:19}
 /* v6.5.20: Equipment Bay + Side Court — lower the whole foe column (plate, icons, sprite, chips) 32px.
    Relative layout stays intact; mid HUD READY bar is well below. */
 #fE.bt-feet-lo{transform:translateY(32px)}
+/* v6.5.63 (t293u): per-room C2BT foot offset so the foe stands on that backdrop's ground, not in the wall / on the shops. */
+#fE.bt-feet-c2{transform:translateY(var(--bt-feet, 52px))}
 
 .fchip{position:relative;width:44px;height:52px;padding:0;border:0;border-radius:10px;background:#1a1530;box-shadow:inset 0 0 0 2px rgba(200,160,255,.35);overflow:hidden}
 .fchip i{position:absolute;inset:2px 2px 9px;background-size:auto 150%;background-position:50% 8%;background-repeat:no-repeat}
@@ -7241,7 +7243,7 @@ function foeDoubles(grp) {
   });
 }
 function startMatch(me, story) { if (typeof commentHide === 'function') commentHide(); if (typeof lvDefer === 'function') lvDefer();
-  try { var _bt = (root.FFF_BTROOM && root.FFF_BTROOM(story)) || (story && root.FFF_CH1OUT && root.FFF_CH1OUT() ? '1' : '0'); $('#game').setAttribute('data-bfx', _bt); var _fe = $('#fE'); if (_fe) _fe.classList.toggle('bt-feet-lo', _bt === 'store_bay' || _bt === 'gym_side'); } catch (e) {} /* v6.5.20: Ch1 indoor room backdrop, or outdoor courtyard */
+  try { var _bt = (root.FFF_BTROOM && root.FFF_BTROOM(story)) || (story && root.FFF_CH1OUT && root.FFF_CH1OUT() ? '1' : '0'); $('#game').setAttribute('data-bfx', _bt); if (root.FFF_BTFEET) root.FFF_BTFEET(_bt); else { var _fe = $('#fE'); if (_fe) _fe.classList.toggle('bt-feet-lo', _bt === 'store_bay' || _bt === 'gym_side'); } } catch (e) {} /* v6.5.20: Ch1 indoor room backdrop, or outdoor courtyard. v6.5.63: also the per-room C2BT foot offset. */
   ST.story = story || null; // v4.0: {foes: [char ids], hp: per-foe HP override, onEnd(win)} = a fight started from the school-grounds map
   ST.me = me; ST.me0 = me; ST.foe = story ? story.foes[0] : me === 'ryo' ? 'aoi' : 'ryo'; ST.b = story ? E.newGroup(me, story.foes, story.hp, story.pst) : E.newBattle(me, ST.foe); if (story && story.boss && ST.b.grp) ST.b.anchor = 0; /* v4.10.1 */ var AM = story && story.ctx && story.ctx.amb; if (AM && AM.k && ST.b.grp) { ST.b.grp.forEach(function (a0) { a0.hp = Math.max(1, Math.round(a0.max * AM.k)); }); ev('match:amb:' + AM.side + ':' + ST.b.grp.map(function (a0) { return a0.hp + '/' + a0.max; }).join(',')); } /* every joined foe starts on the ambush HP, not only the one who was struck */ if (story && story.foeNm && ST.b.grp) ST.b.grp.forEach(function (s) { if (story.foeNm[s.ch]) s.nm = story.foeNm[s.ch]; }); /* display label only; the fighter id stays */ ST.sel = null; ST.gq = null; ST.inGame = true; ST.busy = false; ST.anim = false; ST.ff = false;
   if (story && story.bench && ST.b.grp && !story.tut) { E.addBench(ST.b, story.bench.ch, story.bench.pst, story.boss || story.mini); ST.b.dblPath = story.bench.path || null; ev('match:bench:' + story.bench.ch + ':' + (ST.b.dblPath || 'none')); } // v4.24 tag-in partner
@@ -9029,7 +9031,7 @@ function foeChip(i) { return document.querySelector('#foeRow [data-i="' + i + '"
 function buildFoeRow() {
   var row = $('#foeRow'); if (!row) return; row.innerHTML = ''; var b = ST.b; ST.tgt = 0;
   var n = b.grp ? b.grp.length : 0; var fe = $('#fE'); if (fe) fe.classList.toggle('foes-many', n >= 3);
-  try { var room = ($('#game') && $('#game').getAttribute('data-bfx')) || ''; if (fe) fe.classList.toggle('bt-feet-lo', room === 'store_bay' || room === 'gym_side'); } catch (eF) {}
+  try { var room = ($('#game') && $('#game').getAttribute('data-bfx')) || ''; if (root.FFF_BTFEET) root.FFF_BTFEET(room); else if (fe) fe.classList.toggle('bt-feet-lo', room === 'store_bay' || room === 'gym_side'); } catch (eF) {}
   if (!b.grp || n < 2) { row.style.display = 'none'; return; }
   row.style.display = '';
   b.grp.forEach(function (s, i) {
@@ -44179,9 +44181,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     P2._bt = 1;
     var BT = root.FFF_C2BT;
     BT.ROOMS.br = { name: 'East canal bridge', paint: function (x) { root.FFF_S2P.battleBridge(x); },
-      lights: [[130, 200, '255,190,100', 70, 0.32, 'lamp'], [590, 200, '255,190,100', 70, 0.32, 'lamp']], rain: 50, mood: 'rain' };
+      lights: [[130, 200, '255,190,100', 70, 0.32, 'lamp'], [590, 200, '255,190,100', 70, 0.32, 'lamp']], rain: 50, mood: 'rain', feet: 52 };
     BT.ROOMS.se = { name: 'Minato-s\u014d street', paint: function (x) { root.FFF_S2P.battleSE(x); },
-      lights: [[120, 200, '255,190,100', 70, 0.36, 'lamp'], [270, 200, '255,180,90', 60, 0.22, 'lamp']], rain: 50, mood: 'rain' };
+      lights: [[120, 200, '255,190,100', 70, 0.36, 'lamp'], [270, 200, '255,180,90', 60, 0.22, 'lamp']], rain: 50, mood: 'rain', feet: 52 };
     BT.KEY.c2_br = 'br'; BT.KEY.c2_se = 'se';
     var roomB0 = BT.room;
     BT.room = function (story) {
@@ -44679,9 +44681,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     P3._bt = 1;
     var BT = root.FFF_C2BT;
     BT.ROOMS.lk = { name: 'Funayado \u00b7 Lookout', paint: function (x) { root.FFF_S2P.battleLookout(x); },
-      lights: [[180, 90, '255,200,110', 70, 0.3, 'lamp'], [540, 90, '255,200,110', 70, 0.3, 'lamp']], rain: 0, mood: 'room' };
+      lights: [[180, 90, '255,200,110', 70, 0.3, 'lamp'], [540, 90, '255,200,110', 70, 0.3, 'lamp']], rain: 0, mood: 'room', feet: 52 };
     BT.ROOMS.qy = { name: 'South quay', paint: function (x) { root.FFF_S2P.battleQuay(x); },
-      lights: [[120, 200, '255,190,100', 70, 0.32, 'lamp'], [600, 200, '255,190,100', 70, 0.32, 'lamp']], rain: 50, mood: 'rain' };
+      lights: [[120, 200, '255,190,100', 70, 0.32, 'lamp'], [600, 200, '255,190,100', 70, 0.32, 'lamp']], rain: 50, mood: 'rain', feet: 52 };
     BT.KEY.c2_lk = 'lk'; BT.KEY.c2_qy = 'qy';
     var roomB0 = BT.room;
     BT.room = function (story) {
@@ -45118,9 +45120,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     P4._bt = 1;
     var BT = root.FFF_C2BT;
     BT.ROOMS.gg = { name: 'Quay garage \u00b7 Dispatch', paint: function (x) { root.FFF_S2P.battleGarage(x); },
-      lights: [[140, 110, '255,200,110', 70, 0.3, 'lamp'], [580, 110, '255,200,110', 70, 0.3, 'lamp']], rain: 0, mood: 'room' };
+      lights: [[140, 110, '255,200,110', 70, 0.3, 'lamp'], [580, 110, '255,200,110', 70, 0.3, 'lamp']], rain: 0, mood: 'room', feet: 52 };
     BT.ROOMS.ap = { name: 'Depot approach', paint: function (x) { root.FFF_S2P.battleApproach(x); },
-      lights: [[80, 120, '255,190,100', 70, 0.3, 'lamp'], [640, 120, '255,190,100', 70, 0.3, 'lamp']], rain: 50, mood: 'rain' };
+      lights: [[80, 120, '255,190,100', 70, 0.3, 'lamp'], [640, 120, '255,190,100', 70, 0.3, 'lamp']], rain: 50, mood: 'rain', feet: 52 };
     BT.KEY.c2_gg = 'gg'; BT.KEY.c2_ap = 'ap';
     var roomB0 = BT.room;
     BT.room = function (story) {
@@ -45666,7 +45668,7 @@ ROOMS.street = { name: 'Streets · border brawls / West Street', paint: function
     floor(x, { kind: 'asphalt', far: '#3a3a50', near: '#1c1c2a', lanes: [360], zebra: [[560, 660]] });
     R(x, 0, H0, WD, 26, '#4a4658', 0);
     wet(x, [[100, 0, 70, '120,220,255', 0.24], [455, 0, 60, '255,120,80', 0.24], [625, 0, 70, '255,210,90', 0.24]], 0.65); vign(x, 0.55); },
-  lights: [[100, 177, '120,220,255', 80, 0.3, 'neon'], [455, 177, '255,120,80', 80, 0.3, 'neon'], [625, 176, '255,210,90', 90, 0.32, 'neon']], rain: 50, mood: 'rain', neon: [[100, 177, 80, '120,220,255'], [625, 176, 90, '255,210,90']] };
+  lights: [[100, 177, '120,220,255', 80, 0.3, 'neon'], [455, 177, '255,120,80', 80, 0.3, 'neon'], [625, 176, '255,210,90', 90, 0.32, 'neon']], rain: 50, mood: 'rain', neon: [[100, 177, 80, '120,220,255'], [625, 176, 90, '255,210,90']], feet: 52 };
 /* 10. Club Kitsune (the bouncers, Tetsu's back room) */
 ROOMS.club = { name: 'Club Kitsune · bouncers / back room', paint: function (x) {
     R(x, 0, 0, WD, H0, '#1a1028', 0); for (var i = 0; i < 10; i++) R(x, i * 72, 0, 36, H0, 'rgba(255,255,255,.03)', 0);
@@ -45780,7 +45782,8 @@ function room(story) {
   if (ctx.c2fac || ctx.laneAmb || ctx.amb || ctx.dg === 'c2' || rm === 'town' || inside === 'c2_town') return 'c2_street';
   return '0';
 }
-root.FFF_C2BT = { ROOMS: ROOMS, KEY: KEY, has: has, still: still, fx: drawFx, reset: reset, room: room, W: WD, H: HT };
+function feetPx(k) { var id = KEY[k], R = id && ROOMS[id]; return (R && R.feet) || 0; }
+root.FFF_C2BT = { ROOMS: ROOMS, KEY: KEY, has: has, still: still, fx: drawFx, reset: reset, room: room, W: WD, H: HT, feetPx: feetPx };
 root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
 })(window);
 /* v6.5.61 FFF_C2AMB: luminescent Ch2 overworld (grade + bloom cached per room; motes / steam / rain / lantern / neon
@@ -49865,9 +49868,16 @@ var DBL = root.DBL = { play: play, stop: stop, release: release, moves: MOVES, G
         else { cx.drawImage(pic, a * U, iy, (576 - a) * U, ih, X(a) + d, y, (576 - a) * US, hh); cx.drawImage(pic, b * U, iy, (a - b) * U, ih, X(b), y, (a - b) * US + d, hh); } } }); }
 
   function applyFeetClass(k) {
-    var fe = document.getElementById('fE');
-    if (fe) fe.classList.toggle('bt-feet-lo', k === 'store_bay' || k === 'gym_side');
+    var fe = document.getElementById('fE'); if (!fe) return;
+    fe.classList.remove('bt-feet-lo', 'bt-feet-c2');
+    fe.style.removeProperty('--bt-feet');
+    if (k === 'store_bay' || k === 'gym_side') { fe.classList.add('bt-feet-lo'); return; }
+    var n = 0;
+    try { n = (root.FFF_C2BT && FFF_C2BT.feetPx && FFF_C2BT.feetPx(k)) || 0; } catch (e0) {}
+    if (n) { fe.classList.add('bt-feet-c2'); fe.style.setProperty('--bt-feet', n + 'px'); }
   }
+  window.BFX.feet = applyFeetClass;
+  root.FFF_BTFEET = applyFeetClass;
 
   function contactShadow() {
     var fb = document.querySelector('#fE .fbody'), fr = document.getElementById('fE'), gr0 = game.getBoundingClientRect();
