@@ -46500,12 +46500,12 @@ var raf = 0, lastTs = 0, ENDED = false, dtAvg = 1 / 60, slowN = 0;
 /* a slow phone steps the canvas resolution down (2 -> 1.6 -> 1.25 -> 1) quickly, instead of dropping frames */
 function qualityStep(raw) {
   if (!S || S.ph === 'result' || S.wait || raw <= 0 || raw > 0.25) return;
-  dtAvg += (raw - dtAvg) * 0.2;
+  dtAvg += (raw - dtAvg) * 0.18;
+  if (raw <= 1 / 56) { slowN = 0; return; } /* a lone hitch must not drop a 60 fps phone */
   if (dtAvg <= 1 / 56) { slowN = 0; return; }
-  if (++slowN < 3) return;
+  if (++slowN < (dtAvg > 1 / 45 ? 4 : 10)) return;
   if (DPR <= 1.01) return;
   var next = DPR > 1.61 ? 1.6 : (DPR > 1.26 ? 1.25 : 1);
-  if (dtAvg > 1 / 42 && DPR > 1.26) next = 1; /* really struggling: skip the middle step */
   if (next >= DPR - 0.01) return;
   DPR = next;
   cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
