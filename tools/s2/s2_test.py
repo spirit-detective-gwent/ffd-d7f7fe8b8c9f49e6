@@ -321,7 +321,99 @@ async def main():
         ok('tenant held and taken lines differ', win and win.get('voTaken'), win)
         ok('Residents-only stair has a shut line', win and win.get('stair'), win)
         ok('Night Runs quest closes', win and win.get('q')==9, win)
-        ok('no leftover Night Runs / boat-house pin after close', win and win.get('tgtNull') and 'Boat' not in str(win.get('pin') or ''), win)
+        ok('Night Runs target clears so Phase 3 can take the pin', win and win.get('tgtNull'), win)
+
+        # -------- Phase 3 Above the Boat --------
+        src = INDEX.read_text(encoding='utf-8')
+        ok('S2P3 injected', 'FFF_S2P3' in src and 'cq2_s2_boat' in src)
+        ok('P3 painters in source', 'boatSouth' in src and 'boatLookout' in src and 'battleLookout' in src and 'battleQuay' in src)
+        ok('Kaji world sheets present', (INDEX.parent / 'world' / 'nq_kaji_walk.webp').exists() and (INDEX.parent / 'world' / 'nq_kaji_idle.webp').exists())
+        ok('Kaji portraits present', (INDEX.parent / 'portraits' / 'kaji_neutral.webp').exists() and (INDEX.parent / 'portraits' / 'kaji_angry.webp').exists() and (INDEX.parent / 'portraits' / 'kaji_calm.webp').exists())
+
+        p3 = await ev(pg, """(function(){
+          var P3=root.FFF_S2P3, st=c2S();
+          if (P3 && P3.chainRepair) P3.chainRepair();
+          var BT=root.FFF_C2BT;
+          var lk = BT && BT.room && BT.room({ ctx: { s2lk: 1, dgk: 's2_lk_0', s2k: 's2_lk' } });
+          var qy = BT && BT.room && BT.room({ ctx: { s2qy: 1, dgk: 's2_qy_0', s2k: 's2_qy' } });
+          var t = typeof c2LocksT==='function' ? (function(){var x=c2LocksT(); return x&&{lab:x.lab,loc:x.loc,x:x.x,y:x.y};})() : null;
+          var tgt = P3 && P3.s2Tgt && P3.s2Tgt();
+          return {
+            p3: !!P3, art: P3&&P3.ART, q: st.q.cq2_s2_boat, stg: P3&&P3.stg&&P3.stg(),
+            lk: lk, qy: qy,
+            doorY: P3&&P3.BOAT_DOOR&&P3.BOAT_DOOR.at&&P3.BOAT_DOOR.at[1],
+            doorX: P3&&P3.BOAT_DOOR&&P3.BOAT_DOOR.at&&P3.BOAT_DOOR.at[0],
+            tgt: tgt && { lab: tgt.lab, loc: tgt.loc, x: tgt.x, y: tgt.y },
+            pin: t,
+            pt: typeof PT_PAINT!=='undefined' && PT_PAINT.nq_kaji==='kaji',
+            has: typeof PT_HAS!=='undefined' && PT_HAS.kaji_neutral && PT_HAS.kaji_angry && PT_HAS.kaji_calm,
+            walk: typeof IMG!=='undefined' && !!IMG.nq_kaji_walk,
+            painters: !!(root.FFF_S2P&&FFF_S2P.boatSouth&&FFF_S2P.boatLookout&&FFF_S2P.battleLookout&&FFF_S2P.battleQuay),
+            noP4: st.q.cq2_s2_gar == null && st.q.cq2_s2_depot == null
+          };
+        })()""")
+        ok('S2P3 boots', p3 and p3.get('p3'), p3)
+        ok('Above the Boat auto-opens after Night Runs is done', p3 and p3.get('q') == 0, p3)
+        ok('boat stage is open', p3 and p3.get('stg') == 'open', p3)
+        ok('pin moves to the Funayado lookout', p3 and p3.get('tgt') and 'Funayado' in str(p3['tgt']), p3)
+        ok('lookout door sits on the east boardwalk above the boat (x > 4500, y > 3500)', p3 and p3.get('doorX') and p3['doorX']>4500 and p3.get('doorY') and p3['doorY']>3500, p3)
+        ok('stairs clash picks the lookout battle room', p3 and p3.get('lk')=='c2_lk', p3)
+        ok('quay clash picks the south-quay battle room', p3 and p3.get('qy')=='c2_qy', p3)
+        ok('P3 painters live', p3 and p3.get('painters'), p3)
+        ok('Kaji portrait mapped', p3 and p3.get('pt') and p3.get('has'), p3)
+        ok('Kaji walk sheet wired', p3 and p3.get('walk'), p3)
+        ok('Phase 4 quest is not opened', p3 and p3.get('noP4'), p3)
+
+        voices3 = {}
+        for path in ('fierce', 'strategic', 'balanced'):
+            lines = await ev(pg, f"""(function(){{
+              var raw=root.FFF_S2P3.VO.door['{path}'] || [];
+              return raw.map(function(L){{return L[0]+':'+L[1];}});
+            }})()""")
+            voices3[path] = lines or []
+        ok('Above the Boat door lines differ on all three paths',
+           voices3['fierce'] != voices3['strategic'] and voices3['strategic'] != voices3['balanced'] and voices3['fierce'] != voices3['balanced'], voices3)
+        ok('fierce goes up the stairs', any('going up' in (x or '').lower() or 'through them' in (x or '').lower() for x in voices3['fierce']), voices3['fierce'])
+        ok('strategic is pointed at the water / stairs watch', any('stairs' in (x or '').lower() or 'water' in (x or '').lower() for x in voices3['strategic']), voices3['strategic'])
+        ok('compassionate tells them to walk', any('walk' in (x or '').lower() for x in voices3['balanced']), voices3['balanced'])
+
+        quayV = {}
+        for path in ('fierce', 'strategic', 'balanced'):
+            lines = await ev(pg, f"""(function(){{
+              var raw=root.FFF_S2P3.VO.quay['{path}'] || [];
+              return raw.map(function(L){{return L[0]+':'+L[1];}});
+            }})()""")
+            quayV[path] = lines or []
+        ok('quay flank lines differ on all three paths',
+           quayV['fierce'] != quayV['strategic'] and quayV['strategic'] != quayV['balanced'], quayV)
+        ok('strategic quay line names Alley Cat', any('alley cat' in (x or '').lower() for x in quayV['strategic']), quayV['strategic'])
+
+        # compassionate close: they walk, no fight, pin to garage
+        walked = await ev(pg, """(function(){
+          var P3=root.FFF_S2P3, st=c2S();
+          SAVE.bond=SAVE.bond||{}; SAVE.bond.path='balanced';
+          try { STORY.ensure(SAVE); } catch(e){}
+          P3.setStg('gone'); st.q.cq2_s2_boat=8; P3.qClose();
+          var t = typeof c2LocksT==='function' ? (function(){var x=c2LocksT(); return x&&{lab:x.lab,loc:x.loc,x:x.x,y:x.y};})() : null;
+          return { q: st.q.cq2_s2_boat, stg: P3.stg(), pin: t, p4: st.q.cq2_s2_gar==null };
+        })()""")
+        ok('compassionate walk closes the quest', walked and walked.get('q')==9, walked)
+        ok('after a close the pin is the quay garage, not an unbuilt Phase 4', walked and walked.get('pin') and 'garage' in str(walked['pin']).lower() and walked.get('p4'), walked)
+
+        # skip path: Lookout Corner already done (n13r === 'dep') does not soft-lock
+        skip = await ev(pg, """(function(){
+          var P3=root.FFF_S2P3, st=c2S();
+          st.e.n13r='dep';
+          st.q.cq2_s2_boat=0; P3.setStg('open');
+          /* play the skip the way a visit does */
+          P3.setStg('skip'); st.q.cq2_s2_boat=8; P3.qClose();
+          var t = typeof c2LocksT==='function' ? (function(){var x=c2LocksT(); return x&&{lab:x.lab,loc:x.loc,x:x.x,y:x.y};})() : null;
+          var soft = st.q.cq2_s2_boat!==9;
+          return { q: st.q.cq2_s2_boat, pin: t, soft: soft, dep: st.e.n13r, already: P3.alreadyClear && P3.alreadyClear() };
+        })()""")
+        ok('Lookout-Corner-already-done is detected (n13r === dep)', skip and skip.get('already') and skip.get('dep')=='dep', skip)
+        ok('skip path closes the quest and does not soft-lock', skip and skip.get('q')==9 and not skip.get('soft'), skip)
+        ok('skip path moves the pin to the garage', skip and skip.get('pin') and 'garage' in str(skip['pin']).lower(), skip)
 
         # no page errors
         ok('no page errors', not errs, errs[:4])
