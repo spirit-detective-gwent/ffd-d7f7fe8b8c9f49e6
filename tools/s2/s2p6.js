@@ -785,6 +785,159 @@
   ARRIVE.izak = izArrive; POP.push(popIzak);
   PIN.club = function () { return { room: 'town', x: TOWN_DOORS.izak.at[0], y: TOWN_DOORS.izak.at[1] - 60, lab: 'Izakaya', loc: 'High Score \u00b7 Izakaya Tanuki' }; };
 
+  /* ---------------- 6. Neon Game Center (floor + Jin's prize room). On the strip run the base landmark door lm_game opens these. ---------------- */
+  try { alias('j6_jin', 'mb2_game', (C2K && C2K.mb2_game) || 1.12, '\u201cHigh-Score\u201d Jin', 'jin'); alias('j6_prize', 'npc_clerk', 1.02, 'Prize Clerk'); alias('j6_gamer', 'npc_courier', 1.0, 'Regular'); } catch (eG) { ev('world:s2p6:err:alias6:' + (eG && eG.message)); }
+  var GC_DOOR = (C2W.doors && C2W.doors.gamectr) || { r: [3624, 1500, 3736, 1580], at: [3680, 1630] };
+  TOWN_DOORS.gc = { r: GC_DOOR.r, at: GC_DOOR.at, to: 'gc', out: [GC_DOOR.at[0], GC_DOOR.at[1] + 10] };
+  var CAB_X = { shooter: 170, fighter: 330, ember: 490, rings: 650, street: 810 }, PLAY_PRICE = P6.PLAY_PRICE = 1;
+  var gcSpots = Object.keys(CAB_X).map(function (k) { return { id: 'j6_cab_' + k, r: [CAB_X[k] - 50, 40, CAB_X[k] + 50, 180], at: [CAB_X[k], 290], face: 3, lab: 'Play' }; });
+  roomDef('gc', 'Neon Game Center \u00b7 \u30b2\u30fc\u30e0\u30bb\u30f3\u30bf\u30fc', 'ck_surf', {
+    block: [[110, 40, 900, 230], [960, 300, 1180, 460], [110, 560, 340, 700], [500, 560, 620, 730], [660, 560, 780, 730], [960, 600, 1180, 760]],
+    spots: gcSpots.concat([{ id: 'j6_gc_prize', r: [110, 560, 340, 700], at: [225, 750], face: 0, lab: 'Prizes' },
+      { id: 'j6_gc_crane', r: [500, 560, 780, 730], at: [640, 790], face: 0, lab: 'Crane' },
+      { id: 'j6_gc_medal', r: [960, 600, 1180, 760], at: [920, 680], face: 2, lab: 'Medals' },
+      { id: 'j6_gc_board', r: [960, 300, 1180, 460], at: [1070, 520], face: 0, lab: 'Scores' },
+      { id: 'j6_gc_staff', r: [1060, 40, 1180, 230], at: [1120, 290], face: 3, lab: 'Staff door' }]) });
+  roomDef('gcback', 'Neon Game Center \u00b7 prize room', 'ck_backroom', { w: 1000, h: 900, open: [[90, 230, 910, 850], [440, 850, 560, 900]],
+    block: [[360, 40, 640, 200], [120, 600, 330, 690], [700, 300, 880, 420]],
+    spots: [{ id: 'j6_gc_seal', r: [420, 40, 580, 200], at: [500, 300], face: 3, lab: 'Lock' }, { id: 'j6_gc_jincab', r: [700, 300, 880, 420], at: [790, 470], face: 3, lab: 'Look' }] });
+  P6.SURF.gc = 'concrete'; P6.SURF.gcback = 'wood';
+  AMB.gc = { top: 'rgba(120,200,255,.22)', bot: 'rgba(60,10,80,.30)', rain: 0, motes: 12, lamps: [[100, 100, '255,90,200', 70, 0.3, 'neon'], [290, 100, '90,216,255', 70, 0.3, 'neon']] };
+  AMB.gcback = { top: 'rgba(255,200,90,.22)', bot: 'rgba(30,10,40,.34)', rain: 0, motes: 6, lamps: [[195, 120, '255,200,90', 70, 0.3, 'lamp']] };
+  P6.PKEY.gc = function () { return (stg() === 'izak' ? 'jin' : 'x') + (J().arc && J().arc.g ? Object.keys(J().arc.g).length : 0); };
+  P6.PKEY.gcback = function () { return E().seal_game ? 'open' : 'lock'; };
+  P6.OPEN.gc = function () { return true; };
+  P6.BT.gcback = { name: 'Neon Game Center \u00b7 prize room', lights: [[360, 110, '255,200,90', 100, 0.3, 'lamp']] };
+  P6.innerBack.gcback = function () { enterRoom('gc', [1120, 300, 0]); };
+  P6.innerDoor = P6.innerDoor || {}; P6.innerDoor.gc = TOWN_DOORS.gc;
+  function A6() { var j = J(); if (!j.arc || typeof j.arc !== 'object') j.arc = {}; var a = j.arc; a.best = a.best || {}; a.tier = a.tier || {}; a.g = a.g || {}; a.tok = a.tok | 0; a.spent = a.spent | 0; return a; }
+  P6.A6 = A6;
+  var TIER_TOK = [0, 1, 2, 3];
+  function cab(id) {
+    if (busy()) return true; var X = root.FFF_S2ARC; if (!X || !X.cabPlay) { toastS('The cabinet is booting.'); return true; }
+    if ((SAVE.items | 0) < PLAY_PRICE) { lockIn(1); talk([['', '<p class="dim">\u00a51 a play. Your pockets are empty.</p>']], function () { lockIn(0); }); return true; }
+    try { if (W.ryo) { W.ryo.v = 0; W.path = []; } } catch (e) {}
+    SAVE.items = Math.max(0, (SAVE.items | 0) - PLAY_PRICE); try { save(); hud(); } catch (e) {} ev('world:s2p6:cab:pay:' + id);
+    X.cabPlay(id, { onEnd: function (res) { return cabEnd(res); }, canAgain: function () { return (SAVE.items | 0) >= PLAY_PRICE; },
+      onClose: function (res, again) { try { if (root.AUDIO && root.AUDIO.music) root.AUDIO.music('ck_surf'); } catch (eM) {} P6.resetPaint('gc'); paintRoom(); if (again) later(150, function () { cab(id); }); } });
+    return true;
+  }
+  function cabEnd(res) {
+    var a = A6(), id = res.id, prev = a.tier[id] | 0, tok = 0;
+    if (!res.quit) { a.best[id] = Math.max(a.best[id] | 0, res.score); for (var t = prev + 1; t <= res.tier; t++) tok += TIER_TOK[t]; if (res.tier > prev) a.tier[id] = res.tier; if (res.tier >= 3) a.g[id] = 1; a.tok += tok; sv(); }
+    ev('world:s2p6:cab:end:' + id + ':' + res.score + ':' + res.tier + ':+' + tok);
+    return { best: a.best[id] | 0, tokens: tok, note: res.tier >= 3 ? 'Mastered. Your initials go up on the board.' : prev >= 3 ? 'Already mastered.' : 'Tokens pay once per medal.' };
+  }
+  P6.cab = cab; P6.cabEnd = cabEnd;
+  Object.keys(CAB_X).forEach(function (k) { ACT['j6_cab_' + k] = function () { return cab(k); }; });
+  /* the prize counter: tokens for cosmetics only. The run's gang uniform lives here now (the Punks' yankii set on a Nails run). */
+  var UNI = { arc: [['of_yankii', 'yankii', 8], ['of_yankiis', 'yankiis', 6], ['of_yankiil', 'yankiil', 8]], neo: [['of_suit', 'suit', 8]], bat: [['of_hoodie', 'hoodie', 8]], dep: [['of_rider', 'rider', 8]] };
+  P6.UNI = UNI;
+  function ofName(k) { try { return (typeof OF_N !== 'undefined' && OF_N[k]) || k; } catch (e) { return k; } }
+  function ownedOf(k) { try { return typeof ofOwned === 'function' && ofOwned(k); } catch (e) { return false; } }
+  function prize() {
+    if (busy()) return true;
+    var a = A6(), fac = E().run_fac, L = UNI[fac] || [], have = a.tok - a.spent;
+    var rows = L.map(function (u) { var own = ownedOf(u[1]), need = u[1] !== 'yankii' && !ownedOf('yankii') && fac === 'arc';
+      var why = own ? ' (yours)' : need ? ' (needs the tokk\u014dfuku)' : have < u[2] ? ' (' + u[2] + ' tokens)' : '';
+      return [ofName(u[1]) + ' \u00b7 ' + u[2] + ' \u25ce' + why, function () { buyUni(u); }, 'hot', own || need || have < u[2]]; });
+    rows.push(['Later', null]);
+    var G = Object.keys(a.g).length;
+    try { W.path = []; if (W.ryo) W.ryo.v = 0; } catch (e) {}
+    dialog('<b>Prize Counter</b><p class="q">\u201cTokens only. No yen, no cards, no favours. Looks, that\u2019s all we stock.\u201d</p><p class="dim">Tokens: ' + have + ' \u25ce  \u00b7  Mastered ' + G + ' / 5</p>', rows, 'npc_clerk_fig');
+    return true;
+  }
+  function buyUni(u) { var a = A6(); if (a.tok - a.spent < u[2] || ownedOf(u[1])) return; a.spent += u[2];
+    try { var g = gearS(); g.of = g.of || {}; g.of[u[1]] = 1; g.ofNew = g.ofNew || {}; g.ofNew[u[1]] = 1; } catch (e) {}
+    sv(); ev('world:s2p6:prize:' + u[1] + ':' + u[2]); try { AU.play('place'); } catch (eA) {} later(300, function () { toastS(ofName(u[1]) + ' \u2014 wear it in Menu \u203a Player \u203a Gear \u203a Outfit.'); }); }
+  P6.prize = prize; P6.buyUni = buyUni;
+  /* the yankii set leaves the West Street stall on runs where the prize counter exists */
+  (function moveYk() { var M = typeof SHOPS !== 'undefined' ? SHOPS : null; var Y = M && M.yk_west; if (!Y || Y._j6) return; Y._j6 = 1;
+    Y.items.forEach(function (it) { var u0 = it.unlock, w0 = it.why || ''; it.unlock = function () { if (stripOpen()) return false; return u0 ? u0.apply(this, arguments) : true; };
+      Object.defineProperty(it, 'why', { configurable: true, enumerable: true, get: function () { return stripOpen() ? 'At the Game Center prize counter now' : w0; } }); });
+  })();
+  VO.gcIn = [['', '<p class="dim">Wall-to-wall neon. Five cabinets humming, a crane full of fox plush, a medal pusher spilling tin.</p>']];
+  VO.gcJin = V3([['', '<p class="dim">At the Kitsune Blaster cabinet, a lean man in a gold-trim jacket plays without looking at the screen. The board above reads JIN, JIN, JIN.</p>'],
+    ['j6_jin', 'Don\u2019t touch another player\u2019s session.'], ['j6_jin', 'You\u2019re the two who cost me a ramen shop, a karaoke booth, a hotel floor and a club. Nice run.']], {
+    fierce: [['ryo', 'Game over, Jin.'], ['j6_jin', 'Game over is when I say. Insert coin.']],
+    strategic: [['aoi', 'The strip pays you every Thursday. That ends tonight.'], ['j6_jin', 'Everything ends. High scores don\u2019t.']],
+    balanced: [['ryo', 'The old man at Tanuki says the funeral\u2019s paid off.'], ['j6_jin', '\u2026Ponta talks too much. Fine.']]
+  }, [['j6_jin', 'Staff door. My room. Bring your best run.']]);
+  VO.gcStaff0 = [['', '<p class="dim">STAFF ONLY. A keypad with the buttons worn on 1-U-P.</p>']];
+  VO.gcBack = V3([['', '<p class="dim">The prize room. Glass cases of things nobody ever won. A gold cabinet with one name on its board. A lock on the prize safe, sealed in gray.</p>'],
+    ['j6_jin', 'Two players. One credit. Let\u2019s see your score.']], {
+    fierce: [['ryo', 'I don\u2019t play. I win.']],
+    strategic: [['aoi', 'He reads patterns. Don\u2019t give him one, Ryo.']],
+    balanced: [['ryo', 'One credit\u2019s all we need.']]
+  }, []);
+  VO.gcWon = V3([['j6_jin', '\u2026Ha. New high score.'], ['j6_jin', 'Take the seal. The strip\u2019s yours to keep. Try not to lose your initials.']], {
+    fierce: [['ryo', 'Leave the shops alone. All of them.']],
+    strategic: [['aoi', 'And the Thursday envelopes stop.']],
+    balanced: [['ryo', 'Pay Ponta back while you\u2019re at it.']]
+  }, []);
+  VO.crane = [['', '<p class="dim">Fox plush, three to a stack. The claw is set to \u201cweak\u201d. Everyone knows. Nobody stops.</p>']];
+  VO.medal = [['', '<p class="dim">The medal pusher shoves a wall of tin to the edge and never over. Jin\u2019s favourite machine, says the sticker.</p>']];
+  VO.jinCab = [['', '<p class="dim">The gold cabinet: one game, one name. 999,990 points. The 10 he didn\u2019t get bothers him, you can tell.</p>']];
+  VO.sealDone = [['', '<p class="dim">The prize safe stands open. Plush foxes and old IOUs.</p>']];
+  var G_CAST = { j: null, p: null, r: null, jb: null };
+  function popGc() {
+    var k = room();
+    if (k !== 'gc') { ['j', 'p', 'r'].forEach(function (q) { if (G_CAST[q]) { kill(G_CAST[q]); G_CAST[q] = null; } }); }
+    if (k !== 'gcback' && G_CAST.jb) { kill(G_CAST.jb); G_CAST.jb = null; }
+    function alive(s) { return s && s.el && s.el.parentNode; }
+    if (k === 'gc') {
+      if (!alive(G_CAST.p)) { G_CAST.p = npc('j6_prize', 225, 540, Math.PI / 2); }
+      if (!alive(G_CAST.r)) G_CAST.r = npc('j6_gamer', 650, 300, -Math.PI / 2);
+      if (qOn() && stg() === 'izak' && !alive(G_CAST.j)) { G_CAST.j = npc('j6_jin', 170, 300, -Math.PI / 2); }
+      if (!(qOn() && stg() === 'izak') && G_CAST.j) { kill(G_CAST.j); G_CAST.j = null; }
+    }
+    if (k === 'gcback' && qOn() && stg() === 'met' && !alive(G_CAST.jb)) { G_CAST.jb = npc('j6_jin', 500, 420, Math.PI / 2); try { waddle(G_CAST.jb, 0, Math.PI / 2); } catch (e) {} }
+  }
+  P6.popGc = popGc; P6.G_CAST = G_CAST;
+  function gcArrive() { var j = J(); whenFree(function () { if (room() !== 'gc') return;
+    if (qOn() && stg() === 'izak') { lockIn(1); talk(pv(VO.gcJin), function () { lockIn(0); if (G_CAST.j) { kill(G_CAST.j); G_CAST.j = null; } setStg('met'); qStep(6); sv(); toastS('Journal: Jin\u2019s prize room, past the staff door.'); }); return; }
+    if (!j.gcIn) { lockIn(1); talk(VO.gcIn, function () { j.gcIn = 1; sv(); lockIn(0); }); } }); }
+  function gcBackArrive() { if (!(qOn() && stg() === 'met')) return; whenFree(function () { if (room() !== 'gcback' || stg() !== 'met') return; lockIn(1);
+    var lines = pv(VO.gcBack); function go() { lockIn(0); startFight('gcback', ['mb2_game'], { bt: 'gcback', ctx: { flv: 8, mini: 'mb2_game', j6nm: '\u201cHigh-Score\u201d Jin' } }); }
+    try { if (typeof bossEnt === 'function' && G_CAST.jb) { bossEnt('mb2_game', lines, go, { spr: G_CAST.jb }); return; } } catch (eB) { ev('world:s2p6:err:bent6:' + (eB && eB.message)); }
+    talk(lines, go); }); }
+  FIGHT.gcback = { win: function () { setStg('won'); qStep(7); sv(); lockIn(1); talk(pv(VO.gcWon), function () { lockIn(0); if (G_CAST.jb) { kill(G_CAST.jb); G_CAST.jb = null; } toastS('Journal: take Jin\u2019s seal off the prize safe.'); }); }, lose: function () { } };
+  function takeSeal() {
+    if (busy() || E().seal_game) return; var e = E(); lockIn(1);
+    try { AU.play('place', { gain: 0.8 }); } catch (eA) {} try { AU.play('fire_whoosh', { gain: 0.6 }); } catch (eA2) {}
+    e.seal_game = 1; var n = (typeof c2Seals === 'function') ? c2Seals() : 0;
+    var f = (typeof C2S_FAC === 'object' && C2S_FAC.game) || 'neo', own = e.run_fac && f === e.run_fac;
+    if (!own && f) e['down_' + f] = 1;
+    if (!own && e.run_fac && !e.c2sUp) { e.c2sUp = 1; try { if (root.FFF_OPN) root.FFF_OPN.grant(C2S_SET[e.run_fac][1]); } catch (eG) {} }
+    sv(); ev('world:c2:seal:game:' + n); ev('world:s2p6:seal');
+    try { if (typeof c2sLocksSync === 'function') c2sLocksSync(); } catch (eS) {}
+    P6.resetPaint('gcback'); paintRoom();
+    var last = n >= ((typeof C2LMK !== 'undefined' && C2LMK.length) || 4);
+    var L2 = [['', '<p class="dim">Ryo pries the gray seal off the prize safe. A small engraved token, a serial on the back. Jin\u2019s initials scratched under it.</p>'], ['aoi', last ? 'All four. Now Tetsu\u2019s slip.' : ((typeof C2SC === 'object' && C2SC.sealN && C2SC.sealN[n]) || 'Three down.')]];
+    if (!own && f) { try { L2.push(['ryo', 'The ' + (typeof c2sFacName === 'function' ? c2sFacName(f) : 'Syndicate') + ' stand down now.']); } catch (eN) {} }
+    talk(L2, function () { lockIn(0); if (last) { try { if (typeof sayKey === 'function') sayKey('c2', 'elevator_live'); } catch (eK) {} } try { if (typeof c2SqRefresh === 'function') c2SqRefresh(); } catch (eQ) {} finishQuest(); });
+  }
+  P6.takeSeal = takeSeal;
+  function flipStrip() { var n = NS(); n.won = n.won || {}; n.won.strip = 1; E().stripPunk = 1; /* Club Kitsune flies the Punks' colours now; shop prices are unchanged (no Nails discount on the strip) */
+    try { if (root.FFF_NQ && root.FFF_NQ.BLK && !root.FFF_NQ.BLK.strip) root.FFF_NQ.BLK.strip = { n: 'NEON STRIP', r: [2100, 1400, 3800, 1800] }; } catch (eB) {} sv(); ev('world:s2p6:strip:flip'); }
+  function finishQuest() { if (!E().seal_game) return; if (!qDone()) { setStg('done'); qClose(); } flipStrip(); ev('world:s2p6:done'); }
+  P6.finishQuest = finishQuest; P6.flipStrip = flipStrip;
+  ACT.j6_gc_prize = function () { return prize(); };
+  TALK.j6_prize = function () { return prize(); };
+  TALK.j6_gamer = function () { if (busy()) return true; lockIn(1); var a = A6(); talk([['j6_gamer', Object.keys(a.g).length >= 5 ? 'You mastered all five? I\u2019m telling everyone.' : 'Gold on all five and your initials go up. Jin\u2019s are on everything.']], function () { lockIn(0); }); return true; };
+  ACT.j6_gc_crane = function () { if (busy()) return true; lockIn(1); talk(VO.crane, function () { lockIn(0); }); return true; };
+  ACT.j6_gc_medal = function () { if (busy()) return true; lockIn(1); talk(VO.medal, function () { lockIn(0); }); return true; };
+  ACT.j6_gc_board = function () { if (busy()) return true; var a = A6(), X = root.FFF_S2ARC, TN = ['\u2014', 'Bronze', 'Silver', 'Gold'];
+    var L = (X && X.CAB_ORDER || []).map(function (k) { return X.CABS[k].n + ': ' + (a.best[k] | 0) + ' \u00b7 ' + TN[a.tier[k] | 0]; }).join('<br>');
+    lockIn(1); talk([['', '<p class="dim">HIGH SCORES<br>' + L + '</p>']], function () { lockIn(0); }); return true; };
+  ACT.j6_gc_staff = function () { if (busy()) return true; if (at('met')) { enterRoom('gcback'); return true; } lockIn(1); talk(VO.gcStaff0, function () { lockIn(0); }); return true; };
+  ACT.j6_gc_seal = function () { if (busy()) return true; if (at('won') && !E().seal_game) { takeSeal(); return true; } if (stg() === 'met') { gcBackArrive(); return true; } lockIn(1); talk(E().seal_game ? VO.sealDone : VO.gcStaff0, function () { lockIn(0); }); return true; };
+  ACT.j6_gc_jincab = function () { if (busy()) return true; lockIn(1); talk(VO.jinCab, function () { lockIn(0); }); return true; };
+  ARRIVE.gc = gcArrive; ARRIVE.gcback = gcBackArrive; POP.push(popGc);
+  PIN.izak = function () { return { room: 'town', x: GC_DOOR.at[0], y: GC_DOOR.at[1] - 60, lab: 'Game Center', loc: 'High Score \u00b7 Neon Game Center' }; };
+  PIN.met = function () { if (room() === 'gc') return { room: 'gc', x: 1120, y: 250, lab: 'Staff door', loc: 'High Score \u00b7 Jin\u2019s prize room' }; return { room: 'town', x: GC_DOOR.at[0], y: GC_DOOR.at[1] - 60, lab: 'Game Center', loc: 'High Score \u00b7 Jin\u2019s prize room' }; };
+  PIN.won = function () { if (room() === 'gcback') return { room: 'gcback', x: 500, y: 240, lab: 'Seal', loc: 'High Score \u00b7 Jin\u2019s seal' }; return PIN.met(); };
+
   if (typeof c2Tags === 'function') {
     var tags0 = c2Tags;
     c2Tags = function (id, D) {
@@ -800,6 +953,7 @@
         if (on() && a) {
           var m = /^j6_e_(\w+)$/.exec(a);
           if (m) { if (roomOpen(m[1])) { chainRepair(); enterRoom(m[1]); } return true; }
+          if (a === 'lm_game' && stripOpen()) { chainRepair(); enterRoom('gc'); return true; }
           if (a === 'exit' && inJ6() && P6.innerBack && P6.innerBack[room()]) { P6.innerBack[room()](); return true; }
           if (ACT[a]) return ACT[a](k) !== false;
         }

@@ -123,6 +123,12 @@
     box(x, 120, H0 - 120, 480, 70, '#4a2a18', 4, 6);
     C.floor(x, { far: '#3a2418', near: '#160c08', kind: 'board', line: 'rgba(0,0,0,.35)', n: 8, rows: 10 });
     C.vign(x, 0.55); };
+  B.gcback = function (x) { var C = hb(), WD = 720, H0 = C.H0;
+    x.fillStyle = '#0e0806'; x.fillRect(0, 0, WD, H0); for (var i = 20; i < WD; i += 48) { x.fillStyle = 'rgba(216,176,96,.16)'; x.fillRect(i, 0, 3, H0); }
+    for (var c = 0; c < 4; c++) { var cx = 40 + c * 170; box(x, cx, 40, 130, 150, '#1a1208', 3, 6); box(x, cx + 10, 50, 110, 80, c === 1 ? '#3a2a08' : '#101828', 3, 4); x.fillStyle = '#ffd860'; x.font = '900 14px sans-serif'; x.textAlign = 'center'; x.fillText(c === 1 ? 'JIN 999990' : 'INSERT COIN', cx + 65, 96); }
+    glowAt(x, 360, 110, 320, 'rgba(255,200,90,.2)'); neonLine(x, [[0, H0 - 34], [WD, H0 - 34]], '#ffd860', 5);
+    C.floor(x, { far: '#3a2410', near: '#120a04', kind: 'tile', line: 'rgba(216,176,96,.22)', n: 8, rows: 10 });
+    C.vign(x, 0.55); };
   S2P.p6Battle = function (k, x) { var fn = B[k]; var C = hb(); if (!fn || !C) { x.fillStyle = '#1a1410'; x.fillRect(0, 0, 720, 1280); return; } x.save(); try { fn(x); } finally { x.restore(); } };
   S2P.p6B = B;
 })(typeof window !== 'undefined' ? window : this);
