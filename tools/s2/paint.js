@@ -220,56 +220,69 @@
   S2P.battle = function (g) {
     var H = (typeof window !== 'undefined' && window.FFF_C2H) || (typeof root !== 'undefined' && root.FFF_C2H);
     var WD = 720, HT = 1280, H0 = 330, x = g;
+    /* Lift the shop row 56px so the sidewalk sits under the foe (who stands near H0).
+       Unchanged H0 keeps the shared C2BT floor/lane math. */
+    var LIFT = 56, FOOT = H0 - LIFT;
     rr(g);
     if (!H) { g.fillStyle = '#141830'; g.fillRect(0, 0, WD, HT); return; }
     H.sky(x, '#141830', '#2c2a48', 48);
     H.skyline(x, '#262840', 21, 150);
-    /* -- shop row along the horizon line -- */
+    /* -- shop row, sitting on a sidewalk above the horizon -- */
     /* left: shuttered neighbour */
-    H.R(x, -8, 148, 168, 182, '#3a3448', H.INK, 3);
-    H.R(x, 8, 156, 140, 28, '#2a2434', H.INK, 2);
-    H.txt(x, '\u5840', 78, 171, 16, '#c8c0b0', '900 ');
-    H.shutter(x, 16, 196, 124, 134, '#6a7080');
+    H.R(x, -8, 148 - LIFT, 168, 182, '#3a3448', H.INK, 3);
+    H.R(x, 8, 156 - LIFT, 140, 28, '#2a2434', H.INK, 2);
+    H.txt(x, '\u5840', 78, 171 - LIFT, 16, '#c8c0b0', '900 ');
+    H.shutter(x, 16, 196 - LIFT, 124, 134, '#6a7080');
     /* centre: Chiyo Wagashi, timber + plaster, lit */
-    H.R(x, 156, 118, 360, 212, '#c4a07a', H.INK, 3);
+    H.R(x, 156, 118 - LIFT, 360, 212, '#c4a07a', H.INK, 3);
     /* tiled eave */
-    x.fillStyle = '#2b3240'; x.fillRect(148, 108, 376, 18);
-    for (var ti = 148; ti < 524; ti += 16) { x.fillStyle = ti % 32 ? '#39445a' : '#323b4f'; x.beginPath(); x.arc(ti + 8, 126, 8, Math.PI, 0); x.fill(); }
-    x.strokeStyle = H.INK; x.lineWidth = 3; x.beginPath(); x.moveTo(148, 128); x.lineTo(524, 128); x.stroke();
-    H.R(x, 200, 136, 272, 36, '#f4ead2', H.INK, 3);
-    H.txt(x, '\u548c\u83d3\u5b50  \u5343\u4ee3', 336, 154, 18, '#8e3b52', '900 ');
+    x.fillStyle = '#2b3240'; x.fillRect(148, 108 - LIFT, 376, 18);
+    for (var ti = 148; ti < 524; ti += 16) { x.fillStyle = ti % 32 ? '#39445a' : '#323b4f'; x.beginPath(); x.arc(ti + 8, 126 - LIFT, 8, Math.PI, 0); x.fill(); }
+    x.strokeStyle = H.INK; x.lineWidth = 3; x.beginPath(); x.moveTo(148, 128 - LIFT); x.lineTo(524, 128 - LIFT); x.stroke();
+    H.R(x, 200, 136 - LIFT, 272, 36, '#f4ead2', H.INK, 3);
+    H.txt(x, '\u548c\u83d3\u5b50  \u5343\u4ee3', 336, 154 - LIFT, 18, '#8e3b52', '900 ');
     /* display window */
-    H.win(x, 168, 184, 100, 70, 1, 2);
+    H.win(x, 168, 184 - LIFT, 100, 70, 1, 2);
     /* door + noren */
-    H.R(x, 284, 184, 110, 146, '#4a2c22', H.INK, 3);
-    H.noren(x, 286, 186, 106, 70, '#c45a6a', '\u5343\u4ee3');
-    H.R(x, 296, 258, 40, 64, '#d8c4a0', H.INK, 2);
-    H.R(x, 342, 258, 40, 64, '#d8c4a0', H.INK, 2);
+    H.R(x, 284, 184 - LIFT, 110, 146, '#4a2c22', H.INK, 3);
+    H.noren(x, 286, 186 - LIFT, 106, 70, '#c45a6a', '\u5343\u4ee3');
+    H.R(x, 296, 258 - LIFT, 40, 64, '#d8c4a0', H.INK, 2);
+    H.R(x, 342, 258 - LIFT, 40, 64, '#d8c4a0', H.INK, 2);
     /* right window */
-    H.win(x, 408, 184, 92, 70, 1, 2);
+    H.win(x, 408, 184 - LIFT, 92, 70, 1, 2);
     /* vertical sign */
-    H.R(x, 508, 140, 22, 120, '#8e3b52', H.INK, 2);
-    H.txt(x, '\u548c', 519, 170, 14, '#f4ead2', '900 ');
-    H.txt(x, '\u83d3', 519, 200, 14, '#f4ead2', '900 ');
-    H.txt(x, '\u5b50', 519, 230, 14, '#f4ead2', '900 ');
+    H.R(x, 508, 140 - LIFT, 22, 120, '#8e3b52', H.INK, 2);
+    H.txt(x, '\u548c', 519, 170 - LIFT, 14, '#f4ead2', '900 ');
+    H.txt(x, '\u83d3', 519, 200 - LIFT, 14, '#f4ead2', '900 ');
+    H.txt(x, '\u5b50', 519, 230 - LIFT, 14, '#f4ead2', '900 ');
     /* lanterns lit */
-    H.lantern(x, 250, 168, 26, '#f3c9a0', '');
-    H.lantern(x, 430, 168, 26, '#f3c9a0', '');
+    H.lantern(x, 250, 168 - LIFT, 26, '#f3c9a0', '');
+    H.lantern(x, 430, 168 - LIFT, 26, '#f3c9a0', '');
     /* neighbour tea/noodle shop, half-shutter */
-    H.R(x, 530, 150, 130, 180, '#4a3a40', H.INK, 3);
-    H.noren(x, 544, 188, 102, 56, '#3a5080', '\u8336');
-    H.shutter(x, 544, 250, 102, 80, '#7d8290');
-    H.R(x, 544, 158, 102, 24, '#1a1520', H.INK, 2);
-    H.neon(x, 548, 160, 94, 20, 'TEA', '255,180,90', 12);
+    H.R(x, 530, 150 - LIFT, 130, 180, '#4a3a40', H.INK, 3);
+    H.noren(x, 544, 188 - LIFT, 102, 56, '#3a5080', '\u8336');
+    H.shutter(x, 544, 250 - LIFT, 102, 80, '#7d8290');
+    H.R(x, 544, 158 - LIFT, 102, 24, '#1a1520', H.INK, 2);
+    H.neon(x, 548, 160 - LIFT, 94, 20, 'TEA', '255,180,90', 12);
     /* vending + pole on the far right */
-    vend(H, x, 648, 200);
-    H.pipe(x, [[710, 80], [710, 328]], 6, '#4a4658');
-    x.fillStyle = '#2a2430'; x.fillRect(702, 70, 16, 14);
-    /* curb */
-    H.R(x, 0, H0, WD, 20, '#4a4658', 0);
-    /* wet asphalt street, a little stone sidewalk under the shops */
+    vend(H, x, 648, 200 - LIFT);
+    H.pipe(x, [[710, 80 - LIFT], [710, 328 - LIFT]], 6, '#4a4658');
+    x.fillStyle = '#2a2430'; x.fillRect(702, 70 - LIFT, 16, 14);
+    /* stone sidewalk the shops sit on, so the rider's feet land on ground in front of the door, not in the wall */
+    H.R(x, 0, FOOT, WD, H0 - FOOT, '#5c5868', 0);
+    x.fillStyle = '#6a6578'; x.fillRect(0, FOOT, WD, 10);
+    x.fillStyle = 'rgba(20,16,28,.35)'; x.fillRect(0, H0 - 8, WD, 8);
+    var r0 = H.seed(11), i0, xx0, yy0, s0;
+    for (i0 = 0; i0 < 70; i0++) {
+      yy0 = FOOT + 8 + r0() * (H0 - FOOT - 6); xx0 = r0() * WD; s0 = 8 + (yy0 - FOOT) / 6;
+      x.fillStyle = 'rgba(0,0,0,' + (0.08 + r0() * 0.12) + ')';
+      x.beginPath(); x.ellipse(xx0, yy0, s0 * 1.8, s0 * 0.4, 0, 0, 6.28); x.fill();
+    }
+    /* wet asphalt street */
     H.floor(x, { kind: 'asphalt', far: '#3a3a50', near: '#1c1c2a', lanes: [360], seed: 13 });
-    /* stone paving on the sidewalk band */
+    /* curb, same 26px band as the default street room */
+    H.R(x, 0, H0, WD, 26, '#4a4658', 0);
+    /* stone paving continuing a little onto the street edge */
     var r = H.seed(9), yy, xx, s;
     for (var i = 0; i < 80; i++) {
       yy = H0 + 8 + r() * 70; xx = r() * WD; s = 10 + (yy - H0) / 8;
