@@ -21,21 +21,23 @@ async def newpage(b, body, path='balanced', run=True):
 def norm(s):
     return (s or '').replace('\u2019', "'").replace('\u2018', "'").replace('\u2060', '')
 async def drive(pg, ans_idx, maxn=480):
-    log, plate = [], None
+    log, plate, qbody = [], None, ''
     for i in range(maxn):
         await pg.wait_for_timeout(330); st = await bh.ev(pg, POLL)
-        if st['bond'] and plate is None: plate = (st.get('who') or '').strip()
+        if st['bond'] and plate is None:
+            plate = (st.get('who') or '').strip()
+            qbody = norm(st.get('txt') or '')
         if st['on'] and st.get('txt'):
             log.append((st.get('who') or '', st['txt']))
-        if st['seal']: return True, log, plate
+        if st['seal']: return True, log, plate, qbody
         if st['on']:
             await pg.evaluate(CLICK, ans_idx if st['bond'] else 0)
-    return False, log, plate
+    return False, log, plate, qbody
 async def scene_case(b, body, path, idx, fate):
     ctx, pg, errs = await newpage(b, body, path)
     await bh.ev(pg, "c2Go('sento')"); await pg.wait_for_timeout(2500); await bh.ev(pg, bh.HUSH)
     r = await bh.ev(pg, "(function(){var b=W.c2n.boss;W.ryo.x=b.x-90;W.ryo.y=b.y+60;place(W.ryo,0);if(W.aoi){W.aoi.x=b.x-130;W.aoi.y=b.y+90;place(W.aoi,0)}camera(true);var p0=STORY.bond(SAVE).px;c2LmBack(true,{ctx:{c2lm:'sento',dg:'c2'}});return p0})()")
-    done, log, plate = await drive(pg, idx)
+    done, log, plate, qbody = await drive(pg, idx)
     ans = ['fierce', 'strategic', 'balanced'][idx]
     info = await bh.ev(pg, "(function(){var B=STORY.bond(SAVE),E=c2S().e;return {px:B.px,pick:B.picks.c2_goda,fate:E.godaFate,tip:E.ckTip||0,named:E.ckNamed,seal:E.seal_sento,old:B.picks.c2lm_sento||null}})()")
     n = f'{path}/{ans}'
@@ -49,6 +51,7 @@ async def scene_case(b, body, path, idx, fate):
     ok(f'scene {n}: no old c2lm_sento pick', info['old'] is None)
     blob = norm(' '.join(txt for who, txt in log))
     ok(f'scene {n}: nameplate is Aoi when Aoi asks', plate == 'Aoi', plate)
+    ok(f'scene {n}: question body has no Aoi asks prefix', 'Aoi asks' not in qbody and "Aoi's call" not in qbody, qbody[:180])
     ok(f'scene {n}: does not send Ryo to the club now', 'pay Punk Tetsu' not in blob and "Door's behind the coat check" not in blob and 'The door that wouldn' not in blob, blob[:400])
     ok(f'scene {n}: Gōda names Tetsu as a rumor and points east to Masa', "Jin's club" in blob and 'Wagashi' in blob, blob[:400])
     gs = await bh.ev(pg, "FFF_CH2BOND.gs()===null")
@@ -117,7 +120,7 @@ async def main():
         ok('e2e: no bond question before the fight (c2lm_sento skipped)', not asked, asked)
         pk = await bh.ev(pg, "STORY.bond(SAVE).picks.c2lm_sento||null"); ok('e2e: no c2lm_sento pick', pk is None, pk)
         await bh.ev(pg, "(function(){fight=window.__f0;var p0=STORY.bond(SAVE).px;window.__p0=p0;c2Back(true,{ctx:{c2lm:'sento',dg:'c2',dgk:'lm_sento_boss'}});return p0})()")
-        done, log, plate = await drive(pg, 1)
+        done, log, plate, qbody = await drive(pg, 1)
         r = await bh.ev(pg, "(function(){var B=STORY.bond(SAVE);return {d:B.px-window.__p0,pick:B.picks.c2_goda,fate:c2S().e.godaFate,seal:c2S().e.seal_sento,asked:B.picks.c2lm_sento||null}})()")
         ok('e2e: after the win c2_goda pays 700 (Strategic path, Strategic answer) and nothing else', done and r['d'] == 700 and r['pick'] == 'strategic' and r['fate'] == 'deal' and r['asked'] is None, r)
         ok('e2e: no page errors', not errs, errs[:3]); await ctx.close()

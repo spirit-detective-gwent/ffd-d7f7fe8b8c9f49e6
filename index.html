@@ -16251,7 +16251,7 @@ function bondAsk(id, cb) {
      * focus / the first tap, and plays it when picked. Later answers stay plain lines. */
     var qm = /<b>([\s\S]*?)<\/b>\s*<p>([\s\S]*?)<\/p>/.exec(Q.q), ql = qm ? qm[1] : '', qt = qm ? qm[2] : Q.q, asker = /Aoi/i.test(ql) ? 'aoi' : me, pt = asker === 'ryo' ? ryoPt() : PT[asker]; /* v6.5.63 ch2-bond: nameplate is Aoi when Aoi asks */
     var _pq = ptPaintUrl(asker, ptMoodOf(asker)), html = '<div class="sh' + (first ? ' bfxsh' : '') + (_pq ? ' pt-hang' : '') + '"><i class="pt2" style="background-image:url(' + (_pq || IMG[pt]) + ')"></i>' + (GEAR ? gearPt(asker) : '') + '<b class="snm">' + (NM[asker] || CNAME[asker]) + '</b></div>' +
-      '<div class="tw bq"><p class="dim bqq">' + (ql ? '<strong>' + ql + ':</strong> ' : '') + qt + '</p></div>';
+      '<div class="tw bq"><p class="dim bqq">' + (ql && asker !== 'aoi' ? '<strong>' + ql + ':</strong> ' : '') + qt + '</p></div>'; /* v6.5.63 ch2-bond: Aoi nameplate already names her, so drop 'Aoi asks:' / 'Aoi\u2019s call:' from the body */
     var faceKey = asker === 'ryo' ? (ryoPt() || PT.ryo) : (PT[asker] || (asker + '_fig'));
     dialog(html, STORY.BOND.P.map(function (p) { return [first ? '\u201c' + Q.o[p][0] + '.\u201d<small>' + Q.o[p][1] + '</small>' : '\u201c' + Q.o[p][0] + '.\u201d', function () { pick(p); }, 'bondopt bline bond-' + p + (first ? ' bcol' : '')]; }), faceKey, { speaker: 1, name: NM[asker] || CNAME[asker], face: faceKey });
     $('#wdlg').classList.add('scene', 'bask'); if (first) $('#wdlg').classList.add('bfirst'); ev('world:bond:say:' + id);
@@ -40371,9 +40371,41 @@ function camPan(to, o, done) {
 
   /* ---------- the rows ---------- */
   /* Fierce: Sato and Tome-baa enter from the boiler-corridor door, lift Gōda, and walk him back out (up toward the stairs). Camera stays held; they leave the frame. */
-  function carryPlace(x, y) { var e = GS && GS.lie, k = C2K.mb2_sento || 1, sc = SPH * k / 256, C = LIEC; if (!e || !C) return;
-    e.style.transform = 'translate3d(' + (x - C.w * sc / 2).toFixed(1) + 'px,' + (y - C.base * sc).toFixed(1) + 'px,0)'; e.style.zIndex = 100 + Math.round(y); }
-  function carryTick() { if (!GS || !GS.sato || !GS.tome) return; carryPlace((GS.sato.x + GS.tome.x) / 2, Math.max(GS.sato.y, GS.tome.y) - 6); }
+  var CARRYC = { w: 520, h: 300, cw: 536, ch: 316, g: 8, base: 288, frames: 4, src: 'world/mb2_sentoY_carry.webp' };
+  function carrySc() { return SPH / 272; }
+  function carryStop() { if (!GS) return; if (GS.carryT) { clearInterval(GS.carryT); GS.carryT = 0; } if (GS.carryRaf) { cancelAnimationFrame(GS.carryRaf); GS.carryRaf = 0; } GS.carryGo = 0; }
+  function carryFr(f, left) { var e = GS && GS.carry, C = CARRYC, sc = carrySc(); if (!e) return;
+    var r = left ? 1 : 0; e.style.backgroundPosition = dpx(-(f * C.cw + C.g) * sc) + 'px ' + dpx(-(r * C.ch + C.g) * sc) + 'px'; e.dataset.cfr = f; }
+  function carryPlace(x, y) { var e = GS && GS.carry, C = CARRYC, sc = carrySc(); if (!e) return;
+    GS.cx = x; GS.cy = y; e.style.transform = 'translate3d(' + (x - C.w * sc / 2).toFixed(1) + 'px,' + (y - C.base * sc).toFixed(1) + 'px,0)'; e.style.zIndex = 100 + Math.round(y); }
+  function mkCarry(x, y) { var C = CARRYC, sc = carrySc(), e = document.createElement('div');
+    e.className = 'wsp wdown'; e.dataset.npc = 'mb2_sento_carry';
+    e.style.width = (C.w * sc).toFixed(1) + 'px'; e.style.height = (C.h * sc).toFixed(1) + 'px';
+    e.style.backgroundImage = 'url(' + C.src + ((root.FFF_BUILD) ? '?v=' + root.FFF_BUILD : '') + ')';
+    e.style.backgroundSize = (4 * C.cw * sc).toFixed(1) + 'px ' + (2 * C.ch * sc).toFixed(1) + 'px';
+    e.style.backgroundRepeat = 'no-repeat'; e.style.pointerEvents = 'none';
+    var host = (GS.lie && GS.lie.parentNode) || layer; host.appendChild(e);
+    GS.carry = e; if (GS.fx) GS.fx.push(e); carryFr(0, 0); carryPlace(x, y); return e; }
+  function hideCarrier(s) { if (s && s.el) { try { if (s.walker) animWalk(s, 0); else waddle(s, 0, s.fa); } catch (eH) {} fadeOut(s.el, 180); } }
+  function liftToCarry() { if (!GS) return; var x = GS.x, y = GS.y + 8;
+    hideCarrier(GS.sato); hideCarrier(GS.tome);
+    if (GS.lie) { fadeOut(GS.lie, 160); GS.lie = null; }
+    mkCarry(x, y); ev('world:c2:goda:carry:lift'); }
+  function carryBob() { if (!GS || !GS.carry) return; carryStop();
+    var t0 = performance.now(), x = GS.cx, y = GS.cy;
+    (function tick(now) { if (!GS || !GS.carry || GS.carryGo) return;
+      carryPlace(x, y + Math.sin((now - t0) / 380) * 1.4); GS.carryRaf = requestAnimationFrame(tick); })(t0); }
+  /* 60 fps: the group walks as one, frame from distance, no camera follow */
+  function carryWalk(tx, ty, sp, done) { if (!GS || !GS.carry) { if (done) done(); return; }
+    carryStop(); GS.carryGo = 1; var last = performance.now(), t0 = last, x0 = GS.cx, y0 = GS.cy, dist0 = 0;
+    var lim = 1000 * (Math.hypot(tx - x0, ty - y0) / Math.max(20, sp)) + 2500;
+    (function step(now) { if (!GS || !GS.carry) { if (done) done(); return; }
+      var dt = Math.min(0.05, (now - last) / 1000); last = now;
+      var dx = tx - GS.cx, dy = ty - GS.cy, d = Math.hypot(dx, dy), mv = Math.min(d, sp * dt);
+      if (d < 1.5 || now - t0 > lim) { carryPlace(tx, ty); carryFr((GS.carry.dataset.cfr | 0), tx < x0); if (done) done(); return; }
+      carryPlace(GS.cx + dx / d * mv, GS.cy + dy / d * mv);
+      dist0 += mv; carryFr(Math.floor(dist0 / 12) % 4, tx < x0);
+      GS.carryRaf = requestAnimationFrame(step); })(t0); }
   function stageCarryIn(next) { if (!GS) { next(); return; }
     var doorX = 780, doorY = 500, x = GS.x, y = GS.y;
     try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {}
@@ -40382,13 +40414,11 @@ function camPan(to, o, done) {
     if (tome && tome.el) { tome.el.dataset.npc = 'nq_tome'; GS.fx.push(tome.el); }
     ev('world:c2:goda:carry:in');
     c2WalkAll([[sato, x - 36, y + 8, 70 / ck()], [tome, x + 40, y + 16, 70 / ck()]], function () {
-      c2Face(sato, x, y); c2Face(tome, x, y); later(320, function () { carryTick(); later(280, next); }); }); }
-  function stageCarryOut(next) { if (!GS || !GS.sato) { fadeLie(next); return; }
+      c2Face(sato, x, y); c2Face(tome, x, y); later(280, function () { liftToCarry(); later(200, function () { carryBob(); next(); }); }); }); }
+  function stageCarryOut(next) { if (!GS || !GS.carry) { fadeLie(next); return; }
     try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {}
-    var doorX = 820, doorY = 500; if (GS.carryT) clearInterval(GS.carryT); GS.carryT = setInterval(carryTick, 40); var ticks = GS.carryT;
     ev('world:c2:goda:carry:out');
-    c2WalkAll([[GS.sato, doorX, doorY - 14, 62 / ck()], [GS.tome, doorX + 24, doorY + 20, 62 / ck()]], function () {
-      clearInterval(ticks); fadeOut(GS.sato && GS.sato.el, 500); fadeOut(GS.tome && GS.tome.el, 500); fadeLie(function () { GS.sato = GS.tome = null; next(); }); }); }
+    carryWalk(820, 500, 62 / ck(), function () { fadeOut(GS.carry, 500); GS.carry = null; fadeLie(function () { GS.sato = GS.tome = null; next(); }); }); }
 
   var VQ = { fierce: [['aoi', 'East. Wagashi row. The Riders.'], ['ryo', '{shout}Masa, then.{/shout}', { hype: 1 }]], strategic: [['aoi', 'Wagashi row first. The club can wait.'], ['ryo', 'We take the street. Then Masa.']], balanced: [['aoi', 'Wagashi row. East of here.'], ['ryo', 'We\u2019ll see them. The club can wait.']] };
   function CF(z, o) { return Object.assign({ cam: 'frame', at: 'mb2_sento', at2: 'ryo', z: z || 1.7, f: 0.3, ms: 1500 }, o || {}); }
@@ -40413,7 +40443,7 @@ function camPan(to, o, done) {
   /* ---------- wiring ---------- */
   var bo1 = c2BossOut; c2BossOut = function (k) { if (k === 'sento' && nailsRun() && GS && GS.lie) return godaRows(); return bo1.apply(this, arguments); };
   var ba1 = bondAsk; bondAsk = function (id, cb) { if (id === 'c2lm_sento' && nailsRun()) { ev('world:c2:goda:skipold'); cb([]); return; } return ba1.apply(this, arguments); }; /* the Punk run asks c2_goda after the fight instead */
-  var sl1 = c2LmSeal; c2LmSeal = function (k) { if (GS) { var g = GS; if (g.carryT) clearInterval(g.carryT); GS = null; fadeOut(g.lie, 700); fadeOut(g.g && g.g.el, 700); g.fx.forEach(function (d) { fadeOut(d, 500); }); if (W.c2n && W.c2n.godaS === g.g) W.c2n.godaS = null; } return sl1.apply(this, arguments); };
+  var sl1 = c2LmSeal; c2LmSeal = function (k) { if (GS) { var g = GS; if (g.carryT) clearInterval(g.carryT); if (g.carryRaf) cancelAnimationFrame(g.carryRaf); GS = null; fadeOut(g.lie, 700); fadeOut(g.g && g.g.el, 700); g.fx.forEach(function (d) { fadeOut(d, 500); }); if (W.c2n && W.c2n.godaS === g.g) W.c2n.godaS = null; } return sl1.apply(this, arguments); };
   /* Gōda stands at the bath counter after the Compassionate answer; the free-soak flag resets on each visit */
   var cp1 = c2Pop; c2Pop = function () { var r = cp1.apply(this, arguments); try { if (nailsRun() && c2Room() === 'sento') { W.godaSoak = 0; var e = E();
     if (e.godaFate === 'help' && e.seal_sento && W.c2n && !W.c2n.godaC) { var g = c2Npc('mb2_sento', 650, 925, Math.PI / 2); g.el.dataset.npc = 'mb2_sento'; W.c2n.godaC = g; } } } catch (e2) { ev('world:c2bond:err:pop:' + (e2 && e2.message)); } return r; };
