@@ -12308,15 +12308,17 @@ var KO_TAUNT = { mb_lib: 'Silence, please.', mb_art: 'Off the beat. Again.', mb_
 var KO_TAUNT_ANY = ['Stay down.', 'Go home, kid.', 'Is that all you\u2019ve got?', 'Told you.'];
 function koHint(id) { /* from the foe's own deck, so it never goes stale */
   var c = koChar(id), K = root.ENGINE.cards(), out = [];
-  var cs = Object.keys(c.deck || {}).map(function (k) { return K[k]; }).filter(function (q) { return q && !/^b_/.test(q.id); });
+  var all = Object.keys(c.deck || {}).map(function (k) { return K[k]; }).filter(function (q) { return q; }), cs = all.filter(function (q) { return !/^b_/.test(q.id); });
   function tot(q) { return (q.v | 0) * Math.max(1, q.hits | 0); }
   function best(f) { return cs.filter(f).sort(function (a, b) { return tot(b) - tot(a); })[0]; }
   var brk = best(function (q) { return q.t === 'atk' && (q.pierce || q.brk); }), str = best(function (q) { return q.t === 'atk' && (q.hits | 0) >= 3; }),
     ctr = cs.filter(function (q) { return q.t === 'guard' && q.ctr; })[0], big = best(function (q) { return q.t === 'atk'; });
+  var shell = cs.filter(function (q) { return q.t === 'guard' && (q.v | 0) >= 5; }).sort(function (a, b) { return b.v - a.v; })[0];
   if (brk) out.push(brk.n + ' hits for ' + tot(brk) + ' and breaks Guard, so Guard alone won\u2019t hold.');
+  else if (shell) out.push(shell.n + ' puts up Guard ' + shell.v + '. Bring a card that breaks Guard.');
   if (str && str !== brk) out.push(str.n + ' is ' + str.hits + ' hits of ' + str.v + '. Keep Guard up for it.');
   if (ctr) out.push(ctr.n + ' guards for ' + ctr.v + ' and counters for ' + ctr.ctr + '.');
-  if (!out.length && big) out.push(big.n + ' hits for ' + tot(big) + '. Keep Guard up for it.');
+  if (!out.length) { big = all.filter(function (q) { return q.t === 'atk'; }).sort(function (a, b) { return tot(b) - tot(a); })[0]; if (big) out.push(big.n + ' hits for ' + tot(big) + '. Keep Guard up for it.'); }
   return out.slice(0, 2).join(' '); }
 function koTier(st, id) { var c = (st && st.ctx) || {}; return !!(st && (st.boss || st.mini)) || !!(c.c2boss || c.mini || c.enfDoom) || !!CHAR_INTRO[id] || !!CHAR_INTRO[String(id || '').replace(/g$/, '')]; }
 function koArt(st, id) { /* { url, fit, plate } for #rArt */
