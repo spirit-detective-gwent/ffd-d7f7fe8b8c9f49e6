@@ -45813,6 +45813,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   /* approach the clash marker */
   function flowTick() {
     if (!on() || !inTown()) return;
+    /* quest/side work only — official idle and off-row streets stay cheap */
+    if (!qOn() && !qDone() && !punkAfterSeal()) return;
     chainRepair(); flipPop(); crewSync(); suppressX3Loop();
     if (qOn() && stg() === 'clash' && !busy() && !CL && W.ryo && Math.hypot(W.ryo.x - X3C[0], W.ryo.y - X3C[1]) < 90) clashBeat();
     if (room() === 'waga') paintRoom();
@@ -45871,7 +45873,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   /* ride c2Frame, no new loop */
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!S2.ferr) { S2.ferr = 1; ev('world:s2:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!S2.ferr) { S2.ferr = 1; ev('world:s2:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
@@ -45925,10 +45927,13 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (typeof c2Frame !== 'function' || c2Frame._s2p2rain) return;
     var fr0 = c2Frame;
     var known = { gym: 1, clinic: 1, sento: 1, sentoU: 1, sentoK: 1, arcade: 1, game: 1, depot: 1, hotel: 1, udon: 1, club: 1, ckback: 1, gekko: 1, motors: 1, town: 1, roof: 1 };
+    var lastK = null;
     c2Frame = function (dt) {
       fr0.apply(this, arguments);
       try {
         var k = typeof c2Room === 'function' ? c2Room() : null;
+        if (k === lastK) return;
+        lastK = k;
         if (k && !known[k]) {
           var cv = document.getElementById('c2amb');
           if (cv) {
@@ -46497,7 +46502,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
 
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!P2.ferr) { P2.ferr = 1; ev('world:s2p2:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!P2.ferr) { P2.ferr = 1; ev('world:s2p2:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
@@ -46955,7 +46960,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
 
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { placeDoor(); popTown(); } } catch (e) { if (!P3.ferr) { P3.ferr = 1; ev('world:s2p3:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { placeDoor(); popTown(); } } catch (e) { if (!P3.ferr) { P3.ferr = 1; ev('world:s2p3:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
@@ -47392,7 +47397,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
 
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { placeDoor(); popTown(); } } catch (e) { if (!P4.ferr) { P4.ferr = 1; ev('world:s2p4:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { placeDoor(); popTown(); } } catch (e) { if (!P4.ferr) { P4.ferr = 1; ev('world:s2p4:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
@@ -48097,6 +48102,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   }
   /* After down_dep, the SE Rider quarter is Punk turf and X4 is Punk vs Syndicate. Re-applied on load. */
   function applySeTurf() {
+    if (P5._turfOn) return;
+    P5._turfOn = 1;
     try {
       var T = root.FFF_C2TURF, EAST_R = [3760, 2760, 4900, 3300];
       if (!(T && T.Q && T.Q.P)) return;
@@ -48232,7 +48239,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   var lastPaintK = null;
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { chainRepair(); var k = room(); if (k !== lastPaintK) { lastPaintK = k; popMasa(); popClerk(); paintRoom(); } } } catch (e) { if (!P5.ferr) { P5.ferr = 1; ev('world:s2p5:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on() && p5Enter()) { chainRepair(); var k = room(); if (k !== lastPaintK) { lastPaintK = k; popMasa(); popClerk(); paintRoom(); } } } catch (e) { if (!P5.ferr) { P5.ferr = 1; ev('world:s2p5:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Go === 'function') {
     var goX = c2Go;
@@ -49247,7 +49254,13 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
     var host = document.getElementById('wv'); if (!host) return null;
     if (!cv) { cv = document.createElement('canvas'); cv.id = 'c2amb'; cv.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:40;'; }
     if (cv.parentNode !== host) host.appendChild(cv);
-    var w = host.clientWidth || 360, h = host.clientHeight || 640, d = Math.min(1.5, root.devicePixelRatio || 1);
+    var now = performance.now();
+    if (!ensure._fit || now - ensure._fit > 500) {
+      ensure._fit = now;
+      ensure._w = host.clientWidth || 360;
+      ensure._h = host.clientHeight || 640;
+    }
+    var w = ensure._w || 360, h = ensure._h || 640, d = Math.min(1.5, root.devicePixelRatio || 1);
     if (cv.width !== Math.ceil(w * d) || cv.height !== Math.ceil(h * d) || dpr !== d) {
       dpr = d; vw = w; vh = h; cv.width = Math.ceil(w * d); cv.height = Math.ceil(h * d);
       cx = cv.getContext('2d'); stillKey = '';
@@ -49356,12 +49369,13 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
     if (!world || !world.classList.contains('on') || !world.classList.contains('c2')) { hide(); return; }
     var game = document.getElementById('game');
     if (game && game.classList.contains('on')) { hide(); return; }
+    try { if (root.EATG && EATG.busy && EATG.busy()) { hide(); return; } } catch (eE) {}
     var gctx = ensure(); if (!gctx) return;
     var rm = 'town';
     try { rm = (typeof c2Room === 'function' && c2Room()) || 'town'; } catch (e2) {}
     if (rm === 'roof') { hide(); return; }
     var g = GRADE[rm] || GRADE.town;
-    cv.style.display = '';
+    if (cv.style.display === 'none') cv.style.display = '';
     var key = rm + 'x' + vw + 'x' + vh;
     if (stillKey !== key) { stillKey = key; bakeStill(g); resetParts(g, rm); }
     /* refresh world lights occasionally so walked-into props light up */
@@ -55524,6 +55538,7 @@ function open(o) {
   OV.style.cssText = 'position:fixed;left:0;top:0;right:0;bottom:0;z-index:2147483000;background:#120e16;display:flex;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none';
   cv = document.createElement('canvas'); cv.width = W * DPR; cv.height = H * DPR; cv.style.display = 'block'; cv.style.touchAction = 'none'; ctx = cv.getContext('2d', { alpha: false });
   OV.appendChild(cv); document.body.appendChild(OV); fit();
+  try { var WW = root.WORLD_API && WORLD_API.W; if (WW && !WW.paused) { WW._eatgPause = 1; WW.paused = true; } } catch (eP) {}
   OV.addEventListener('pointerdown', pDown); OV.addEventListener('pointerup', pUp); OV.addEventListener('pointercancel', pUp); OV.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   window.addEventListener('keydown', kDown, true); window.addEventListener('keyup', kUp, true); window.addEventListener('resize', fit); document.addEventListener('visibilitychange', onVis);
   try { if (root.AUDIO && root.AUDIO.wake) root.AUDIO.wake(); var A = root.AUDIO && root.AUDIO.st; if (A && A.ctx && A.ctx.state === 'suspended') A.ctx.resume(); } catch (eA) {}
@@ -55540,6 +55555,7 @@ function close() {
   var res = S ? S.res || 'bad' : 'bad', cause = S ? S.cause : '', o = OPT;
   window.removeEventListener('keydown', kDown, true); window.removeEventListener('keyup', kUp, true); window.removeEventListener('resize', fit); document.removeEventListener('visibilitychange', onVis);
   if (OV && OV.parentNode) OV.parentNode.removeChild(OV);
+  try { var WW = root.WORLD_API && WORLD_API.W; if (WW && WW._eatgPause) { WW._eatgPause = 0; WW.paused = false; } } catch (eP2) {}
   if (cv) { cv.width = 0; cv.height = 0; } cv = null; ctx = null; OV = null; S = null; OPT = null;
   if (BITE_OC) { BITE_OC.width = 0; BITE_OC.height = 0; BITE_OC = null; }
   if (BGC) { BGC.width = 0; BGC.height = 0; BGC = null; BGK = ''; }

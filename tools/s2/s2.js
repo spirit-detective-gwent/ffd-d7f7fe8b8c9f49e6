@@ -593,6 +593,8 @@
   /* approach the clash marker */
   function flowTick() {
     if (!on() || !inTown()) return;
+    /* quest/side work only — official idle and off-row streets stay cheap */
+    if (!qOn() && !qDone() && !punkAfterSeal()) return;
     chainRepair(); flipPop(); crewSync(); suppressX3Loop();
     if (qOn() && stg() === 'clash' && !busy() && !CL && W.ryo && Math.hypot(W.ryo.x - X3C[0], W.ryo.y - X3C[1]) < 90) clashBeat();
     if (room() === 'waga') paintRoom();
@@ -651,7 +653,7 @@
   /* ride c2Frame, no new loop */
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!S2.ferr) { S2.ferr = 1; ev('world:s2:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!S2.ferr) { S2.ferr = 1; ev('world:s2:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;

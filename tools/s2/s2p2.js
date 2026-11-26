@@ -40,10 +40,13 @@
     if (typeof c2Frame !== 'function' || c2Frame._s2p2rain) return;
     var fr0 = c2Frame;
     var known = { gym: 1, clinic: 1, sento: 1, sentoU: 1, sentoK: 1, arcade: 1, game: 1, depot: 1, hotel: 1, udon: 1, club: 1, ckback: 1, gekko: 1, motors: 1, town: 1, roof: 1 };
+    var lastK = null;
     c2Frame = function (dt) {
       fr0.apply(this, arguments);
       try {
         var k = typeof c2Room === 'function' ? c2Room() : null;
+        if (k === lastK) return;
+        lastK = k;
         if (k && !known[k]) {
           var cv = document.getElementById('c2amb');
           if (cv) {
@@ -612,7 +615,7 @@
 
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!P2.ferr) { P2.ferr = 1; ev('world:s2p2:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!P2.ferr) { P2.ferr = 1; ev('world:s2p2:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;

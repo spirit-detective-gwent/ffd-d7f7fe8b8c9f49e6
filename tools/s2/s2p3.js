@@ -444,7 +444,7 @@
 
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { placeDoor(); popTown(); } } catch (e) { if (!P3.ferr) { P3.ferr = 1; ev('world:s2p3:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { placeDoor(); popTown(); } } catch (e) { if (!P3.ferr) { P3.ferr = 1; ev('world:s2p3:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;

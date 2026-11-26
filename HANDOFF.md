@@ -203,3 +203,17 @@ State of the game at handoff start.
   - Ch3 redo with crew reputation system; rename Bilge-Rat Sabu.
   - Lucky 7 Arcade on hold.
 - Merge note: the main assistant builds from local source packs, not by editing this index.html. Keep edits small and tagged so they can be merged back.
+
+## GGD-37 / GGD-22 — 4x heat vs live (v6563-mai, after GGD-49)
+
+**Cause (not a new always-on loop):** Official `perf_check` skipall only taps buttons whose text starts with `Skip`, then Close. On live (`b15775f`), the Chapter Two crane-pan Skip does **not** set `W._c2SkipCine`, so the arrival cinematic starts after the trans. Those scenes have no `Skip` button, so official live stays in `#wdlg.on.scene` / `W.dlg` / `W.cut` with no roamers (`dgF=0`) — the overworld is held still, which understates live 4x heat (gym 58, town 48). On mai, trans Skip sets `_c2SkipCine` and `c2Cine` aborts the arrival talk (`c2AbortTalk`), so official mai is already true town idle (roamers running). That skip-behavior difference is the entire official "mai is heavier" gap.
+
+At a fair true idle (skip flags + `c2AbortTalk` on both), mai is **lighter** than live at every official Ch2 spot (~10–16 cpu_busy points), with fewer world DOM nodes (439 vs 498 at the gym) and lower script/recalc. Disabling S2 c2Frame extras on mai did not close the official gap (it was never the 10-point cause). Ch1 4x heat was already even.
+
+**Fixes (look preserved, no new loops, FFF_BUILD not bumped):**
+- Seal-2 `c2Frame` hooks no longer call `hookBattle` every frame (still at init + `c2Pop`). Wagashi `flowTick` / crew sync runs only when that quest is on or done (or after the sento seal). Indoor-rain hide runs only when the room changes. Phase 5 chain/paint/turf runs only when `p5Enter()`, and `applySeTurf` applies once.
+- C2AMB: cache the overlay size for 500ms (avoids a forced `clientWidth` reflow every frame), only set `display` when hidden, and hide while EATG is busy.
+- EATG: pause the hidden world (`W.paused`) for the duration of the eat overlay so eat-anim 4x is not world+minigame stacked.
+
+**Official perf_check:** run with a leftover-talk hush after skipall so live also reaches true overworld idle (same cleanup extra_perf already uses). Do not freeze mai to match stuck live cine.
+

@@ -691,6 +691,8 @@
   }
   /* After down_dep, the SE Rider quarter is Punk turf and X4 is Punk vs Syndicate. Re-applied on load. */
   function applySeTurf() {
+    if (P5._turfOn) return;
+    P5._turfOn = 1;
     try {
       var T = root.FFF_C2TURF, EAST_R = [3760, 2760, 4900, 3300];
       if (!(T && T.Q && T.Q.P)) return;
@@ -826,7 +828,7 @@
   var lastPaintK = null;
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { chainRepair(); var k = room(); if (k !== lastPaintK) { lastPaintK = k; popMasa(); popClerk(); paintRoom(); } } } catch (e) { if (!P5.ferr) { P5.ferr = 1; ev('world:s2p5:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on() && p5Enter()) { chainRepair(); var k = room(); if (k !== lastPaintK) { lastPaintK = k; popMasa(); popClerk(); paintRoom(); } } } catch (e) { if (!P5.ferr) { P5.ferr = 1; ev('world:s2p5:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Go === 'function') {
     var goX = c2Go;
