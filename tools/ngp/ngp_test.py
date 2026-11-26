@@ -241,7 +241,7 @@ async def t8(p):
     await pg.evaluate("document.querySelector('#ngplus [data-a=review]').click()"); await pg.wait_for_timeout(300)
     await pg.evaluate("document.querySelector('#ngplus [data-a=start]').click()"); await pg.wait_for_timeout(4000)
     s = json.loads(await ev(pg, "JSON.stringify({ngp:SAVE.ngp,on:W.on,ch:SAVE.chapter,items:SAVE.items,gsk:SAVE.gsk,bond:SAVE.bond&&SAVE.bond.path,ess:SAVE.ess,cx:SAVE.cx,intro:SAVE.intro,scr:W.scr})"))
-    ok('T8 title -> New Game+ -> Fresh Start: world entered, run reset, Codex kept', s['ngp'] == 2 and s['on'] and s['ch'] == 1 and s['items'] == 0 and not s['gsk'] and s['bond'] == 'balanced' and s['ess'] == 0 and s['cx'] == {'tip_howto': 1}, s)
+    ok('T8 title -> New Game+ -> Fresh Start: world entered, run reset, Codex kept', s['ngp'] == 2 and s['on'] and s['ch'] == 1 and s['items'] == 0 and not s['gsk'] and s['bond'] == 'balanced' and s['ess'] == 0 and s['cx'].get('tip_howto') == 1, s)  # intro may add more tip_* entries after the start
     await pg.screenshot(path=str(SHOTS / 'title_ngp_start.png'))
     ok('T8 no page errors (title start)', not errs, errs[:3]); await b.close()
 
