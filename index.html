@@ -40385,7 +40385,7 @@ function camPan(to, o, done) {
       c2Face(sato, x, y); c2Face(tome, x, y); later(320, function () { carryTick(); later(280, next); }); }); }
   function stageCarryOut(next) { if (!GS || !GS.sato) { fadeLie(next); return; }
     try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {}
-    var doorX = 820, doorY = 500, ticks = setInterval(carryTick, 40);
+    var doorX = 820, doorY = 500; if (GS.carryT) clearInterval(GS.carryT); GS.carryT = setInterval(carryTick, 40); var ticks = GS.carryT;
     ev('world:c2:goda:carry:out');
     c2WalkAll([[GS.sato, doorX, doorY - 14, 62 / ck()], [GS.tome, doorX + 24, doorY + 20, 62 / ck()]], function () {
       clearInterval(ticks); fadeOut(GS.sato && GS.sato.el, 500); fadeOut(GS.tome && GS.tome.el, 500); fadeLie(function () { GS.sato = GS.tome = null; next(); }); }); }
@@ -40413,7 +40413,7 @@ function camPan(to, o, done) {
   /* ---------- wiring ---------- */
   var bo1 = c2BossOut; c2BossOut = function (k) { if (k === 'sento' && nailsRun() && GS && GS.lie) return godaRows(); return bo1.apply(this, arguments); };
   var ba1 = bondAsk; bondAsk = function (id, cb) { if (id === 'c2lm_sento' && nailsRun()) { ev('world:c2:goda:skipold'); cb([]); return; } return ba1.apply(this, arguments); }; /* the Punk run asks c2_goda after the fight instead */
-  var sl1 = c2LmSeal; c2LmSeal = function (k) { if (GS) { var g = GS; GS = null; fadeOut(g.lie, 700); fadeOut(g.g && g.g.el, 700); g.fx.forEach(function (d) { fadeOut(d, 500); }); if (W.c2n && W.c2n.godaS === g.g) W.c2n.godaS = null; } return sl1.apply(this, arguments); };
+  var sl1 = c2LmSeal; c2LmSeal = function (k) { if (GS) { var g = GS; if (g.carryT) clearInterval(g.carryT); GS = null; fadeOut(g.lie, 700); fadeOut(g.g && g.g.el, 700); g.fx.forEach(function (d) { fadeOut(d, 500); }); if (W.c2n && W.c2n.godaS === g.g) W.c2n.godaS = null; } return sl1.apply(this, arguments); };
   /* Gōda stands at the bath counter after the Compassionate answer; the free-soak flag resets on each visit */
   var cp1 = c2Pop; c2Pop = function () { var r = cp1.apply(this, arguments); try { if (nailsRun() && c2Room() === 'sento') { W.godaSoak = 0; var e = E();
     if (e.godaFate === 'help' && e.seal_sento && W.c2n && !W.c2n.godaC) { var g = c2Npc('mb2_sento', 650, 925, Math.PI / 2); g.el.dataset.npc = 'mb2_sento'; W.c2n.godaC = g; } } } catch (e2) { ev('world:c2bond:err:pop:' + (e2 && e2.message)); } return r; };
