@@ -4902,10 +4902,14 @@ function dueJoin(b) {
 }
 /* v6.5.16 (Ernest) SYNC BREAK: Genji's technique, replaces Corner Assist. Only on once learned (b.sync).
  * Ryo breaks a Guard type when his guard break lands while it is guarding. Aoi breaks an Attack type when her counter lands on it.
- * A break never skips the enemy's turn. It opens ONE Sync window per turn: the partner tags in free (no swap) and acts before the
- * enemies. Ryo's break opens the window mid-turn (Aoi gets a free action). Aoi's break (on the enemy turn) opens it at the start of
- * the next turn (Ryo tags in free; his play is that turn's play). After the incoming partner acts: who stays in (b.sbAsk).
- * Bosses can be broken once per fight phase (one battle). Bond Lv 7-10 also live here: Path Echo, Sync Break II, In Sync, Awakening. */
+ * It opens ONE Sync window per turn: the partner tags in free (no swap) and acts before the enemies. Ryo's break opens the
+ * window mid-turn (Aoi gets a free action). Aoi's break (on the enemy turn) opens it at the start of the next player turn
+ * (Ryo tags in free; his play is that turn's play). After the incoming partner acts: who stays in (b.sbAsk).
+ * In a 1v1 a break never skips the enemy's next turn (they act after the window). In a 2- or 3-enemy fight, a break cuts
+ * short the rest of the current enemy phase: the whole remaining line loses that turn, then the window plays out, then
+ * the line takes its next turn. One skipped remainder per break (it does not stack). Passing the window, or not tagging,
+ * still leaves that remainder skipped. Bosses can be broken once per fight phase (one battle). Bond Lv 7-10 also live
+ * here: Path Echo, Sync Break II, In Sync, Awakening. */
 var SB_TYPE = { c2_suit: 'G', c2_suitg: 'G', c2_boso: 'G', c2_bosog: 'G', bouncer: 'G', mb2_sento: 'G', mb2_depot: 'G', c2_boss: 'G', mb2_game: 'GA', chinpira1: 'A', chinpira1g: 'A', c2_punk: 'A', c2_punkg: 'A', c2_hustler: 'A', c2_hustlerg: 'A', mb2_arcade: 'A' };
 var SB_BOSS = { mb2_sento: 1, mb2_depot: 1, mb2_game: 1, mb2_arcade: 1, c2_boss: 1 };
 var SB = { lv8: 3, inSync: 5, echo: 0.2, echo10: 0.35, echoDg: 8, burn10: 3, heal10: 8, guard10: 5 };
@@ -4942,6 +4946,8 @@ function sbTag(b) {
 }
 /* skip a mid-turn window: the enemies move */
 function sbPass(b) { if (!b || !b.sbWin) return false; var mid = b.sbWin.mid; b.sbWin = null; if (mid && b.sbHold) { b.sbHold = 0; b.turn = 1; } return true; }
+/* true while a Sync window is open: the UI must not keep running the leftover group queue (2v/3v). */
+function sbHoldLine(b) { return !!(b && b.sync && !b.over && (b.sbWin || b.sbHold)); }
 /* after the incoming partner's action: back = the one who left comes back in (free) */
 function sbStay(b, back) {
   var A = b && b.sbAsk; if (!A) return null; b.sbAsk = null; if (!back || !b.bench || b.over) return { stay: b.s[0].ch, back: false };
@@ -5007,7 +5013,7 @@ function guardTick(b) {
     cardScore._t37 = 1;
   }
 })();
-var E = { laneOn: laneOn, dueJoin: dueJoin, SB: SB, SB_TYPE: SB_TYPE, SB_BOSS: SB_BOSS, sbType: sbType, sbOpen: sbOpen, sbTag: sbTag, sbPass: sbPass, sbStay: sbStay, stunSkip: stunSkip, guardTick: guardTick, laneTick: laneTick, LANE: LANE, serveOn: serveOn, serveTick: serveTick, SERVE: SERVE, addBench: addBench, canSwitch: canSwitch, dblReady: dblReady, dblMove: dblMove, dblKind: dblKind, DBL_NAME: DBL_NAME, DBL_KIND: DBL_KIND, switchIn: switchIn, SW_MAX: SW_MAX, applyPst: applyPst, SPV: SPV, pathStep: pathStep, GRADE: GRADE, gSnap: gSnap, gStart: gStart, gTrack: gTrack, grade: grade, gradeItems: gradeItems, gradeYenAdd: gradeYenAdd, gradeUseful: gradeUseful, deckDmg: deckDmg, expectedDmg: expectedDmg, vkey: vkey, fromRec: fromRec, recLevel: recLevel, pathMax: pathMax, cardGain: cardGain, comboGain: comboGain, comboNeed: comboNeed, comboPay: comboPay, energyCombo: energyCombo, comboNet: comboNet, comboMax: comboMax, comboGroups: comboGroups, tryEscape: tryEscape, comboShape: comboShape, canCombo: canCombo, comboCost: comboCost, comboBonus: comboBonus, comboMates: comboMates, comboCfg: comboCfg, aiTune: AIC, aiGuard: AIG, addGuard: addGuard, canDiscard: canDiscard, discard: discard, PATHS: PATHS, pathsOf: pathsOf, normPaths: normPaths, init: init, newBattle: newBattle, newSide: newSide, newGroup: newGroup, setFoe: setFoe, aliveFoes: aliveFoes, groupFix: groupFix, discardCost: discardCost, mulligan: mulligan, aiMulligan: aiMulligan, applyMove: applyMove, aiMove: aiMove, legal: legal, fury: fury, sigReady: sigReady,
+var E = { laneOn: laneOn, dueJoin: dueJoin, SB: SB, SB_TYPE: SB_TYPE, SB_BOSS: SB_BOSS, sbType: sbType, sbOpen: sbOpen, sbTag: sbTag, sbPass: sbPass, sbStay: sbStay, sbHoldLine: sbHoldLine, stunSkip: stunSkip, guardTick: guardTick, laneTick: laneTick, LANE: LANE, serveOn: serveOn, serveTick: serveTick, SERVE: SERVE, addBench: addBench, canSwitch: canSwitch, dblReady: dblReady, dblMove: dblMove, dblKind: dblKind, DBL_NAME: DBL_NAME, DBL_KIND: DBL_KIND, switchIn: switchIn, SW_MAX: SW_MAX, applyPst: applyPst, SPV: SPV, pathStep: pathStep, GRADE: GRADE, gSnap: gSnap, gStart: gStart, gTrack: gTrack, grade: grade, gradeItems: gradeItems, gradeYenAdd: gradeYenAdd, gradeUseful: gradeUseful, deckDmg: deckDmg, expectedDmg: expectedDmg, vkey: vkey, fromRec: fromRec, recLevel: recLevel, pathMax: pathMax, cardGain: cardGain, comboGain: comboGain, comboNeed: comboNeed, comboPay: comboPay, energyCombo: energyCombo, comboNet: comboNet, comboMax: comboMax, comboGroups: comboGroups, tryEscape: tryEscape, comboShape: comboShape, canCombo: canCombo, comboCost: comboCost, comboBonus: comboBonus, comboMates: comboMates, comboCfg: comboCfg, aiTune: AIC, aiGuard: AIG, addGuard: addGuard, canDiscard: canDiscard, discard: discard, PATHS: PATHS, pathsOf: pathsOf, normPaths: normPaths, init: init, newBattle: newBattle, newSide: newSide, newGroup: newGroup, setFoe: setFoe, aliveFoes: aliveFoes, groupFix: groupFix, discardCost: discardCost, mulligan: mulligan, aiMulligan: aiMulligan, applyMove: applyMove, aiMove: aiMove, legal: legal, fury: fury, sigReady: sigReady,
   targetSide: targetSide, spiritOf: spiritOf, cardText: cardText, typeLabel: typeLabel, badge: badge, TYPEN: TYPEN, cardScore: cardScore, playBlock: playBlock, applyEnh: applyEnh,
   upgraded: upgraded, storyRules: function (o) { if (o) Object.assign(SU, o); return SU; },
   cards: function () { return CARDS; }, chars: function () { return CHARS; }, rules: function () { return R; }, setRng: function (f) { rnd = f; } };
@@ -8510,6 +8516,13 @@ async function afterTurn() {
   /* v4.64: endurance loop — no early batter floor; player must reach 0 HP after Gouki's first item revival to unlock Bond */
   if (b.over) { endMatch(); return; }
   if (b.sbAsk) { if (sbStayAsk()) return; } /* v6.5.16 Sync Break: who stays in, before the enemies move */
+  /* v6.5.63: a multi-enemy Sync Break cuts short the rest of this enemy phase. The leftover group queue
+   * (ST.gq) would otherwise keep walking the line, then the line would act again after the free tag. */
+  if (E.sbHoldLine && E.sbHoldLine(b)) {
+    var skipped = (ST.gq && ST.gq.length) ? ST.gq.length : 0;
+    ST.gq = null; if (b.turn === 1) b.turn = 0;
+    if (skipped) { addLog('The rest of the enemy line loses the turn.'); ev('sb:line:skip:' + skipped); }
+  }
   if (b.freeOpen && !b.freeSpent && b.turn === 1 && (b.s[0].turns | 0) >= 1) { b.freeSpent = 1; b.turn = 0; ST.gq = null; var fb = $('#banner'); if (fb) { fb.innerHTML = '<em>They never saw the first hit coming.</em>'; fb.className = 'on'; setTimeout(function () { if (fb) fb.className = ''; }, 2600); } ev('match:freeOpen:spent'); }
   if (b.grp && b.grp.length > 1) { // v4.0 groups: after the player's move every bully still standing takes one turn, in order
     if (b.turn === 1 && !ST.gq) ST.gq = E.aliveFoes(b);
