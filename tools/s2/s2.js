@@ -374,13 +374,9 @@
 
   /* ---------------- menu (prices proposed; Nails 20% off after takeover) ---------------- */
   function disc(c) { return Math.max(1, Math.round(c * 0.8)); }
-  HITEM.sroll = HITEM.sroll || { n: 'Sweet roll', pct: 0.18, ic: '\ud83e\udd50', rank: 2 };
-  HITEM.dango = HITEM.dango || { n: 'Dango', pct: 0.10, ic: '\ud83c\udf61', rank: 1 };
   var WAGA_MENU = S2.MENU = [
     { id: 'roll', n: 'Sweet roll', jp: '\u3042\u3093\u30ed\u30fc\u30eb', hp: 14, base: 8, cost: 6, eat: 'sweetroll' },
-    { id: 'dango', n: 'Dango', jp: '\u3060\u3093\u3054', hp: 8, base: 5, cost: 4, eat: 'dango' },
-    { id: 'togo_roll', n: 'Sweet roll to-go', jp: '\u6301\u5e30', bag: 'sroll', base: 8, cost: 6 },
-    { id: 'togo_dango', n: 'Dango to-go', jp: '\u6301\u5e30', bag: 'dango', base: 5, cost: 4 }
+    { id: 'dango', n: 'Dango', jp: '\u3060\u3093\u3054', hp: 8, base: 5, cost: 4, eat: 'dango' }
   ];
   function yen() { return SAVE.items | 0; }
   function payYen(c) { SAVE.items = Math.max(0, yen() - c); sv(); try { hud(); bumpItems(); } catch (e) {} }
@@ -407,7 +403,6 @@
   }
   function buy(it, c) {
     payYen(c); ev('world:s2:waga:buy:' + it.id + ':' + c);
-    if (it.bag) { SAVE.heal.push(it.bag); sv(); try { AU.play('place'); } catch (e) {} try { toast(HITEM[it.bag].n + ' in your bag.'); } catch (e2) {} later(200, counterMenu); return; }
     var h0 = SAVE.hp | 0, add = it.hp | 0, half = Math.ceil(add / 2), winAdd = Math.round(add * 1.5);
     applyVit(it);
     var h1 = SAVE.hp | 0, id = it.eat, opened = false;
@@ -480,18 +475,17 @@
     if (root.FFF_NQ && root.FFF_NQ.BLK && !root.FFF_NQ.BLK.x3) root.FFF_NQ.BLK.x3 = { n: 'WAGASHI ROW', r: [2420, 2760, 3460, 3300] };
     sv();
   }
-  /* Back-right work area (jars / steamer). Serving stand is just behind the counter top (y=470), facing the customer. */
-  var CHI_BACK = [780, 380], CHI_FRONT = [640, 455], chiReady = 0;
+  /* Serving stand is at the counter front at all times, facing the customer.
+     No walk on Order — the walk dropped fps. Area behind the counter stays blocked. */
+  var CHI_BACK = [780, 380], CHI_FRONT = [640, 455], chiReady = 1;
   S2.CHI_BACK = CHI_BACK; S2.CHI_FRONT = CHI_FRONT;
   function chiyoPop() {
-    if (room() !== 'waga') { if (CHI) { try { kill(CHI); } catch (eK) {} CHI = null; } chiReady = 0; return; }
+    if (room() !== 'waga') { if (CHI) { try { kill(CHI); } catch (eK) {} CHI = null; } return; }
     if (CHI && CHI.el && CHI.el.parentNode) return;
-    CHI = npc('nq_chiyo', CHI_BACK[0], CHI_BACK[1], Math.PI);
+    CHI = npc('nq_chiyo', CHI_FRONT[0], CHI_FRONT[1], 0);
     asWalker(CHI, 'nq_chiyo');
-    CHI.dir = 1;
-    if (typeof animWalk === 'function') animWalk(CHI, 0);
-    place(CHI, 0);
-    chiReady = 0;
+    chiReady = 1;
+    chiyoFaceCustomer();
     try { if (W.c2n) W.c2n.s2 = CHI; } catch (eN) {}
   }
   function chiyoFaceCustomer() {
@@ -499,16 +493,10 @@
     if (typeof c2Face === 'function') c2Face(CHI, CHI.x, CHI.y + 80);
     else { CHI.dir = 0; if (typeof animWalk === 'function') animWalk(CHI, 0); place(CHI, 0); }
   }
+  /* No-op face: she already stands at the counter. Kept so older callers still resolve. */
   function chiyoToCounter(done) {
-    if (!CHI || !CHI.el || !CHI.el.parentNode) { if (done) done(); return; }
-    if (chiReady || Math.hypot(CHI.x - CHI_FRONT[0], CHI.y - CHI_FRONT[1]) < 8) {
-      chiReady = 1; chiyoFaceCustomer(); if (done) done(); return;
-    }
-    lockIn(true);
-    /* Step down to the counter, then walk sideways along it (existing side frames) to the serving gap. */
-    move(CHI, [[CHI_BACK[0], CHI_FRONT[1]], [CHI_FRONT[0], CHI_FRONT[1]]], 120, function () {
-      chiReady = 1; chiyoFaceCustomer(); lockIn(false); if (done) done();
-    });
+    if (CHI) chiyoFaceCustomer();
+    if (done) done();
   }
   S2.chiyoToCounter = chiyoToCounter;
   S2.chiyoPop = chiyoPop;
@@ -619,7 +607,7 @@
       try {
         if (on()) {
           if (a === 's2_e_waga') { doorTalk(); return true; }
-          if (a === 's2_waga_order') { chiyoToCounter(function () { counterMenu(); }); return true; }
+          if (a === 's2_waga_order') { if (CHI) chiyoFaceCustomer(); counterMenu(); return true; }
           if (a === 's2_flip' || (FL && a && /n13flip/.test(a) && qOn() && stg() === 'open')) { flipTalk(); return true; }
         }
       } catch (e) { ev('world:s2:err:act:' + (e && e.message)); }

@@ -11,6 +11,25 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
+### 2026-11-26 — executor (Grok Bot) — v6.5.63 GGD-49 shop and healing rules (not published)
+Erik’s shop / healing rules. FFF_BUILD was not bumped.
+
+- Bag: no use-to-heal from Hase’s old patch kit / spare tube. Those item defs and menu-icon art stay in the code (`HITEM.patch` / `HITEM.bpart`, `ITEMS.*`, `ICONS.patch` / `ICONS.bpart`) but are disabled (`combat: 1`) — not sold, not usable from the bag. Reserved for combat-only heals later. Yard gauze as a bag heal is gone. Crafted 20% dressings, candy/bandage/potion drops, and restaurant eat-in stay.
+- Hase sells only electrical tape and gauze, ¥3 base each (food-equivalent: a dressing is +10 HP ≈ restaurant yen-per-HP × 10 ≈ ¥6 for 1+1). Nails 20% off applies. Mugwort stays ¥1. World-found mats stay the cheap path.
+- Depot keeps only onigiri and canned coffee. Machi Motors: tape, gauze, canned soda (no bandage). Ono: tape and gauze only (no bandage/potion).
+- Ch2 supply shops (Machi, Ono, Hase, depot) and herb cycles (`c2RefreshCycle`) restock after a quest or side-quest turn-in, never on a KO / gym wake.
+- All restaurant menus are eat-in only: Chiyo and udon to-go rows are gone.
+- Ms. Chiyo stands at the front of her counter at all times. No walk on Order (the walk dropped fps). Area behind the counter stays blocked.
+- Gōda’s Genji-map pin uses the grey X / “stood down” style after he is beaten (`down_bat` on fight win; `c2lDown` also honors a taken rival seal), same as Masa.
+- `c2RefreshCycle('wake')` call sites removed (`c2GymWake`, `v640GymTravel`, two g38 gym-wake wraps). Herbs and Ch2 supply shops refill only on main-quest and side-quest turn-ins. Shop buy-counts (`SAVE.shops[id].b`) for Machi, Ono, Hase and the depot are cleared there; other shops never reset.
+- Unused depot packing-tape pouch (`ptape`) is gone from the shop catalog. Icon painter left in place, unused.
+- Ch1 nurse cabinet (`n9Cabinet` / `SAVE.cabT`) keeps its 60-second real-time cooldown (by design).
+- The Ch1 First Aid machine no longer sells bag bandages (`buyBandage` is a no-op). The machine stays in the nurse\'s office and tells you to craft dressings from the Bag. The Ch3 pier fence no longer sells ready-made bandages. Candy, enemy drops, and quest-reward bandages were left alone pending Erik.
+- Clinic Brass Kettle craft UI is retired (`c2Kettle` points at Bag crafting; `kBrew` does not brew). Phone Bag crafting is the only bench. The Kampo lesson flavor still uses the kettle. Help and codex copy no longer send you to the kettle to brew.
+
+- Stale copy fixed: mugwort/ginger no longer say they restock “after a knockout”; gauze/tape blurbs no longer claim they lie near the clinic and alley crates or that tape has no shop price.
+
+
 ### 2026-11-26 — executor (Grok Bot) — v6.5.63 ch2-bond (not published, not merged)
 Erik previewed c2_goda and asked for: a staged Sato/Tome-baa carry-off (keep the quick cut to the seal), the bondAsk nameplate to say Aoi, a proper kneeling Gōda sprite (the Y sheet’s side head was split), and the post-seal pointer to go east to Masa / Wagashi row (Club Kitsune is optional, Jin’s ground). Seal 2 is Masa. FFF_BUILD was not bumped.
 

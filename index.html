@@ -17091,20 +17091,16 @@ function trainVendAct(a) { var it = SAVE.items;
   var c2 = FOOD.cost, h = Math.ceil(MAXHP * FOOD.pct); ev('world:train:food');
   dialog('<b>Food machine</b><p>\u00a5' + c2 + ' each, eaten on the spot: <b>+' + h + ' HP</b> (30%). This machine never runs out. Your yen: <b>\u00a5' + it + '</b>.</p>',
     [['Not now', null]].concat(Object.keys(FOODS).map(function (f) { return [FOODS[f].ic + ' ' + FOODS[f].n, function () { eatFood('train', f); }, 'hot food', it < c2 || SAVE.hp >= MAXHP]; }))); }
-/* v4.34 (Ernest, t857u): the nurse's office machines (moved from the training room). Right: sodas (\u00a52);
- * left: FIRST AID, Bandages only, never runs out, AID.cost yen each (the priciest thing in any machine: soda 2, food 3). A bandage
- * goes into your health items (hSlots() shared slots) and heals HITEM.bandage.pct of max HP when used. */
+/* v4.34 (Ernest, t857u): the nurse's office machines (moved from the training room). Right: sodas (\u00a52).
+ * left: FIRST AID cabinet (visual). It does not sell ready-made bandages; dressings are crafted from gauze + tape in the Bag. */
 var AID = { cost: 4 };
 function roomVend() { var D = INT.room; [['naid', ' aid'], ['nsoda', '']].forEach(function (v) { var sp = D.spots.find(function (s) { return s.id === v[0]; }), e = document.createElement('i');
   e.className = 'wvend in tvend' + v[1]; e.dataset.tv = v[0]; e.style.backgroundImage = 'url(' + IMG.vend + ')'; e.style.left = ((sp.r[0] + sp.r[2]) / 2) + 'px'; e.style.top = (sp.r[3] - 6) + 'px'; e.style.zIndex = 100 + sp.r[3]; layer.appendChild(e); W.ints.push({ el: e }); }); }
 function roomVendAct(a) { var it = SAVE.items;
   if (a === 'nsoda') { trainVendAct('tsoda'); return; } /* the soda machine: \u00a52 like every soda machine, never runs out */
-  var c = AID.cost, full = SAVE.heal.length >= hSlots(), h = Math.ceil(MAXHP * HITEM.bandage.pct); ev('world:room:aid');
-  dialog('<b>First Aid machine</b><p><strong>\ud83e\ude79 Bandage</strong> \u00b7 \u00a5' + c + ' each: heals <b>' + Math.round(HITEM.bandage.pct * 100) + '% HP</b> (+' + h + ') when you use it.</p><p class="vst"><span>In this machine: <b>never runs out</b></span><span>Your yen: <b>\u00a5' + it + '</b></span><span>Health items: <b>' + SAVE.heal.length + '/' + hSlots() + '</b></span></p>' + (full ? '<p class="dim">Your health item slots are full.</p>' : ''),
-    [['Not now', null], [full ? 'Slots full' : it < c ? 'Buy 1 \u00b7 need \u00a5' + c : 'Buy 1 \u00a5' + c, function () { buyBandage(); }, 'hot buy', full || it < c]]); }
-function buyBandage() { if (SAVE.items < AID.cost || SAVE.heal.length >= hSlots()) { var fl = SAVE.heal.length >= hSlots(); toast(fl ? '\ud83e\ude79 Inventory full \u2013 can\u2019t carry more (' + hSlots() + '/' + hSlots() + ' health items). Use one, then come back.' : 'Not enough yen: a bandage is \u00a5' + AID.cost + '.'); ev('world:aid:refuse:' + (fl ? 'full' : 'yen')); return false; }
-  SAVE.items -= AID.cost; SAVE.heal.push('bandage'); save(); hud(); bumpItems(); AU.play('place'); vendFx();
-  toast('\ud83e\ude79 A bandage in your health items (' + SAVE.heal.length + '/' + hSlots() + ').'); ev('world:aid:buy:' + SAVE.heal.length); return true; }
+  ev('world:room:aid');
+  dialog('<b>First Aid machine</b><p>It doesn\u2019t sell bandages. Craft a 20% dressing from gauze and tape in your Bag.</p>', [['Close', null]]); }
+function buyBandage() { ev('world:aid:buy:blocked'); return false; }
 function buyTrainSoda(q) { q = q === 2 ? 2 : 1; if (SAVE.items < SODA.cost * q) return false;
   SAVE.items -= SODA.cost * q; SAVE.soda.ramune = (SAVE.soda.ramune | 0) + q; save(); hud(); bumpItems(); AU.play('place'); vendFx();
   toast((q > 1 ? '2 sodas' : 'A soda') + ' in your bag (' + sodaN() + ' soda' + (sodaN() > 1 ? 's' : '') + ').'); helpTip('soda', { t: 'Sodas', h: '<p>Tap \ud83e\udd64 on the map bar to drink one.</p>' }); ev('world:train:buy' + (q > 1 ? ':x2' : '')); return true; }
@@ -20193,7 +20189,7 @@ function c2Heal(cost) { var h0 = SAVE.hp; SAVE.items = Math.max(0, SAVE.items - 
 /* ---------- losing in Kitsune-Chuo: Aoi hauls you to the apothecary cot ---------- */
 function c2Wake() { c2GymWake(); }
 /* Knockout from Chapter 2 on: Genji's gym, the same HP floor the Chapter 1 nurse wake already applied. No spirit refill and no free tea. */
-function c2GymWake() { ev('world:c2:wake:gym'); c2RefreshCycle('wake'); c2Go('gym', [640, 780, 3]); W.cool = Math.max(W.cool, 1.5);
+function c2GymWake() { ev('world:c2:wake:gym'); c2Go('gym', [640, 780, 3]); W.cool = Math.max(W.cool, 1.5);
   setTimeout(function () { scene(null, C2SC.gymWake, function () { W.dlg = false; ev('world:c2:wake:gym:end'); if (typeof c2AfterKo === 'function') c2AfterKo(); }); }, 350); }
 function c2Back(win, st) { var c = st && st.ctx, S = c2S(); if (!c || c.dg !== 'c2') return; c2BackX(win, st); /* v5.1 */ if (c.c2lm) c2LmBack(win, st); /* v5.2 */
   if (c.dgk === 'punk1') { W.c2busy = 0; var p = W.c2n && W.c2n.punk;
@@ -20696,6 +20692,7 @@ var c2LieHold = null; /* v6.5.63 ch2-bond: set by the c2_goda block */
 function c2LmBack(win, st) { var c = st.ctx || {}, k = c.c2lm, L = C2LM[k], b = W.c2n && W.c2n.boss; if (!L) return; W.c2busy = 0;
     if (win && !st.escaped) { if (k === 'arcade') { var gk = gearS(); gk.keys = gk.keys || {}; if (!gk.keys.locker) { gk.keys.locker = 1; ev('world:c2:locker:key:arcade'); } } if (b) { var bx = b.x, by = b.y; b.el.classList.add('out'); setTimeout(function () { b.el.remove(); }, 500); W.c2n.boss = null;
       var le = k === 'roof' ? lieEl(L.boss, L.bat[0], L.bat[1] - 24, C2K[L.boss]) : lieEl(L.boss, bx, by, C2K[L.boss]); /* v5.3: the roof boss lies where the duel ends (no drift into the shrine rail) */ if (le) { le.classList.add('c2lie'); layer.appendChild(le); W.ints.push({ el: le }); if (typeof c2LieHold === 'function' && c2LieHold(k, le, bx, by)) { /* v6.5.63 ch2-bond: c2_goda owns the lying sprite until its scene ends */ } else { setTimeout(function () { le.classList.add('fade'); }, 6000); setTimeout(function () { le.remove(); }, 7000); } } c2Smoke(bx, by); }
+    if (k !== 'roof') { try { var Sd = c2S(), fd = typeof C2S_FAC === 'object' && C2S_FAC[k], ownD = Sd.e.run_fac && fd === Sd.e.run_fac; if (!ownD && fd) Sd.e['down_' + fd] = 1; } catch (eD) {} }
     ev('world:c2:lm:beaten:' + k);
     if (k === 'roof') { setTimeout(function () { c2Final(); }, 900); return; }
     setTimeout(function () { scene(null, typeof c2BossOut === 'function' ? c2BossOut(k) : C2SC['lm_' + k + '_out'], function () { c2LmSeal(k); }); }, 900); }
@@ -20953,9 +20950,9 @@ intAct = function (a) { var I = W.inside; if (I && I.id === 'train' && (a === 't
 /* ---------- 3. the apothecary economy ---------- */
 var C2_MUG = 3, C2_HERB_PER = 3;
 var HERB = { leaf: { n: 'Mugwort Leaf', d: 'The base of every kettle recipe.', w: 'Dr. Tsukikage sells bundles (\u00a51 = 3 leaves, 3 bundles per restock). She gives you the first one for the Kampo lesson.' },
-  ginger: { n: 'Ginger Root', d: 'Leaf + Ginger = Kampo Potion (+35% HP).', w: 'Ginger grows wild at the water\u2019s edge: small sprigs in the flower beds on the canal boardwalk, in the flower boat moored at the east end of the pier, and on the south quay. Tap one to pull it. They grow back after a quest or a knockout.' },
-  gauze: { n: 'Clean Gauze', d: 'Dressing ingredient, with medical tape.', w: 'Near the clinic and the alley crates. Nobody sells it.' },
-  tape: { n: 'Medical Tape', d: 'Gauze + tape = a 20% dressing, once the nurse has taught it.', w: 'Clinic bins, alley crates, and the station shopfront.' } };
+  ginger: { n: 'Ginger Root', d: 'Leaf + Ginger = Kampo Potion (+35% HP).', w: 'Ginger grows wild at the water\u2019s edge: small sprigs in the flower beds on the canal boardwalk, in the flower boat moored at the east end of the pier, and on the south quay. Tap one to pull it. They grow back after a finished quest or side quest.' },
+  gauze: { n: 'Clean Gauze', d: 'Dressing ingredient, with medical tape.', w: 'Safe-room kits hold it. In Chapter 2, Hase, Machi Motors, and Ono sell it as a dressing material. World-found stays the cheap path.' },
+  tape: { n: 'Medical Tape', d: 'Gauze + tape = a 20% dressing, once the nurse has taught it.', w: 'Safe-room kits hold it. In Chapter 2, Hase, Machi Motors, and Ono sell it as a dressing material. World-found stays the cheap path.' } };
 function herbS() { var h = SAVE.herbs && typeof SAVE.herbs === 'object' ? SAVE.herbs : (SAVE.herbs = {}); ['leaf', 'ginger', 'gauze', 'tape'].forEach(function (k) { h[k] = h[k] | 0; }); return h; }
 function herbN(k) { return herbS()[k] | 0; }
 function herbAdd(k, n) { var h = herbS(); h[k] = Math.max(0, (h[k] | 0) + n); save(); ev('world:herb:' + k + ':' + h[k]); }
@@ -20965,8 +20962,8 @@ function c2Cyc() { var S = c2S(); if (!SAVE.patchMig) { SAVE.patchMig = 1; if (S
 function c2PatchAmt() { return Math.round(MAXHP * ((typeof HEAL !== 'undefined' && HEAL.freePct) || 0.25)); }
 function c2PatchCdMs() { var cd = root.FFF_FREE_CD != null ? root.FFF_FREE_CD : ((typeof HEAL !== 'undefined' && HEAL.freeCd) || 90); return cd * 1000; }
 function c2PatchLeft() { c2Cyc(); var t = +SAVE.patchT || 0; if (!(t > 0)) return 0; return Math.max(0, Math.ceil((t + c2PatchCdMs() - Date.now()) / 1000)); }
-/* a fresh stock cycle: ONLY a finished main quest, a side-quest turn-in, or waking up at the clinic. The patch is a 90 s cooldown, not this cycle. */
-function c2RefreshCycle(why) { if (typeof SAVE === 'undefined' || !SAVE || SAVE.chapter !== 2 && !c2On()) return; var S = c2Cyc(); S.mugLeft = C2_MUG; S.cyc = (S.cyc | 0) + 1; save(); ev('world:c2:cycle:' + (why || '') + ':' + S.cyc); try { if (c2Room() === 'town') g5HerbsPop(); } catch (e) {} }
+/* a fresh stock cycle: a finished main quest or a side-quest turn-in. Never a knockout / clinic wake. The patch is a 90 s cooldown, not this cycle. */
+function c2RefreshCycle(why) { if (typeof SAVE === 'undefined' || !SAVE || SAVE.chapter !== 2 && !c2On()) return; if (why && String(why).indexOf('wake') === 0) return; var S = c2Cyc(); S.mugLeft = C2_MUG; S.cyc = (S.cyc | 0) + 1; try { ['nq_motors', 'nq_gk2', 's2_hase', 's2_depot'].forEach(function (id) { var s = typeof shopS === 'function' ? shopS(id) : null; if (s) s.b = {}; }); } catch (eR) {} save(); ev('world:c2:cycle:' + (why || '') + ':' + S.cyc); try { if (c2Room() === 'town') g5HerbsPop(); } catch (e) {} }
 var C2_TEA_SAY = ['Bitter tea and a poultice. Back to full.', 'Twenty-six yen. The herbs don\u2019t grow on trees. Well. They do. Slowly.', 'Sit. Drink. Don\u2019t talk while it works.'];
 function c2SumireD(wake) { if (c2Room() !== 'clinic') return; var S = c2S(); c2Cyc();
   if (!S.e.sumire) { scene(null, C2SC.sumireMeet, function () { S.e.sumire = 1; SAVE.craft = SAVE.craft || {}; save(); ev('world:craft:potion:pending'); var offer = function () { if (typeof v630PotOffer === 'function') v630PotOffer(); else if (SAVE.hp < MAXHP) c2SumireMenu(); }; if (c2QA() === CQ.hq) { c2QDone(CQ.hq); setTimeout(function () { scene(null, C2SC.scoutBrief, function () { c2QStart(CQ.scout); ev('world:c2:scout:brief'); offer(); }); }, 1600); } else offer(); }); return; }
@@ -20978,7 +20975,7 @@ function c2SumireMenu() { var S = c2Cyc(), full = SAVE.hp >= MAXHP, poor = (SAVE
   dialog(ptFace('tsukikage', 'Dr. Tsukikage', IMG.tsukikage_fig) + '<div class="tw"><p class="q">\u201c' + C2_TEA_SAY[(S.tsi = ((S.tsi | 0) + 1)) % C2_TEA_SAY.length] + '\u201d</p><p class="vst"><span>HP <b>' + SAVE.hp + '/' + MAXHP + '</b></span><span>\u00a5' + (SAVE.items | 0) + '</span><span>\ud83c\udf3f ' + herbN('leaf') + ' \u00b7 ginger ' + herbN('ginger') + ' \u00b7 gauze ' + herbN('gauze') + '</span></p></div>', b);
   $('#wdlg').classList.add('scene'); ptLift(); ev('world:c2:sumire:menu:' + (full ? 'full' : 'hurt') + ':' + m); }
 function c2MugShop() { var S = c2Cyc(), m = S.mugLeft | 0, y = SAVE.items | 0, all = Math.min(m, y);
-  dialog(ptFace('tsukikage', 'Mugwort Bundles', IMG.tsukikage_fig) + '<div class="tw"><p class="kmug">' + herbSvg('leaf') + '<span>\u00a51 a bundle \u00b7 ' + C2_HERB_PER + ' leaves each. <b>' + m + '/' + C2_MUG + '</b> left until the next restock (when she restocks, or after a knockout).</span></p><p class="vst"><span>Leaves <b>' + herbN('leaf') + '</b></span><span>\u00a5' + y + '</span></p></div>',
+  dialog(ptFace('tsukikage', 'Mugwort Bundles', IMG.tsukikage_fig) + '<div class="tw"><p class="kmug">' + herbSvg('leaf') + '<span>\u00a51 a bundle \u00b7 ' + C2_HERB_PER + ' leaves each. <b>' + m + '/' + C2_MUG + '</b> left until the next restock (after a finished quest or side quest).</span></p><p class="vst"><span>Leaves <b>' + herbN('leaf') + '</b></span><span>\u00a5' + y + '</span></p></div>',
     [['Back', function () { setTimeout(c2SumireMenu, 0); }], ['Buy 1 \u00b7 \u00a51', function () { c2MugBuy(1); }, '', !m || y < 1], ['Buy ' + (all || m) + ' \u00b7 \u00a5' + (all || m), function () { c2MugBuy(all); }, 'hot', all < 2]]);
   $('#wdlg').classList.add('scene'); ptLift(); ev('world:c2:mug:open:' + m); }
 function c2MugBuy(n) { var S = c2Cyc(); n = Math.min(n | 0, S.mugLeft | 0, SAVE.items | 0); if (n <= 0) return; S.mugLeft -= n; SAVE.items -= n; herbAdd('leaf', n * C2_HERB_PER); hud(); bumpItems(); AU.play('place');
@@ -21011,7 +21008,7 @@ function herbSvg(k) { return k === 'leaf' ? '<svg class="hbsvg" viewBox="0 0 40 
   : k === 'tape' ? '<svg class="hbsvg" viewBox="0 0 40 40" aria-hidden="true"><circle cx="18" cy="20" r="12" fill="#f4f1ea" stroke="#14110d" stroke-width="2"/><circle cx="18" cy="20" r="5" fill="#1a2744" stroke="#14110d" stroke-width="2"/><path d="M28 14 h8 v12 h-8" fill="#f4f1ea" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/><path d="M18 8 v24 M8 20 h20" stroke="#7ecfc6" stroke-width="1.4" opacity=".85"/></svg>'
   : '<svg class="hbsvg" viewBox="0 0 40 40" aria-hidden="true"><rect x="7" y="12" width="22" height="18" rx="9" fill="#f4f1ea" stroke="#14110d" stroke-width="2"/><ellipse cx="29" cy="21" rx="5" ry="9" fill="#e4dfd2" stroke="#14110d" stroke-width="2"/><ellipse cx="29" cy="21" rx="2" ry="3.5" fill="#b9b2a2"/><path d="M29 30 L36 33 L34 36 L27 32" fill="#f4f1ea" stroke="#14110d" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 13 V29" stroke="#4f86c6" stroke-width="2"/></svg>'; }
 function bookSvg(k) { var c = k === 'uncommon' ? '#3e8f5a' : '#3f6fae', c2 = k === 'uncommon' ? '#2a6a40' : '#2c5288'; return '<svg class="hbsvg" viewBox="0 0 40 40" aria-hidden="true"><path d="M8 8 h20 a4 4 0 0 1 4 4 v22 h-20 a4 4 0 0 1 -4 -4z" fill="' + c + '" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/><path d="M8 30 a4 4 0 0 0 4 4 h20 v-4 h-20 a4 4 0 0 0 -4 0z" fill="#f4ecd8" stroke="#14110d" stroke-width="1.6"/><path d="M12 8 v22" stroke="' + c2 + '" stroke-width="2"/><circle cx="21" cy="18" r="5" fill="none" stroke="#ffd25a" stroke-width="2"/><path d="M21 13 v10 M16 18 h10" stroke="#ffd25a" stroke-width="1.4"/>' + (k === 'uncommon' ? '<path d="M30 6 l2 4 4 .6 -3 2.8 .8 4 -3.8 -2 -3.8 2 .8 -4 -3 -2.8 4 -.6z" fill="#ffd25a" stroke="#14110d" stroke-width="1"/>' : '') + '</svg>'; }
-var KET_N = 'Brass Kettle', KET_Q = 'Leaf plus one more thing. Simmer it. Don\u2019t rush it.', C2_BOOK_NOTE = '', C2_HERB_NOTE = 'Brew them in Dr. Tsukikage\u2019s Brass Kettle: Leaf + Gauze = Poultice Bandage, Leaf + Ginger = Kampo Potion.'; /* v6.0: swapped per chapter */
+var KET_N = 'Brass Kettle', KET_Q = 'Leaf plus one more thing. Simmer it. Don\u2019t rush it.', C2_BOOK_NOTE = '', C2_HERB_NOTE = 'Craft them from your Bag: Gauze + Tape = 20% Healing Dressing, Mugwort + Ginger = Kampo Potion.'; /* v6.0: swapped per chapter */
 function c2HerbDrop() { return Math.random() < 0.7 ? 'ginger' : 'leaf'; }
 var KET_SVG = '<svg viewBox="0 0 64 56" aria-hidden="true"><path d="M14 22 Q32 10 50 22 L54 44 Q32 54 10 44Z" fill="#c9a24a" stroke="#14110d" stroke-width="2.6" stroke-linejoin="round"/><path d="M50 26 Q62 24 60 14" fill="none" stroke="#14110d" stroke-width="3.4"/><path d="M50 26 Q62 24 60 14" fill="none" stroke="#e8c870" stroke-width="1.6"/><path d="M22 16 Q32 4 42 16" fill="none" stroke="#14110d" stroke-width="3"/><ellipse cx="32" cy="18" rx="6" ry="2.6" fill="#8a6a2a" stroke="#14110d" stroke-width="1.6"/><path d="M16 30 Q32 36 48 30" stroke="#f6e3a0" stroke-width="2" fill="none"/></svg>';
 
@@ -21024,7 +21021,7 @@ function kPlan(R, q) { var have = R.need.every(function (k) { return herbN(k) >=
   if (q <= op) return { mode: 'bag', lab: 'Brew \u00d7' + q + ' \u2192 Add to Bag' };
   if (full) return { off: 1, lab: 'Bag & HP Full' };
   return { mode: 'now', lab: 'Bag Full \u00b7 ' + (R.verb === 'Apply' ? 'Apply Now' : 'Drink Now') + ' (+' + Math.round(R.pct * q * 100) + '% HP)' }; }
-function c2Kettle() { W.dlg = true; W.path = []; stickEnd(); W.kq = W.kq || { bandage: 1, potion: 1 }; var m = $('#wkettle'); if (!m) { m = document.createElement('div'); m.id = 'wkettle'; $('#world').appendChild(m); } kPaint(); m.className = 'on'; ev('world:c2:kettle:open'); }
+function c2Kettle() { ev('world:c2:kettle:retired'); dialog('<b>' + KET_N + '</b><p>The kettle is for tea. Craft dressings and potions from your Bag.</p>', [['Close', null]]); }
 function kPaint(drw) { var m = $('#wkettle'); if (!m) return;
   var h = '<div class="kbox" role="dialog" aria-label="' + KET_N + '"><div class="khd"><i class="kic">' + KET_SVG + '</i><div><b>' + KET_N + '</b><p>\u201c' + KET_Q + '\u201d</p></div><span class="kst"><span>HP <b>' + SAVE.hp + '/' + MAXHP + '</b></span><span>Bag <b class="kbag">' + SAVE.heal.length + '/' + hSlots() + '</b></span></span></div>';
   h += '<div class="kpouch">' + Object.keys(HERB).map(function (k) { return '<button class="kchip' + (drw === k ? ' on' : '') + '" data-a="kchip" data-k="' + k + '">' + herbSvg(k) + '<span>' + HERB[k].n + '</span><b>' + herbN(k) + '</b></button>'; }).join('') + '</div>';
@@ -21040,7 +21037,7 @@ function kPaint(drw) { var m = $('#wkettle'); if (!m) return;
     if (a === 'kq') { W.kq[b.dataset.r] = +b.dataset.n; kPaint(drw); ev('world:c2:kettle:qty:' + b.dataset.r + ':' + b.dataset.n); return; }
     if (a === 'kgo') kBrew(b.dataset.r); }; }
 function kClose() { var m = $('#wkettle'); if (m) m.className = ''; setTimeout(function () { if (!$('#wdlg').classList.contains('on')) W.dlg = false; }, 50); save(); hud(); ev('world:c2:kettle:close'); }
-function kBrew(id) { var R = KREC.find(function (q) { return q.id === id; }), q = W.kq[id] || 1, P = kPlan(R, q); if (!R || P.off) return false;
+function kBrew(id) { ev('world:c2:kettle:brew:blocked:' + id); return false; var R = KREC.find(function (q) { return q.id === id; }), q = W.kq[id] || 1, P = kPlan(R, q); if (!R || P.off) return false;
   R.need.forEach(function (k) { herbAdd(k, -q); });
   if (P.mode === 'bag') { for (var i = 0; i < q; i++) SAVE.heal.push(id); save(); hud(); bumpItems(); AU.play('pl_heal', { gain: 0.45 }); ev('world:c2:kettle:brew:' + id + ':' + q);
     kPaint(); var c = $('#wkettle .krec[data-r="' + id + '"]'); if (c) c.classList.add('steam'); return true; }
@@ -21061,7 +21058,7 @@ C2SC.reveal = []; /* v6.5.29: jab/cross plays with no covering narration; scene(
 var C2_GENJI_TAPE = ['Hold still. You bleed like a faucet.', 'One roll of tape. Don\u2019t make me regret it.', 'There. Now stop leading with your face.'];
 var C2_GENJI_DRILL = ['Again. Snap it back. Again.', 'Hips, not shoulders. Better.', 'That one I felt. Read the book, then hit like it.'];
 function c2GenjiFirst() { var S = c2S(); scene(null, C2SC.genjiMeet, function () { S.e.genji = 1; save(); if (c2QA() === CQ.arrive) { c2QDone(CQ.arrive); setTimeout(function () { c2QStart(CQ.hq); }, 1600); }
-    helpTip('c2hq', { t: 'Kurogane Boxing Gym', h: '<p>Your Chapter Two <b>HQ</b>: Genji\u2019s quests, and a patch for +12 HP every 90 seconds. Talk to Genji to evolve your basic moves. The ring is where you spar and train with Aoi. The bags are for practice.</p><p>Real healing: the west end of <b>Lantern Alley</b>, Dr. Tsukikage\u2019s apothecary and her Brass Kettle.</p>' }); }); }
+    helpTip('c2hq', { t: 'Kurogane Boxing Gym', h: '<p>Your Chapter Two <b>HQ</b>: Genji\u2019s quests, and a patch for +12 HP every 90 seconds. Talk to Genji to evolve your basic moves. The ring is where you spar and train with Aoi. The bags are for practice.</p><p>Real healing: the west end of <b>Lantern Alley</b>, Dr. Tsukikage\u2019s apothecary (tea and mugwort), and dressings crafted from your Bag.</p>' }); }); }
 /* first arrival: Genji tests Ryo before a word is said (kurogane_spar + the Kazan guard on <who>_gym row 0) */
 function c2GenjiReveal() { var S = c2S(), g = W.c2n && W.c2n.genji, r = W.ryo, a = W.aoi; if (S.e.genji || S.e.reveal || !g || !r) { if (!S.e.genji) c2GenjiFirst(); return; }
   S.e.reveal = 1; save(); W.g5busy = 1; W.cut = true; W.path = []; r.v = 0; ev('world:c2:reveal:start');
@@ -21599,7 +21596,7 @@ var C3COVER = [{ id: 'c_steam1', k: 'steam', at: [2860, 900], r: [2815, 860, 290
   { id: 'c_fog', k: 'fog', at: [4000, 2600], r: [3830, 2540, 4170, 2690] }];
 function c3Water(W3) { var w = W3.water, gr = (W3.ground || []).filter(function (g) { return g[0] === 'grate'; }).map(function (g) { return g[1]; }).sort(function (a, b) { return a[0] - b[0]; }), out = [], x = w[0];
   gr.forEach(function (g) { if (g[0] > x) out.push([x, w[1], g[0], w[3]]); x = Math.max(x, g[2]); }); if (x < w[2]) out.push([x, w[1], w[2], w[3]]); return out.length ? out : [w]; }
-function c3HubSpots(sp) { return sp.map(function (s) { var o = Object.assign({}, s); if (o.id === 'coach') o.id = 'genji'; if (o.id === 'nami') o.id = 'sumire'; if (o.id === 'kettle') o.lab = 'Brew'; if (o.id === 'ring') o.lab = function () { return c2S().e.genji ? 'Spar' : 'Look'; }; if (o.id === 'cooler' || o.id === 'drawers') delete o.lab; return o; }); }
+function c3HubSpots(sp) { return sp.map(function (s) { var o = Object.assign({}, s); if (o.id === 'coach') o.id = 'genji'; if (o.id === 'nami') o.id = 'sumire'; if (o.id === 'kettle') o.lab = 'Look'; if (o.id === 'ring') o.lab = function () { return c2S().e.genji ? 'Spar' : 'Look'; }; if (o.id === 'cooler' || o.id === 'drawers') delete o.lab; return o; }); }
 if (C3W) {
   C3W.hides = (C3W.hides || []).concat(C3COVER.map(function (c) { return { id: c.id, k: c.k, at: c.at, r: c.r }; }));
   C3W.locked.tower = C3W.locked.tide; /* the final landmark is keyed 'roof' in the shared engine; its door is the Tide-Gate */
@@ -21710,7 +21707,7 @@ var C3SHOPS = {
     items: [{ id: 'of_peacoat', k: 'outfit', of: 'peacoat', cost: 24, stock: 1 }, { id: 'of_oilskin', k: 'outfit', of: 'oilskin', cost: 34, stock: 1, unlock: function () { return c2Seals() >= 1; }, why: 'Clear one corner first' },
       { id: 's3_soda', k: 'soda', n: 'Ramune (cold box)', cost: 2, stock: 3, d: 'A soda: more yen from your next fights.' }, { id: 's3_ging', k: 'herb', hb: 'ginger', n: 'Ginger Root', cost: 1, stock: 3, d: 'Pot ingredient: Ginger + Bonito = Ginger Dashi.' }] },
   fence_pier: { n: 'Pier Fence \u00b7 Kujira', who: 'npc3_fence', at: [1060, 2020], loc: 'Dock Road (by Pier 4)', hi: 'Kujira. Things fall off boats. I catch them.',
-    items: [{ id: 'p3_band', k: 'heal', h: 'bandage', cost: 3, stock: 4 }, { id: 'p3_intel', k: 'intel', n: 'Harbor Intel: the ice-hook man', cost: 4, stock: 1, lines: 'market' },
+    items: [{ id: 'p3_intel', k: 'intel', n: 'Harbor Intel: the ice-hook man', cost: 4, stock: 1, lines: 'market' },
       { id: 'p3_card', k: 'card', rar: 'common', n: 'Sealed card pack (Common)', cost: 10, stock: 2 },
       { id: 'p3_bon', k: 'herb', hb: 'bonito', n: 'Dried Bonito', cost: 1, stock: 3, d: 'Pot ingredient: Kelp + Bonito = Brine Stew.' }, { id: 'p3_leaf', k: 'herb', hb: 'leaf', n: 'Mugwort Leaf', cost: 1, stock: 3, d: 'Pot ingredient: Leaf + Kelp, Leaf + Pearl.' }] },
   fence_moku: { n: 'Drydock Fence \u00b7 Moku', who: 'npc_fence2', at: [3420, 2020], loc: 'Dock Road (by Drydock 2)', hi: 'Moku again. The canal got too hot. The sea\u2019s cooler.',
@@ -21822,7 +21819,7 @@ CH3T = { C2W: C3W, C2R: C3R, C2HUB: C3HUB, C2DROP: { tot: 0.12, com: 0.07, unc: 
   C2TALIS: [-9999, -9999], C2LMK: ['market', 'pier', 'dock'], C2LM: C3LM, C2LMZ: { market: 'North Quay (east)', pier: 'Dock Road (west)', dock: 'Dock Road (east)', roof: 'the breakwater \u00b7 Tide-Gate Shrine' }, SHOPS: C3SHOPS, C2_FENCE_INTEL: C3_FENCE_INTEL,
   C2HERBS: C3HERBS, KREC: C3KREC, HERB: C3HERB, G5BAG: { bag_red: { cx: 980, top: 0, bot: 380, sx: 0, at: [980, 420], n: 'Anchor Bag' }, bag_black: { cx: 1107, top: 0, bot: 384, sx: 70, at: [1107, 420], n: 'Kick Post' } }, C2_MUG: 3,
   KET_N: 'Brine-Iron Pot', KET_Q: 'Kelp first, then one more thing. Low flame. Patience, child.', KET_SVG: C3KET_SVG,
-  C2_BOOK_NOTE: '', C2_HERB_NOTE: 'Simmer them in Obaa Nami\u2019s Brine-Iron Pot: Kelp + Gauze = Kelp Salve, Leaf + Kelp = Brine Poultice, Kelp + Bonito = Brine Stew, Ginger + Bonito = Ginger Dashi, Leaf + Pearl = Tide Tonic.',
+  C2_BOOK_NOTE: '', C2_HERB_NOTE: 'Craft them from your Bag: Kelp + Gauze = Kelp Salve, Leaf + Kelp = Brine Poultice, Kelp + Bonito = Brine Stew, Ginger + Bonito = Ginger Dashi, Leaf + Pearl = Tide Tonic.',
   C2TRANS_CAP: '<b>Chapter Three</b><span>Kitsune Bay \u00b7 The Harbor</span>', C2TRANS_GATE: 'KITSUNE-CHUO STATION', C2TRANS_SG: [['KITSUNE BAY', '#46e0ff', 0.05, 3], ['FISH MARKET', '#ffd25a', 0.52, 2], ['PIER 4', '#ff8a3a', 0.08, 1], ['UMI-INARI', '#ff4fa0', 0.54, 0]],
   CQ: { arrive: 'cq3_arrive', hq: 'cq3_hq', scout: 'cq3_scout', turf: 'cq3_noturf', locks: 'cq3_locks' }, C2SC: C3SC, C2CALL: C3CALL, C2CALL_G: C3CALL_G, c2HerbDrop: c3HerbDrop };
 if (!C3W) CH3T = null;
@@ -21842,7 +21839,7 @@ var dialog0 = dialog; dialog = function (html, btns, portrait, opt) { if (chN() 
 var toast0 = toast; toast = function (t) { return toast0(chN() === 3 ? c3Tx(t) : t); };
 var qBanner0 = qBanner; qBanner = function (k, t, s) { if (chN() === 3) { t = c3Tx(t); s = c3Tx(s); } return qBanner0(k, t, s); };
 var C3TIP = { c2map: ['c3map', 'Kitsune Bay', '<p><b>Chapter Three.</b> Gold ping = Main quest, cyan = Side. Check <b>Menu \u203a Map</b>.</p><p>Coach Tatsumi\u2019s shed and Obaa Nami\u2019s galley stand side by side on the <b>North Quay</b>, east of the station.</p>'],
-  c2hq: ['c3hq', 'Anchor-Hold Grappling Shed', '<p>Your Chapter Three <b>HQ</b>: Tatsumi\u2019s quests, <b>Harbor Intel</b>, and a patch for +12 HP every 90 seconds. The bench opens <b>enhancement and the deck</b>. Evolution past Common is not taught here.</p><p>Real healing: next door west, Obaa Nami\u2019s galley and her <b>Brine-Iron Pot</b>.</p>'],
+  c2hq: ['c3hq', 'Anchor-Hold Grappling Shed', '<p>Your Chapter Three <b>HQ</b>: Tatsumi\u2019s quests, <b>Harbor Intel</b>, and a patch for +12 HP every 90 seconds. The bench opens <b>enhancement and the deck</b>. Evolution past Common is not taught here.</p><p>Real healing: next door west, Obaa Nami\u2019s galley, and dressings crafted from your Bag.</p>'],
   c2hide: ['c3hide', 'Hidden', '<p>Step into <b>cover</b> (crates, dumpsters, steam vents, tarp stacks, the breakwater fog) and you are <b>Hidden</b>: crews only spot you up close.</p><p>Strike from cover for an <b>ambush from behind</b>.</p>'] };
 var helpTip0 = helpTip; helpTip = function (id, o) { if (chN() === 3 && C3TIP[id]) { var T = C3TIP[id]; o = Object.assign({}, o || {}, { t: T[1], h: T[2] }); if (id === 'c2hide') cxAdd('c3cover', 1); id = T[0]; }
   else if (chN() === 3 && o) { o = Object.assign({}, o); if (o.t) o.t = c3Tx(o.t); if (o.h) o.h = c3Tx(o.h); } return helpTip0(id, o); };
@@ -21913,7 +21910,7 @@ function c3NamiMenu() { var S = c2Cyc(), full = SAVE.hp >= MAXHP, poor = (SAVE.i
   dialog('<div class="sh"><i class="pt2" style="background-image:url(' + IMG.nami_fig + ')"></i><b class="snm">Obaa Nami</b></div><div class="tw"><p class="q">\u201c' + C2_TEA_SAY[(S.tsi = ((S.tsi | 0) + 1)) % C2_TEA_SAY.length] + '\u201d</p><p class="vst"><span>HP <b>' + SAVE.hp + '/' + MAXHP + '</b></span><span>\u00a5' + (SAVE.items | 0) + '</span><span>\ud83c\udf31 kelp ' + herbN('kelp') + ' \u00b7 bonito ' + herbN('bonito') + ' \u00b7 pearl ' + herbN('pearl') + '</span></p></div>', b);
   $('#wdlg').classList.add('scene'); ev('world:c3:nami:menu:' + (full ? 'full' : 'hurt') + ':' + m); }
 function c3KelpShop() { var S = c2Cyc(), m = S.mugLeft | 0, y = SAVE.items | 0, all = Math.min(m, y);
-  dialog('<div class="sh"><i class="pt2" style="background-image:url(' + IMG.nami_fig + ')"></i><b class="snm">Kombu Bundles</b></div><div class="tw"><p class="kmug">' + herbSvg('kelp') + '<span>\u00a51 a bundle \u00b7 ' + C2_HERB_PER + ' kelp each. <b>' + m + '/' + C2_MUG + '</b> left until the next restock (finish a quest, or wake up here).</span></p><p class="vst"><span>Kelp <b>' + herbN('kelp') + '</b></span><span>\u00a5' + y + '</span></p></div>',
+  dialog('<div class="sh"><i class="pt2" style="background-image:url(' + IMG.nami_fig + ')"></i><b class="snm">Kombu Bundles</b></div><div class="tw"><p class="kmug">' + herbSvg('kelp') + '<span>\u00a51 a bundle \u00b7 ' + C2_HERB_PER + ' kelp each. <b>' + m + '/' + C2_MUG + '</b> left until the next restock (after a finished quest or side quest).</span></p><p class="vst"><span>Kelp <b>' + herbN('kelp') + '</b></span><span>\u00a5' + y + '</span></p></div>',
     [['Back', function () { setTimeout(c3NamiMenu, 0); }], ['Buy 1 \u00b7 \u00a51', function () { c3KelpBuy(1); }, '', !m || y < 1], ['Buy ' + (all || m) + ' \u00b7 \u00a5' + (all || m), function () { c3KelpBuy(all); }, 'hot', all < 2]]);
   $('#wdlg').classList.add('scene'); ev('world:c3:kelp:open:' + m); }
 function c3KelpBuy(n) { var S = c2Cyc(); n = Math.min(n | 0, S.mugLeft | 0, SAVE.items | 0); if (n <= 0) return; S.mugLeft -= n; SAVE.items -= n; herbAdd('kelp', n * C2_HERB_PER); hud(); bumpItems(); AU.play('place');
@@ -21989,8 +21986,8 @@ root.GK_CAP = { fierce: 'We finally clicked. Something had to break.', strategic
 HITEM.dress = { n: '20% Healing Dressing', pct: 0.2, ic: '\ud83e\ude79', rank: 2 };
 var PH_MAT = { gauze: 'Clean Gauze', tape: 'Medical Tape', leaf: 'Mugwort Leaf', ginger: 'Ginger Root' };
 var PH_MAT_D = {
-  gauze: 'A dressing ingredient. Safe-room kits hold it. In Chapter 2 it lies near the clinic and the alley crates, and street crews drop it.',
-  tape: 'A dressing ingredient. Safe-room kits hold it. No shop price is defined.',
+  gauze: 'A dressing ingredient. Safe-room kits hold it. In Chapter 2, Hase, Machi Motors, and Ono sell it as a dressing material. World-found stays the cheap path.',
+  tape: 'A dressing ingredient. Safe-room kits hold it. In Chapter 2, Hase, Machi Motors, and Ono sell it as a dressing material. World-found stays the cheap path.',
   leaf: 'Chapter 2 potion ingredient. Dr. Tsukikage sells a bundle of 3 leaves for \u00a51 (3 bundles per restock). She gives you the first one for the Kampo lesson.',
   ginger: 'Chapter 2 potion ingredient. Grows wild at the water\u2019s edge: pull it from the flower beds on the canal boardwalk, the moored flower boat and the south quay.'
 };
@@ -22575,7 +22572,7 @@ function phPrices() {
     bandageMachine: { yen: AID.cost, heal: '20% stored bandage' },
     potionShop: { yen: (STORY && STORY.POTION && STORY.POTION.cost) || 3, heal: '35% stored potion' },
     nurseFull: { yen: (typeof HEAL !== 'undefined' && HEAL.full) || 1, heal: 'full HP' },
-    craftCh1: '1 Clean Gauze + 1 Medical Tape = 20% dressing. Tape has no shop price. Chapter 2 gauze is picked up near the clinic and the alley, or dropped by street crews.',
+    craftCh1: '1 Clean Gauze + 1 Medical Tape = 20% dressing. In Chapter 2, Hase, Machi Motors, and Ono sell both as kit materials. World-found and safe-room kits stay the cheap path.',
     craftCh2: '1 Mugwort Leaf + 1 Ginger Root = 35% potion. Ingredients already defined. Gated to Chapter 2.',
     income: 'Each bully rolls 50% of \u00a51 (expected \u00a50.5). A relay rolls 50% of \u00a52 (expected \u00a51). Gouki alone rolls 50% of \u00a53 (expected \u00a51.5), plus \u00a51 of that roll per joiner before the half.',
     recommendation: 'Leave the numbers. A \u00a54 stored 20% bandage and a \u00a53 stored 35% potion undercut crafting, and \u00a54 food heals 30% immediately. Crafters do not yet save yen for Chapter 2. Raising those prices needs Ernest\u2019s call. Nurse kits were not given a new restock number.'
@@ -23908,7 +23905,7 @@ CXD.bully3.n = CXD.bully3.n || 'Sukeban Rika';
 CXD.bully4.n = CXD.bully4.n || 'Masked Shun';
 var V630_PLACES = {
   c2_gym: { n: 'Kurogane Boxing Gym', a: 'Genji\u2019s gym on Gym Lane. Quests, the bench, and the ring. No full heal here.' },
-  c2_clinic: { n: 'Tsukikage Herbal Apothecary', a: 'West end of Lantern Alley. Dr. Tsukikage\u2019s tea is a full heal for \u00a56. The Brass Kettle is here.' },
+  c2_clinic: { n: 'Tsukikage Herbal Apothecary', a: 'West end of Lantern Alley. Dr. Tsukikage\u2019s tea is a full heal. Craft potions from your Bag.' },
   c2_arcade: { n: 'Ginko Sh\u014dtengai Arcade', a: 'The covered arcade off the market street.' },
   c2_game: { n: 'Neon Game Center', a: 'Cabinets and a prize counter on the Neon Strip.' },
   c2_sento: { n: 'Kitsune-no-Yu', a: 'The bathhouse on Lantern Alley.' },
@@ -24019,7 +24016,7 @@ function v630Items() {
   }
   add('heal_candy', 'Heals', 'Candy bar', 'Carryable +10% HP', v630Has('candy') || (SAVE.heal || []).indexOf('candy') >= 0);
   add('heal_dress', 'Heals', craft.dress ? 'Healing Dressing' : 'Bandage', craft.dress ? '20% HP. Gauze + tape, from the nurse\u2019s lesson.' : 'A carried heal.', !!(craft.dress || v630Has('dress') || (SAVE.heal || []).indexOf('dress') >= 0));
-  if (ch >= 2) add('heal_potion', 'Heals', 'Kampo Potion', '35% HP. Mugwort + ginger in the Brass Kettle. Ginger is foraged.', !!craft.potion);
+  if (ch >= 2) add('heal_potion', 'Heals', 'Kampo Potion', '35% HP. Mugwort + ginger, crafted from your Bag. Ginger is foraged.', !!craft.potion);
   Object.keys(FOODS || {}).forEach(function (k) { add('food_' + k, 'Food and sodas', FOODS[k].n, '\u00a5' + FOOD.cost + ' \u00b7 eaten on the spot \u00b7 +30% HP', !!(SAVE.cxFood && SAVE.cxFood[k])); });
   add('soda', 'Food and sodas', 'Soda', '\u00a52 \u00b7 +5 Spirit on the map', !!(SAVE.cxItem && SAVE.cxItem.soda) || Object.keys(SAVE.soda || {}).some(function (k) { return SAVE.soda[k] > 0; }));
   [['gauze', 'Clean Gauze'], ['tape', 'Medical Tape']].forEach(function (m) { add('mat_' + m[0], 'Crafting materials', m[1], (HERB[m[0]] && HERB[m[0]].d) || '', v630Has(m[0]) || (typeof phMatN === 'function' && phMatN(m[0]) > 0)); });
@@ -24032,7 +24029,7 @@ function v630Article(cat, sel) {
   if (cat === 'bond' || sel.id === 'bond') return n9BondArticle();
   if (sel.id === 'soda') return '<div class="cxart"><h4>SODA</h4><p>Every flavour is \u00a52 and restores 5 Spirit on the map. No next-fight buff. Most machines stock 2. The training-room machine does not run out.</p></div>';
   if (sel.id === 'heal_dress') return '<div class="cxart"><p>A 20% heal. Nurse Shiraishi teaches it: 1 Clean Gauze + 1 Medical Tape.</p></div>';
-  if (sel.id === 'heal_potion') return '<div class="cxart"><p>A 35% heal. Dr. Tsukikage teaches it. Brew mugwort and ginger in the Brass Kettle. Ginger is foraged, never sold. Her tea is still a full heal for \u00a56.</p></div>';
+  if (sel.id === 'heal_potion') return '<div class="cxart"><p>A 35% heal. Dr. Tsukikage teaches it. Craft mugwort and ginger from your Bag. Ginger is foraged, never sold. Her tea is still a full heal.</p></div>';
   if (sel.id === 'nurse' && CXD.nurse) return '<div class="cxart"><p>' + CXD.nurse.a + '</p><p>When you are hurt she bandages for about +12 HP. There is no paid full heal in that talk. After the lesson she has taught the dressing.</p></div>';
   if (sel.id === 'genji') {
     var L = SAVE.c2les || {}, names = [];
@@ -25276,7 +25273,7 @@ function v640LossCine(done) {
     else setTimeout(genjiIn, 500);
   }
 }
-function v640GymTravel() { ev('world:c2:wake:gym'); if (typeof c2RefreshCycle === 'function') c2RefreshCycle('wake'); c2Go('gym', [640, 780, 3]); W.cool = Math.max(W.cool, 1.5); }
+function v640GymTravel() { ev('world:c2:wake:gym'); c2Go('gym', [640, 780, 3]); W.cool = Math.max(W.cool, 1.5); }
 var c2GymWakeArt = c2GymWake;
 c2GymWake = function () {
   var S = c2S(); W.v640EnfLock = 0;
@@ -27354,14 +27351,14 @@ v640LossCine = function (done) { if (!g38Gym()) return v640LossCine37(done);
 /* the wake puts Ryo and Aoi on their stage spots in the same tick, so nobody snaps on screen */
 var v640GymTravel37 = v640GymTravel;
 v640GymTravel = function () { var S = c2S(); if (!g38Ch2() || S.e.lossArc || (S.e.c2loss | 0) < 3) return v640GymTravel37();
-  ev('world:c2:wake:gym'); if (typeof c2RefreshCycle === 'function') c2RefreshCycle('wake'); var p = g38Path(), P = G38.STAGE[p];
+  ev('world:c2:wake:gym'); var p = g38Path(), P = G38.STAGE[p];
   c2Go('gym', [P.r[0], P.r[1], P.r[2]]); W.cool = Math.max(W.cool, 1.5); g38Place(p, false); W.cut = true; };
 /* KO wakes that lead into lesson 2 or 3: wake on the stage spots, Genji walks over, then the wake lines */
 function g38NextLesson() { var L = SAVE.c2les || {}, S = c2S(), kos = (SAVE.c2kos | 0) + 1, fac = typeof c2FacN === 'function' ? c2FacN() : 0; if (W.c2lesBusy || !(S.e && S.e.lossArc)) return '';
   if (!L.sneak) return 'sneak'; if (!L.assist) return kos >= 2 || fac >= 4 ? 'assist' : ''; if (!L.cover) return kos >= 3 || fac >= 6 ? 'cover' : ''; return ''; }
 var c2GymWakeArt37 = c2GymWakeArt;
 c2GymWakeArt = function () { if (!g38Ch2() || !g38NextLesson()) return c2GymWakeArt37();
-  ev('world:c2:wake:gym'); c2RefreshCycle('wake'); var p = g38Path(), P = G38.STAGE[p]; c2Go('gym', [P.r[0], P.r[1], P.r[2]]); W.cool = Math.max(W.cool, 1.5);
+  ev('world:c2:wake:gym'); var p = g38Path(), P = G38.STAGE[p]; c2Go('gym', [P.r[0], P.r[1], P.r[2]]); W.cool = Math.max(W.cool, 1.5);
   g38Place(p, false); W.cut = true; ev('world:g38:wake:stage:' + p);
   setTimeout(function () { var g = g38G(); W.camFocus = [W.ryo, W.aoi, g].filter(Boolean);
     g38GenjiIn(p, function () { scene(null, C2SC.gymWake, function () { W.dlg = false; ev('world:c2:wake:gym:end'); c2AfterKo(); setTimeout(function () { g38Release(); }, 700); }); }); }, 350); };
@@ -27655,7 +27652,7 @@ var G38G_OVER = [[4560,3420,4620,3450],[4410,3450,4770,3480],[4320,3480,4770,351
    3) Ginger (Chapter 2 only; Chapter 3 keeps the v6.5.37 walk-overs): 9 tiny sprigs (same ids hb_p1..p9) drawn over their dug holes while unpicked.
       Tap within G38G.TAP_R of a sprig -> walk to its stand point (18 px north, facing down) -> the pick crouch (sprig in hand) -> +1 ginger
       (one chip: herbAdd's own matFlo; the walk-over's extra matFlo is gone). Walking over a sprig never picks it. Tap during the crouch skips it.
-      Picked = dug hole until the next stock cycle (main quest, side-quest turn-in, knockout wake), unchanged. Normal and Scarce: 9.
+      Picked = dug hole until the next stock cycle (main quest or side-quest turn-in, never a knockout), unchanged. Normal and Scarce: 9.
    4) Herbalist: "Teach me" gives 1 Mugwort Leaf, the quest only waits on ginger; new lines; shop line fixed (pack_batch3.py string subs).
    5) Kampo Potion craft: W2 frames (wkitcraft_pot_1..8) instead of the bandage frames; S3 pour + liquid settle (work + finish). */
 var G38G = { TAP_R: 20, TAP_DY: -3, NEAR: 12, REACH: 24, SKIP_GUARD: 400, SPR: G38G_SPR, OVER: G38G_OVER };
@@ -30923,7 +30920,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
         setTimeout(function () { if (st.q[CQ.hq] == null && (st.q[CQ.scout] == null)) c2QStart(CQ.scout); c2lScoutSync(); }, 1600);
       }
       try {
-        helpTip('c2hq', { t: 'Kurogane Boxing Gym', h: '<p>Your Chapter Two <b>HQ</b>: Genji\u2019s quests, and a patch for +12 HP every 90 seconds. Talk to Genji to evolve your basic moves. The ring is where you spar and train with Aoi. The bags are for practice.</p><p>Real healing: the west end of <b>Lantern Alley</b>, Dr. Tsukikage\u2019s apothecary and her Brass Kettle.</p>' });
+        helpTip('c2hq', { t: 'Kurogane Boxing Gym', h: '<p>Your Chapter Two <b>HQ</b>: Genji\u2019s quests, and a patch for +12 HP every 90 seconds. Talk to Genji to evolve your basic moves. The ring is where you spar and train with Aoi. The bags are for practice.</p><p>Real healing: the west end of <b>Lantern Alley</b>, Dr. Tsukikage\u2019s apothecary (tea and mugwort), and dressings crafted from your Bag.</p>' });
       } catch (eT) {}
     });
   };
@@ -31140,8 +31137,12 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     return (typeof C2S_FAC === 'object' && C2S_FAC[fac]) || fac;
   }
   function c2lDown(id) {
-    var st = S(), e = st && st.e, code = c2lFacCode(id);
-    return !!(e && code && e['down_' + code]);
+    var st = S(), e = st && st.e, fac = C2L_FAC[id], code = c2lFacCode(id);
+    if (!e || !code) return false;
+    if (e['down_' + code]) return true;
+    /* Seal taken from a beaten rival still greys the pin if down_* was missed. Own crew hands the seal over and stays standing. */
+    if (fac && e['seal_' + fac] && !(e.run_fac && e.run_fac === code)) return true;
+    return false;
   }
   /* Pin names the beaten leader; the legend chip names the crew, same as Hustlers after Gōda. */
   function c2lPinLab(id) {
@@ -33506,7 +33507,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
       var dialog0 = dialog;
       dialog = function (html, btns) {
         if (typeof html === 'string') {
-          html = html.replace('finish a quest, or after a knockout', 'when she restocks, or after a knockout');
+          html = html.replace(/, or after a knockout|, or wake up here/g, '');
         }
         return dialog0(html, btns);
       };
@@ -37337,8 +37338,7 @@ var GINKO = (function () {
     c2SumireMenu._v6554 = 1;
   }
 
-  /* After the recipe is learned, the Brass Kettle in the clinic is usable
-     again for later crafts (bought mugwort + foraged ginger). */
+  /* The clinic kettle is flavor only. Crafting is the phone Bag bench. */
   function potKettleSpot(D) {
     if (!D || !D.spots) return null;
     for (var i = 0; i < D.spots.length; i++) if (D.spots[i] && D.spots[i].id === 'kettle') return D.spots[i];
@@ -37355,7 +37355,7 @@ var GINKO = (function () {
           if (s && !(out || []).some(function (t) { return t && t.act && t.act.int === 'kettle'; })) {
             out.push({
               key: (id || 'clinic') + ':kettle',
-              lab: s.lab || 'Brew',
+              lab: 'Look',
               x: (s.r[0] + s.r[2]) / 2,
               y: s.r[1] - 4,
               below: false,
@@ -37377,8 +37377,8 @@ var GINKO = (function () {
     var c2ActD0 = c2ActD;
     c2ActD = function (k, a) {
       if (a === 'kettle') {
-        if (potLearned() && typeof c2Kettle === 'function') { c2Kettle(); ev('world:c2:kettle:open:ok'); return true; }
-        ev('world:c2:kettle:locked');
+        ev('world:c2:kettle:retired');
+        if (typeof c2Kettle === 'function') c2Kettle();
         return true;
       }
       return c2ActD0.apply(this, arguments);
@@ -39870,7 +39870,6 @@ function camPan(to, o, done) {
   /* ================= Nails' price, the counters, the shops ================= */
   function disc(c) { return Math.max(1, Math.round(c * 0.8)); }
   var NP = '<i class="nqnp">Nails\u2019 price</i>';
-  HITEM.udon = HITEM.udon || { n: 'Udon to-go', pct: 0.35, ic: '\ud83c\udf5c', rank: 3 };
   /* the udon counter */
   var UDON_MENU = [
     { id: 'kake', n: 'Kake udon', jp: '\u304b\u3051', hp: 20, base: 12, cost: 10, st: 'kake' },
@@ -39878,8 +39877,7 @@ function camPan(to, o, done) {
     { id: 'tsukimi', n: 'Tsukimi udon', jp: '\u6708\u898b', hp: 30, base: 16, cost: 13, st: 'tsukimi' },
     { id: 'curry', n: 'Curry udon', jp: '\u30ab\u30ec\u30fc', hp: 35, sp: 5, base: 19, cost: 15, st: 'curry' },
     { id: 'nabe', n: 'Nabeyaki udon', jp: '\u934b\u713c', full: 1, base: 24, cost: 19, st: 'nabe' },
-    { id: 'mugi', n: 'Barley tea', jp: '\u9ea6\u8336', tea: 8, base: 6, cost: 5 },
-    { id: 'togo', n: 'Udon to-go', jp: '\u6301\u5e30', bag: 'udon', base: 9, cost: 7 }
+    { id: 'mugi', n: 'Barley tea', jp: '\u9ea6\u8336', tea: 8, base: 6, cost: 5 }
   ];
   NQ.UDON_MENU = UDON_MENU;
   function priceHtml(it, nails) { return nails && it.base > it.cost ? '<s>\u00a5' + it.base + '</s> <b class="nqp">\u00a5' + it.cost + '</b>' : '\u00a5' + (nails ? it.cost : it.base); }
@@ -39959,12 +39957,12 @@ function camPan(to, o, done) {
     })();
   }
   NQ.udonFx = udonFx;
-  /* Machi Motors: medical tape, bandages, canned sodas (Nails' price on the corner) */
-  SHOPS.nq_motors = { n: 'Machi Motors', who: 'nq_mech', hi: 'Tape, bandages, cold cans. The bike stuff\u2019s not for kids.', nq: 1,
-    items: [{ id: 'tape', k: 'herb', hb: 'tape', n: 'Medical Tape', base: 3, cost: 2, stock: 3, d: 'For the 20% dressing, with clean gauze.' }, { id: 'band', k: 'heal', h: 'bandage', base: 4, cost: 3, stock: 3 }, { id: 'can', k: 'soda', n: 'Canned soda', base: 3, cost: 2, stock: 3, d: 'Cold from the fridge. One soda in your bag.' }] };
+  /* Machi Motors: medical tape, gauze, canned sodas. Tape/gauze at food-equivalent ¥3 base (GGD-49). */
+  SHOPS.nq_motors = { n: 'Machi Motors', who: 'nq_mech', hi: 'Tape, gauze, cold cans. The bike stuff\u2019s not for kids.', nq: 1,
+    items: [{ id: 'tape', k: 'herb', hb: 'tape', n: 'Medical Tape', base: 3, cost: 2, stock: 3, d: 'For a 20% dressing, with clean gauze.' }, { id: 'gauze', k: 'herb', hb: 'gauze', n: 'Gauze', base: 3, cost: 2, stock: 3, d: 'For a dressing. Craft with tape.' }, { id: 'can', k: 'soda', n: 'Canned soda', base: 3, cost: 2, stock: 3, d: 'Cold from the fridge. One soda in your bag.' }] };
   /* the Ginko stalls Nails' wins open */
   SHOPS.nq_gk1 = { n: 'Dagashi Fumi', who: 'nq_dagashi', hi: 'Ten yen candy. Well. One yen, for you.', items: [{ id: 'ram', k: 'soda', n: 'Ramune', cost: 2, stock: 3, d: 'Marble soda. One soda in your bag.' }, { id: 'candy', k: 'heal', h: 'candy', cost: 1, stock: 3 }] };
-  SHOPS.nq_gk2 = { n: 'Ono Drugstore', who: 'nq_drug', hi: 'Bandages, potions, tape. Don\u2019t tell me how.', items: [{ id: 'band', k: 'heal', h: 'bandage', cost: 4, stock: 3 }, { id: 'pot', k: 'heal', h: 'potion', cost: 7, stock: 2 }, { id: 'tape', k: 'herb', hb: 'tape', n: 'Medical Tape', cost: 3, stock: 2, d: 'For the 20% dressing.' }] };
+  SHOPS.nq_gk2 = { n: 'Ono Drugstore', who: 'nq_drug', hi: 'Tape and gauze. Don\u2019t tell me how.', items: [{ id: 'tape', k: 'herb', hb: 'tape', n: 'Medical Tape', base: 3, cost: 2, stock: 3, d: 'For a 20% dressing, with clean gauze.' }, { id: 'gauze', k: 'herb', hb: 'gauze', n: 'Gauze', base: 3, cost: 2, stock: 3, d: 'For a dressing. Craft with tape.' }] };
   SHOPS.nq_gk3 = { n: 'Hon\u2019s Used Books', who: 'nq_books', hi: 'Old fight manuals. Some of them even work.', nqBook: 1, items: [{ id: 'bkc', k: 'book', bk: 'common', n: 'Dog-eared manual', cost: 10, stock: 2, d: 'Open it: +1 ' + (typeof essName === 'function' ? essName() : 'essence') + '.' }, { id: 'bku', k: 'book', bk: 'uncommon', n: 'Rare fight manual', cost: 24, stock: 1, d: 'Open it: +3 ' + (typeof essName === 'function' ? essName() : 'essence') + '.' }] };
   SHOPS.nq_gk4 = { n: 'Gacha Corner', who: 'nq_gacha', hi: 'Turn the crank! Every capsule\u2019s a card!', items: [{ id: 'gc', k: 'card', rar: 'common', n: 'Capsule (common)', cost: 8, stock: 3 }, { id: 'gu', k: 'card', rar: 'uncommon', n: 'Gold capsule (uncommon)', cost: 20, stock: 1 }] };
   var GKS = { n1: 'nq_gk1', n2: 'nq_gk2', n3: 'nq_gk3', n4: 'nq_gk4' };
@@ -41921,7 +41919,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       mori: 'The street slept last night. First time in a month. Come in. The kettle is on.',
       nao: 'I walked home and it was quiet. Thank you. I can keep the day job if the nights stay like this.',
       haru: 'The bikes did not come. Can I sit on the sofa now? Mori-san said maybe.',
-      hase: 'They are gone. I am still here. Parts, tape, a cheap patch. Nails prices, if that is the deal.'
+      hase: 'They are gone. I am still here. Tape and gauze. Nails prices, if that is the deal.'
     };
     txt(g, (title[who] || who) + '  \u00b7  ' + (phase === 'taken' ? 'after the block flips' : 'while the Riders hold it'), 450, 40, 18, '#f0e4c8', '800 ');
     var body = (phase === 'taken' ? taken : held)[who] || '';
@@ -45596,13 +45594,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
 
   /* ---------------- menu (prices proposed; Nails 20% off after takeover) ---------------- */
   function disc(c) { return Math.max(1, Math.round(c * 0.8)); }
-  HITEM.sroll = HITEM.sroll || { n: 'Sweet roll', pct: 0.18, ic: '\ud83e\udd50', rank: 2 };
-  HITEM.dango = HITEM.dango || { n: 'Dango', pct: 0.10, ic: '\ud83c\udf61', rank: 1 };
   var WAGA_MENU = S2.MENU = [
     { id: 'roll', n: 'Sweet roll', jp: '\u3042\u3093\u30ed\u30fc\u30eb', hp: 14, base: 8, cost: 6, eat: 'sweetroll' },
-    { id: 'dango', n: 'Dango', jp: '\u3060\u3093\u3054', hp: 8, base: 5, cost: 4, eat: 'dango' },
-    { id: 'togo_roll', n: 'Sweet roll to-go', jp: '\u6301\u5e30', bag: 'sroll', base: 8, cost: 6 },
-    { id: 'togo_dango', n: 'Dango to-go', jp: '\u6301\u5e30', bag: 'dango', base: 5, cost: 4 }
+    { id: 'dango', n: 'Dango', jp: '\u3060\u3093\u3054', hp: 8, base: 5, cost: 4, eat: 'dango' }
   ];
   function yen() { return SAVE.items | 0; }
   function payYen(c) { SAVE.items = Math.max(0, yen() - c); sv(); try { hud(); bumpItems(); } catch (e) {} }
@@ -45629,7 +45623,6 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   }
   function buy(it, c) {
     payYen(c); ev('world:s2:waga:buy:' + it.id + ':' + c);
-    if (it.bag) { SAVE.heal.push(it.bag); sv(); try { AU.play('place'); } catch (e) {} try { toast(HITEM[it.bag].n + ' in your bag.'); } catch (e2) {} later(200, counterMenu); return; }
     var h0 = SAVE.hp | 0, add = it.hp | 0, half = Math.ceil(add / 2), winAdd = Math.round(add * 1.5);
     applyVit(it);
     var h1 = SAVE.hp | 0, id = it.eat, opened = false;
@@ -45702,18 +45695,17 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (root.FFF_NQ && root.FFF_NQ.BLK && !root.FFF_NQ.BLK.x3) root.FFF_NQ.BLK.x3 = { n: 'WAGASHI ROW', r: [2420, 2760, 3460, 3300] };
     sv();
   }
-  /* Back-right work area (jars / steamer). Serving stand is just behind the counter top (y=470), facing the customer. */
-  var CHI_BACK = [780, 380], CHI_FRONT = [640, 455], chiReady = 0;
+  /* Serving stand is at the counter front at all times, facing the customer.
+     No walk on Order — the walk dropped fps. Area behind the counter stays blocked. */
+  var CHI_BACK = [780, 380], CHI_FRONT = [640, 455], chiReady = 1;
   S2.CHI_BACK = CHI_BACK; S2.CHI_FRONT = CHI_FRONT;
   function chiyoPop() {
-    if (room() !== 'waga') { if (CHI) { try { kill(CHI); } catch (eK) {} CHI = null; } chiReady = 0; return; }
+    if (room() !== 'waga') { if (CHI) { try { kill(CHI); } catch (eK) {} CHI = null; } return; }
     if (CHI && CHI.el && CHI.el.parentNode) return;
-    CHI = npc('nq_chiyo', CHI_BACK[0], CHI_BACK[1], Math.PI);
+    CHI = npc('nq_chiyo', CHI_FRONT[0], CHI_FRONT[1], 0);
     asWalker(CHI, 'nq_chiyo');
-    CHI.dir = 1;
-    if (typeof animWalk === 'function') animWalk(CHI, 0);
-    place(CHI, 0);
-    chiReady = 0;
+    chiReady = 1;
+    chiyoFaceCustomer();
     try { if (W.c2n) W.c2n.s2 = CHI; } catch (eN) {}
   }
   function chiyoFaceCustomer() {
@@ -45721,16 +45713,10 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (typeof c2Face === 'function') c2Face(CHI, CHI.x, CHI.y + 80);
     else { CHI.dir = 0; if (typeof animWalk === 'function') animWalk(CHI, 0); place(CHI, 0); }
   }
+  /* No-op face: she already stands at the counter. Kept so older callers still resolve. */
   function chiyoToCounter(done) {
-    if (!CHI || !CHI.el || !CHI.el.parentNode) { if (done) done(); return; }
-    if (chiReady || Math.hypot(CHI.x - CHI_FRONT[0], CHI.y - CHI_FRONT[1]) < 8) {
-      chiReady = 1; chiyoFaceCustomer(); if (done) done(); return;
-    }
-    lockIn(true);
-    /* Step down to the counter, then walk sideways along it (existing side frames) to the serving gap. */
-    move(CHI, [[CHI_BACK[0], CHI_FRONT[1]], [CHI_FRONT[0], CHI_FRONT[1]]], 120, function () {
-      chiReady = 1; chiyoFaceCustomer(); lockIn(false); if (done) done();
-    });
+    if (CHI) chiyoFaceCustomer();
+    if (done) done();
   }
   S2.chiyoToCounter = chiyoToCounter;
   S2.chiyoPop = chiyoPop;
@@ -45841,7 +45827,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       try {
         if (on()) {
           if (a === 's2_e_waga') { doorTalk(); return true; }
-          if (a === 's2_waga_order') { chiyoToCounter(function () { counterMenu(); }); return true; }
+          if (a === 's2_waga_order') { if (CHI) chiyoFaceCustomer(); counterMenu(); return true; }
           if (a === 's2_flip' || (FL && a && /n13flip/.test(a) && qOn() && stg() === 'open')) { flipTalk(); return true; }
         }
       } catch (e) { ev('world:s2:err:act:' + (e && e.message)); }
@@ -46078,7 +46064,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     []
   );
   VO.haseOpen = V3(
-    [['nq_hase', 'They are gone. I am still here. Parts, tape, a cheap patch. Nails prices, if that is the deal.']],
+    [['nq_hase', 'They are gone. I am still here. Tape and gauze. Nails prices, if that is the deal.']],
     {
       fierce: [['ryo', 'Just the kit. We are moving.']],
       strategic: [['ryo', 'We will be back. The yards are still his.']],
@@ -46225,47 +46211,43 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   try { later(0, hookBattle); } catch (eB) { try { setTimeout(hookBattle, 0); } catch (eB2) {} }
 
   /* ---------------- shop ---------------- */
-  /* Isolated heal-amount fix (menus executor restyles these in ffd-menus):
-     Patch kit / Spare tube must heal the flat +6 / +10 HP the menu lists, not HITEM.bandage's 20%.
-     Shop `h` is the bag key; useHeal honors HITEM[k].hp when set and pct is absent. */
+  /* GGD-49: Hase sells only first-aid-kit materials (electrical tape + gauze).
+     Pricing is food-equivalent: a restaurant sweet roll is +14 HP for ¥8 base
+     (~¥0.57/HP, same cluster as Full Heal Tea ¥26/46 HP). A 20% dressing is
+     +10 HP, so 1 tape + 1 gauze costs ¥6 total — ¥3 base each. Nails 20% off
+     applies (shopCost). Mugwort stays ¥1. World-found materials stay the cheap path.
+     Healing in the field is eat-in or crafted dressings. Patch kit / spare tube
+     stay defined (and painted) but are disabled: not sold, not usable from the
+     bag. Reserved for combat-only heals later. */
   if (typeof HITEM !== 'undefined') {
-    if (!HITEM.patch) HITEM.patch = { n: 'Patch kit', hp: 6, ic: '\ud83e\ude79', rank: 2 };
-    if (!HITEM.bpart) HITEM.bpart = { n: 'Spare tube', hp: 10, ic: '\ud83e\ude79', rank: 2 };
+    /* Keep defs + art; combat:1 means useHeal must not consume or heal from the bag. */
+    if (!HITEM.patch) HITEM.patch = { n: 'Patch kit', hp: 6, ic: '\ud83e\ude79', rank: 2, combat: 1 };
+    else { HITEM.patch.combat = 1; delete HITEM.patch.pct; }
+    if (!HITEM.bpart) HITEM.bpart = { n: 'Spare tube', hp: 10, ic: '\ud83e\ude79', rank: 2, combat: 1 };
+    else { HITEM.bpart.combat = 1; delete HITEM.bpart.pct; }
   }
-  if (typeof ITEMS !== 'undefined') {
-    if (!ITEMS.etape) ITEMS.etape = { n: 'Electrical tape', k: 'herb', hb: 'tape', d: 'For wiring, or a knuckle.' };
-    if (!ITEMS.patch) ITEMS.patch = { n: 'Patch kit', k: 'heal', h: 'patch', hp: 6, d: 'A cheap roadside repair kit.' };
-    if (!ITEMS.bpart) ITEMS.bpart = { n: 'Spare tube', k: 'heal', h: 'bpart', hp: 10, d: 'A patched inner tube. You can wrap a cut with it.' };
-    else { ITEMS.patch.h = 'patch'; ITEMS.bpart.h = 'bpart'; }
-    if (!ITEMS.chainoil) ITEMS.chainoil = { n: 'Chain oil', k: 'herb', hb: 'oil', d: 'Keeps a bike quiet. Or a hinge.' }; /* provisional */
-    if (!ITEMS.cancoffee) ITEMS.cancoffee = { n: 'Canned coffee', k: 'soda', d: 'Hot from the machine in the bay. +6 SP.' }; /* provisional */
+  function bindHaseItems() {
+    if (typeof ITEMS === 'undefined') return false;
+    if (!ITEMS.etape) ITEMS.etape = { n: 'Electrical tape', k: 'herb', hb: 'tape', d: 'For wiring, or a first-aid dressing.' };
+    if (!ITEMS.gauze) ITEMS.gauze = { n: 'Gauze', k: 'herb', hb: 'gauze', d: 'For a dressing. Craft with tape.' };
+    if (!ITEMS.patch) ITEMS.patch = { n: 'Patch kit', k: 'heal', h: 'patch', hp: 6, combat: 1, d: 'A cheap roadside repair kit. Not for the bag.' };
+    else { ITEMS.patch.combat = 1; }
+    if (!ITEMS.bpart) ITEMS.bpart = { n: 'Spare tube', k: 'heal', h: 'bpart', hp: 10, combat: 1, d: 'A patched inner tube. Not for the bag.' };
+    else { ITEMS.bpart.combat = 1; }
+    return true;
   }
-  if (typeof useHeal === 'function' && !root._s2HaseFlatHeal) {
-    root._s2HaseFlatHeal = 1;
+  bindHaseItems();
+  try { later(0, bindHaseItems); } catch (eI) { try { setTimeout(bindHaseItems, 0); } catch (eI2) {} }
+  /* Refuse bag / travel use of combat-reserved heals (and any leftover patch / bpart). */
+  if (typeof useHeal === 'function' && !root._s2NoBagCombatHeal) {
+    root._s2NoBagCombatHeal = 1;
     var useHeal0 = useHeal;
     useHeal = function (i) {
       var k = SAVE.heal[i], it = (typeof HITEM !== 'undefined') && HITEM[k];
-      if (it && it.hp != null && it.pct == null) {
-        if (W.busy || (!W.on && !W.room)) return false;
-        if (typeof gkHealLocked === 'function' && gkHealLocked()) {
-          try { AU.play('tap'); } catch (eA) {}
-          try { if (typeof comment === 'function') comment(['ryo', 'Not during this.']); } catch (eC) {}
-          ev('world:heal:locked:gouki'); return false;
-        }
-        if (SAVE.hp >= MAXHP) {
-          try { AU.play('tap'); } catch (eA2) {}
-          try { if (typeof hpFullBanter === 'function') hpFullBanter(); else if (typeof comment === 'function') comment([SAVE.act === 'aoi' ? 'aoi' : 'ryo', "I'm fine. Save the gauze for later."]); } catch (eC2) {}
-          return false;
-        }
-        var was = SAVE.hp;
-        SAVE.hp = Math.min(MAXHP, SAVE.hp + (it.hp | 0));
-        SAVE.heal.splice(i, 1); save(); hud();
-        try { AU.play('pl_heal', { gain: 0.7 }); } catch (eAu) {}
-        var st = (typeof $ === 'function') && $('#wstat'); if (st) { st.classList.remove('heal'); void st.offsetWidth; st.classList.add('heal'); }
-        try { if (typeof actPlay === 'function') actPlay('bandage'); } catch (eP) {}
-        try { if (typeof vitFlo === 'function') vitFlo('hp', SAVE.hp - was); } catch (eV) {}
-        ev('world:heal:use:' + k + ':' + (SAVE.hp - was));
-        return true;
+      if (it && (it.combat || k === 'patch' || k === 'bpart')) {
+        try { AU.play('tap'); } catch (eA) {}
+        ev('world:heal:blocked:bag:' + k);
+        return false;
       }
       return useHeal0.apply(this, arguments);
     };
@@ -46273,15 +46255,12 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   function nailsOn() { return qDone() || !!(NS().won && NS().won.east); }
   function shopCost(base) { var c = base; if (nailsOn()) c = Math.max(1, Math.round(base * 0.8)); return c; }
   P2.MENU = [
-    { id: 'etape', k: 'herb', hb: 'tape', n: 'Electrical tape', base: 3, cost: 2, stock: 3, d: 'For wiring, or a knuckle.' },
-    { id: 'patch', k: 'heal', h: 'patch', n: 'Patch kit', base: 4, cost: 3, stock: 3, hp: 6, d: 'A cheap roadside repair kit. +6 HP.' },
-    { id: 'bpart', k: 'heal', h: 'bpart', n: 'Spare tube', base: 6, cost: 5, stock: 2, hp: 10, d: 'A patched inner tube. +10 HP.' },
-    { id: 'chainoil', k: 'herb', hb: 'oil', n: 'Chain oil', base: 5, cost: 4, stock: 2, d: 'Keeps a bike quiet. Or a hinge.' }, /* provisional */
-    { id: 'cancoffee', n: 'Canned coffee', base: 4, cost: 3, sp: 6, drink: 1, d: 'Hot from the machine in the bay. +6 SP.' } /* provisional */
+    { id: 'etape', k: 'herb', hb: 'tape', n: 'Electrical tape', base: 3, cost: 2, stock: 3, d: 'For wiring, or a first-aid dressing.' },
+    { id: 'gauze', k: 'herb', hb: 'gauze', n: 'Gauze', base: 3, cost: 2, stock: 3, d: 'For a dressing. Craft with tape.' }
   ];
   function menuNow() { return P2.MENU.map(function (it) { var o = {}; Object.keys(it).forEach(function (k) { o[k] = it[k]; }); o.cost = shopCost(it.base); return o; }); }
   if (typeof SHOPS !== 'undefined') {
-    SHOPS.s2_hase = { n: 'Hase Repair', who: 'nq_hase', hi: 'Parts, tape, a cheap patch.', nq: 1, items: P2.MENU };
+    SHOPS.s2_hase = { n: 'Hase Repair', who: 'nq_hase', hi: 'Tape and gauze. That\u2019s the shop.', nq: 1, items: P2.MENU };
   }
   function openShop() {
     var items = menuNow();
@@ -48323,61 +48302,40 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   }
 
   /* ---------------- catalog ----------------
-   * Existing Chiyo / Hase prices are unchanged. New rows are flagged provisional. */
+   * GGD-49: restaurant menus are eat-in only (no to-go). Hase sells only tape + gauze
+   * at food-equivalent ¥3 base each (see s2p2.js). Depot is food and drink only. */
   var CHIYO_ITEMS = [
     { id: 'roll', n: 'Sweet roll', jp: 'あんロール', icon: 'sweetroll', hp: 14, base: 8, cost: 6, eat: 'sweetroll',
       eff: '+14 HP  ·  eat now', flavor: 'Anko folded in a warm roll. Pull it apart at the table.' },
     { id: 'dango', n: 'Dango', jp: 'だんご', icon: 'dango', hp: 8, base: 5, cost: 4, eat: 'dango',
       eff: '+8 HP  ·  eat now', flavor: 'Three colors on a stick. Soft, and gone too fast.' },
-    { id: 'togo_roll', n: 'Sweet roll to-go', jp: '持ち帰りのあんロール', icon: 'sweetroll', bag: 'sroll', base: 8, cost: 6,
-      eff: 'into your bag  ·  +18% HP', flavor: 'Wrapped while it’s still warm.' },
-    { id: 'togo_dango', n: 'Dango to-go', jp: '持ち帰りのだんご', icon: 'dango', bag: 'dango', base: 5, cost: 4,
-      eff: 'into your bag  ·  +10% HP', flavor: 'For the walk back.' },
     { id: 'hojicha', n: 'Hojicha', jp: 'ほうじ茶', icon: 'hojicha', sp: 6, base: 4, cost: 3, drink: 1, prov: 1,
       eff: '+6 SP  ·  drink now', flavor: 'Toasted tea, no sugar. Clears the last bite.' }
   ];
-  /* Existing Hase rows (etape / patch / bpart) take k, h, hp, stock, and prices
-   * from FFF_S2P2.MENU so a later +6 / +10 HP bag fix flows through. Menu copy
-   * already says +6 / +10. Do not change stock or restock here. */
   var HASE_META = {
-    etape: { jp: '電気テープ', icon: 'etape', flavor: 'For wiring, or a knuckle.', eff: 'into your pouch' },
-    patch: { jp: 'パンク修理', icon: 'patch', flavor: 'A cheap roadside repair kit.' },
-    bpart: { jp: '予備チューブ', icon: 'bpart', flavor: 'A patched inner tube. You can wrap a cut with it.' },
-    chainoil: { jp: 'チェーンオイル', icon: 'chainoil', flavor: 'Keeps a bike quiet. Or a hinge.', eff: 'into your pouch', prov: 1 },
-    cancoffee: { jp: '缶コーヒー', icon: 'cancoffee', flavor: 'Hot from the machine in the bay.', eff: '+6 SP  ·  drink now', prov: 1 }
+    etape: { jp: '電気テープ', icon: 'etape', flavor: 'For wiring, or a first-aid dressing.', eff: 'into your pouch' },
+    gauze: { jp: 'ガーゼ', icon: 'gauze', flavor: 'For a dressing. Craft with tape.', eff: 'into your pouch' }
   };
-  var HASE_NEW = [
-    { id: 'chainoil', n: 'Chain oil', k: 'herb', hb: 'oil', base: 5, cost: 4, stock: 2, prov: 1 },
-    { id: 'cancoffee', n: 'Canned coffee', base: 4, cost: 3, sp: 6, drink: 1, prov: 1 }
-  ];
   var HASE_FALLBACK = [
     { id: 'etape', n: 'Electrical tape', k: 'herb', hb: 'tape', base: 3, cost: 2, stock: 3 },
-    { id: 'patch', n: 'Patch kit', k: 'heal', h: 'patch', hp: 6, base: 4, cost: 3, stock: 3 },
-    { id: 'bpart', n: 'Spare tube', k: 'heal', h: 'bpart', hp: 10, base: 6, cost: 5, stock: 2 }
+    { id: 'gauze', n: 'Gauze', k: 'herb', hb: 'gauze', base: 3, cost: 2, stock: 3 }
   ];
   function decorateHase(it) {
     var o = {}, m = HASE_META[it.id] || {};
     Object.keys(it).forEach(function (k) { o[k] = it[k]; });
     Object.keys(m).forEach(function (k) { o[k] = m[k]; });
-    if (o.hp && o.k === 'heal' && !m.eff) o.eff = 'into your bag  ·  +' + o.hp + ' HP';
     return o;
   }
   function haseItems() {
     var base = (root.FFF_S2P2 && FFF_S2P2.MENU && FFF_S2P2.MENU.length) ? FFF_S2P2.MENU.slice() : HASE_FALLBACK.slice();
-    var have = {}, out = base.map(function (it) { have[it.id] = 1; return decorateHase(it); });
-    HASE_NEW.forEach(function (it) { if (!have[it.id]) out.push(decorateHase(it)); });
-    return out;
+    return base.map(function (it) { return decorateHase(it); });
   }
   var HASE_ITEMS = haseItems();
   var DEPOT_ITEMS = [
     { id: 'onigiri', n: 'Onigiri', jp: 'おにぎり', icon: 'onigiri', hp: 10, base: 6, cost: 5, eat: 'onigiri', prov: 1,
       eff: '+10 HP  ·  eat now', flavor: 'From the break-room rice cooker. Still a little warm.' },
     { id: 'cancoffee', n: 'Canned coffee', jp: '缶コーヒー', icon: 'cancoffee', sp: 6, base: 4, cost: 3, drink: 1, prov: 1,
-      eff: '+6 SP  ·  drink now', flavor: 'Night-shift blend, stenciled can.' },
-    { id: 'ptape', n: 'Packing tape', jp: '梱包テープ', icon: 'ptape', k: 'herb', hb: 'ptape', base: 3, cost: 2, stock: 3, prov: 1,
-      eff: 'into your pouch', flavor: 'For crates, and for a split knuckle.' },
-    { id: 'gauze', n: 'Yard gauze', jp: 'ガーゼ', icon: 'gauze', k: 'heal', h: 'bandage', hp: 8, base: 5, cost: 4, stock: 2, prov: 1,
-      eff: 'into your bag  ·  +8 HP', flavor: 'The first-aid tin by the time clock.' }
+      eff: '+6 SP  ·  drink now', flavor: 'Night-shift blend, stenciled can.' }
   ];
 
   var SHOPS_M = M.SHOPS = {
@@ -48396,9 +48354,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       id: 's2_hase', theme: 'hase', n: 'Hase Repair', jp: '長谷 整備', who: 'nq_hase',
       leave: '戻る  ·  Leave',
       hi: {
-        fierce: 'Parts, tape, a cheap patch. Nails prices, if that is the deal.',
-        strategic: 'Parts, tape, a cheap patch. Nails prices, if that is the deal.',
-        balanced: 'I am still here. Parts, tape, a cheap patch.'
+        fierce: 'Tape and gauze. Nails prices, if that is the deal.',
+        strategic: 'Tape and gauze. Nails prices, if that is the deal.',
+        balanced: 'I am still here. Tape and gauze.'
       },
       nails: function () { try { return !!(root.FFF_S2P2 && FFF_S2P2.nailsOn && FFF_S2P2.nailsOn()); } catch (e) { return false; } },
       items: function () { return HASE_ITEMS = haseItems(); }
@@ -48779,12 +48737,11 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     };
   }
 
-  /* Herb stubs for new pouch items so herbAdd does not throw. Provisional. */
+  /* Herb stubs so herbAdd does not throw on Hase tape. */
   try {
     if (typeof HERB !== 'undefined') {
-      if (!HERB.oil) HERB.oil = { n: 'Chain oil', ic: '🛢' };
-      if (!HERB.ptape) HERB.ptape = { n: 'Packing tape', ic: '📦' };
       if (!HERB.tape) HERB.tape = { n: 'Electrical tape', ic: '🎗' };
+      if (!HERB.gauze) HERB.gauze = { n: 'Gauze', ic: '🩹' };
     }
   } catch (eH) {}
 

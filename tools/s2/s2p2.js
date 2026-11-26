@@ -179,7 +179,7 @@
     []
   );
   VO.haseOpen = V3(
-    [['nq_hase', 'They are gone. I am still here. Parts, tape, a cheap patch. Nails prices, if that is the deal.']],
+    [['nq_hase', 'They are gone. I am still here. Tape and gauze. Nails prices, if that is the deal.']],
     {
       fierce: [['ryo', 'Just the kit. We are moving.']],
       strategic: [['ryo', 'We will be back. The yards are still his.']],
@@ -326,47 +326,43 @@
   try { later(0, hookBattle); } catch (eB) { try { setTimeout(hookBattle, 0); } catch (eB2) {} }
 
   /* ---------------- shop ---------------- */
-  /* Isolated heal-amount fix (menus executor restyles these in ffd-menus):
-     Patch kit / Spare tube must heal the flat +6 / +10 HP the menu lists, not HITEM.bandage's 20%.
-     Shop `h` is the bag key; useHeal honors HITEM[k].hp when set and pct is absent. */
+  /* GGD-49: Hase sells only first-aid-kit materials (electrical tape + gauze).
+     Pricing is food-equivalent: a restaurant sweet roll is +14 HP for ¥8 base
+     (~¥0.57/HP, same cluster as Full Heal Tea ¥26/46 HP). A 20% dressing is
+     +10 HP, so 1 tape + 1 gauze costs ¥6 total — ¥3 base each. Nails 20% off
+     applies (shopCost). Mugwort stays ¥1. World-found materials stay the cheap path.
+     Healing in the field is eat-in or crafted dressings. Patch kit / spare tube
+     stay defined (and painted) but are disabled: not sold, not usable from the
+     bag. Reserved for combat-only heals later. */
   if (typeof HITEM !== 'undefined') {
-    if (!HITEM.patch) HITEM.patch = { n: 'Patch kit', hp: 6, ic: '\ud83e\ude79', rank: 2 };
-    if (!HITEM.bpart) HITEM.bpart = { n: 'Spare tube', hp: 10, ic: '\ud83e\ude79', rank: 2 };
+    /* Keep defs + art; combat:1 means useHeal must not consume or heal from the bag. */
+    if (!HITEM.patch) HITEM.patch = { n: 'Patch kit', hp: 6, ic: '\ud83e\ude79', rank: 2, combat: 1 };
+    else { HITEM.patch.combat = 1; delete HITEM.patch.pct; }
+    if (!HITEM.bpart) HITEM.bpart = { n: 'Spare tube', hp: 10, ic: '\ud83e\ude79', rank: 2, combat: 1 };
+    else { HITEM.bpart.combat = 1; delete HITEM.bpart.pct; }
   }
-  if (typeof ITEMS !== 'undefined') {
-    if (!ITEMS.etape) ITEMS.etape = { n: 'Electrical tape', k: 'herb', hb: 'tape', d: 'For wiring, or a knuckle.' };
-    if (!ITEMS.patch) ITEMS.patch = { n: 'Patch kit', k: 'heal', h: 'patch', hp: 6, d: 'A cheap roadside repair kit.' };
-    if (!ITEMS.bpart) ITEMS.bpart = { n: 'Spare tube', k: 'heal', h: 'bpart', hp: 10, d: 'A patched inner tube. You can wrap a cut with it.' };
-    else { ITEMS.patch.h = 'patch'; ITEMS.bpart.h = 'bpart'; }
-    if (!ITEMS.chainoil) ITEMS.chainoil = { n: 'Chain oil', k: 'herb', hb: 'oil', d: 'Keeps a bike quiet. Or a hinge.' }; /* provisional */
-    if (!ITEMS.cancoffee) ITEMS.cancoffee = { n: 'Canned coffee', k: 'soda', d: 'Hot from the machine in the bay. +6 SP.' }; /* provisional */
+  function bindHaseItems() {
+    if (typeof ITEMS === 'undefined') return false;
+    if (!ITEMS.etape) ITEMS.etape = { n: 'Electrical tape', k: 'herb', hb: 'tape', d: 'For wiring, or a first-aid dressing.' };
+    if (!ITEMS.gauze) ITEMS.gauze = { n: 'Gauze', k: 'herb', hb: 'gauze', d: 'For a dressing. Craft with tape.' };
+    if (!ITEMS.patch) ITEMS.patch = { n: 'Patch kit', k: 'heal', h: 'patch', hp: 6, combat: 1, d: 'A cheap roadside repair kit. Not for the bag.' };
+    else { ITEMS.patch.combat = 1; }
+    if (!ITEMS.bpart) ITEMS.bpart = { n: 'Spare tube', k: 'heal', h: 'bpart', hp: 10, combat: 1, d: 'A patched inner tube. Not for the bag.' };
+    else { ITEMS.bpart.combat = 1; }
+    return true;
   }
-  if (typeof useHeal === 'function' && !root._s2HaseFlatHeal) {
-    root._s2HaseFlatHeal = 1;
+  bindHaseItems();
+  try { later(0, bindHaseItems); } catch (eI) { try { setTimeout(bindHaseItems, 0); } catch (eI2) {} }
+  /* Refuse bag / travel use of combat-reserved heals (and any leftover patch / bpart). */
+  if (typeof useHeal === 'function' && !root._s2NoBagCombatHeal) {
+    root._s2NoBagCombatHeal = 1;
     var useHeal0 = useHeal;
     useHeal = function (i) {
       var k = SAVE.heal[i], it = (typeof HITEM !== 'undefined') && HITEM[k];
-      if (it && it.hp != null && it.pct == null) {
-        if (W.busy || (!W.on && !W.room)) return false;
-        if (typeof gkHealLocked === 'function' && gkHealLocked()) {
-          try { AU.play('tap'); } catch (eA) {}
-          try { if (typeof comment === 'function') comment(['ryo', 'Not during this.']); } catch (eC) {}
-          ev('world:heal:locked:gouki'); return false;
-        }
-        if (SAVE.hp >= MAXHP) {
-          try { AU.play('tap'); } catch (eA2) {}
-          try { if (typeof hpFullBanter === 'function') hpFullBanter(); else if (typeof comment === 'function') comment([SAVE.act === 'aoi' ? 'aoi' : 'ryo', "I'm fine. Save the gauze for later."]); } catch (eC2) {}
-          return false;
-        }
-        var was = SAVE.hp;
-        SAVE.hp = Math.min(MAXHP, SAVE.hp + (it.hp | 0));
-        SAVE.heal.splice(i, 1); save(); hud();
-        try { AU.play('pl_heal', { gain: 0.7 }); } catch (eAu) {}
-        var st = (typeof $ === 'function') && $('#wstat'); if (st) { st.classList.remove('heal'); void st.offsetWidth; st.classList.add('heal'); }
-        try { if (typeof actPlay === 'function') actPlay('bandage'); } catch (eP) {}
-        try { if (typeof vitFlo === 'function') vitFlo('hp', SAVE.hp - was); } catch (eV) {}
-        ev('world:heal:use:' + k + ':' + (SAVE.hp - was));
-        return true;
+      if (it && (it.combat || k === 'patch' || k === 'bpart')) {
+        try { AU.play('tap'); } catch (eA) {}
+        ev('world:heal:blocked:bag:' + k);
+        return false;
       }
       return useHeal0.apply(this, arguments);
     };
@@ -374,15 +370,12 @@
   function nailsOn() { return qDone() || !!(NS().won && NS().won.east); }
   function shopCost(base) { var c = base; if (nailsOn()) c = Math.max(1, Math.round(base * 0.8)); return c; }
   P2.MENU = [
-    { id: 'etape', k: 'herb', hb: 'tape', n: 'Electrical tape', base: 3, cost: 2, stock: 3, d: 'For wiring, or a knuckle.' },
-    { id: 'patch', k: 'heal', h: 'patch', n: 'Patch kit', base: 4, cost: 3, stock: 3, hp: 6, d: 'A cheap roadside repair kit. +6 HP.' },
-    { id: 'bpart', k: 'heal', h: 'bpart', n: 'Spare tube', base: 6, cost: 5, stock: 2, hp: 10, d: 'A patched inner tube. +10 HP.' },
-    { id: 'chainoil', k: 'herb', hb: 'oil', n: 'Chain oil', base: 5, cost: 4, stock: 2, d: 'Keeps a bike quiet. Or a hinge.' }, /* provisional */
-    { id: 'cancoffee', n: 'Canned coffee', base: 4, cost: 3, sp: 6, drink: 1, d: 'Hot from the machine in the bay. +6 SP.' } /* provisional */
+    { id: 'etape', k: 'herb', hb: 'tape', n: 'Electrical tape', base: 3, cost: 2, stock: 3, d: 'For wiring, or a first-aid dressing.' },
+    { id: 'gauze', k: 'herb', hb: 'gauze', n: 'Gauze', base: 3, cost: 2, stock: 3, d: 'For a dressing. Craft with tape.' }
   ];
   function menuNow() { return P2.MENU.map(function (it) { var o = {}; Object.keys(it).forEach(function (k) { o[k] = it[k]; }); o.cost = shopCost(it.base); return o; }); }
   if (typeof SHOPS !== 'undefined') {
-    SHOPS.s2_hase = { n: 'Hase Repair', who: 'nq_hase', hi: 'Parts, tape, a cheap patch.', nq: 1, items: P2.MENU };
+    SHOPS.s2_hase = { n: 'Hase Repair', who: 'nq_hase', hi: 'Tape and gauze. That\u2019s the shop.', nq: 1, items: P2.MENU };
   }
   function openShop() {
     var items = menuNow();

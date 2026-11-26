@@ -819,7 +819,7 @@
       mori: 'The street slept last night. First time in a month. Come in. The kettle is on.',
       nao: 'I walked home and it was quiet. Thank you. I can keep the day job if the nights stay like this.',
       haru: 'The bikes did not come. Can I sit on the sofa now? Mori-san said maybe.',
-      hase: 'They are gone. I am still here. Parts, tape, a cheap patch. Nails prices, if that is the deal.'
+      hase: 'They are gone. I am still here. Tape and gauze. Nails prices, if that is the deal.'
     };
     txt(g, (title[who] || who) + '  \u00b7  ' + (phase === 'taken' ? 'after the block flips' : 'while the Riders hold it'), 450, 40, 18, '#f0e4c8', '800 ');
     var body = (phase === 'taken' ? taken : held)[who] || '';

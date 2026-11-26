@@ -227,6 +227,22 @@ async def main():
         ok('after down_dep, Masa\u2019s pin and the Riders legend chip read stood down',
            turf and turf.get('down') and 'stood down' in (turf.get('pin') or '') and 'Riders' in (turf.get('chip') or '') and 'stood down' in (turf.get('chip') or ''), turf)
 
+        godaPin = await ev(pg, """(function(){
+          var st=c2S();
+          st.e = st.e || {};
+          st.e.run_fac = 'arc';
+          st.e.down_bat = 1;
+          st.e.seal_sento = 1;
+          var M = root.FFF_C2LMAP || {};
+          return {
+            down: !!(M.down && M.down('goda')),
+            pin: M.pinLab && M.pinLab('goda'),
+            chip: M.chipLab && M.chipLab('goda')
+          };
+        })()""")
+        ok('after down_bat, Goda pin and the Hustlers legend chip read stood down',
+           godaPin and godaPin.get('down') and 'stood down' in (godaPin.get('pin') or '') and 'Hustlers' in (godaPin.get('chip') or '') and 'stood down' in (godaPin.get('chip') or ''), godaPin)
+
 
         shop = await ev(pg, """(function(){
           var P5=root.FFF_S2P5, M=root.FFF_S2MENUS;
@@ -320,16 +336,24 @@ async def main():
           try { if (root.EATG && typeof EATG.close==='function') EATG.close(); } catch(eG){}
           try { W.busy=false; W.dlg=false; W.cut=false; } catch(eW){}
           var H=typeof HITEM!=='undefined'&&HITEM;
-          var rec={ patch:H&&H.patch&&H.patch.hp, bpart:H&&H.bpart&&H.bpart.hp, patchPct:H&&H.patch&&H.patch.pct, bpartPct:H&&H.bpart&&H.bpart.pct };
+          var rec={
+            patch:H&&H.patch&&H.patch.hp, bpart:H&&H.bpart&&H.bpart.hp,
+            patchCombat:!!(H&&H.patch&&H.patch.combat), bpartCombat:!!(H&&H.bpart&&H.bpart.combat),
+            ic:!!(H&&H.patch&&H.patch.ic&&H.bpart&&H.bpart.ic)
+          };
           var hp0=SAVE.hp, max=MAXHP, bag=(SAVE.heal||[]).slice();
-          SAVE.hp=Math.max(1, max-20); SAVE.heal=['patch','bpart'];
-          var a=useHeal(0), hp1=SAVE.hp;
-          SAVE.heal=['bpart']; var b=useHeal(0), hp2=SAVE.hp;
+          var start=Math.max(1, max-20);
+          SAVE.hp=start; SAVE.heal=['patch','bpart'];
+          var a=useHeal(0), hp1=SAVE.hp, bag1=(SAVE.heal||[]).slice();
+          var b=useHeal(0), hp2=SAVE.hp, bag2=(SAVE.heal||[]).slice();
           SAVE.hp=hp0; SAVE.heal=bag; try{save();hud();}catch(e){}
-          rec.d6=hp1-(max-20); rec.d10=hp2-hp1; rec.ok=a&&b;
+          rec.a=a; rec.b=b; rec.hp1=hp1; rec.hp2=hp2; rec.start=start;
+          rec.kept=bag1.length===2 && bag2.length===2;
           return rec;
         })()""")
-        ok('Hase patch kit heals +6 and spare tube +10, not 20% bandage', heal and heal.get('patch')==6 and heal.get('bpart')==10 and heal.get('d6')==6 and heal.get('d10')==10 and heal.get('patchPct') is None, heal)
+        ok('patch kit and spare tube defs remain, but bag use heals nothing',
+           heal and heal.get('patch')==6 and heal.get('bpart')==10 and heal.get('patchCombat') and heal.get('bpartCombat') and heal.get('ic')
+           and heal.get('a') is False and heal.get('b') is False and heal.get('hp1')==heal.get('start') and heal.get('hp2')==heal.get('start') and heal.get('kept'), heal)
         lines = (after or {}).get('lines') or {}
         ok('after-seal Mori line is new (freight quiet)', any('quiet for good' in (x or '').lower() or 'kettle' in (x or '').lower() for x in lines.get('mori') or []), lines.get('mori'))
         ok('after-seal Nao line is new (day job)', any('day job' in (x or '').lower() for x in lines.get('nao') or []), lines.get('nao'))

@@ -48,61 +48,40 @@
   }
 
   /* ---------------- catalog ----------------
-   * Existing Chiyo / Hase prices are unchanged. New rows are flagged provisional. */
+   * GGD-49: restaurant menus are eat-in only (no to-go). Hase sells only tape + gauze
+   * at food-equivalent ¥3 base each (see s2p2.js). Depot is food and drink only. */
   var CHIYO_ITEMS = [
     { id: 'roll', n: 'Sweet roll', jp: 'あんロール', icon: 'sweetroll', hp: 14, base: 8, cost: 6, eat: 'sweetroll',
       eff: '+14 HP  ·  eat now', flavor: 'Anko folded in a warm roll. Pull it apart at the table.' },
     { id: 'dango', n: 'Dango', jp: 'だんご', icon: 'dango', hp: 8, base: 5, cost: 4, eat: 'dango',
       eff: '+8 HP  ·  eat now', flavor: 'Three colors on a stick. Soft, and gone too fast.' },
-    { id: 'togo_roll', n: 'Sweet roll to-go', jp: '持ち帰りのあんロール', icon: 'sweetroll', bag: 'sroll', base: 8, cost: 6,
-      eff: 'into your bag  ·  +18% HP', flavor: 'Wrapped while it’s still warm.' },
-    { id: 'togo_dango', n: 'Dango to-go', jp: '持ち帰りのだんご', icon: 'dango', bag: 'dango', base: 5, cost: 4,
-      eff: 'into your bag  ·  +10% HP', flavor: 'For the walk back.' },
     { id: 'hojicha', n: 'Hojicha', jp: 'ほうじ茶', icon: 'hojicha', sp: 6, base: 4, cost: 3, drink: 1, prov: 1,
       eff: '+6 SP  ·  drink now', flavor: 'Toasted tea, no sugar. Clears the last bite.' }
   ];
-  /* Existing Hase rows (etape / patch / bpart) take k, h, hp, stock, and prices
-   * from FFF_S2P2.MENU so a later +6 / +10 HP bag fix flows through. Menu copy
-   * already says +6 / +10. Do not change stock or restock here. */
   var HASE_META = {
-    etape: { jp: '電気テープ', icon: 'etape', flavor: 'For wiring, or a knuckle.', eff: 'into your pouch' },
-    patch: { jp: 'パンク修理', icon: 'patch', flavor: 'A cheap roadside repair kit.' },
-    bpart: { jp: '予備チューブ', icon: 'bpart', flavor: 'A patched inner tube. You can wrap a cut with it.' },
-    chainoil: { jp: 'チェーンオイル', icon: 'chainoil', flavor: 'Keeps a bike quiet. Or a hinge.', eff: 'into your pouch', prov: 1 },
-    cancoffee: { jp: '缶コーヒー', icon: 'cancoffee', flavor: 'Hot from the machine in the bay.', eff: '+6 SP  ·  drink now', prov: 1 }
+    etape: { jp: '電気テープ', icon: 'etape', flavor: 'For wiring, or a first-aid dressing.', eff: 'into your pouch' },
+    gauze: { jp: 'ガーゼ', icon: 'gauze', flavor: 'For a dressing. Craft with tape.', eff: 'into your pouch' }
   };
-  var HASE_NEW = [
-    { id: 'chainoil', n: 'Chain oil', k: 'herb', hb: 'oil', base: 5, cost: 4, stock: 2, prov: 1 },
-    { id: 'cancoffee', n: 'Canned coffee', base: 4, cost: 3, sp: 6, drink: 1, prov: 1 }
-  ];
   var HASE_FALLBACK = [
     { id: 'etape', n: 'Electrical tape', k: 'herb', hb: 'tape', base: 3, cost: 2, stock: 3 },
-    { id: 'patch', n: 'Patch kit', k: 'heal', h: 'patch', hp: 6, base: 4, cost: 3, stock: 3 },
-    { id: 'bpart', n: 'Spare tube', k: 'heal', h: 'bpart', hp: 10, base: 6, cost: 5, stock: 2 }
+    { id: 'gauze', n: 'Gauze', k: 'herb', hb: 'gauze', base: 3, cost: 2, stock: 3 }
   ];
   function decorateHase(it) {
     var o = {}, m = HASE_META[it.id] || {};
     Object.keys(it).forEach(function (k) { o[k] = it[k]; });
     Object.keys(m).forEach(function (k) { o[k] = m[k]; });
-    if (o.hp && o.k === 'heal' && !m.eff) o.eff = 'into your bag  ·  +' + o.hp + ' HP';
     return o;
   }
   function haseItems() {
     var base = (root.FFF_S2P2 && FFF_S2P2.MENU && FFF_S2P2.MENU.length) ? FFF_S2P2.MENU.slice() : HASE_FALLBACK.slice();
-    var have = {}, out = base.map(function (it) { have[it.id] = 1; return decorateHase(it); });
-    HASE_NEW.forEach(function (it) { if (!have[it.id]) out.push(decorateHase(it)); });
-    return out;
+    return base.map(function (it) { return decorateHase(it); });
   }
   var HASE_ITEMS = haseItems();
   var DEPOT_ITEMS = [
     { id: 'onigiri', n: 'Onigiri', jp: 'おにぎり', icon: 'onigiri', hp: 10, base: 6, cost: 5, eat: 'onigiri', prov: 1,
       eff: '+10 HP  ·  eat now', flavor: 'From the break-room rice cooker. Still a little warm.' },
     { id: 'cancoffee', n: 'Canned coffee', jp: '缶コーヒー', icon: 'cancoffee', sp: 6, base: 4, cost: 3, drink: 1, prov: 1,
-      eff: '+6 SP  ·  drink now', flavor: 'Night-shift blend, stenciled can.' },
-    { id: 'ptape', n: 'Packing tape', jp: '梱包テープ', icon: 'ptape', k: 'herb', hb: 'ptape', base: 3, cost: 2, stock: 3, prov: 1,
-      eff: 'into your pouch', flavor: 'For crates, and for a split knuckle.' },
-    { id: 'gauze', n: 'Yard gauze', jp: 'ガーゼ', icon: 'gauze', k: 'heal', h: 'bandage', hp: 8, base: 5, cost: 4, stock: 2, prov: 1,
-      eff: 'into your bag  ·  +8 HP', flavor: 'The first-aid tin by the time clock.' }
+      eff: '+6 SP  ·  drink now', flavor: 'Night-shift blend, stenciled can.' }
   ];
 
   var SHOPS_M = M.SHOPS = {
@@ -121,9 +100,9 @@
       id: 's2_hase', theme: 'hase', n: 'Hase Repair', jp: '長谷 整備', who: 'nq_hase',
       leave: '戻る  ·  Leave',
       hi: {
-        fierce: 'Parts, tape, a cheap patch. Nails prices, if that is the deal.',
-        strategic: 'Parts, tape, a cheap patch. Nails prices, if that is the deal.',
-        balanced: 'I am still here. Parts, tape, a cheap patch.'
+        fierce: 'Tape and gauze. Nails prices, if that is the deal.',
+        strategic: 'Tape and gauze. Nails prices, if that is the deal.',
+        balanced: 'I am still here. Tape and gauze.'
       },
       nails: function () { try { return !!(root.FFF_S2P2 && FFF_S2P2.nailsOn && FFF_S2P2.nailsOn()); } catch (e) { return false; } },
       items: function () { return HASE_ITEMS = haseItems(); }
@@ -504,12 +483,11 @@
     };
   }
 
-  /* Herb stubs for new pouch items so herbAdd does not throw. Provisional. */
+  /* Herb stubs so herbAdd does not throw on Hase tape. */
   try {
     if (typeof HERB !== 'undefined') {
-      if (!HERB.oil) HERB.oil = { n: 'Chain oil', ic: '🛢' };
-      if (!HERB.ptape) HERB.ptape = { n: 'Packing tape', ic: '📦' };
       if (!HERB.tape) HERB.tape = { n: 'Electrical tape', ic: '🎗' };
+      if (!HERB.gauze) HERB.gauze = { n: 'Gauze', ic: '🩹' };
     }
   } catch (eH) {}
 

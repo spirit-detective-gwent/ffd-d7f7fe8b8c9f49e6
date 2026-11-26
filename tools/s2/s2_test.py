@@ -147,7 +147,7 @@ async def main():
         ok('S2P + C2H painters live', art and art.get('s2p') and art.get('c2h'), art)
         ok('X3 clash picks the Wagashi battle room', art and art.get('room')=='c2_waga', art)
         ok('EATG knows sweetroll and dango', art and art.get('eatg'), art)
-        ok('Chiyo walks to the counter on order', 'chiyoToCounter' in src.split('S2_BEGIN')[-1].split('S2_END')[0] if 'S2_BEGIN' in src else False)
+        ok('Chiyo stands at the counter with no walk on Order', 'CHI_FRONT' in src.split('S2_BEGIN')[-1].split('S2_END')[0] and 'Step down to the counter' not in src.split('S2_BEGIN')[-1].split('S2_END')[0] if 'S2_BEGIN' in src else False)
         ok('Wagashi battle lifts shops onto a sidewalk', 'var LIFT = 56' in src and 'FOOT = H0 - LIFT' in src)
         ok('quest auto-opens after seal', info and info.get('q') == 0, info)
         ok('next rival is depot (Masa)', info and info.get('next') == 'depot', info)
@@ -159,7 +159,7 @@ async def main():
         ok('pin is Wagashi / Flip / Masa, not Jin',
            any(s in lab for s in ('Wagashi', 'Flip', 'Masa', 'cq2_s2_waga')) and 'Neon' not in lab, tgt)
 
-        # t292: customer stays in front of the counter; Chiyo walks up from the back
+        # t305: customer stays in front of the counter; Chiyo already stands at the front
         shop = await ev(pg, """(function(){
           var S2=root.FFF_S2, st=c2S();
           st.q.cq2_s2_waga=9; if (S2&&S2.setStg) S2.setStg('done');
@@ -190,14 +190,15 @@ async def main():
         ok('side aisle around the counter is blocked', shop and shop.get('aisle') == 1, shop)
         ok('customer floor in front of the counter is open', shop and shop.get('customer') == 0, shop)
         chi = (shop or {}).get('chi') or []
-        ok('Chiyo starts in the back, not at the counter front', chi and chi[1] <= 420 and chi[0] >= 700, shop)
+        ok('Chiyo stands at the front of the counter', chi and 430 <= chi[1] <= 500 and 580 <= chi[0] <= 720, shop)
         ok('Chiyo is a walker (existing walk frames)', chi and chi[2] is True, shop)
-        # walk her up and confirm she stops behind the counter, facing the customer
-        await ev(pg, """(function(){ try { root.FFF_S2.chiyoToCounter(function(){ root.__chiReady=1; }); } catch(e){ root.__chiReady='err:'+e; } return 1; })()""")
-        await pg.wait_for_timeout(2200)
-        walked = await ev(pg, """(function(){ var c=W.c2n&&W.c2n.s2; return { x:c&&Math.round(c.x), y:c&&Math.round(c.y), dir:c&&c.dir, ready:root.__chiReady, front:root.FFF_S2&&root.FFF_S2.CHI_FRONT }; })()""")
-        ok('Chiyo arrives at the front of the counter', walked and walked.get('y') is not None and 430 <= walked['y'] <= 500 and 580 <= walked['x'] <= 720, walked)
-        ok('Chiyo faces the customer (down) after the walk', walked and walked.get('dir') == 0, walked)
+        ok('Chiyo faces the customer (down) at the counter', chi and chi[3] == 0, shop)
+        # Order must not walk her; she is already at the front
+        await ev(pg, """(function(){ try { var c=W.c2n&&W.c2n.s2; root.__chi0={x:c&&c.x,y:c&&c.y}; root.FFF_S2.chiyoToCounter(function(){ root.__chiReady=1; }); } catch(e){ root.__chiReady='err:'+e; } return 1; })()""")
+        await pg.wait_for_timeout(200)
+        stood = await ev(pg, """(function(){ var c=W.c2n&&W.c2n.s2, z=root.__chi0||{}; return { x:c&&Math.round(c.x), y:c&&Math.round(c.y), dir:c&&c.dir, ready:root.__chiReady, moved:c&&(Math.abs(c.x-z.x)>2||Math.abs(c.y-z.y)>2), front:root.FFF_S2&&root.FFF_S2.CHI_FRONT }; })()""")
+        ok('Chiyo stays at the front of the counter on Order', stood and stood.get('y') is not None and 430 <= stood['y'] <= 500 and 580 <= stood['x'] <= 720 and not stood.get('moved'), stood)
+        ok('Chiyo still faces the customer after Order', stood and stood.get('dir') == 0, stood)
         # leave the room so later tests still start in town
         await ev(pg, """(function(){ try{ c2Go('town',[2360,3300,0]); }catch(e){} try{ if(W.ryo){ W.ryo.x=2360; W.ryo.y=3300; place(W.ryo,0);} camera(true);}catch(e2){} return typeof c2Room==='function'?c2Room():null; })()""")
 
@@ -603,6 +604,7 @@ async def main():
           var x0=W.ryo&&W.ryo.x, y0=W.ryo&&W.ryo.y;
           var ch=M&&M.CHIYO_ITEMS, hs=M&&M.HASE_ITEMS, dp=M&&M.DEPOT_ITEMS;
           var nailsCh=M&&M.SHOPS.s2_chiyo.nails();
+          SAVE.hp=30; SAVE.sp=20; SAVE.items=40; try{hud();}catch(eH){}
           M.open('s2_chiyo');
           var el=document.getElementById('wshop');
           var html=el?el.innerHTML:'';
@@ -615,19 +617,27 @@ async def main():
           return {
             has:!!(M&&M.has&&M.has('s2_chiyo')&&M.has('s2_hase')&&!M.has('s2_depot')),
             art:!!(P&&P.menuIcon&&P.menuChrome),
-            chiyoN: ch&&ch.length, hoji: ch&&ch.some(function(i){return i.id==='hojicha'&&i.prov&&i.drink&&i.base===4&&i.cost===3;}),
+            chiyoN: ch&&ch.length,
+            hoji: ch&&ch.some(function(i){return i.id==='hojicha'&&i.prov&&i.drink&&i.base===4&&i.cost===3;}),
             roll: ch&&ch[0]&&ch[0].eat==='sweetroll'&&ch[0].base===8&&ch[0].cost===6,
-            haseN: hs&&hs.length, oil: hs&&hs.some(function(i){return i.id==='chainoil'&&i.prov;}),
-            tape: hs&&hs[0]&&hs[0].base===3&&hs[0].cost===2,
-            depN: dp&&dp.length, depOnigiri: dp&&dp[0]&&dp[0].eat==='onigiri',
+            togo: ch&&ch.some(function(i){return i.bag || /to-go/i.test(i.n||'') || /^togo/.test(i.id||'');}),
+            haseN: hs&&hs.length,
+            oil: hs&&hs.some(function(i){return i.id==='chainoil';}),
+            patch: hs&&hs.some(function(i){return i.id==='patch'||i.id==='bpart';}),
+            gauze: hs&&hs.some(function(i){return i.id==='gauze'&&i.hb==='gauze'&&i.base===3;}),
+            tape: hs&&hs.some(function(i){return (i.id==='etape'||i.hb==='tape')&&i.base===3&&i.cost===2;}),
+            depN: dp&&dp.length,
+            depOnigiri: dp&&dp[0]&&dp[0].eat==='onigiri',
+            depMats: dp&&dp.some(function(i){return i.id==='ptape'||i.id==='gauze'||i.k==='heal'||i.bag;}),
             openClass: el&&el.className, jp: html.indexOf('千代和菓子')>=0, struck:struck,
             posOk: x0===x1 && y0===y1, depotOpen:!!depotOpen, nailsCh:!!nailsCh
           };
         })()""")
         ok('S2MENUS is present and depot stays unhas()', menu and menu.get('has') and menu.get('art'), menu)
         ok('Chiyo menu keeps sweet-roll prices and adds provisional hojicha', menu and menu.get('roll') and menu.get('hoji'), menu)
-        ok('Hase menu keeps tape prices and adds provisional chain oil', menu and menu.get('tape') and menu.get('oil'), menu)
-        ok('depot catalog has an onigiri eat-in (unwired)', menu and menu.get('depOnigiri'), menu)
+        ok('Chiyo menu has no to-go rows', menu and menu.get('togo') is False, menu)
+        ok('Hase menu is tape and gauze at food-equivalent prices', menu and menu.get('tape') and menu.get('gauze') and menu.get('haseN')==2 and not menu.get('oil') and not menu.get('patch'), menu)
+        ok('depot catalog is food and drink only', menu and menu.get('depOnigiri') and menu.get('depN')==2 and not menu.get('depMats'), menu)
         ok('Chiyo themed menu opens with JP header and Nails strikethrough', menu and menu.get('jp') and menu.get('struck') and menu.get('nailsCh') and 's2m-chiyo' in str(menu.get('openClass')), menu)
         ok('opening the menu does not move the player', menu and menu.get('posOk'), menu)
         ok('depot open() is a no-op until phase 5 wires it', menu and menu.get('depotTried', True) is not False and not menu.get('depotOpen'), menu)
