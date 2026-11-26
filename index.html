@@ -43325,13 +43325,20 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       requestAnimationFrame(step);
     })();
   }
-  /* Turn a c2Npc (map sheet + waddle) into a walker so existing walk-sheet frames play. */
+  /* Turn a c2Npc (map sheet + waddle) into a walker so existing walk-sheet frames play.
+     c2Npc's waddle starts a cel idle loop; that loop sizes frames as the 4-col idle sheet.
+     If it keeps ticking after we switch to the 8-col walk sheet, two Chiyos appear in one box. */
   function asWalker(s, who) {
-    if (!s || !s.el || s.walker) return s;
+    if (!s || !s.el) return s;
+    try { if (typeof celLoopOff === 'function') celLoopOff(s); } catch (eL) {}
     s.walker = true; s.el.classList.add('walker');
     s.el.dataset.who = who; s.el.dataset.gait = 'walk';
+    if (s.el.dataset.loop) delete s.el.dataset.loop;
+    if (s.el.dataset.bw) s.el.dataset.bw = '';
     if (s.dir == null) s.dir = 0; if (s.fr == null) s.fr = 1; if (s.ph == null) s.ph = 1;
-    s.sheet = null;
+    s.sheet = null; s.loop = null;
+    try { if (typeof SHC === 'object' && SHC) { SHC[who + '_walk'] = 8; SHC[who + '_idle'] = 4; } } catch (eS) {}
+    try { if (typeof SHR === 'object' && SHR) { SHR[who + '_walk'] = 4; SHR[who + '_idle'] = 4; } } catch (eR) {}
     if (typeof animWalk === 'function') animWalk(s, 0); else place(s, 0);
     return s;
   }
@@ -43764,7 +43771,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     }
     lockIn(true);
     /* Step down to the counter, then walk sideways along it (existing side frames) to the serving gap. */
-    move(CHI, [[CHI_BACK[0], CHI_FRONT[1]], [CHI_FRONT[0], CHI_FRONT[1]]], 95, function () {
+    move(CHI, [[CHI_BACK[0], CHI_FRONT[1]], [CHI_FRONT[0], CHI_FRONT[1]]], 120, function () {
       chiReady = 1; chiyoFaceCustomer(); lockIn(false); if (done) done();
     });
   }

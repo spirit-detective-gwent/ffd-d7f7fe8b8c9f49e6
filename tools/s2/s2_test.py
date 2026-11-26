@@ -54,7 +54,7 @@ async def newpage(p, errs):
     html = body()
     async def rt(route): await route.fulfill(body=html, content_type='text/html')
     await pg.route('**/index.html', rt)
-    await pg.goto(f'http://127.0.0.1:{PORT}/index.html'); await pg.wait_for_timeout(2200)
+    await pg.goto(f'http://127.0.0.1:{PORT}/index.html'); await pg.wait_for_timeout(2800)
     return b, pg
 
 async def boot_ch2_nails_seal(pg, path='fierce'):
