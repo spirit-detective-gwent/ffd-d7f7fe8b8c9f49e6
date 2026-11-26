@@ -2119,8 +2119,6 @@ span.ashine::before{display:none}
 #wdlg.gtrain .bt button.glock,#wdlg.gtrain .bt button.glock:disabled{background:#d5e4f2;color:#1a3148;opacity:1}
 #wdlg.gtrain .bt button.glock small{color:#1a3148}
 #wdlg.gtrain .snm{color:#1a3148}
-#matmove{position:fixed;left:50%;top:16%;transform:translateX(-50%);z-index:80;pointer-events:none;background:#1a3148;color:#e7e0d2;border-radius:12px;padding:8px 14px;font:800 16px system-ui;text-align:center}
-#matmove small{display:block;color:#d5e4f2;font:600 12px system-ui}
 /* v6563 genji-teach v2: Genji's shadow lesson (first time) + two-hit repeat. Finite animations only, nothing loops. */
 #world .tcshadow{filter:brightness(0) invert(1) sepia(1) hue-rotate(168deg) saturate(7) brightness(1.15) drop-shadow(0 0 5px rgba(160,230,255,1)) drop-shadow(0 0 16px rgba(110,160,255,.85))!important;opacity:0;transition:opacity .45s ease-out;pointer-events:none}
 #world .tcshadow.on{opacity:.84}
@@ -10021,7 +10019,7 @@ function openEvo(S, opt) {
     UI.ev('enh:evo:' + g.e.from + ':' + g.e.to);
     flameStop(); var panel = document.getElementById('wenh'); if (panel) panel.classList.remove('on');
     var again = function () { openEvo(S, V); };
-    if (root.MAT && root.MAT.genji) root.MAT.genji(g.to.n, again); else { if (AU) AU.play('pl_heal', { gain: 0.7 }); again(); }
+    if (root.MAT && root.MAT.genji) root.MAT.genji(g.to.n, again, { mode: 'evo', card: g.e.to }); else { if (AU) AU.play('pl_heal', { gain: 0.7 }); again(); }
   };
   var later = evoEdges(S.act || 'ryo').filter(function (e) { return e.teacher !== 'genji'; });
   if (later.length) body.appendChild(el('p', 'ekept', 'Not from me: ' + later.slice(0, 4).map(function (e) { return E.cards()[e.to] ? E.cards()[e.to].n : e.to; }).join(', ') + (later.length > 4 ? '\u2026' : '') + '. Other trainers can take those further.'));
@@ -14722,8 +14720,6 @@ function matPump() { matPose(W.ryo, 'ryo_cin', 2, 0, 0, 0); matPose(W.aoi, 'aoi_
 function matHits() { var frames = [2, 0, 2, 4, 2], i = 0, tok = W.matTok; matGuard(); (function step() { if (W.matTok !== tok) return; var f = frames[i]; matPose(W.ryo, 'ryo_walk', f, 2, 0, 0); matPose(W.aoi, 'aoi_rdy', (i % 4), 1, 0, 0); if (f === 2 && i < frames.length - 1) AU.play('whoosh', { gain: 0.32 }); if (f === 0 || f === 4) { AU.play('hit', { gain: 0.55, rate: 1.15 }); if (typeof g5Spark === 'function') g5Spark(300, 292, 0); } if (++i < frames.length) setTimeout(step, 280); })(); }
 function matIntro(done) { var p = matPath(), steps = p === 'fierce' ? [{ ms: 1600, go: matBump }, { ms: 1100, go: matGuard }] : p === 'strategic' ? [{ ms: 900, go: matNod }, { ms: 1000, go: matPoint }, { ms: 800, go: matGuard }] : p === 'balanced' ? [{ ms: 1600, go: matBow }, { ms: 1000, go: matGuard }] : [{ ms: 1000, go: function () { matPose(W.ryo, 'ryo_walk', 2, 2, 0, 0); matPose(W.aoi, 'aoi_walk', 2, 1, 0, 0); W.ryo.x = 220; W.aoi.x = 316; place(W.ryo, 0); place(W.aoi, 0); } }, { ms: 900, go: matGuard }]; ev('world:mat:intro:' + (p || 'neutral')); matRun(steps, done); }
 function matDrill(done) { ev('world:mat:drill'); matRun([{ ms: 700, go: matGuard }, { ms: 1500, go: matHits }, { ms: 500, go: matGuard }], done); }
-function matGenjiHits(g) { var frames = [2, 0, 2, 4, 2], i = 0, tok = W.matTok; if (typeof g5Genji === 'function') g5Genji(g, [0, 2, 3, 5, 6], 280);
-  (function step() { if (W.matTok !== tok) return; var f = frames[i]; matPose(W.ryo, 'ryo_walk', f, 2, 0, 0); if (f === 2 && i < frames.length - 1) AU.play('whoosh', { gain: 0.32 }); if (f === 0 || f === 4) { AU.play('hit', { gain: 0.55, rate: 1.15 }); if (typeof g5Spark === 'function') g5Spark(300, 292, 0); } if (++i < frames.length) setTimeout(step, 280); })(); }
 /* v6563 genji-teach v2. First time: "Genji's shadow lesson" in front of the ring. The room dims, a glowing shadow of Genji steps out of him
  * (the Alley Cat shadow-form look from the Nails lesson), throws the move, the student mirrors it face to face, and on the last hit the
  * shadow shatters and the REAL card (UI.cardEl: the card's own art and frame) bursts out of it, is burned in by a fox-fire brushstroke with
@@ -20916,21 +20912,6 @@ function c2GenjiReveal() { var S = c2S(), g = W.c2n && W.c2n.genji, r = W.ryo, a
     setTimeout(function () { /* beat 2: Genji shows his open palms; Ryo's 1-2 is caught: a leather crack + a spark */
       g5Genji(g, [4, 4, 5, 4, 5, 6], 140); g5Strip(r, G5ROW.spar, [3, 4, 5, 6, 7, 7], 140, null, { hold: 1, on: function (f) { if (f === 4 || f === 6) { AU.play('hit', { gain: 0.6, rate: 1.5 }); g5Spark(hx, hy, f === 6); ev('world:c2:reveal:catch:' + f); } } });
       setTimeout(function () { g5Off(r); g5GenjiOff(g); r.dir = 2; place(r, 0); W.cut = false; W.g5busy = 0; ev('world:c2:reveal:end'); jabDone = 1; both(); }, g5Ms(140 * 7 + 260)); }, g5Ms(150 * 6 + 120)); }); }
-function c2CopyReady() {
-  var E = root.ENGINE, cards = E && E.cards(), edges = (root.CARD_DATA && root.CARD_DATA.story && root.CARD_DATA.story.evo) || [], evo = {};
-  edges.forEach(function (e) { if (e.teacher === 'genji' && e.ch === 2) evo[e.from] = 1; });
-  if (!cards || !SAVE.cards) return { n: 0, line: 'No extra copies ready' };
-  var ch = SAVE.act === 'aoi' ? 'aoi' : 'ryo', by = {};
-  SAVE.cards.forEach(function (r) { var c = cards[r.id]; if (!c || c.t === 'sig' || c.ch !== ch || !c.ladder) return; (by[r.id] = by[r.id] || { c: c, recs: [] }).recs.push(r); });
-  var total = 0, top = null;
-  Object.keys(by).forEach(function (id) {
-    var o = by[id], ready = 0;
-    if (!evo[id]) return;
-    o.recs.slice(1).forEach(function () { ready++; });
-    if (!ready) return; total += ready; if (!top || ready > top.n) top = { n: ready, name: o.c.n };
-  });
-  return { n: total, line: top ? top.name + ' \u00d7' + top.n + ' ready' : 'No extra copies ready' };
-}
 function c2LessonRows() {
   var L = SAVE.c2les || {}, kos = SAVE.c2kos | 0, fac = typeof c2FacN === 'function' ? c2FacN() : 0;
   return [
@@ -20939,23 +20920,43 @@ function c2LessonRows() {
     { id: 'cover', n: 'Cover Up', learned: !!L.cover, avail: !!L.assist && !L.cover && (kos >= 3 || fac >= 6) }
   ];
 }
-function c2GenjiFace() { return '<div class="sh"><i class="pt2" style="background-image:url(' + IMG.kurogane_fig + ')"></i><b class="snm">Genji</b></div><div class="tw"><p class="gess">\u2726 Spirit Essence <b>' + (SAVE.ess | 0) + '</b></p><p class="q">\u201cI taught you the move. The extra copies can still be trained.\u201d</p></div>'; }
+function c2GenjiFace() { return '<div class="sh"><i class="pt2" style="background-image:url(' + IMG.kurogane_fig + ')"></i><b class="snm">Genji</b></div><div class="tw"><p class="gess">\u2726 Spirit Essence <b>' + (SAVE.ess | 0) + '</b></p><p class="q">\u201cI show a move once. After that, you train it.\u201d</p></div>'; }
 function c2PatchLabel() { var left = c2PatchLeft(), hp = c2PatchAmt(); return left ? ('Patching in ' + left + ' s') : ('Patch me up (+' + hp + ' HP)'); }
+/* v6563 Genji's "Learn a basic": 5 Spirit Essence buys one more copy of one of the active fighter's five basics (own cap 6 per card).
+ * Ryo and Aoi each have their own list; Ryo's Ground Crack and Aoi's Riposte stay out. The copy goes through the same teach scene as an evolve
+ * (the shadow lesson the first time, the two-hit exchange after that). The flag SAVE.genjiTeach is set when the scene ends. */
+var GENJI_LEARN = { cost: 5, cap: 6, ryo: ['r_jab', 'r_crack', 'r_hook', 'r_ouen', 'r_tape'], aoi: ['a_kata', 'a_kote', 'a_wind', 'a_readln', 'a_step'] };
+function c2GenjiLearnRows() { var who = SAVE.act === 'aoi' ? 'aoi' : 'ryo', C = (root.ENGINE && root.ENGINE.cards && root.ENGINE.cards()) || {}, own = {};
+  (SAVE.cards || []).forEach(function (r) { own[r.id] = (own[r.id] | 0) + 1; });
+  return GENJI_LEARN[who].filter(function (id) { return !!C[id]; }).map(function (id) { return { id: id, n: C[id].n, own: own[id] | 0 }; }); }
+function c2GenjiLearn() { var rows = c2GenjiLearnRows(), ess = SAVE.ess | 0, cost = GENJI_LEARN.cost, cap = GENJI_LEARN.cap, short = ess < cost;
+  var btns = rows.map(function (r) { var full = r.own >= cap;
+    return [r.n + '<small>' + (full ? 'Own ' + r.own + ' \u00b7 the most you can carry' : 'Own ' + r.own + '/' + cap + ' \u00b7 ' + cost + ' \u2726') + '</small>', function () { setTimeout(function () { c2GenjiLearnBuy(r.id); }, 0); }, 'gmain', full || short]; });
+  btns.push(['Back', function () { setTimeout(c2GenjiMenu, 0); }, 'glater']);
+  dialog(c2GenjiFace() + '<p class="gnote">' + (short ? 'Not enough Essence. A basic costs ' + cost + ' \u2726.' : 'Pick a basic. It costs ' + cost + ' \u2726 a copy, and you can carry ' + cap + ' of each.') + '</p>', btns);
+  $('#wdlg').classList.add('scene', 'c2hq', 'gtrain'); ev('world:c2:genji:learn:' + (short ? 'short' : 'open')); }
+function c2GenjiLearnBuy(id) { var rows = c2GenjiLearnRows(), r = rows.filter(function (x) { return x.id === id; })[0], cost = GENJI_LEARN.cost, who = SAVE.act === 'aoi' ? 'aoi' : 'ryo';
+  if (!r || r.own >= GENJI_LEARN.cap || (SAVE.ess | 0) < cost || !root.STORY) { c2GenjiLearn(); return; }
+  SAVE.ess = (SAVE.ess | 0) - cost; root.STORY.grant(SAVE, id, 1); save(); hud(); ev('world:c2:genji:learn:buy:' + id + ':' + (r.own + 1));
+  var again = function () { if (typeof c2GenjiLearn === 'function') setTimeout(c2GenjiLearn, 60); };
+  if (root.MAT && root.MAT.genji) root.MAT.genji(r.n, again, { mode: 'learn', who: who, card: id }); else { try { AU.play('pl_heal', { gain: 0.7 }); } catch (e) {} again(); } }
 function c2GenjiMenu() { var S = c2Cyc(), patch = c2PatchLabel(), ch3 = typeof chN === 'function' && chN() === 3;
   if (ch3) {
     var b3 = [['Street Intel', function () { setTimeout(function () { c2Intel(); }, 0); }],
+      ['Learn a basic<small>' + GENJI_LEARN.cost + ' \u2726 each</small>', function () { setTimeout(c2GenjiLearn, 0); }],
       [patch, function () { setTimeout(c2Patch, 0); }],
       ['Conditioning (+2\u20134 max HP)', function () { setTimeout(function () { if (typeof c2CondAsk === 'function') c2CondAsk(); }, 0); }],
       ['Later', null]];
     dialog('<div class="sh"><i class="pt2" style="background-image:url(' + IMG.kurogane_fig + ')"></i><b class="snm">Genji Kurogane</b></div><div class="tw"><p class="q">\u201c' + C2_GENJI_IDLE[(S.gi = ((S.gi | 0) + 1)) % C2_GENJI_IDLE.length] + '\u201d</p></div>', b3);
     $('#wdlg').classList.add('scene', 'c2hq'); ev('world:c2:genji:menu'); return;
   }
-  var info = c2CopyReady(), open = c2LessonRows().filter(function (r) { return r.avail; });
-  var btns = [['Evolve copies<small>' + info.line + '</small>', function () { setTimeout(function () { if (root.ENH) { var o = trainOpt(); o.onBack = c2GenjiMenu; root.ENH.openEvo(SAVE, o); } }, 0); }, 'gmain']];
+  var open = c2LessonRows().filter(function (r) { return r.avail; });
+  var btns = [['Evolve moves', function () { setTimeout(function () { if (root.ENH) { var o = trainOpt(); o.onBack = c2GenjiMenu; root.ENH.openEvo(SAVE, o); } }, 0); }, 'gmain'],
+    ['Learn a basic<small>' + GENJI_LEARN.cost + ' \u2726 each</small>', function () { setTimeout(c2GenjiLearn, 0); }, 'gmain']];
   btns.push([patch, function () { setTimeout(c2Patch, 0); }, 'gmain']);
   open.forEach(function (r) { btns.push([r.n + ' \u00b7 Start', function () { setTimeout(function () { if (typeof c2LessonOffer === 'function') c2LessonOffer(r.id); }, 0); }, 'gmain']); });
   btns.push(['Later', null, 'glater']);
-  dialog(c2GenjiFace() + '<p class="gnote">Evolve the extra copies you already own. Signature moves stay as they are.</p>', btns);
+  dialog(c2GenjiFace() + '<p class="gnote">Evolve a move you own, or learn a basic from me. Signature moves stay as they are.</p>', btns);
   $('#wdlg').classList.add('scene', 'c2hq', 'gtrain'); ev('world:c2:genji:menu'); }
 function c2Patch() { var S = c2Cyc(), add = c2PatchAmt(), left = c2PatchLeft();
   if (SAVE.hp >= MAXHP) { scene(null, [['kurogane', 'You\u2019re not bleeding. Save my tape for when you are.', { mood: 'neutral' }]]); ev('world:c2:patch:full'); return; }
