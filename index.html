@@ -621,6 +621,22 @@ body.cuc .sparks{z-index:19}
 #game.story,#result.story{z-index:1}
 #game.story{background:linear-gradient(180deg,rgba(10,12,28,.62) 0,rgba(8,9,18,.42) 40%,rgba(12,10,16,.48) 70%,rgba(20,14,10,.72) 100%)}
 #result.story{background:rgba(6,7,14,.62)}
+/* v6.5.64 defeat screen: framed winner bust + short text. No retry button, one Wake up button. */
+#rArt.ko2{width:min(56vw,226px);height:min(74.7vw,301px);border:3px solid #ff5b5b;border-radius:14px;background-size:cover;background-position:50% 12%;background-repeat:no-repeat;position:relative;overflow:hidden;box-shadow:0 0 0 2px rgba(0,0,0,.6),0 10px 26px rgba(0,0,0,.6),0 0 26px rgba(255,70,70,.28);transition:opacity .25s ease;margin-top:6px}
+#rArt.ko2.kowait0{opacity:0}
+#rArt.ko2.kofig{background-size:contain;background-position:50% 100%;background-color:#14101c}
+#rArt.ko2::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(40,0,0,.0) 52%,rgba(8,0,6,.88) 100%);pointer-events:none}
+#rArt.ko2 b{position:absolute;left:0;right:0;bottom:calc(24px * var(--ts,1));z-index:1;font:900 calc(18px * var(--ts,1))/1.1 "Arial Black",Impact,system-ui;color:#fff;text-shadow:0 2px 4px #000;letter-spacing:.3px}
+#rArt.ko2 b:last-child{bottom:8px}
+#rArt.ko2 u{position:absolute;left:8px;right:8px;bottom:8px;z-index:1;text-decoration:none;font:italic 700 calc(13px * var(--ts,1))/1.15 system-ui;color:#ffd48a;text-shadow:0 1px 3px #000}
+#result.lose.story h1{margin-top:8px;line-height:1}
+#rSub .kowake{display:block;margin-top:2px;color:#ddd;font-size:calc(15px * var(--ts,1));line-height:1.3}
+#rSub .kocost{display:block;margin-top:8px;color:#ffb0a0;font-size:calc(16px * var(--ts,1))}
+#rSub .kodim{display:block;margin-top:6px;color:#9aa;font-size:calc(12px * var(--ts,1))}
+#rSub .koaoi{display:block;margin:10px auto 0;max-width:330px;text-align:left;padding:7px 10px;border-left:3px solid #2f9d92;background:rgba(20,40,44,.55);border-radius:0 8px 8px 0;color:#d9f1ee;font-size:calc(13.5px * var(--ts,1));line-height:1.3}
+#rSub .koaoi b{display:block;color:#7fe0d2;font-size:calc(12px * var(--ts,1));margin-bottom:1px}
+#rSub .kowait{display:block;margin-top:6px;color:#ffd48a;font-style:italic;font-size:calc(13px * var(--ts,1))}
+@media (max-height:700px){#rArt.ko2{width:min(44vw,170px);height:min(58.7vw,226px)}}
 #rSub .lost{display:inline-block;margin-top:8px;color:#ffb0a0;font-size:calc(15px * var(--ts, 1))}#rSub .lost2{display:inline-block;margin-top:4px;color:#ffd48a;font-weight:700}#rSub .dim2{color:#aab;font-size:calc(12px * var(--ts, 1))}
 /* v4.3 switch buttons + who's playing */
 #wpause .pbt .swb,#wcards .ch .sw{background:linear-gradient(180deg,#3a5fa8,#1f3466);color:#fff}
@@ -8580,6 +8596,11 @@ async function afterTurn() {
   }
   ST.busy = false; render(false); if (tut()) tutTurn();
 }
+/* v6.5.64 defeat screen art: the winner's painted bust in a framed card (CSS only, no loops). */
+function koArtReset() { var a = $('#rArt'); if (!a) return; a.className = ''; a.innerHTML = ''; a.style.backgroundSize = ''; var m = $('#rMap'); if (m && m.classList.contains('kowake')) { m.classList.remove('kowake'); m.textContent = 'Back to the map'; } }
+function koArtSet(url, fit, plate) { var a = $('#rArt'); if (!a || !url) return false; var im = new Image(); a.className = 'ko2' + (fit === 'fig' ? ' kofig' : '') + ' kowait0'; a.style.backgroundImage = 'url(' + url + ')'; a.innerHTML = plate || ''; im.onload = im.onerror = function () { a.classList.remove('kowait0'); }; im.src = url; return true; }
+function koArtApply(k) { if (!k) return; koArtSet(k.url, k.fit, k.plate); if (k.title) $('#rTitle').textContent = k.title; if (k.btn) { var m = $('#rMap'); if (m) { m.textContent = k.btn; m.classList.add('kowake'); } } ev('story:ko:art:' + (k.fit || 'none')); }
+function koArtDuel(id) { var K = root.FFF_KO; if (!K || !K.bust) return; var u = K.bust(id, 0); if (u) koArtSet(u, 'bust', '<b>' + ((CH[id] && CH[id].name) || '') + '</b>'); }
 function artOf(ch) { return ch === 'ryo' && !fistOn(ch === ST.me ? 0 : 1) && IMG.ryo_plain ? 'ryo_plain' : CH[ch].art; } // v4.8: Ryo's fire portrait only when the fire fist is on
 function gkQuietLose(w) { var c = ST.story && ST.story.ctx; return !!(c && w === 1 && (c.gkLoop || (c.gkAwaitBond && !c.gkFin))); } /* v4.71 Hold #18 */
 function bwStop() { ST.bwTok = (ST.bwTok | 0) + 1; if (ST.bwT) { clearTimeout(ST.bwT); ST.bwT = null; } } // the KO watchdog must not fire after the match has already handed back to a scene
@@ -8596,7 +8617,7 @@ function endMatch() {
   var ws = b.s[w] || { hp: 0 };
   if (!b.s[w]) ev('match:end:noside:' + w);
   if (ST.story) $('#rSub').textContent = ''; else $('#rSub').textContent = (w === 0 ? CH[ST.me].name : foeName(ST.foe)) + ' takes the duel with ' + ws.hp + ' HP left \u00b7 ' + (Math.floor((b.n - 1) / 2) + 1) + ' turns';
-  $('#rArt').style.backgroundImage = 'url(' + IMG[artOf(w === 1 ? ST.foe : ST.me)] + ')';
+  $('#rArt').style.backgroundImage = 'url(' + IMG[artOf(w === 1 ? ST.foe : ST.me)] + ')'; koArtReset(); if (w === 1 && !ST.story) koArtDuel(ST.foe); // v6.5.64: the defeat portrait is the winner's current painted bust, never the old full-body art
   var cineW = w === 0 && !!ST.story && root.FFF_NO_VC == null; // v4.10: the pose plays over the fight scene; the result screen comes after the grade
   $('#result').className = 'screen' + (cineW ? '' : ' on') + ' ' + (w === 0 ? 'win' : 'lose') + (ST.story ? ' story' : ''); if (!cineW) show('result'); var _gkSkipMus = ST.story && ST.story.ctx && (ST.story.ctx.gkLoop || (ST.story.ctx.gkPhase === 1 && w === 0) || (ST.story.ctx.gkAwaitBond && w === 1)); if (!_gkSkipMus && !(w === 0 && ST.story && root.FFF_NO_VC == null)) AU.music(w === 0 ? 'victory' : 'defeat');
   $('#vBars').innerHTML = ''; $('#vLine').className = ''; $('#vLine').innerHTML = ''; $('#vSpot').className = ''; $('#result').onclick = null; VC = null;
@@ -8611,6 +8632,7 @@ function endMatch() {
       ST.story.gheal = gheal; try { if (root.FFF_WAVE) root.FFF_WAVE.graded(ST, gr, b); } catch (eWv3) { ev('wave:graded:err'); } ev('grade:' + gr.k + ':' + gr.score + ':' + d0 + '>' + ST.story.drop + ':hp' + gheal); }
     var ncI = 0;
     try { ST.story.mQuiet = !!(ST.b && ST.b.mQuiet); } catch (eMq) {} /* v6.5.24 Lampglass unlock */
+    if (w === 1) ST.story.koLead = ((b.grp || []).filter(function (s) { return s && s.hp > 0; })[0] || b.grp[0] || {}).ch || ''; /* v6.5.64: who put you down (the defeat screen portrait) */
     var res = ST.story.settle ? ST.story.settle(w === 0, ST.story) : null; // v4.3: the fight's rewards (or what was forfeited), from the map
     /* v4.64: phase1 / endurance loop skip result screens; keep battle_gouki across revivals */
     if (w === 0 && res && res.gkPhase === 1) { ev('story:end:gkphase1'); /* keep music into revive scene */ setTimeout(function () { backToMap(); }, 200); return; }
@@ -8618,7 +8640,8 @@ function endMatch() {
     if (w === 1 && ST.story.ctx && ST.story.ctx.gkLoop) { ST.story.ctx.gkBond = 1; ev('story:end:gkloop:lose'); AU.music(null); setTimeout(function () { backToMap(); }, 200); return; }
     if (w === 1 && ST.story.ctx && ST.story.ctx.gkAwaitBond && !ST.story.ctx.gkFin) { ST.story.ctx.gkBond = 1; ev('story:end:gkbond'); AU.music(null); setTimeout(function () { backToMap(); }, 200); return; }
     $('#rSub').innerHTML = w === 0 ? (boss ? 'Gouki Daimon is down. The gym doors are still locked\u2026 for now.' : ST.story.mini ? CH[ST.story.mini].name + ' is down. The spirit riding them slips back through the Veil.' : (n > 1 ? n + ' possessed bullies' : foeName(b.grp[0].ch)) + ' knocked out. The leaking spirit' + (n > 1 ? 's scatter' : ' scatters') + '.') + '<span class="vl"><b class="drop">+\u00a5<u class="vn">' + (ST.story.drop || n) + '</u> yen' + (ST.story.soda ? ' \u00b7 soda bonus +' + ST.story.soda : '') + '</b>' + (ST.story.grade ? '<b class="gline g' + ST.story.grade.k + '">Grade ' + ST.story.grade.k + ' \u00b7 ' + ST.story.grade.w + (ST.story.gskip ? '' : ' \u00b7 bonus +' + (ST.story.gbonus | 0) + ' yen') + '</b>' : '') + '</span>' + (ST.story.wbonus ? '<span class="vl"><b class="gline gS">S on both waves \u00b7 bonus +' + (ST.story.wbonus | 0) + ' yen</b></span>' : '') + (res && res.ess ? '<span class="vl"><b class="drop">+' + (res.ess | 0) + ' Spirit Essence</b></span>' : '') + (ST.story.gheal ? '<span class="vl"><b class="drop">+' + ST.story.gheal + ' HP</b></span>' : '') + (res && res.lines.length ? res.lines.map(function (l) { if (res.bond && /^BOND \+/.test(l)) return bondRow(res.bond, l); var ci = /^NEW CARD! /.test(l) ? ncI++ : -1, cid = ci >= 0 && res.cards && ci < res.cards.length ? res.cards[ci] : res.sig2 && /^NEW SIGNATURE: /.test(l) ? res.sig2 : ''; return '<span class="vl"' + (cid ? ' data-card="' + cid + '"' : '') + '><b class="drop rew">' + l + '</b></span>'; }).join('') : '') /* v4.16: rows map to their cards by the NEW CARD lines (the Bond row came first and shifted them); the Bond row has its XP bar */
-      : (res && res.html) || 'You were knocked out. ' + (ST.story.partner || 'Aoi') + ' drags you back to the courtyard. Rewards from this fight are forfeited.';
+      : (res && res.html) || 'You were knocked out. ' + (ST.story.partner || 'Aoi') + ' gets you back on your feet. This fight\u2019s rewards are gone.';
+    if (w === 1 && res && res.ko) koArtApply(res.ko);
     if (w === 0 && ST.story.ctx && ST.story.ctx.c2spar && res && res.html) { $('#rSub').innerHTML = res.html + (ST.story.grade ? '<span class="vl"><b class="gline g' + ST.story.grade.k + '">Grade ' + ST.story.grade.k + ' \u00b7 ' + ST.story.grade.w + '</b></span>' : ''); ev('story:end:spar:plain'); } /* v6.5.38 */
     if (w === 0 && ST.story.ctx && ST.story.ctx.ckOffice) { var sub0 = $('#rSub'); if (sub0) sub0.innerHTML = sub0.innerHTML.replace(/<span class="vl"><b class="drop">\+\u00a5[\s\S]*?<\/span>/, ''); }
     if (res && res.mount) res.mount($('#rSub')); // v4.7 health-item swap prompt
@@ -12266,16 +12289,63 @@ var KO_DRESS = ['gauze', 'tape'];
 function koHerb() { return SAVE.herbs && typeof SAVE.herbs === 'object' ? SAVE.herbs : (SAVE.herbs = {}); }
 function koStripMats() { var h = koHerb(), lost = {}; KO_DRESS.forEach(function (k) { var q = h[k] | 0; if (q > 0) { lost[k] = q; h[k] = 0; } }); return lost; }
 function koGrantMat(k, n) { var h = koHerb(); h[k] = Math.max(0, (h[k] | 0) + (n | 0)); ev('world:ko:mat:' + k + ':' + h[k]); return h[k]; }
-function koLoseHtml(st) { var ch2 = typeof c2On === 'function' && c2On(), spar = st.ctx && st.ctx.matspar, exempt = koYenExempt();
-  if (st.ctx && st.ctx.enfDoom) return 'You were knocked out.<br><b class="lost">No yen is taken. No dressing materials are lost.</b><br><span class="dim2">Cards and enhancements are never touched.</span>';
-  if (st.ctx && st.ctx.ckDoom) return 'The guard throws you out of Club Kitsune.<br><b class="lost">No yen is taken. No dressing materials are lost.</b><br><span class="dim2">Cards and enhancements are never touched.</span>';
-  if (ch2 && !spar && typeof c2S === 'function' && ((c2S().e.c2loss | 0) === 2)) return 'You were knocked out. This is the third time down.<br><b class="lost">No yen is taken from this loss.</b>';
-  var where = spar ? 'the mat' : ch2 ? 'Genji\u2019s gym' : 'the nurse\u2019s office';
-  var yen = exempt ? 'No yen lost.' : 'Defeat costs ' + Math.round(LOSS_COIN_PCT * 100) + '% of your yen, up to \u00a5' + LOSS_COIN_CAP + '.';
-  var soda = st.soda ? '<br><span class="lost2">The soda still counted this fight' + (st.sodaLeft ? ' (1 fight left on it).' : '.') + '</span>' : '';
-  var tail = (!spar && !ch2) ? '<br><span class="dim2">The nurse bandages you for +12 HP, free, once every 90 seconds. She sets out 1 gauze and 1 tape.</span>' : '';
-  return 'You were knocked out. ' + (st.partner || 'Aoi') + ' gets you to ' + where + '; you wake there with ' + WAKE_HP + ' HP.<br><b class="lost">Rewards forfeited: no yen and no Spirit Essence from this fight.</b><br><span class="lost2">' + yen + ' Raw dressing materials are lost. Crafted kits stay in the bag. Cards and enhancements are never touched.</span>' + soda + tail; }
-root.FFF_KO = { loss: koYenLoss, exempt: koYenExempt, lessons: koLessonsDone, strip: koStripMats, grant: koGrantMat, html: koLoseHtml };
+/* v6.5.64 defeat screen: ONE data-driven screen for every loss. The winner's current painted bust (portraits/, the same busts the dialogue uses),
+ * a K.O. title, where you wake, the real cost (koPlan: the same function the knockout itself runs), and after a mini-boss / boss the partner's
+ * hint plus where he waits. Every number comes from the live rules (HEAL / WAKE_HP / MAXHP / koYenLoss / the card data). No retry button. */
+function koPlan(st) { var c = (st && st.ctx) || {}, script = !!(c.ckDoom || c.enfDoom), h = koHerb(), mats = {};
+  if (!script) KO_DRESS.forEach(function (k) { var q = h[k] | 0; if (q > 0) mats[k] = q; });
+  return { script: script, yen: script ? 0 : koYenLoss(SAVE.items), mats: mats, exempt: koYenExempt() }; }
+function koChar(id) { var C = root.ENGINE && root.ENGINE.chars ? root.ENGINE.chars() : null; return (C && C[id]) || {}; }
+function koBust(id, tier) { /* the winner's current painted bust: the id, its group / spar twin, then its fig / art name. '' = none */
+  var c = koChar(id), base = String(id || '').replace(/(_spar|_j|g)$/, ''), cs = [id, base, String(c.fig || '').replace(/_fig$/, ''), String(c.art || '').replace(/_fig$/, '')], mood = tier ? 'calm' : 'neutral', u = '';
+  for (var i = 0; i < cs.length && !u; i++) if (cs[i]) u = ptPaintUrl(cs[i], mood) || '';
+  return u; }
+var KO_WAIT = { mb_lib: 'Mizuno is still in the Old Wing Archive.', mb_art: 'Kurosawa is still on the Music Hall stage.', mb_cafe: 'Kurata is still holding the Cafeteria.', mb_field: 'Bando is still at the Sports Storehouse.',
+  hall_mon: 'Saeki is still walking the halls of the Art & Music Wing.', gouki: 'Gouki is still standing at the gym doors.', mb2_arcade: 'Nails is still working the Ginko Sh\u014dtengai arcade.', mb2_game: 'Jin is still at the Neon Game Center.',
+  mb2_sento: 'G\u014dda is still guarding the Lantern Alley bathhouse.', mb2_depot: 'Masa is still running the Subway Freight Depot.', c2_doorman: 'Kaneda is still on the door at Kitsune-no-Yu.', c2_boss: 'Kager\u014d is still waiting atop Central Tower.', enforcer: 'Ban Shigure is still holding the lane.' };
+var KO_TAUNT = { mb_lib: 'Silence, please.', mb_art: 'Off the beat. Again.', mb_cafe: 'Wait your turn.', mb_field: 'Lane fee is due.', hall_mon: 'No running in the halls.', gouki: 'The gym doors stay shut.', mb2_arcade: 'Toll is due, kid.', mb2_game: 'Continue? 10\u2026 9\u2026',
+  mb2_sento: 'The water remembers.', mb2_depot: 'Off my dock, kid.', c2_doorman: 'Nobody goes up.', c2_boss: 'Not yet, child.', enforcer: 'I don\u2019t ask twice.', chinpira1: 'Keep up, schoolboy.', bouncer: 'Not tonight.' };
+var KO_TAUNT_ANY = ['Stay down.', 'Go home, kid.', 'Is that all you\u2019ve got?', 'Told you.'];
+function koHint(id) { /* from the foe's own deck, so it never goes stale */
+  var c = koChar(id), K = root.ENGINE.cards(), out = [];
+  var cs = Object.keys(c.deck || {}).map(function (k) { return K[k]; }).filter(function (q) { return q && !/^b_/.test(q.id); });
+  function tot(q) { return (q.v | 0) * Math.max(1, q.hits | 0); }
+  function best(f) { return cs.filter(f).sort(function (a, b) { return tot(b) - tot(a); })[0]; }
+  var brk = best(function (q) { return q.t === 'atk' && (q.pierce || q.brk); }), str = best(function (q) { return q.t === 'atk' && (q.hits | 0) >= 3; }),
+    ctr = cs.filter(function (q) { return q.t === 'guard' && q.ctr; })[0], big = best(function (q) { return q.t === 'atk'; });
+  if (brk) out.push(brk.n + ' hits for ' + tot(brk) + ' and breaks Guard, so Guard alone won\u2019t hold.');
+  if (str && str !== brk) out.push(str.n + ' is ' + str.hits + ' hits of ' + str.v + '. Keep Guard up for it.');
+  if (ctr) out.push(ctr.n + ' guards for ' + ctr.v + ' and counters for ' + ctr.ctr + '.');
+  if (!out.length && big) out.push(big.n + ' hits for ' + tot(big) + '. Keep Guard up for it.');
+  return out.slice(0, 2).join(' '); }
+function koTier(st, id) { var c = (st && st.ctx) || {}; return !!(st && (st.boss || st.mini)) || !!(c.c2boss || c.mini || c.enfDoom) || !!CHAR_INTRO[id] || !!CHAR_INTRO[String(id || '').replace(/g$/, '')]; }
+function koArt(st, id) { /* { url, fit, plate } for #rArt */
+  var tier = koTier(st, id), c = koChar(id), bid = CHAR_INTRO[id] ? id : String(id || '').replace(/g$/, ''), u = koBust(id, tier), fit = 'bust', name = String(c.name || '').replace(/\s*\(sparring\)$/, '');
+  if (!u) { var f = IMG[c.fig || ''] || ''; if (f) { u = f; fit = 'fig'; } }
+  var tl = KO_TAUNT[bid] || KO_TAUNT_ANY[Math.floor(Math.random() * KO_TAUNT_ANY.length)];
+  return { url: u, fit: fit, tier: tier, plate: '<b>' + name + '</b>' + (tier || !(st.ctx && (st.ctx.c2spar || st.ctx.matspar)) ? '<u>\u201c' + tl + '\u201d</u>' : '') }; }
+function koWake(st, plan) { var c = st.ctx || {}, ch2 = typeof c2On === 'function' && c2On() && !!C2W, who = st.partner || 'Aoi';
+  if (c.ckDoom) return 'The guard throws you out of Club Kitsune.';
+  if (c.matspar) return who + ' helps you up. You come to with ' + WAKE_HP + ' HP.';
+  if (ch2) return who + ' gets you to Genji\u2019s gym. You wake on the mat with ' + WAKE_HP + ' HP.';
+  if (c.nurse) return 'You come to in the nurse\u2019s office with ' + WAKE_HP + ' HP.';
+  return who + ' gets you to the nurse\u2019s office. She patches you up to full (' + MAXHP + ' HP).'; }
+function koCost(st, plan) { var parts = [];
+  if (plan.script) return 'No yen or materials lost. This fight\u2019s rewards are gone.';
+  if (plan.yen > 0) parts.push('\u00a5' + plan.yen);
+  KO_DRESS.forEach(function (k) { if (plan.mats[k]) parts.push(plan.mats[k] + ' ' + k); });
+  parts.push('this fight\u2019s rewards');
+  return 'Lost ' + (parts.length > 2 ? parts.slice(0, -1).join(', ') + ', and ' + parts[parts.length - 1] : parts.join(' and ')) + '.'; }
+function koLoseHtml(st) { var plan = koPlan(st), id = st.koLead || '', tier = koTier(st, id), who = st.partner || 'Aoi', bid = CHAR_INTRO[id] ? id : String(id || '').replace(/g$/, ''), h = '';
+  h += '<span class="kowake">' + koWake(st, plan) + '</span>';
+  h += '<b class="kocost">' + koCost(st, plan) + '</b>';
+  if (st.soda) h += '<span class="kodim">The soda still counted this fight' + (st.sodaLeft ? ' (1 fight left on it).' : '.') + '</span>';
+  if (tier && !(st.ctx && (st.ctx.ckDoom || st.ctx.matspar))) { var hint = koHint(bid), wait = KO_WAIT[bid] || (koChar(id).name ? String(koChar(id).name).split(' ')[0] + ' is still waiting.' : '');
+    if (hint) h += '<span class="koaoi"><b>' + who + '</b>\u201c' + hint + '\u201d</span>';
+    if (wait) h += '<span class="kowait">' + wait + '</span>'; }
+  h += '<span class="kodim">Your cards, upgrades and crafted kits are safe.</span>';
+  return h; }
+root.FFF_KO = { loss: koYenLoss, exempt: koYenExempt, lessons: koLessonsDone, strip: koStripMats, grant: koGrantMat, html: koLoseHtml, plan: koPlan, bust: koBust, art: koArt, hint: koHint, wake: koWake };
 /* v5.1 (Ernest): the locked drop tables. Each row is [rarity, weight], rolled with Math.random() (or FFF_DROPR in tests).
  *   c1bully 10% Common (chance('bully')) | c1mini 90% Common / 10% Uncommon | c1boss (Gouki, every win) 95% Uncommon / 5% Rare
  *   c2street 10% = 7% Common / 3% Uncommon (C2DROP) | c2mini 50% Common / 50% Uncommon | c2boss 100% Rare (a one-time story fight, no rematch) */
@@ -12313,10 +12383,10 @@ function xpWin(st, res) { var c = st.ctx || {}, gr = xpGrind(), pl = playerLv(),
   return { n: n, kind: kind }; }
 function settle(win, st) {
   if (st.res) return st.res; var res = st.res = { win: !!win, cards: [], lines: [], sig2: null, first: false };
-  if (st.ctx && st.ctx.c2spar) { res.spar = 1; res.html = win ? 'Round to you. Sparring only: no yen, no cards, and your HP and items come back.' : 'Genji calls the round. Sparring only: no wake-up trip, and your HP and items come back.'; ev('world:settle:spar:' + (win ? 'win' : 'lose')); return res; } /* v5.3 Kurogane ring: no stakes, no farming */
+  if (st.ctx && st.ctx.c2spar) { res.spar = 1; if (!win) { var kaS = koArt(st, st.koLead || ''); res.ko = { url: kaS.url, fit: kaS.fit, plate: kaS.plate, title: 'DEFEAT', btn: '' }; } res.html = win ? 'Round to you. Sparring only: no yen, no cards, and your HP and items come back.' : 'Genji calls the round. Sparring only: no wake-up trip, and your HP and items come back.'; ev('world:settle:spar:' + (win ? 'win' : 'lose')); return res; } /* v5.3 Kurogane ring: no stakes, no farming */
   if (win && st.boss && st.ctx && st.ctx.gkPhase === 1) { res.gkPhase = 1; res.html = 'Gouki falls… then rises.'; W.dropCh = {}; save(); ev('world:settle:gkphase1'); return res; }
   if (win && st.boss && st.ctx && st.ctx.gkLoop) { res.gkLoop = 1; res.html = 'Gouki falls… the seal flares again.'; W.dropCh = {}; save(); ev('world:settle:gkloop:' + (st.ctx.gkRevives | 0)); return res; } /* v4.64: no rewards until Bond Double finishes him */
-  if (!win) { res.html = koLoseHtml(st); ev('world:settle:lose' + (koYenExempt() ? ':exempt' : '')); return res; }
+  if (!win) { res.html = koLoseHtml(st); var kaL = koArt(st, st.koLead || ''); res.ko = { url: kaL.url, fit: kaL.fit, plate: kaL.plate, title: 'K.O.', btn: 'Wake up' }; ev('world:settle:lose' + (koYenExempt() ? ':exempt' : '')); return res; }
   SAVE.items += st.drop;
   if (STORY) {
     var LD = (STORY.SD.ladder && STORY.SD.ladder.essDrop) || { fight: 1, fightP: 0.5, mini: 4, miniRepeat: 0, boss: 8, bossRepeat: 0, sub: 6, subRepeat: 0, kagero: 10, kageroRepeat: 0 };
@@ -12379,7 +12449,7 @@ function back(win, st) { rdyOff(W.ryo); rdyOff(W.aoi); var bb = $('#wbub'); if (
   SAVE.fights = (SAVE.fights | 0) + 1; var res = settle(win, st || {}); var cxu = cxFight(win, st || {}); // v4.10.1 encyclopedia
   if (win) { SAVE.wins++; SAVE.hp = Math.max(1, SAVE.hp); var gi = yenRoll(gearFx('it')); if (gi && st) { SAVE.items += gi; st.drop = (st.drop | 0) + gi; ev('world:gear:items:' + gi); } var gw = gearFx('hw'); if (gw && SAVE.hp < MAXHP) { SAVE.hp = Math.min(MAXHP, SAVE.hp + Math.ceil(MAXHP * gw)); ev('world:gear:heal'); } if (W.dgRelay && st && st.mini && beaten(W.dgRelay.el.dataset.mb)) { var rr = W.dgRelay; W.dgRelay = null; rr.el.classList.add('out'); setTimeout(function () { rr.el.remove(); }, 600); } } // v4.3: rewards were applied in settle()
   if (!win) { var scriptLoss = st.ctx && (st.ctx.ckDoom || st.ctx.enfDoom); if (!(st.ctx && st.ctx.ckDoom)) SAVE.losses++; // v4.3 fix: this branch used to hang off the restock check, so a win without a restock was booked as a loss. A scripted club dump does not add a loss.
-    var ch2Wake = typeof c2On === 'function' && c2On() && C2W, matSpar = !!(st.ctx && st.ctx.matspar); SAVE.hp = WAKE_HP; var pc = scriptLoss ? 0 : koYenLoss(SAVE.items), lostMats = scriptLoss ? {} : koStripMats(); if (!scriptLoss) SAVE.items -= pc; var nurseMats = !matSpar && !ch2Wake; if (nurseMats) { koGrantMat('gauze', 1); koGrantMat('tape', 1); } W.pen = { coins: pc, heal: 0, mats: lostMats, exempt: koYenExempt(), nurse: nurseMats ? { gauze: 1, tape: 1 } : null }; ev('world:penalty:' + pc + ':' + (lostMats.gauze | 0) + ':' + (lostMats.tape | 0) + (W.pen.exempt ? ':exempt' : '')); W.safe = 6; clearRoam(); W.roamT = 4; if (!(st.ctx && st.ctx.matspar)) { var nu = W.inside && INT[W.inside.id].c2 ? [W.ryo.x, W.ryo.y] : (ch2Wake ? [W.ryo.x, W.ryo.y] : nurseAt()); if (!ch2Wake || !(W.inside && INT[W.inside.id].c2)) { W.ryo.x = nu[0]; W.ryo.y = nu[1]; W.ryo.dir = 0; W.aoi.x = W.ryo.x; W.aoi.y = W.ryo.y + 50; resetTrail(W.ryo.x, W.ryo.y, 3); } ev('world:respawn:' + (ch2Wake ? 'gym' : 'nurse') + ':' + Math.round(W.ryo.x) + ',' + Math.round(W.ryo.y) + ':' + SAVE.hp); } } // Both chapters wake on low HP. Chapter 1: the nurse then stands and fills it. Chapter 2: Genji's gym, no full heal. A mat spar stays on the mat.
+    var ch2Wake = typeof c2On === 'function' && c2On() && C2W, matSpar = !!(st.ctx && st.ctx.matspar); SAVE.hp = WAKE_HP; var pc = koPlan(st).yen, lostMats = scriptLoss ? {} : koStripMats(); if (!scriptLoss) SAVE.items -= pc; var nurseMats = !matSpar && !ch2Wake; if (nurseMats) { koGrantMat('gauze', 1); koGrantMat('tape', 1); } W.pen = { coins: pc, heal: 0, mats: lostMats, exempt: koYenExempt(), nurse: nurseMats ? { gauze: 1, tape: 1 } : null }; ev('world:penalty:' + pc + ':' + (lostMats.gauze | 0) + ':' + (lostMats.tape | 0) + (W.pen.exempt ? ':exempt' : '')); W.safe = 6; clearRoam(); W.roamT = 4; if (!(st.ctx && st.ctx.matspar)) { var nu = W.inside && INT[W.inside.id].c2 ? [W.ryo.x, W.ryo.y] : (ch2Wake ? [W.ryo.x, W.ryo.y] : nurseAt()); if (!ch2Wake || !(W.inside && INT[W.inside.id].c2)) { W.ryo.x = nu[0]; W.ryo.y = nu[1]; W.ryo.dir = 0; W.aoi.x = W.ryo.x; W.aoi.y = W.ryo.y + 50; resetTrail(W.ryo.x, W.ryo.y, 3); } ev('world:respawn:' + (ch2Wake ? 'gym' : 'nurse') + ':' + Math.round(W.ryo.x) + ',' + Math.round(W.ryo.y) + ':' + SAVE.hp); } } // Both chapters wake on low HP. Chapter 1: the nurse then stands and fills it. Chapter 2: Genji's gym, no full heal. A mat spar stays on the mat.
   save(); enter(true);
   syncVend();
   var CARDS = root.ENGINE.cards(), newC = res.cards || []; if (typeof waveBack === 'function') { var _wv = waveBack(win, st, newC, cxu); if (_wv === 1) return; if (_wv && _wv.cards) { newC = _wv.cards; cxu = _wv.cx; } } /* v6.5.30 chain battles */
@@ -15493,7 +15563,7 @@ var HOWTO = [
   ['Yen', 'Wins sometimes give <b>yen (\u00a5)</b> (each bully about half the time). A regular A win adds 1 yen and an S win adds 2. Bosses and sub-bosses keep their own payout. In Chapter One yen buys food and drink from the machines. It never upgrades cards. Later chapters add their own shops once you are there.'],
   ['Fight grade', 'A story win is graded <b>C, B, A or S</b>. The speed par is your deck\u2019s own average damage, never below 4. S also needs you to finish on at least 70% of the HP you started with. Each regular enemy may drop 1 Spirit Essence: C 25%, B 50%, A 75%, S always. Sub-bosses, Gouki, rematches, side quests and the opening lessons keep their set amounts. An S win also restores 6 HP, unless that fight ends the chapter.'],
   ['Enhancement', 'Cards train with <b>Spirit Essence</b>. Defeated enemies release it, along with yen. Nothing is broken down: the collection is permanent. On the training mat, choose Train with Aoi, then Enhance cards. Common copies have 1 slot. Other tiers have 2. Each of a card\'s choices can be taken once. Slots carry through evolution. Evolution itself is not taught in Chapter 1. In Chapter 2, enhancing stays on the training mat. Genji\u2019s Evolve copies opens Evolve Your Moves. A Guardian Seal unlocks that technique once. Further practice costs Spirit Essence. Other trainers go further. Signature moves are not evolved.'],
-  ['Health', 'HP carries over between fights. The nurse bandages for about +12 HP when you are hurt. Dressings and other heals are in <b>Menu \u2192 Bag</b>. Lose a fight and you wake at the nurse on low HP. She can patch you the rest of the way. Card upgrades are never lost.'],
+  ['Health', 'HP carries over between fights. The nurse bandages for about +12 HP when you are hurt. Dressings and other heals are in <b>Menu \u2192 Bag</b>. Lose a fight and you wake at the nurse\u2019s office in Chapter 1 (she patches you up to full) or at Genji\u2019s gym in Chapter 2 (you wake on low HP). A loss costs the fight\u2019s rewards, up to ' + Math.round(LOSS_COIN_PCT * 100) + '% of your yen (never more than \u00a5' + LOSS_COIN_CAP + ') and any raw gauze and tape. Cards, upgrades and crafted kits are never lost.'],
   ['Sodas', 'Every flavour is <b>\u00a52</b> and restores <b>+5 Spirit</b> on the map, the moment you drink it. No next-fight buff. Most machines stock 2. The training-room machine does not run out. Drink one from <b>Menu \u2192 Bag</b> or the \ud83e\udd64 on the top bar.'],
   ['Switch + menu', 'The <b>\u21c4</b> button beside the menu swaps Ryo and Aoi in one tap. The menu (\u2630) has Map, Journal, Player (Status, Deck, Equipment, Items), Codex, Saves and Settings.']];
 var CXD = {
@@ -15509,7 +15579,7 @@ var CXD = {
     b: 'He wrote rule seventeen, no fighting in the archive, and the spirit made him break it. Beaten, his hold on the energy loosens, and the path to the next corner clears. Every win: \u00a53 and one card (90% Common, 10% Uncommon).' },
   bully1: { k: 'Possessed bully', img: 'bully1' }, bully2: { k: 'Possessed bully', n: 'Heavy Delinquent', img: 'bully2', a: 'The heavy build. Big Daigo, who keeps the library periodicals, is this build. A heavy on the grounds, in the infirmary, or in another room is not him.' }, bully3: { k: 'Possessed bully', img: 'bully3' }, bully4: { k: 'Possessed bully', img: 'bully4' },
   shrine: { k: 'Place', n: 'The Cracked Shrine', img: null, a: 'The fox protector\u2019s shrine in the old wing. A thin crack of light runs through the stone: the Veil is weak here. The stone fox statue kept the Veil closed until it left to bond with Ryo.' },
-  infirmary: { k: 'Place', n: 'Nurse\u2019s Office', a: 'South, by the pool, under the glowing red cross. Talk to her when you are hurt and she bandages for about +12 HP. There is no paid full heal in that talk. Knocked out, you wake here. She can patch you the rest of the way. No fights right at the door.' },
+  infirmary: { k: 'Place', n: 'Nurse\u2019s Office', a: 'South, by the pool, under the glowing red cross. Talk to her when you are hurt and she bandages for about +12 HP. There is no paid full heal in that talk. Knocked out, you wake here and she patches you up to full. No fights right at the door.' },
   hall: { k: 'Place', n: 'Training Room', a: 'Behind the Training door in the nurse\u2019s hallway. The exit to the grounds stays on the back wall. Tap the <b>mat</b>: Train with Aoi, then Enhance cards, or change the deck. Defeated enemies leave ' + essName() + ' and yen. Cards are not broken down.' },
   gym: { k: 'Place', n: 'The Gym', a: 'North. Energy pours off the gym. It pulls students in. It overwhelms Ryo and Aoi if they walk it too early.' },
   vend: { k: 'Place', n: 'Vending Machines', a: 'Campus machines sell soda for \u00a52. Every flavour restores +5 Spirit on the map. No next-fight buff. Most machines stock 2. The training-room machine does not run out. Food from a machine is eaten on the spot.' },
@@ -20386,7 +20456,7 @@ var C2SC = {
   punkDown: [['chinpira1', 'Tch\u2026 gray coat said\u2026 I\u2019d be untouchable\u2026', { mood: 'neutral' }], ['ryo', 'Nobody\u2019s untouchable. Tell your boss.', { mood: 'neutral' }], ['aoi', 'Back to Genji. He\u2019ll want that seal.', { mood: 'neutral' }]],
   ring: [['', '<p class="dim">Canvas stained by forty years of fights. The ropes still sing.</p>']],
   cooler: [['', '<p class="dim">Paper cups. A note: \u201cHYDRATE OR GET OUT. \u2014 G.K.\u201d</p>']],
-  cot: [['', '<p class="dim">A tatami cot, crisp linen. Where Aoi drops you when you lose.</p>']],
+  cot: [['', '<p class="dim">A tatami cot, crisp linen. Dr. Tsukikage\u2019s patients sleep here.</p>']],
   kettle: [['', '<p class="dim">The kettle never stops. It smells like moss and bad decisions.</p>']],
   drawers: [['', '<p class="dim">A hundred tiny drawers. Every label in Dr. Tsukikage\u2019s tight brushwork.</p>']] };
 function c2Punk() { var p = W.c2n && W.c2n.punk; if (!p || W.c2busy) return; W.c2busy = 1; W.path = []; W.ryo.v = 0; stickEnd(); ev('world:c2:punk');
