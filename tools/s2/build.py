@@ -11,6 +11,9 @@ if p2p.exists():
 p3p = HERE / 'paint_p3.js'
 if p3p.exists():
     paint = paint + '\n' + p3p.read_text(encoding='utf8').rstrip('\n')
+p4p = HERE / 'paint_p4.js'
+if p4p.exists():
+    paint = paint + '\n' + p4p.read_text(encoding='utf8').rstrip('\n')
 mod = (HERE / 's2.js').read_text(encoding='utf8').rstrip('\n')
 BP, EP = '/* S2P_BEGIN v6563-seal2 */\n', '\n/* S2P_END */\n'
 B, E = '/* S2_BEGIN v6563-seal2 */\n', '\n/* S2_END */\n'
@@ -68,6 +71,21 @@ if p3.exists():
     else:
         raise SystemExit('S2P2_END missing; cannot inject S2P3')
     print('injected S2P3', len(mod3))
+
+# Phase 4 Off Schedule, after S2P3
+p4 = HERE / 's2p4.js'
+B4, E4 = '/* S2P4_BEGIN v6563-seal2-p4 */\n', '\n/* S2P4_END */\n'
+if p4.exists():
+    mod4 = p4.read_text(encoding='utf8').rstrip('\n')
+    if B4 in s:
+        i = s.index(B4); j = s.index(E4, i) + len(E4)
+        s = s[:i] + B4 + mod4 + E4 + s[j:]
+    elif E3 in s:
+        i = s.index(E3) + len(E3)
+        s = s[:i] + B4 + mod4 + E4 + s[i:]
+    else:
+        raise SystemExit('S2P3_END missing; cannot inject S2P4')
+    print('injected S2P4', len(mod4))
 
 INDEX.write_text(s, encoding='utf8')
 print('injected S2P+S2 into', INDEX, 'paint', len(paint), 's2', len(mod))
