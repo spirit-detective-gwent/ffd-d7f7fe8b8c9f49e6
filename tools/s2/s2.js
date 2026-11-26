@@ -4,7 +4,7 @@
  * clash with Punk backup at X3; on win the row flips to Punk ownership (recolor
  * sting) and the clash loop stops. Wagashi door + cel interior + Chiyo's counter
  * (sweet rolls, dango, Nails' price after takeover). New art is behind S2.ART
- * (off until Erik approves the preview). Placeholder shop art until then.
+ * Art is wired (S2.ART): Chiyo, the north Wagashi door, the interior, the X3 battle backdrop, and the eat game.
  * Wraps only; no new always-running loops (frame work rides c2Frame).
  * Does not edit existing Fierce/Strategic Nails copy. */
 (function () {
@@ -12,7 +12,7 @@
   if (typeof c2S !== 'function' || typeof C2W === 'undefined' || !C2W || typeof INT === 'undefined' || !INT.c2_town) {
     try { ev('world:s2:skip'); } catch (e0) {} return;
   }
-  var S2 = root.FFF_S2 = { v: 1, ART: false };
+  var S2 = root.FFF_S2 = { v: 1, ART: true };
   function on() { return (typeof c2On !== 'function' || c2On()) && (typeof chN !== 'function' || chN() === 2); }
   function S() { return c2S(); }
   function E() { return c2S().e; }
@@ -173,7 +173,7 @@
   }
 
   /* ---------------- journal card for Wagashi Row ---------------- */
-  var X3C = [2560, 3190], FLIP_AT = [2360, 3190], SHOP_AT = [3080, 3336];
+  var X3C = [2560, 3190], FLIP_AT = [2360, 3190], SHOP_AT = [3080, 2680];
   function rich() {
     var s = stg(), done = qDone(), out = [];
     var brief = s !== '' && s !== 'open';
@@ -226,20 +226,28 @@
   if (typeof c2QT === 'function') { var qt0 = c2QT; c2QT = function () { try { var t = s2Tgt(); if (t) return t; } catch (e) {} return qt0.apply(this, arguments); }; }
   S2.tgt = s2Tgt;
 
-  /* ---------------- names / placeholder sprite (art not wired) ---------------- */
+  /* ---------------- names / Chiyo sprite + portrait ---------------- */
   NM.nq_chiyo = 'Chiyo';
-  (function aliasChiyo() {
-    var src = 'npc_clerk';
-    ['map', 'walk', 'fig', 'run', 'hurt', 'kn', 'lie', 'fig_hurt', 'fig_down', 'idle'].forEach(function (sh) { if (typeof IMG !== 'undefined' && IMG[src + '_' + sh]) IMG['nq_chiyo_' + sh] = IMG[src + '_' + sh]; });
-    if (typeof SHC !== 'undefined' && SHC[src + '_walk']) SHC['nq_chiyo_walk'] = SHC[src + '_walk'];
-    if (typeof BW_IDS !== 'undefined' && BW_IDS[src]) BW_IDS.nq_chiyo = 1;
+  (function wireChiyo() {
+    if (typeof wUrl !== 'function' || typeof IMG === 'undefined') return;
+    IMG.nq_chiyo_walk = wUrl('nq_chiyo_walk');
+    IMG.nq_chiyo_idle = wUrl('nq_chiyo_idle');
+    IMG.nq_chiyo_map = wUrl('nq_chiyo_map');
+    IMG.nq_chiyo_fig = wUrl('nq_chiyo_fig');
+    /* kinds we do not paint: keep the engine off the old clerk alias */
+    IMG.nq_chiyo_run = IMG.nq_chiyo_walk;
+    ['hurt', 'kn', 'lie', 'fig_hurt', 'fig_down'].forEach(function (sh) { IMG['nq_chiyo_' + sh] = IMG.nq_chiyo_fig; });
+    if (typeof SHC !== 'undefined') { SHC.nq_chiyo_walk = 8; SHC.nq_chiyo_idle = 4; }
+    if (typeof SHR !== 'undefined') { SHR.nq_chiyo_idle = 4; if (SHR.c2_punk_walk != null) SHR.nq_chiyo_walk = SHR.c2_punk_walk; }
+    if (typeof BW_IDS !== 'undefined') BW_IDS.nq_chiyo = 1;
     if (typeof C2K !== 'undefined') C2K.nq_chiyo = 1.04;
-    PT.nq_chiyo = PT[src] || (src + '_fig');
+    PT.nq_chiyo = 'nq_chiyo_fig';
+    if (typeof PT_PAINT !== 'undefined') PT_PAINT.nq_chiyo = 'chiyo';
+    if (typeof PT_HAS !== 'undefined') PT_HAS.chiyo_neutral = 1;
   })();
-  /* portrait mapping is left unwired (S2.ART) \u2014 preview lives in v6560-review/seal2/phase1/ */
 
-  /* ---------------- door + room (placeholder interior until art is approved) ---------------- */
-  var WAGA_DOOR = { r: [3030, 3226, 3130, 3300], at: SHOP_AT, to: 'waga', out: [SHOP_AT[0], SHOP_AT[1] + 10] };
+  /* ---------------- door + room (north facade, x≈3080) ---------------- */
+  var WAGA_DOOR = { r: [3030, 2688, 3130, 2764], at: SHOP_AT, to: 'waga', out: [SHOP_AT[0], SHOP_AT[1] - 24] };
   var RW = 1280, RH = 900;
   function roomDef() {
     var id = 'c2_nq_waga'; C2R.waga = id;
@@ -253,9 +261,51 @@
   roomDef();
   if (typeof c2DoorOf === 'function') { var door0 = c2DoorOf; c2DoorOf = function (k) { if (k === 'waga') return WAGA_DOOR; return door0.apply(this, arguments); }; }
   if (typeof c2Surf === 'function') { var surf0 = c2Surf; c2Surf = function (x, y) { if (c2Room() === 'waga') return 'wood'; return surf0.apply(this, arguments); }; }
-  INT.c2_town.spots.push({ id: 's2_e_waga', r: WAGA_DOOR.r, at: WAGA_DOOR.at, face: 3, lab: 'Enter' });
+  INT.c2_town.spots.push({ id: 's2_e_waga', r: WAGA_DOOR.r, at: WAGA_DOOR.at, face: 0, lab: 'Enter' });
   if (typeof TRANS !== 'undefined') TRANS.s2_e_waga = 1;
   delete INT.c2_town.G;
+  /* painted door overlay, flush on the existing Wagashi north band (400×160, center 3080, bottom on y=2760).
+     NQ's FAC / propEl / facades live inside the NQ IIFE, so we append the canvas ourselves and hook c2Pop. */
+  var WAGA_FAC = null;
+  function placeDoor() {
+    if (!S2.ART || !on() || !inTown()) return;
+    if (document.getElementById('s2WagaDoor')) return;
+    if (!WAGA_FAC) {
+      WAGA_FAC = document.createElement('canvas'); WAGA_FAC.width = 400; WAGA_FAC.height = 160;
+      try { if (root.FFF_S2P && root.FFF_S2P.facadeDoor) root.FFF_S2P.facadeDoor(WAGA_FAC.getContext('2d')); } catch (eF) { ev('world:s2:err:facade:' + (eF && eF.message)); }
+    }
+    WAGA_FAC.className = 'nqprop'; WAGA_FAC.id = 's2WagaDoor';
+    WAGA_FAC.style.cssText = 'position:absolute;left:2880px;top:2600px;width:400px;height:160px;z-index:' + (100 + 2760) + ';pointer-events:none';
+    var host = null, sample = document.querySelector('#world .nqprop, #wimap .nqprop, .nqprop');
+    if (sample && sample.parentNode) host = sample.parentNode;
+    if (!host) host = document.getElementById('world') || document.getElementById('wimap') || (W && W.el);
+    if (!host) return;
+    host.appendChild(WAGA_FAC);
+    try { if (W && W.ints) W.ints.push({ el: WAGA_FAC }); } catch (eI) {}
+  }
+  S2.placeDoor = placeDoor;
+  if (typeof facades === 'function') {
+    var fac0 = facades;
+    facades = function () { fac0.apply(this, arguments); try { placeDoor(); } catch (eD) {} };
+  }
+  function hookBattle() {
+    if (S2._bt) return true;
+    if (!root.FFF_C2BT || !root.FFF_S2P || !root.FFF_S2P.battle) return false;
+    S2._bt = 1;
+    var BT = root.FFF_C2BT;
+    BT.ROOMS.waga = { name: 'Wagashi row', paint: function (x) { root.FFF_S2P.battle(x); },
+      lights: [[200, 200, '255,170,100', 70, 0.32, 'lamp'], [520, 200, '255,170,100', 70, 0.32, 'lamp']], rain: 48, mood: 'rain' };
+    BT.KEY.c2_waga = 'waga';
+    var roomB0 = BT.room;
+    BT.room = function (story) {
+      var ctx = (story && story.ctx) || {}, dgk = String(ctx.dgk || '');
+      if (S2.ART && (ctx.s2waga || ctx.s2k === 's2_x' || ctx.s2k === 's2_waga' || /^s2_x/.test(dgk))) return 'c2_waga';
+      return roomB0.apply(this, arguments);
+    };
+    return true;
+  }
+  hookBattle();
+  try { later(0, hookBattle); } catch (eB) { try { setTimeout(hookBattle, 0); } catch (eB2) {} }
   function roomOpen() { return on() && qDone(); }
   S2.roomOpen = roomOpen; S2.DOOR = WAGA_DOOR;
 
@@ -319,11 +369,35 @@
   function buy(it, c) {
     payYen(c); ev('world:s2:waga:buy:' + it.id + ':' + c);
     if (it.bag) { SAVE.heal.push(it.bag); sv(); try { AU.play('place'); } catch (e) {} try { toast(HITEM[it.bag].n + ' in your bag.'); } catch (e2) {} later(200, counterMenu); return; }
-    /* eat game: wired later; apply the heal now */
+    var h0 = SAVE.hp | 0, add = it.hp | 0, half = Math.ceil(add / 2), winAdd = Math.round(add * 1.5);
     applyVit(it);
-    try { AU.play('pl_heal', { gain: 0.5 }); } catch (e3) {}
-    try { actPlay('eat', W.ryo); } catch (e4) {}
-    later(700, counterMenu);
+    var h1 = SAVE.hp | 0, id = it.eat, opened = false;
+    var tg = { win: Math.min(MAXHP, h0 + winAdd), close: h1, bad: Math.min(MAXHP, h0 + half) };
+    function afterEat() {
+      try { AU.play('pl_heal', { gain: 0.5 }); } catch (e3) {}
+      try { actPlay('eat', W.ryo); } catch (e4) {}
+      later(700, counterMenu);
+    }
+    try {
+      if (id && typeof eatgOn === 'function' && eatgOn(id) && root.EATG && typeof eatgHold === 'function') {
+        var b0 = W.busy;
+        try { eatgCloseBag(); } catch (eC) {}
+        W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + id);
+        opened = !!root.EATG.open({ item: id, who: typeof eatgWho === 'function' ? eatgWho() : 'ryo',
+          hp0: h0, sp0: SAVE.sp | 0, maxhp: MAXHP, spmax: typeof SPMAX === 'number' ? SPMAX : 40,
+          rows: { win: ['WIN', '+' + winAdd + ' HP', 'a generous plate'], close: ['CLOSE MISS', '+' + add + ' HP', 'the normal heal'], bad: ['BAD RUN', '+' + half + ' HP', 'half of normal'] },
+          bot: root.FFF_EATG_BOT,
+          target: function (r) { return { hp: tg[r] != null ? tg[r] : h1, sp: SAVE.sp | 0 }; },
+          onEnd: function (res) {
+            try { eatgHold(false); } catch (eH) {}
+            SAVE.hp = Math.min(MAXHP, tg[res] != null ? tg[res] : h1); sv();
+            try { hud(); if (typeof vitFlo === 'function') vitFlo('hp', SAVE.hp - h0); } catch (eV) {}
+            W.busy = b0; W.path = []; ev('world:eatg:' + id + ':' + res); afterEat();
+          } });
+        if (!opened) { try { eatgHold(false); } catch (eH2) {} W.busy = b0; }
+      }
+    } catch (eE) { opened = false; }
+    if (!opened) afterEat();
   }
   S2.menu = counterMenu;
 
@@ -366,6 +440,12 @@
     } catch (eT) {}
     if (root.FFF_NQ && root.FFF_NQ.BLK && !root.FFF_NQ.BLK.x3) root.FFF_NQ.BLK.x3 = { n: 'WAGASHI ROW', r: [2420, 2760, 3460, 3300] };
     sv();
+  }
+  function chiyoPop() {
+    if (room() !== 'waga') { if (CHI) { try { kill(CHI); } catch (eK) {} CHI = null; } return; }
+    if (CHI && CHI.el && CHI.el.parentNode) return;
+    CHI = npc('nq_chiyo', 640, 360, Math.PI / 2);
+    try { if (W.c2n) W.c2n.s2 = CHI; } catch (eN) {}
   }
   function flipPop() {
     if (!on() || !inTown() || !qOn() || stg() !== 'open') return;
@@ -517,11 +597,11 @@
   /* ride c2Frame, no new loop */
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { flowTick(); } } catch (e) { if (!S2.ferr) { S2.ferr = 1; ev('world:s2:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!S2.ferr) { S2.ferr = 1; ev('world:s2:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
-    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); crewSync(); flipPop(); suppressX3Loop(); if (room() === 'waga') paintRoom(); } } catch (eP) {} };
+    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); crewSync(); flipPop(); suppressX3Loop(); placeDoor(); chiyoPop(); if (room() === 'waga') paintRoom(); } } catch (eP) {} };
   }
   try { chainRepair(); } catch (eC) {}
   ev('world:s2:ready');

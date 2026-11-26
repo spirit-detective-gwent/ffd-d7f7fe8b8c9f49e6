@@ -99,6 +99,12 @@ async def main():
         print('NO INDEX', INDEX); sys.exit(2)
     src = INDEX.read_text(encoding='utf-8')
     ok('S2 injected', 'FFF_S2' in src and 'cq2_s2_waga' in src)
+    ok('S2P painters injected', 'FFF_S2P' in src and 'S2P_BEGIN' in src)
+    ok('Chiyo world sheets present', (INDEX.parent / 'world' / 'nq_chiyo_walk.webp').exists() and (INDEX.parent / 'world' / 'nq_chiyo_idle.webp').exists())
+    ok('Chiyo portrait present', (INDEX.parent / 'portraits' / 'chiyo_neutral.webp').exists())
+    ok('clerk alias removed', 'npc_clerk' not in src.split('S2_BEGIN')[-1].split('S2_END')[0] if 'S2_BEGIN' in src else False)
+    ok('buy hooks EATG', 'EATG.open' in src.split('S2_BEGIN')[-1].split('S2_END')[0] if 'S2_BEGIN' in src else False)
+    ok('ART flag on in source', 'ART: true' in src.split('S2_BEGIN')[-1].split('S2_END')[0] if 'S2_BEGIN' in src else False)
     ok('NQ first-seal tables untouched', "id: 'cq2_nq_west'" in src and "n: 'Hold the West Street'" in src)
     ok('no Fierce/Strategic Nails VO edits in S2', 'VO.flip =' not in src.split('S2_BEGIN')[-1].split('S2_END')[0] if 'S2_BEGIN' in src else False or True)
     srv = serve(PORT, str(INDEX.parent))
@@ -121,7 +127,26 @@ async def main():
           };
         })()""")
         ok('S2 boots', info and info.get('s2'), info)
-        ok('art not wired', info and info.get('art') is False, info)
+        ok('art is wired', info and info.get('art') is True, info)
+        art = await ev(pg, """(function(){
+          var S2=root.FFF_S2, D=S2&&S2.DOOR, BT=root.FFF_C2BT, walk=typeof IMG!=='undefined'&&IMG.nq_chiyo_walk;
+          var rm = BT && BT.room && BT.room({ ctx: { s2waga: 1, dgk: 's2_x_0', s2k: 's2_x' } });
+          return {
+            doorY: D && D.at && D.at[1], doorR: D && D.r, shopAt: D && D.at,
+            walk: typeof walk==='string' ? walk : (walk && walk.src) || '',
+            pt: (typeof PT_PAINT!=='undefined'&&PT_PAINT.nq_chiyo), has: !!(typeof PT_HAS!=='undefined'&&PT_HAS.chiyo_neutral),
+            s2p: !!(root.FFF_S2P&&FFF_S2P.interior&&FFF_S2P.facadeDoor&&FFF_S2P.battle),
+            c2h: !!(root.FFF_C2H), room: rm, eatg: !!(root.EATG&&EATG.has&&EATG.has('sweetroll')&&EATG.has('dango')),
+            buy: !!(S2 && /EATG/.test(String(S2)))
+          };
+        })()""")
+        ok('north door stands in the street (y < 2760)', art and art.get('doorY') is not None and art['doorY'] < 2760, art)
+        ok('door rect sits on the north band', art and art.get('doorR') and art['doorR'][3] <= 2770 and art['doorR'][1] < 2760, art)
+        ok('Chiyo walk is the new sheet, not the clerk', art and 'nq_chiyo_walk' in str(art.get('walk') or ''), art)
+        ok('Chiyo portrait mapped', art and art.get('pt')=='chiyo' and art.get('has'), art)
+        ok('S2P + C2H painters live', art and art.get('s2p') and art.get('c2h'), art)
+        ok('X3 clash picks the Wagashi battle room', art and art.get('room')=='c2_waga', art)
+        ok('EATG knows sweetroll and dango', art and art.get('eatg'), art)
         ok('quest auto-opens after seal', info and info.get('q') == 0, info)
         ok('next rival is depot (Masa)', info and info.get('next') == 'depot', info)
         quote = (info or {}).get('quote') or ''

@@ -48,7 +48,7 @@
     R(g, 280, 36, 720, 14, '#3b2a22', INK, 3);
     var i, x;
     var glyphs = ['\u548c', '\u83d3', '\u5b50', '\u5343', '\u4ee3', '\u548c', '\u83d3', '\u5b50'];
-    for (i = 0; i < 8; i++) {
+    for (var i = 0; i < 8; i++) {
       x = 286 + i * 88;
       R(g, x, 50, 80, 128, i % 2 ? '#c45a6a' : '#e8c9c4', INK, 3);
       txt(g, glyphs[i], x + 40, 114, 34, i % 2 ? '#f8ece8' : '#8e3b52', '900 ', 'center');
@@ -190,12 +190,13 @@
     for (k = 0; k < 3; k++) {
       nx = 150 + k * 33;
       g.fillStyle = k % 2 ? '#c45a6a' : '#e8c9c4';
-      g.beginPath(); g.moveTo(nx, 60); g.lineTo(nx + 30, 60); g.lineTo(nx + 30, 104); g.quadraticCurveTo(nx + 15, 110, nx, 104); g.closePath();
+      g.beginPath(); g.moveTo(nx, 60); g.lineTo(nx + 30, 60); g.lineTo(nx + 30, 118); g.quadraticCurveTo(nx + 15, 126, nx, 118); g.closePath();
       g.fill(); g.strokeStyle = INK; g.lineWidth = 2; g.stroke();
     }
     R(g, 148, 56, 104, 6, '#3b2a22', INK, 2);
-    txt(g, '\u5343', 183, 84, 16, '#f8ece8', '900 ');
-    txt(g, '\u4ee3', 216, 84, 16, '#8e3b52', '900 ');
+    /* 千 / 代 centered on the left and right flaps (not on the seams) */
+    txt(g, '\u5343', 165, 86, 20, '#f8ece8', '900 ');
+    txt(g, '\u4ee3', 231, 86, 20, '#8e3b52', '900 ');
   };
 
   /* standalone storefront kept only as a leftover; the preview uses facadeDoor on the town block */
@@ -270,7 +271,7 @@
     H.floor(x, { kind: 'asphalt', far: '#3a3a50', near: '#1c1c2a', lanes: [360], seed: 13 });
     /* stone paving on the sidewalk band */
     var r = H.seed(9), yy, xx, s;
-    for (i = 0; i < 80; i++) {
+    for (var i = 0; i < 80; i++) {
       yy = H0 + 8 + r() * 70; xx = r() * WD; s = 10 + (yy - H0) / 8;
       x.fillStyle = 'rgba(0,0,0,' + (0.06 + r() * 0.1) + ')';
       x.beginPath(); x.ellipse(xx, yy, s * 1.8, s * 0.45, 0, 0, 6.28); x.fill();
@@ -290,7 +291,7 @@
     /* light rain streaks (still) */
     x.strokeStyle = 'rgba(200,210,230,.22)'; x.lineWidth = 1.2;
     var rr2 = H.seed(3);
-    for (i = 0; i < 50; i++) {
+    for (var i = 0; i < 50; i++) {
       var rx = rr2() * WD, ry = rr2() * HT, rl = 10 + rr2() * 16;
       x.beginPath(); x.moveTo(rx, ry); x.lineTo(rx - 2, ry + rl); x.stroke();
     }

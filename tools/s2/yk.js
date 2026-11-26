@@ -216,7 +216,12 @@
       if (k === 5 && spec.hara && shirt && (Y - shirt.t) / Math.max(1, shirt.b - shirt.t) > spec.hara) { put(i, HARA, (X % 3 === 0) ? 0.72 : 1); continue; } /* haramaki: a ribbed belly band */
       if (k === 5 && spec.shirt === 'irezumi' && shirt) { var qz = (Y - shirt.t) / Math.max(1, shirt.b - shirt.t); var iz = irez(X, Y, sc0, face); if (qz < 0.12 || !iz) put(i, skin, rl); else { var zc = IREZ[iz]; d[i * 4] = zc[0]; d[i * 4 + 1] = zc[1]; d[i * 4 + 2] = zc[2]; } continue; }
       if (k === 7 && spec.geta && Y > shoeT) { var gq = (Y - shoeT) / Math.max(1, y1 - shoeT); if (gq < 0.3) put(i, tri(spec.geta.strap), rl); else if (gq > 0.82) put(i, tri('#3a2a1e'), 1); else put(i, tri(spec.geta.wood), (Y % 3 === 0) ? 0.86 : rl); continue; }
-      if (k === 5 && spec.happi && face === 'back' && Y > (chin || y0 + H * 0.2)) { put(i, P[4] || tri('#c47a86'), rl); continue; }
+      if (k === 5 && spec.happi && (face === 'back' || sideF) && Y > (sideF ? y0 + H * 0.17 : (chin || y0 + H * 0.2))) {
+        if (sideF) {
+          var a5 = w, b5 = -1; [4, 5, 6].forEach(function (kk) { var e5 = rowExt(Y, kk); if (e5) { if (e5[0] < a5) a5 = e5[0]; if (e5[1] > b5) b5 = e5[1]; } });
+          if (b5 >= a5) { var fr5 = dir2 > 0 ? b5 : a5, ew5 = Math.max(2, (b5 - a5) * 0.06); if (Math.abs(X - fr5) < ew5) { put(i, tri(spec.happi.eri), rl); continue; } }
+        }
+        put(i, P[4] || tri('#c47a86'), rl); continue; }
       if (k === 4 && spec.happi && Y <= hem && Y > hem - H * 0.045) { put(i, tri(spec.happi.hemCol), (((X >> 2) + (Y >> 1)) % 4 === 0) ? 0.55 : 1); continue; } /* the happi's banded hem */
       if (k === 4 && spec.happi && face === 'front' && shirt && Y > shirt.t - H * 0.02 && Y <= hem) { var ew = Math.max(2, (x1 - x0) * 0.075); if ((X < shirt.l && X >= shirt.l - ew) || (X > shirt.r && X <= shirt.r + ew)) { put(i, tri(spec.happi.eri), rl); continue; } } /* the white collar band (eri) */
       if (k === 4 && spec.happi && sideF && Y > y0 + H * 0.2 && Y <= hem) { var ex4 = rowExt(Y, 4); if (ex4) { var fr4 = dir2 > 0 ? ex4[1] : ex4[0], ew2 = Math.max(2, (x1 - x0) * 0.09); if (Math.abs(X - fr4) < ew2) { put(i, tri(spec.happi.eri), rl); continue; } } }
@@ -237,6 +242,18 @@
       if (spec.sash && (k === 4 || k === 6) && Math.abs(Y - hem) <= Math.max(2, 2.6 * sc0)) { put(i, tri(spec.sash), Y < hem ? 1.15 : 0.9); continue; } /* a satin sash at the waist */
       if (k === 3 && spec.hairCol2 && !spec.hair && hash(X, Y + 17) > 0.92 && (X % 7 < 2)) { put(i, tri(spec.hairCol2), rl); continue; } /* rare strand streaks when the hair cap is not redrawn */
       var t = P[k]; if (t) put(i, t, rl); }
+    if (spec.happi && sideF) { /* leftover cream from the sailor blouse, keep a thin eri at the front edge */
+      var hpT = P[4] || tri('#c47a86'), yLo5 = Math.round(y0 + H * 0.17), yHi5 = Math.min(h - 1, hem + 6);
+      for (Y = yLo5; Y < yHi5; Y++) for (X = 1; X < w - 1; X++) {
+        i = Y * w + X; if (d[i * 4 + 3] < 120 || C[i] === 2 || H2[i]) continue;
+        var pr = d[i * 4], pg = d[i * 4 + 1], pb = d[i * 4 + 2];
+        if (!(pr > 200 && pg > 165 && pb > 145 && pr - pb < 110 && pr - pg < 80)) continue;
+        var aP = w, bP = -1; [4, 5, 6].forEach(function (kk) { var eP = rowExt(Y, kk); if (eP) { if (eP[0] < aP) aP = eP[0]; if (eP[1] > bP) bP = eP[1]; } });
+        var frP = bP >= aP ? (dir2 > 0 ? bP : aP) : -999;
+        if (Math.abs(X - frP) < Math.max(2, (bP - aP) * 0.07)) continue;
+        put(i, hpT, 1); if (C[i] === 5) C[i] = 4;
+      }
+    }
     if (spec.base === 'punk') for (i = 0; i < N; i++) if (C[i] === 1 || C[i] === 8) { var rr = d[i * 4], gg = d[i * 4 + 1], bb = d[i * 4 + 2]; if ((gg - rr > 10 || bb - rr > 18) && L[i] < 90) { var kk = Math.min(1.4, L[i] / 30); d[i * 4] = INK[0] * kk; d[i * 4 + 1] = INK[1] * kk; d[i * 4 + 2] = INK[2] * kk; } }
     /* Aoi's open front: a sarashi strip down the middle of her coat */
     if (spec.openFront && face !== 'back' && face !== 'left' && face !== 'right') { var cxm2 = (x0 + x1) / 2, sw = (x1 - x0) * 0.09, t1 = chin + (hem - chin) * 0.25;
@@ -579,13 +596,34 @@
           x.beginPath(); x.moveTo(fT, aTop); x.lineTo(fB, aBot); x.stroke(); }
       }
       x.restore(); }
+    if (spec.happi && spec.knotCol) { /* a tied happi knot at the chest, above the apron */
+      var kn = tri(spec.knotCol || '#c47a86'), kCx = (x0 + x1) / 2, kCy = shirt ? shirt.t + (hem - shirt.t) * 0.18 : y0 + H * 0.3, kR = Math.max(3.2, 4.2 * sc0);
+      x.save(); x.lineJoin = 'round'; x.lineCap = 'round'; x.fillStyle = rgb(kn.b); x.strokeStyle = rgb(INK); x.lineWidth = 1.15 * sc0;
+      if (face === 'front') {
+        x.beginPath(); x.ellipse(kCx - kR * 0.85, kCy, kR * 0.7, kR * 0.55, -0.5, 0, 7); x.fill(); x.stroke();
+        x.beginPath(); x.ellipse(kCx + kR * 0.85, kCy, kR * 0.7, kR * 0.55, 0.5, 0, 7); x.fill(); x.stroke();
+        x.beginPath(); x.arc(kCx, kCy + kR * 0.1, kR * 0.45, 0, 7); x.fillStyle = rgb(kn.h); x.fill(); x.stroke();
+        x.fillStyle = rgb(kn.b);
+        x.beginPath(); x.moveTo(kCx - kR * 0.2, kCy + kR * 0.4); x.quadraticCurveTo(kCx - kR * 1.1, kCy + kR * 2.1, kCx - kR * 0.6, kCy + kR * 2.8); x.quadraticCurveTo(kCx - kR * 0.05, kCy + kR * 1.6, kCx, kCy + kR * 0.5); x.closePath(); x.fill(); x.stroke();
+        x.beginPath(); x.moveTo(kCx + kR * 0.2, kCy + kR * 0.4); x.quadraticCurveTo(kCx + kR * 1.2, kCy + kR * 2.2, kCx + kR * 0.55, kCy + kR * 2.9); x.quadraticCurveTo(kCx + kR * 0.05, kCy + kR * 1.6, kCx, kCy + kR * 0.5); x.closePath(); x.fill(); x.stroke();
+      } else if (sideF) {
+        var exK = rowExt(Math.round(kCy), 4) || rowExt(Math.round(kCy), 5);
+        if (exK) { var kx2 = (dir2 > 0 ? exK[1] : exK[0]) - dir2 * kR * 0.55;
+          x.beginPath(); x.ellipse(kx2, kCy, kR * 0.5, kR * 0.4, dir2 * 0.3, 0, 7); x.fill(); x.stroke();
+          x.beginPath(); x.moveTo(kx2, kCy + kR * 0.15); x.quadraticCurveTo(kx2 - dir2 * kR * 0.15, kCy + kR * 1.6, kx2 + dir2 * kR * 0.2, kCy + kR * 2.1); x.lineWidth = 1.5 * sc0; x.stroke(); }
+      }
+      x.restore(); }
     /* hands back on top */
     var hc = document.createElement('canvas'); hc.width = w; hc.height = h; var hcx2 = hc.getContext('2d', { willReadFrequently: true }), hid = hcx2.createImageData(w, h), hd = hid.data, od = id.data;
     var base = x.getImageData(0, 0, w, h); /* the recoloured hands live in id (before vector add-ons) */
     for (i = 0; i < N; i++) if (H2[i]) { hd[i * 4] = od[i * 4]; hd[i * 4 + 1] = od[i * 4 + 1]; hd[i * 4 + 2] = od[i * 4 + 2]; hd[i * 4 + 3] = od[i * 4 + 3]; }
     hcx2.putImageData(hid, 0, 0); x.drawImage(hc, 0, 0); base = null;
     if (spec.bun) { /* v6.5.63 club staff: hair put up in a bun, a gold ornament or a blossom pin (Chiyo). */
-      var bR = H * 0.052, bx = (hx0 + hx1) / 2 + (face === 'left' ? 1 : face === 'right' ? -1 : 0) * (hx1 - hx0) * 0.28, by = Math.max(bR * 0.9, y0 + bR * (face === 'front' ? 0.45 : face === 'back' ? 0.55 : 0.4));
+      var bR = H * 0.05, hxM = (hx0 + hx1) / 2, hW = (hx1 - hx0), bx, by;
+      /* low nape bun (the portrait): front peeks at her left / the viewer's right; side is mid-to-low at the back of the skull; back is centered on the nape */
+      if (face === 'front') { bx = hxM + hW * 0.36; by = (typeof chin === 'number' && chin > y0) ? chin + bR * 0.25 : y0 + H * 0.22; }
+      else if (face === 'back') { bx = hxM; by = (typeof chin === 'number' && chin > y0) ? chin + bR * 0.08 : y0 + H * 0.2; }
+      else { bx = hxM + (face === 'left' ? 1 : -1) * hW * 0.38; var hairBotY = (typeof capBot === 'number' && capBot > y0) ? capBot : y0 + H * 0.2; by = y0 + (hairBotY - y0) * 0.78; }
       var bunCol = tri(spec.hairCol || '#121014'), bunCol2 = spec.hairCol2 ? tri(spec.hairCol2) : null;
       x.save(); x.globalCompositeOperation = 'source-over'; x.fillStyle = rgb(bunCol.b); x.strokeStyle = rgb(INK); x.lineWidth = 1.2 * sc0;
       x.beginPath(); x.ellipse(bx, by, bR * 1.15, bR * 0.95, 0, 0, Math.PI * 2); x.fill(); x.stroke();
