@@ -7,7 +7,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 HERE = Path(__file__).resolve().parent
 OUT = Path('/workspace/v6560-review/seal2/phase2')
-V1 = OUT / 'v1'
+V1 = OUT / 'v2'
 PORT = 8873
 OUT.mkdir(parents=True, exist_ok=True)
 V1.mkdir(parents=True, exist_ok=True)
@@ -53,7 +53,7 @@ def compose_facades():
     before_s.convert('RGB').save(V1 / 'south_before.png')
     after_s.convert('RGB').save(V1 / 'south_after.png')
     pair_s.save(V1 / 'south_before_after.png')
-    pair_s.save(OUT / 'south_v1_compare.png')
+    pair_s.save(OUT / 'south_v2_compare.png')
 
     # north street edge
     box_n = (3700, 2480, 4960, 3000)
@@ -74,7 +74,7 @@ def compose_facades():
     before_n.convert('RGB').save(V1 / 'north_before.png')
     after_n.convert('RGB').save(V1 / 'north_after.png')
     pair_n.save(V1 / 'north_before_after.png')
-    pair_n.save(OUT / 'north_v1_compare.png')
+    pair_n.save(OUT / 'north_v2_compare.png')  # NOTE: north overlay is preview-only; do not wire over Sato
     print('composites', 'south@', 3760, 3280, 'north@', 3760, 2592)
 
 def sheet():
@@ -126,7 +126,7 @@ def sheet():
         r, col = divmod(i, cols)
         sheet.paste(c, (12 + col * W, 36 + r * H))
     sheet.save(V1 / 'phase2_sheet_v1.png')
-    sheet.save(OUT / 'phase2_sheet_v1.png')
+    sheet.save(OUT / 'phase2_sheet_v2.png')
     print('sheet', sheet.size, 'cells', len(cells))
 
 async def main():
@@ -150,7 +150,7 @@ async def main():
                 continue
             im = Image.open(io.BytesIO(base64.b64decode(data.split(',', 1)[1]))).convert('RGB')
             im.save(V1 / f'{cid}.png')
-            im.save(OUT / f'{cid}_v1.png')
+            im.save(OUT / f'{cid}_v2.png')
         await b.close()
     compose_facades()
     sheet()
