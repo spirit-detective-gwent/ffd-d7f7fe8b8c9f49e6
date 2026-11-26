@@ -11,6 +11,27 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
+### 2026-11-26 — executor (Grok Bot) — v6.5.63 ch2-bond (not published, not merged)
+Erik previewed c2_goda and asked for: a staged Sato/Tome-baa carry-off (keep the quick cut to the seal), the bondAsk nameplate to say Aoi, a proper kneeling Gōda sprite (the Y sheet’s side head was split), and the post-seal pointer to go east to Masa / Wagashi row (Club Kitsune is optional, Jin’s ground). Seal 2 is Masa. FFF_BUILD was not bumped.
+
+What changed (tip will be this branch HEAD):
+- **Carry-off (Fierce):** `stageCarryIn` / `stageCarryOut` in the CH2BOND module. Old Sato (`nq_bandai`) and Tome-baa (`nq_tome`) enter from the boiler corridor (~780, 500), lift the lying sprite (it tracks between them), and walk him back out of the held camera frame. No zoom-out (`FFF_SCAM.st.keep`). Then the slip / rumor / Masa lines, then the existing `c2LmSeal` pry (the transition Erik liked).
+- **bondAsk:** `ask()` now treats a question headed “Aoi …” as Aoi. Nameplate and portrait use `asker` and pass `{ speaker:1, name, face }` into `dialog()` so the d2 choice box shows Aoi, not Ryo.
+- **Kneel sheet:** redrew `world/mb2_sentoY_kn.webp` (front/left/right heads composited from `mb2_sentoY_idle`, broken gold side-head wiped). Preview: `/workspace/v6560-review/bond/goda_kneel_sheet.png`. Old sheet backed up as `mb2_sentoY_kn_old.webp` in that folder. Back row unchanged.
+- **Story pointer (Gōda scene + post-seal only):** all three answers: Gōda names Tetsu as a rumor (“Tetsu sits in Jin’s club, but you can’t touch Jin’s ground yet”) and his last pointer is east to Masa and the Riders at Wagashi row. Path voice stays distinct (VQ + Gōda’s line). `c2LmSeal` when `n===1 && k==='sento'`: Aoi says “Wagashi row. Masa and the Riders.” / `c2sSay` “Wagashi row is next. The club will keep.” Club still opens after the first seal (`c2Bouncer` unchanged). `ckNamed` and the deal’s `ckTip` (Thursday crates, if they optionally visit) stay.
+- **M2:** slot moved to Masa’s depot shutter. Id `c2_masa_after`, Journal name “Masa at the shutter”, pay still 760/380/152. `PAY.c2_cheap` is an alias. Scene still comes with seal-2 phase 5.
+
+**Exact strings / functions touched (for a clean merge with the phase-1 journal-to-Masa branch):**
+- `bondAsk` → `ask()` (nameplate / `dialog()` args only)
+- `BCALL_NAME`, `PAY`, `BOND_CH2` (M2 id/name/pay)
+- CH2BOND: `VQ`, `seqFor`, new `stageCarryIn` / `stageCarryOut` / `carryPlace` / `carryTick`
+- Nails `c2LmSeal`: only the `n===1` Aoi line and the `c2sSay` call, gated on `k==='sento'`
+- `world/mb2_sentoY_kn.webp`
+
+**Left alone (phase 1 / other routes):** `C2LMK` order, Four Corners “next corner” text (may still list Jin’s Game Center until that branch lands), `c2sReveal(1)` (“Loud shirt. Punk Tetsu. Back office…” — not played on Punk Gōda because we replace `c2BossOut`), `c2Bouncer`.
+
+Preview: `/workspace/v6560-review/bond/c2_goda_preview_v2.mp4` and `*_v2.png` key shots, once recorded.
+
 ### 2026-11-25 — executor (Grok Bot) — v6.5.63 ch2-bond (branch `ch2-bond`, not published, not merged into v6563-mai)
 Erik asked for the five Ch2 bond moments (spec `/workspace/v6560-review/ch2_bond_moments.md`). This branch is for him to preview **M1** (`c2_goda`) first. FFF_BUILD was not bumped.
 
