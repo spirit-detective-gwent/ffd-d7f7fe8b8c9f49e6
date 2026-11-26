@@ -13,6 +13,16 @@
   var root = typeof window !== 'undefined' ? window : this;
   var S2 = root.FFF_S2;
   var P2 = root.FFF_S2P2 = { v: 1, ART: true };
+  /* Hide the town CSS rain overlay in C2 interiors. Uses the c2 / c2town
+   * classes c2Pop already toggles — no new loop. Also pauses the tile animation. */
+  (function hideIndoorRain() {
+    var st = document.getElementById('s2p2-norain');
+    if (st) return;
+    st = document.createElement('style');
+    st.id = 's2p2-norain';
+    st.textContent = '#world.c2:not(.c2town) #wrain{display:none}#world.c2:not(.c2town) #wrain .rn{animation-play-state:paused}';
+    (document.head || document.documentElement).appendChild(st);
+  })();
   function on() { return (typeof c2On !== 'function' || c2On()) && (typeof chN !== 'function' || chN() === 2); }
   function S() { return c2S(); }
   function E() { return c2S().e; }
@@ -189,9 +199,9 @@
     INT[id].base = INT[id].block; TAGS_IN[id] = {};
     return INT[id];
   }
-  roomDef('mshop', 'Hase Repair', { block: [[120, 250, 320, 450], [760, 360, 1120, 496], [180, 650, 260, 740]],
+  roomDef('mshop', 'Hase Repair', { block: [[120, 250, 340, 640], [500, 350, 1000, 500], [140, 660, 300, 780]],
     spots: [{ id: 'exit', r: [575, 850, 705, 900], at: [640, 870], face: 0 },
-      { id: 's2_hase_shop', r: [820, 360, 1060, 500], at: [940, 530], face: 0, lab: 'Shop' },
+      { id: 's2_hase_shop', r: [680, 430, 960, 560], at: [760, 580], face: 0, lab: 'Shop' },
       { id: 's2_to_lobby', r: [100, 80, 220, 230], at: [160, 250], face: 0, lab: 'Lobby' }] });
   roomDef('mina', 'Minato-s\u014d \u00b7 Lobby', { block: [[120, 250, 380, 460], [400, 250, 600, 400], [620, 300, 820, 388], [880, 248, 1090, 548], [140, 560, 390, 680]],
     spots: [{ id: 'exit', r: [575, 850, 705, 900], at: [640, 870], face: 0 },
@@ -355,7 +365,8 @@
   function popShop() {
     if (room() !== 'mshop') { if (HASE) { try { kill(HASE); } catch (eK) {} HASE = null; } return; }
     if (HASE && HASE.el && HASE.el.parentNode) return;
-    HASE = npc('nq_hase', 940, 400, Math.PI / 2);
+    HASE = npc('nq_hase', 780, 520, Math.PI / 2);
+    try { if (typeof waddle === 'function') waddle(HASE, 0, Math.PI / 2); } catch (eW) {}
     try { if (W.c2n) W.c2n.s2h = HASE; } catch (eN) {}
   }
   function popLobby() {

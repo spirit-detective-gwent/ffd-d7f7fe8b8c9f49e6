@@ -8,9 +8,11 @@ from PIL import Image, ImageDraw, ImageFont
 HERE = Path(__file__).resolve().parent
 OUT = Path('/workspace/v6560-review/seal2/phase2')
 V1 = OUT / 'v2'
-PORT = 8873
+V3 = OUT / 'v3'
+PORT = 8874
 OUT.mkdir(parents=True, exist_ok=True)
 V1.mkdir(parents=True, exist_ok=True)
+V3.mkdir(parents=True, exist_ok=True)
 
 class Q(http.server.SimpleHTTPRequestHandler):
     def log_message(self, *a): pass
@@ -151,10 +153,13 @@ async def main():
             im = Image.open(io.BytesIO(base64.b64decode(data.split(',', 1)[1]))).convert('RGB')
             im.save(V1 / f'{cid}.png')
             im.save(OUT / f'{cid}_v2.png')
+            im.save(V3 / f'{cid}.png')
+            im.save(OUT / f'{cid}_v3.png')
         await b.close()
     compose_facades()
+    # also dump a v3 shop/bridge compare later from those files
     sheet()
-    print('done', V1)
+    print('done', V1, V3)
 
 if __name__ == '__main__':
     asyncio.run(main())

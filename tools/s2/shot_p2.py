@@ -99,34 +99,40 @@ async def main():
         await go_town(pg, 4300, 3520)
         await ev(pg, "try{if(root.FFF_S2P2){var el=document.getElementById('s2MinaSouth');}}catch(e){}")
         await pg.wait_for_timeout(400)
-        await shot(pg, '01_south_facade')
+        await shot(pg, '01_south_facade_v3')
         # bridge
         await go_town(pg, 3610, 3480)
-        await shot(pg, '02_bridge_foot')
+        await shot(pg, '02_bridge_foot_v3')
         # lobby
         await ev(pg, """(function(){ try{c2Go('mina',[640,700,0]);}catch(e){} return typeof c2Room==='function'?c2Room():null; })()""")
         await pg.wait_for_timeout(600)
         await ev(pg, HUSH)
-        await shot(pg, '03_lobby')
+        await shot(pg, '03_lobby_v3')
         # stair approach
         await ev(pg, """(function(){ try{ if(W.ryo){ W.ryo.x=860; W.ryo.y=600; place(W.ryo,0);} camera(true);}catch(e){} return 1; })()""")
         await pg.wait_for_timeout(300)
-        await shot(pg, '04_lobby_stair')
-        # workshop
-        await ev(pg, """(function(){ try{c2Go('mshop',[640,700,0]);}catch(e){} return typeof c2Room==='function'?c2Room():null; })()""")
-        await pg.wait_for_timeout(600)
+        await shot(pg, '04_lobby_stair_v3')
+        # workshop: frame Hase at the counter and the workbench
+        info5 = await ev(pg, """(function(){
+          try{c2Go('mshop',[640,640,0]);}catch(e){}
+          try{ if(W.ryo){ W.ryo.x=640; W.ryo.y=640; place(W.ryo,0);} if(W.aoi){ W.aoi.x=560; W.aoi.y=680; place(W.aoi,0);} camera(true);}catch(e2){}
+          var h=W.c2n&&W.c2n.s2h;
+          return {room:typeof c2Room==='function'?c2Room():null, hase:h?[Math.round(h.x),Math.round(h.y)]:null, wrain:(function(){var e=document.getElementById('wrain'); if(!e)return 'none'; var s=getComputedStyle(e); return s.display;})()};
+        })()""")
+        print('workshop', info5, flush=True)
+        await pg.wait_for_timeout(700)
         await ev(pg, HUSH)
-        await shot(pg, '05_workshop')
+        await shot(pg, '05_workshop_v3')
         # after flip, still in workshop (Hase stays)
-        await ev(pg, """(function(){ var P2=root.FFF_S2P2; P2.takeEastTurf(); P2.setStg('done'); var st=c2S(); st.q.cq2_s2_runs=9; try{c2Pop();}catch(e){} return {won:!!(st.e.nq&&st.e.nq.won&&st.e.nq.won.east)}; })()""")
-        await pg.wait_for_timeout(400)
+        await ev(pg, """(function(){ var P2=root.FFF_S2P2; P2.takeEastTurf(); P2.setStg('done'); var st=c2S(); st.q.cq2_s2_runs=9; try{c2Pop();}catch(e){} try{ if(W.ryo){ W.ryo.x=640; W.ryo.y=640; place(W.ryo,0);} camera(true);}catch(e2){} return {won:!!(st.e.nq&&st.e.nq.won&&st.e.nq.won.east), hase:!!(W.c2n&&W.c2n.s2h)}; })()""")
+        await pg.wait_for_timeout(500)
         await ev(pg, HUSH)
-        await shot(pg, '06_workshop_after')
+        await shot(pg, '06_workshop_after_v3')
         # lobby after
         await ev(pg, """(function(){ try{c2Go('mina',[640,700,0]);}catch(e){} return 1; })()""")
         await pg.wait_for_timeout(600)
         await ev(pg, HUSH)
-        await shot(pg, '07_lobby_after')
+        await shot(pg, '07_lobby_after_v3')
         print('ERRS', errs[:6], flush=True)
         await b.close()
 
