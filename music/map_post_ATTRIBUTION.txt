@@ -1,0 +1,10 @@
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/map_post.mp3 (Chapter One grounds after all four relay bosses are beaten, instead of map.mp3 "Hitman")
+
+Required in-game credit:
+"Undaunted" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400025
+
+Edit: 3:17 excerpt (78 bars at 95 bpm from 0.35 s of the original, before the outro), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched to map.mp3 (about -22 LUFS). Stereo MP3 at 192 kbps, 44.1 kHz.
