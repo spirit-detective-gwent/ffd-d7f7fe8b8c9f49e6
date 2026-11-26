@@ -9,7 +9,7 @@ from playwright.async_api import async_playwright
 OUT = Path('/workspace/v6560-review/bond'); OUT.mkdir(exist_ok=True)
 PORT = 8984
 IDX = {'fierce': 0, 'strategic': 1, 'balanced': 2}
-POLL = """(function(){var d=document.getElementById('wdlg');var on=!!(d&&d.classList.contains('on'));return {on:on,len:on?((d.querySelector('.tw')||{}).textContent||'').length:0,btns:on?[...d.querySelectorAll('button')].filter(x=>x.offsetParent&&!/Auto/.test(x.textContent)).map(x=>x.textContent.trim().slice(0,30)):[],bond:!!document.querySelector('#wdlg.on button.bondopt'),seal:!!c2S().e.seal_sento,scene:(W.scr|0),cut:!!W.cut}})()"""
+POLL = """(function(){var d=document.getElementById('wdlg');var on=!!(d&&d.classList.contains('on'));return {on:on,len:on?((d.querySelector('.d2-q,.tw,.d2-body')||{}).textContent||'').length:0,btns:on?[...d.querySelectorAll('button')].filter(x=>x.offsetParent&&!/Auto/.test(x.textContent)).map(x=>x.textContent.trim().slice(0,30)):[],bond:!!document.querySelector('#wdlg.on button.bondopt'),seal:!!c2S().e.seal_sento,scene:(W.scr|0),cut:!!W.cut}})()"""
 CLICK = """(i)=>{var b=[...document.querySelectorAll('#wdlg.on button')].filter(e=>e.offsetParent&&!e.disabled&&!/Auto/.test(e.textContent));if(!b.length)return null;var x=b[i||0]||b[0];x.click();return x.textContent.trim()}"""
 async def record(ans, body, errs, keep=None):
     async with async_playwright() as p:
@@ -41,7 +41,7 @@ async def record(ans, body, errs, keep=None):
         await v.run(1.0)
         info = await bh.ev(pg, "JSON.stringify({fate:c2S().e.godaFate,tip:c2S().e.ckTip,picks:STORY.bond(SAVE).picks,px:STORY.bond(SAVE).px})")
         print(ans, 'frames', v.n, 'clicks', clicks, info); await b.close()
-    mp4 = OUT / f'c2_goda_{ans}.mp4'; bh.encode(d, mp4); return d, mp4
+    mp4 = OUT / f'c2_goda_{ans}_v2.mp4'; bh.encode(d, mp4); return d, mp4
 async def main():
     order = sys.argv[1:] or ['fierce', 'strategic', 'balanced']
     bh.serve(PORT); body = bh.inject(); errs = []
