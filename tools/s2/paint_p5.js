@@ -204,6 +204,17 @@
     ellipse(g, x, y + 48, 14, 14, '#1a1220', INK, 2);
     ellipse(g, x, y + 48, 6, 6, '#6a707c', INK, 1.4);
   }
+  function palletJack(g, x, y) {
+    /* low manual jack — forks toward +y, tiller up */
+    R(g, x, y, 40, 36, '#3a3e48', INK, 2);
+    R(g, x + 6, y + 36, 10, 54, '#6a707c', INK, 2);
+    R(g, x + 24, y + 36, 10, 54, '#6a707c', INK, 2);
+    ellipse(g, x + 10, y + 34, 8, 8, '#1a1220', INK, 2);
+    ellipse(g, x + 30, y + 34, 8, 8, '#1a1220', INK, 2);
+    g.strokeStyle = INK; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(x + 20, y); g.lineTo(x + 20, y - 44); g.lineTo(x + 44, y - 58); g.stroke();
+    R(g, x + 36, y - 64, 16, 10, '#3a3e48', INK, 1.6);
+  }
   function chainHang(g, x, y0, y1) {
     var i, n = Math.max(4, Math.floor((y1 - y0) / 10));
     g.strokeStyle = '#8a8fa0'; g.lineWidth = 3;
@@ -1161,6 +1172,17 @@
     hose(g, 300, 820, 140);
     handTruck(g, 160, 500);
     cone(g, 340, 800); cone(g, 900, 800);
+    /* weighty lower-half props — chains, a pallet jack, oil drums; center lane clear */
+    palletJack(g, 280, 620);
+    pallet(g, 270, 710, 90, 22);
+    drum(g, 300, 760, 36, 60, '#6a3a28');
+    drum(g, 340, 780, 32, 56, '#3a4a38');
+    drum(g, 920, 760, 36, 60, '#6a3a28');
+    drum(g, 960, 780, 32, 54, '#3a4a38');
+    chainHang(g, 300, 480, 620);
+    chainHang(g, 980, 480, 620);
+    chainCoil(g, 380, 840, 22);
+    chainCoil(g, 900, 840, 20);
     /* control panel on a stand */
     R(g, 900, 500, 80, 140, '#2a2c34', INK, 2);
     R(g, 924, 640, 16, 50, '#2a2c34', INK, 2);
