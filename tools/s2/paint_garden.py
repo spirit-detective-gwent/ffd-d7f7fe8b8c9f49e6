@@ -10,12 +10,20 @@ from pathlib import Path
 
 from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 
+from paint_plant_frames import (
+    POT_FOOT,
+    POT_SCALE,
+    plant_frames,
+    potpick_frames,
+    write_world_sheets,
+)
+
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent.parent
 CLINIC = ROOT / "world" / "c2_clinic.webp"
 GPICK = {
-    "ryo": Path("/tmp/garden-src/ryo_gpick.png"),
-    "aoi": Path("/tmp/garden-src/aoi_gpick.png"),
+    "ryo": HERE / "sprites" / "ryo_gpick.png",
+    "aoi": HERE / "sprites" / "aoi_gpick.png",
 }
 OUT = Path("/workspace/v6560-review/garden")
 
@@ -372,93 +380,55 @@ def paint_hands_on_rim(fr, mode="press"):
 
 
 def make_strips():
-    """6-frame pot-pick and planting strips. Character sheets stay on black;
-    pots sit in front of the shoes, not through the torso."""
+    """6-frame pot-pick and planting strips.
+
+    The pot sits to the LEFT of the body at ~2.9x (room pot vs SPH 86, mapped
+    onto the 256-tall official cell) so a kneel puts official/new hands on the
+    rim. The pot is drawn behind the body; only the lower lip sits in front of
+    the shoes, so the near leg still reads as kneeling *beside* the pot.
+    """
     out = {}
     cw, ch = 200, 280
+    # Character is pasted at (0, 8) so official feet (y=252) land on cy=260.
+    pot_x, pot_y = POT_FOOT[0], POT_FOOT[1] + 8
+    sc = POT_SCALE
+    # Lip in front of the shoes only (below mid-shin), not over the kneeling leg.
+    LIP_Y = 214
 
-    def cell(fr, pot_state=None, pot_front=True):
-        c = Image.new("RGBA", (cw, ch), (16, 12, 18, 255))
-        d = ImageDraw.Draw(c)
-        # pot at the feet, slightly in front and a touch to the character's right
-        # so it is not jammed between the legs
-        px, py = 118, 260
-        if pot_state and not pot_front:
-            draw_pot(d, px, py, state=pot_state, variant=1)
-        c.alpha_composite(fr, (0, 8))
-        if pot_state and pot_front:
-            # redraw only the lower pot lip in front of the shoes
-            draw_pot(d, px, py, state=pot_state, variant=1)
-            # but the pot would now cover hands in kneel frames — so for those,
-            # we already drew it behind. pot_front is for standing frames only.
-        return c
+    def compose(frames, states):
+        strip = Image.new("RGBA", (6 * cw + 5 * 8, ch), (16, 12, 18, 255))
+        for i, f in enumerate(frames):
+            c = Image.new("RGBA", (cw, ch), (16, 12, 18, 255))
+            d = ImageDraw.Draw(c)
+            if states[i]:
+                draw_pot(d, pot_x, pot_y, state=states[i], variant=1, scale=sc)
+            c.alpha_composite(f, (0, 8))
+            if states[i]:
+                lip = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
+                ld = ImageDraw.Draw(lip)
+                draw_pot(ld, pot_x, pot_y, state=states[i], variant=1, scale=sc)
+                pxd = lip.load()
+                for y in range(0, LIP_Y):
+                    for x in range(cw):
+                        pxd[x, y] = (0, 0, 0, 0)
+                c.alpha_composite(lip)
+            strip.paste(c, (i * (cw + 8), 0))
+        return strip
+
+    def sheet(frames):
+        im = Image.new("RGBA", (1248, 272), (0, 0, 0, 0))
+        for i, f in enumerate(frames):
+            im.paste(f, (8 + i * (200 + 8), 8), f)
+        return im
 
     for who in ("ryo", "aoi"):
-        fr = slice_gpick(who)
-        # pot-pick: stand, squat, kneel-at-rim (official deep kneel, mugwort), rise with herb, hold, stand
-        pick_fr = [
-            fr[0],
-            fr[1],
-            recolor_held_mugwort(fr[2]),
-            recolor_held_mugwort(fr[3]),
-            recolor_held_mugwort(fr[4]),
-            fr[5],
-        ]
+        pick_fr = potpick_frames(who)
+        # bloomed in the pot until the lift (f2 holds the sprig at the rim), then empty
         pick_pot = ["bloomed", "bloomed", "bloomed", "empty", "empty", "empty"]
-        pick_front = [True, True, False, False, True, True]
-        # planting: stand, squat, press, pat, rise, stand
-        plant_fr = [
-            fr[0],
-            fr[1],
-            paint_hands_on_rim(fr[2], "press"),
-            paint_hands_on_rim(fr[3], "pat"),
-            cut_held_plant(fr[4]),
-            fr[5],
-        ]
+        plant_fr = plant_frames(who)
         plant_pot = ["empty", "empty", "empty", "planted", "planted", "planted"]
-        plant_front = [True, True, False, False, True, True]
-
-        def compose(frames, states, fronts):
-            # Room pot is ~22px next to an 86px character; on the 256-tall
-            # official sheet that is ~3.2x. Rim then sits just under kneel hands.
-            strip = Image.new("RGBA", (6 * cw + 5 * 8, ch), (16, 12, 18, 255))
-            for i, f in enumerate(frames):
-                c = Image.new("RGBA", (cw, ch), (16, 12, 18, 255))
-                d = ImageDraw.Draw(c)
-                # slightly right of center so a standing body is not a pot with legs
-                px, py = 124, 260
-                sc = 1.15
-                if states[i] and not fronts[i]:
-                    draw_pot(d, px, py, state=states[i], variant=1, scale=sc)
-                c.alpha_composite(f, (0, 8))
-                if states[i] and fronts[i]:
-                    draw_pot(d, px, py, state=states[i], variant=1, scale=sc)
-                elif states[i] and not fronts[i]:
-                    # front lip only, below the hands, so the rim meets them
-                    lip = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-                    ld = ImageDraw.Draw(lip)
-                    draw_pot(ld, px, py, state=states[i], variant=1, scale=sc)
-                    # keep pixels below the hands / in front of the shins
-                    pxd = lip.load()
-                    for y in range(0, 186):
-                        for x in range(cw):
-                            pxd[x, y] = (0, 0, 0, 0)
-                    c.alpha_composite(lip)
-                strip.paste(c, (i * (cw + 8), 0))
-            return strip
-
-        out[f"{who}_potpick"] = compose(pick_fr, pick_pot, pick_front)
-        out[f"{who}_plant"] = compose(plant_fr, plant_pot, plant_front)
-
-        # keep the official-scale character sheet (no pot) for later wiring
-        def sheet(frames):
-            gw, chs, cws = 8, 256, 200
-            im = Image.new("RGBA", (gw + 6 * (cws + gw) - gw, gw + chs + gw), (0, 0, 0, 0))
-            # actually 8+6*200+5*8 = 1248, height 8+256+8=272
-            im = Image.new("RGBA", (1248, 272), (0, 0, 0, 0))
-            for i, f in enumerate(frames):
-                im.paste(f, (8 + i * (200 + 8), 8), f)
-            return im
+        out[f"{who}_potpick"] = compose(pick_fr, pick_pot)
+        out[f"{who}_plant"] = compose(plant_fr, plant_pot)
         out[f"{who}_potpick_sheet"] = sheet(pick_fr)
         out[f"{who}_plant_sheet"] = sheet(plant_fr)
     return out
@@ -550,9 +520,10 @@ def make_inroom_strips(strips_frames):
     # front-center pot is col 1, row 2
     feet = pot_feet()
     _, _, pot_x, pot_y = [f for f in feet if f[0] == 1 and f[1] == 2][0]
-    # stand in the aisle east of the pot, feet on the boards (not in the bowl,
-    # and not with the head in the pot behind)
-    stand_x, stand_y = pot_x + 38, pot_y + 6
+    # East of the pot, close enough that the left-hand at sprite x=72 meets
+    # the right rim, and feet sit on the pot's ground line so y=190 hands
+    # meet the 22px rim when the 256-tall sheet is drawn at SPH=86.
+    stand_x, stand_y = pot_x + 24, pot_y + 1
 
     def compose(who, kind, frames, states):
         # base room matches the first pot state (empty for plant, bloomed for pick)
@@ -583,24 +554,10 @@ def make_inroom_strips(strips_frames):
             strip.paste(c, (i * (cw + 6), 0))
         return strip
 
-    # rebuild character frames the same way make_strips does
     for who in ("ryo", "aoi"):
-        fr = slice_gpick(who)
-        pick_fr = [
-            fr[0], fr[1],
-            recolor_held_mugwort(fr[2]),
-            recolor_held_mugwort(fr[3]),
-            recolor_held_mugwort(fr[4]),
-            fr[5],
-        ]
-        pick_pot = ["bloomed", "bloomed", "empty", "empty", "empty", "empty"]
-        plant_fr = [
-            fr[0], fr[1],
-            paint_hands_on_rim(fr[2], "press"),
-            paint_hands_on_rim(fr[3], "pat"),
-            cut_held_plant(fr[4]),
-            fr[5],
-        ]
+        pick_fr = potpick_frames(who)
+        pick_pot = ["bloomed", "bloomed", "bloomed", "empty", "empty", "empty"]
+        plant_fr = plant_frames(who)
         plant_pot = ["empty", "empty", "empty", "planted", "planted", "planted"]
         out[f"{who}_potpick_inroom"] = compose(who, "potpick", pick_fr, pick_pot)
         out[f"{who}_plant_inroom"] = compose(who, "plant", plant_fr, plant_pot)
@@ -609,6 +566,7 @@ def make_inroom_strips(strips_frames):
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
+    write_world_sheets(ROOT)
     shots = []
     for state in ("empty", "planted", "bloomed"):
         sparkle = 0 if state == "empty" else None  # first-visit sparkle on pot 0

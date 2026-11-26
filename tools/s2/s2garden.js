@@ -21,7 +21,7 @@
       { id: 'gp9', at: [402, 380] }
     ],
     /* aisle stand: east of the pot, feet on the boards */
-    stand: function (p) { return [p.at[0] + 38, p.at[1] + 6]; },
+    stand: function (p) { return [p.at[0] + 24, p.at[1] + 1]; },
     INTRO: [
       ['tsukikage', 'That corner gets good light. I\'ve set out pots, if you\'d like mugwort of your own.', { mood: 'neutral' }],
       ['tsukikage', 'Buy seeds, plant them, and I\'ll water and tend them while you\'re out.', { mood: 'neutral' }],
