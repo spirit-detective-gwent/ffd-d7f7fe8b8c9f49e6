@@ -298,7 +298,10 @@
           x.beginPath(); P.forEach(function (p) { var a1 = f(p[1], p[2]); if (p[0] === 'm') x.moveTo(a1[0], a1[1]); else if (p[0] === 'l') x.lineTo(a1[0], a1[1]); else { var a2 = f(p[3], p[4]); x.quadraticCurveTo(a1[0], a1[1], a2[0], a2[1]); } }); x.closePath(); };
         HP(1); x.fillStyle = rgb(skin.b); x.fill(); x.save(); x.clip(); x.fillStyle = rgb(skin.s); x.beginPath(); x.moveTo(fEdge - dir * sHH * 0.5, sHT + sHH * 0.62); x.lineTo(fEdge - dir * sHH * 0.2, sHT + sHH * 0.95); x.lineTo(fEdge - dir * sHH * 0.9, sHT + sHH * 1.1); x.lineTo(fEdge - dir * sHH * 0.9, sHT + sHH * 0.6); x.fill(); x.restore();
         HP(1); x.lineWidth = 2 * sc; x.lineJoin = 'round'; x.strokeStyle = rgb(INK); x.stroke();
-        capCx = hcxS - dir * sHH * 0.06; capRx = sHH * 0.47; capCy = hcy - sHH * 0.02; capRy = sHH * 0.53; capBot = capCy + capRy; ft = sHT; chinH = sCH; skW = sHH * 0.4; }
+        capCx = hcxS - dir * sHH * 0.06; capRx = sHH * 0.47; capCy = hcy - sHH * 0.02; capRy = sHH * 0.53; capBot = capCy + capRy; ft = sHT; chinH = sCH; skW = sHH * 0.4;
+        /* short hair in profile should hug the skull, not sit like a knit cap */
+        if (spec.tight || spec.hair === 'pomp' || spec.hair === 'slick') { capRx *= 0.86; capRy *= 0.78; capCy = capTop + capRy * 0.98; capBot = capCy + capRy; }
+      }
       x.save(); x.beginPath(); if (sideF) { var fYh = ft + (chinH - ft) * 0.3, bYh = ft + (chinH - ft) * 0.8; x.moveTo(0, 0); x.lineTo(w, 0); x.lineTo(w, dir > 0 ? fYh : bYh); x.lineTo(0, dir > 0 ? bYh : fYh); x.closePath(); } else x.rect(0, 0, w, capBot); x.clip();
       if (HP) HP(1.07); else { x.beginPath(); x.ellipse(capCx, capCy, capRx, capRy, 0, 0, Math.PI * 2); }
       x.fillStyle = rgb(ht.b); x.fill(); x.lineWidth = 2.2 * sc; x.strokeStyle = rgb(INK); x.stroke();
@@ -306,6 +309,17 @@
       else if (spec.tight && !sideF) { x.lineCap = 'round'; x.lineWidth = 1.2 * sc; x.strokeStyle = rgb(spec.hairHi ? hx(spec.hairHi) : ht.h); /* slicked back: comb lines swept from a side part */
         [0, 1, 2].forEach(function (k7) { x.beginPath(); x.moveTo(capCx - capRx * 0.55 + k7 * capRx * 0.1, capCy + capRy * 0.35 - k7 * capRy * 0.05); x.quadraticCurveTo(capCx - capRx * 0.1 + k7 * capRx * 0.3, capTop + capRy * 0.1, capCx + capRx * (0.45 + k7 * 0.18), capCy - capRy * 0.1 + k7 * capRy * 0.25); x.stroke(); });
         x.strokeStyle = rgb(ht.s); x.lineWidth = 1.4 * sc; x.beginPath(); x.moveTo(capCx - capRx * 0.62, capCy + capRy * 0.5); x.quadraticCurveTo(capCx - capRx * 0.66, capTop + capRy * 0.5, capCx - capRx * 0.4, capTop + capRy * 0.15); x.stroke(); }
+      else if (sideF) { /* swept strands along the skull — the old stacked ellipses read as a ribbed beanie */
+        x.lineCap = 'round'; x.strokeStyle = rgb(spec.hairHi ? hx(spec.hairHi) : ht.h); x.lineWidth = 1.15 * sc;
+        for (var gl = 0; gl < 5; gl++) {
+          var t = gl / 4;
+          x.beginPath();
+          x.moveTo(capCx - dir * capRx * (0.05 + t * 0.45), capCy - capRy * (0.7 - t * 0.2));
+          x.quadraticCurveTo(capCx - dir * capRx * 0.95, capCy - capRy * (0.15 - t * 0.1), capCx - dir * capRx * (0.55 + t * 0.25), capCy + capRy * (0.35 + t * 0.4));
+          x.stroke();
+        }
+        x.strokeStyle = rgb(ht.s); x.lineWidth = 1.3 * sc;
+        x.beginPath(); x.ellipse(capCx, capCy, capRx * 0.82, capRy * 0.82, 0, Math.PI * 1.15, Math.PI * 1.85); x.stroke(); }
       else { x.lineWidth = 1.3 * sc; x.strokeStyle = rgb(ht.s); for (var gl = -2; gl <= 2; gl++) { x.beginPath(); x.ellipse(capCx + gl * skW * 0.22, capCy + capRy * 0.2, skW * 0.3, capRy * 0.95, 0, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); } }
       x.restore();
       /* the face back on top of the cap */
@@ -348,7 +362,7 @@
         if (F2.stache) { x.fillStyle = rgb(tri(spec.hairCol || '#151318').b); x.strokeStyle = rgb(INK); x.lineWidth = 0.7 * sc; var sy3 = mY - 1.7 * sc, sw3 = mw * 1.25; /* v6.5.63: a pencil mustache */
           x.beginPath(); x.moveTo(fc9, sy3 - 0.4 * sc); x.quadraticCurveTo(fc9 - sw3 * 0.5, sy3 - 1.3 * sc, fc9 - sw3, sy3 + 0.9 * sc); x.quadraticCurveTo(fc9 - sw3 * 0.5, sy3 + 0.2 * sc, fc9, sy3 + 0.6 * sc); x.quadraticCurveTo(fc9 + sw3 * 0.5, sy3 + 0.2 * sc, fc9 + sw3, sy3 + 0.9 * sc); x.quadraticCurveTo(fc9 + sw3 * 0.5, sy3 - 1.3 * sc, fc9, sy3 - 0.4 * sc); x.fill(); }
         if (spec.stubble) { x.save(); facePath(); x.clip(); x.fillStyle = 'rgba(60,40,36,0.5)'; for (Y = Math.round(fT2 + fH2 * 0.6); Y <= cY; Y++) for (X = Math.round(fc0 - ew9); X <= fc0 + ew9; X++) if (hash(X, Y * 3) < 0.26 && Math.abs(Y - mY) > 0.8) x.fillRect(X, Y, 1, 1); x.restore(); } x.restore(); }
-      if (spec.hair === 'pomp') { var side = face === 'left' || face === 'right', rise = hh * 0.34, qx = side ? capCx + dir * skW * 0.5 : capCx, qy = capTop + (side ? rise * 0.12 : capRy * 0.12), qrx = side ? skW * 0.66 : skW * 0.84, qry = rise * (side ? 0.56 : 0.85);
+      if (spec.hair === 'pomp') { var side = face === 'left' || face === 'right', rise = hh * (side ? 0.22 : 0.28), qx = side ? capCx + dir * skW * 0.35 : capCx, qy = capTop + (side ? rise * 0.08 : capRy * 0.08), qrx = side ? skW * 0.52 : skW * 0.78, qry = rise * (side ? 0.5 : 0.8);
         x.save(); x.translate(qx, qy); x.rotate(dir * -0.42);
         var ht2 = spec.hairCol2 ? tri(spec.hairCol2) : null; x.beginPath(); x.ellipse(0, 0, qrx, qry, 0, Math.PI * 0.92, Math.PI * 2.08); x.fillStyle = rgb(ht.b); x.lineWidth = 2.2 * sc; x.strokeStyle = rgb(INK); x.stroke(); x.fill();
         x.beginPath(); x.ellipse(0, qry * 0.3, qrx * 0.9, qry * 0.45, 0, Math.PI * 0.05, Math.PI * 0.95); x.fillStyle = rgb(ht.s); x.fill();
@@ -828,7 +842,7 @@
 
   /* v6.5.63 seal2 phase 3: Kaji, Masa's lookout at the Funayado. Punk proportions. */
   SPEC.kaji = { base: 'punk', glove: 0, nozig: 1, noScar: 1, clean: 1, skinRe: 1, skin: '#c48a62',
-    bulk: 0.08, pal: { 3: tri('#1a1614'), 4: tri('#2a3858'), 5: tri('#c45a3a'), 6: tri('#243048'), 7: tri('#1a2028') },
+    bulk: 0.04, pal: { 3: tri('#1a1614'), 4: tri('#2a3858'), 5: tri('#c45a3a'), 6: tri('#243048'), 7: tri('#1a2028') },
     pockets: 0.08, closeV: 0.35, stubble: 1, hair: 'tight', tight: 1, hairCol: '#1a1410', hairHi: '#3a2a22',
     face2: { brow: 'flat', browW: 1.2, mouth: 'flat', jaw: 'pointed', w: 0.96, eyeQ: 0.38, mouthQ: 0.55 },
     hands: 1, armsCol: '#2a3858', handsCol: '#c48a62' };
@@ -836,9 +850,9 @@
 
   /* v6.5.63 seal2 phase 4: Sada, Masa's quay dispatcher. Punk proportions, older lieutenant. */
   SPEC.sada = { base: 'punk', glove: 0, nozig: 1, noScar: 1, clean: 1, skinRe: 1, skin: '#c89268',
-    bulk: 0.14, pal: { 3: tri('#3a3228'), 4: tri('#3a463c'), 5: tri('#c9a04a'), 6: tri('#2e382e'), 7: tri('#1a1c20') },
-    pockets: 0.12, closeV: 0.42, stubble: 1, hair: 'pomp', hairCol: '#3a3228', hairHi: '#6a5a48', hairCol2: '#8a8070',
-    face2: { brow: 'flat', browW: 1.3, mouth: 'flat', jaw: 'square', w: 1.02, eyeQ: 0.36, mouthQ: 0.5 },
+    bulk: 0.05, pal: { 3: tri('#3a3228'), 4: tri('#3a463c'), 5: tri('#c9a04a'), 6: tri('#2e382e'), 7: tri('#1a1c20') },
+    pockets: 0.1, closeV: 0.42, stubble: 1, hair: 'pomp', hairCol: '#3a3228', hairHi: '#6a5a48', hairCol2: '#8a8070',
+    face2: { brow: 'flat', browW: 1.3, mouth: 'flat', jaw: 'square', w: 1.0, eyeQ: 0.36, mouthQ: 0.5 },
     hands: 1, armsCol: '#3a463c', handsCol: '#c89268' };
 
   root.FFF_YK = { SPEC: SPEC, paintCell: paintCell, paintSheet: paintSheet, tri: tri };
