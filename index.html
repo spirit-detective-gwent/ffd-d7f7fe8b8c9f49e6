@@ -10703,7 +10703,7 @@ function outdoorLv(pl, tier) {
   if (tier == null) tier = outdoorTier();
   return Math.max(1, Math.min(5, Math.max(pl - 1, Math.min(pl + 1, tier))));
 }
-function packsLive() { return !!(/* v6.5.38: from the intro, not the nurse */ !SAVE.ch1 && !SAVE.gouki && !SAVE.ngp && SAVE.intro && root.FFF_NO_SPAWN !== 1 && root.FFF_CROWD !== false); }
+function packsLive() { return !!(/* v6.5.38: from the intro, not the nurse. NG+ runs the same packs (its start is the normal fresh() start; ch1 and gouki are clear) */ !SAVE.ch1 && !SAVE.gouki && SAVE.intro && root.FFF_NO_SPAWN !== 1 && root.FFF_CROWD !== false); }
 function inIntroSafe(x, y) {
   if (!nurseDone()) return Math.hypot(x - OPEN_PT[0], y - OPEN_PT[1]) < OPEN_R || Math.hypot(x - NURSE_PATH_PT[0], y - NURSE_PATH_PT[1]) < NURSE_PATH_R || nearSafe(x, y);
   return nearSafe(x, y);
@@ -15151,44 +15151,12 @@ function codexPane(sec) {
 }
 /* v4.10 New Game Plus: everything you own carries over, the story (and the map) starts over; the old save is backed up first */
 var NGP_BAK = 'fff_world_bak';
-/* v4.13 NG+: pick an option -> a screen saying exactly what it gives -> Confirm (or Back) */
-var NG_OPT = [['keep', 'Keep my deck', 'hot ngk'], ['refund', 'Fresh upgrades', 'ngr'], ['fresh', 'From nothing', 'ngf']];
-function ngAsk() { ev('world:ngplus:ask'); dialog('<b>Start New Game Plus?</b><p>Chapter One starts over from the opening. Pick how your cards carry over; the next screen shows what you get.</p><p class="dim">Your current save is backed up first.</p>',
-  [['Cancel', null]].concat(NG_OPT.map(function (o) { return [o[1], function () { setTimeout(function () { ngDesc(o[0]); }, 0); }, o[2]]; }))); }
-function ngDesc(mode) { var chs = [SAVE].concat(Object.keys(SAVE.chars || {}).map(function (k) { return SAVE.chars[k]; }).filter(Boolean)), cards = 0, back = 0;
-  chs.forEach(function (C) { cards += (C.cards || []).length; back += refundChar(JSON.parse(JSON.stringify(C))); });
-  var o = NG_OPT.find(function (q) { return q[0] === mode; }), it = SAVE.items | 0, L = {
-    keep: ['All ' + cards + ' cards stay, with every upgrade on them.', 'Your ' + yenTxt(it) + ' and ' + essTxt(SAVE.ess) + ' ' + essName() + ' stay.', 'Items, sodas and potions stay.'],
-    refund: ['All ' + cards + ' cards stay, every upgrade comes off.', 'Those upgrades come back as ' + essTxt(back) + ' ' + essName() + ': ' + essTxt((SAVE.ess | 0) + back) + ' in total. Your ' + yenTxt(it) + ' stays.', 'Items, sodas and potions stay.'],
-    fresh: ['Starter cards only (every won card is gone).', 'No upgrades, no yen, no ' + essName() + '.', 'No items: no sodas, no potions.'] }[mode];
-  ev('world:ngplus:desc:' + mode);
-  dialog('<b>New Game Plus: ' + o[1] + '</b><ul class="ngl">' + L.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '<li>Always: Chapter One from the opening; the relays, crowds and Gouki come back; vending machines restock; Codex stays. Bond level stays. You choose the Bond path next. Side quests start over.</li></ul>',
-    [['Back', function () { setTimeout(ngAsk, 0); }], ['Confirm', function () { ev('world:ngplus:confirm:' + mode); ngPlus(mode); }, 'hot ngc']]); }
+/* New Game Plus: the options screen and the start live in the v6.4.0 block below (registry + ngBuild); refundChar stays here */
+function ngAsk() { ev('world:ngplus:ask'); v640NgOpen(false); }
 /* v4.10.1: NG+ carry-over: 'keep' (deck + upgrades as is), 'refund' (every upgrade off, all spent items back), 'fresh' (starter cards, nothing else) */
 /* v4.31: refunded as Essence at today's prices (stat upgrades first, then Energy, each step at the next price on that copy) */
 function refundChar(C) { var X = STORY.ESSENCE, n = 0, at = function (t, i) { return t[Math.min(t.length - 1, i)]; }; (C.cards || []).forEach(function (r) { var i = 0, lp = r.lp || {}, card = root.ENGINE.cards()[r.id] || {}, rr = card.rarity || 'common', XS = (X.statByRar && X.statByRar[rr]) || X.stat, XE = (X.energyByRar && X.energyByRar[rr]) || X.energy; /* v5.1: refund by the card's rarity table */ Object.keys(lp).forEach(function (p) { if (p !== 'sp') for (var q = 0; q < (lp[p] | 0); q++) n += at(XS, i++); }); if (r.pt) n += at(XS, i++); for (var e = 0; e < (lp.sp | 0); e++) n += at(XE, i++); var ep = (STORY.SD.ladder && STORY.SD.ladder.enhCost && STORY.SD.ladder.enhCost[rr]) || 0; n += ep * ((r.enh || []).length); r.lp = {}; r.pt = null; r.enh = []; r.freeRe = 0; });
   C.sigLv = 0; C.lv = {}; C.lp = {}; return n; }
-function ngCarry(mode) { var chs = [SAVE].concat(Object.keys(SAVE.chars || {}).map(function (k) { return SAVE.chars[k]; }).filter(Boolean)), n = 0;
-  if (mode === 'refund') { chs.forEach(function (C) { n += refundChar(C); }); SAVE.ess = (SAVE.ess | 0) + n; }
-  else if (mode === 'fresh') { var f = freshChar(); PER.forEach(function (k) { if (k !== 'hp' && k !== 'sp' && k !== 'gouki') SAVE[k] = f[k]; }); Object.keys(SAVE.chars || {}).forEach(function (k) { SAVE.chars[k] = freshChar(); }); SAVE.items = 0; SAVE.ess = 0; SAVE.soda = {}; SAVE.sodaOn = 0; SAVE.sodaK = ''; SAVE.heal = []; }
-  if (mode !== 'keep') { STORY.ensure(SAVE); } ev('world:ngplus:mode:' + (mode || 'keep') + ':' + n); return n; }
-function ngPlus(mode) { W.scGen = (W.scGen | 0) + 1; W.opFade = 0; W.scr = 0; if (W.inside) intExit(true); /* v5.3.1 */ $('#world').classList.remove('c2', 'c2town'); SAVE.chapter = 1; SAVE.dg = SAVE.dg || {}; delete SAVE.dg.c2; delete SAVE.dg.c3;
-  try { localStorage.setItem(NGP_BAK, localStorage.getItem('fff_world') || JSON.stringify(SAVE)); localStorage.setItem(NGP_BAK + '_t', String(Date.now())); } catch (e) {}
-  if (SAVE.act !== 'ryo') switchChar('ryo');
-  var keepGsk = SAVE.gsk;
-  var back = ngCarry(mode || 'keep');
-  var f = fresh(); ['x', 'y', 'intro', 'mb', 'sc', 'chapter', 'hint', 'freeT', 'vm'].forEach(function (k) { SAVE[k] = f[k]; });
-  /* t3125u: gang skills survive NG+ in every carry mode, matching Genji techniques (c2les is also left alone, including 'fresh'). */
-  SAVE.gsk = keepGsk; if (SAVE.bond && typeof SAVE.bond === 'object') SAVE.bond.picks = {}; /* v4.13: Bond levels stay; Aoi's calls can be made again */
-  SAVE.ch1 = 0; SAVE.gouki = 0; SAVE.dbl = 0; SAVE.gkPh = 0; SAVE.gkRevives = 0; SAVE.gkPhp = null; SAVE.gkPsp = null; Object.keys(SAVE.chars || {}).forEach(function (k) { if (SAVE.chars[k]) SAVE.chars[k].gouki = 0; });
-  SAVE.ngp = (SAVE.ngp | 0) + 1; SAVE.hp = MAXHP; SAVE.sp = 0; SAVE.dg = {}; SAVE.sq = null; if (typeof sqWipe === 'function') sqWipe('all'); var bqN = $('#wquest'); if (bqN) { bqN._qgen = (bqN._qgen | 0) + 1; bqN.className = ''; bqN.style.visibility = 'hidden'; bqN.dataset.k = ''; bqN.dataset.done = ''; } /* side quests: acceptance, progress, turn-in, giver talk. Other carryover stays. */
-  clearRoam(); W.crowdL = {}; W.fire = 0; restockVend(); W.ryo.x = SAVE.x; W.ryo.y = SAVE.y; W.ryo.dir = 3; W.aoi.x = SAVE.x; W.aoi.y = SAVE.y + 60; resetTrail(SAVE.x, SAVE.y, 3); leaderSprites(); syncMinis(); save(); hud(); camera(true); ev('world:ngplus:' + SAVE.ngp); if (mode === 'refund') toast('New Game Plus: every upgrade refunded (' + essTxt(back) + ' ' + essName() + ' back, ' + essTxt(SAVE.ess) + ' total).'); else if (mode === 'fresh') toast('New Game Plus from nothing: starter cards, no yen, no ' + essName() + '.');
-  if ($('#wpause').classList.contains('on')) { $('#wpause').className = ''; W.paused = false; } W.path = []; W.dlg = true;
-  ngBondAsk(function () { if (!W.introRun) { W.introRun = true; var g = W.scGen | 0; setTimeout(function () { W.introRun = false; if (!scOk(g)) return; if (!SAVE.intro) intro(0); }, 120); } }); }
-function ngBondAsk(done) { var cur = (SAVE.bond && SAVE.bond.path) || '', N = STORY && STORY.BOND ? STORY.BOND.N : {}, opts = [['fierce', 'Fierce'], ['balanced', 'Compassionate'], ['strategic', 'Strategic']];
-  ev('world:ngplus:bond:ask:' + (cur || 'none'));
-  dialog('<b>Choose the Bond path</b><p>This run keeps your Bond level and your cards. Pick the path. Compassionate is the path older saves store as balanced.</p><p class="dim">Right now: <b>' + (N[cur] || 'not chosen') + '</b></p>',
-    opts.map(function (o) { return [o[1] + (o[0] === cur ? ' · current' : ''), function () { if (!SAVE.bond || typeof SAVE.bond !== 'object') SAVE.bond = { path: o[0], px: 0, picks: {} }; var was = SAVE.bond.path || ''; SAVE.bond.path = o[0]; save(); ev('world:ngplus:bond:' + was + '>' + o[0]); if (done) done(); }, o[0] === cur ? 'hot' : '']; })); }
 function infArrow() { // v4.2: when hurt, an arrow at the screen edge points to the infirmary if it is off-screen
   var a = $('#warrow'), ip = W.infP || (W.infP = PLACES.find(function (p) { return p.id === 'infirmary'; })); if (!a || !ip) return;
   var show = SAVE.hp <= MAXHP * 0.5 && !visible(ip.x, ip.y - 40, -30) && !W.dlg;
@@ -24299,24 +24267,78 @@ phJournal = function () {
   return h;
 };
 
-function v640NgBase() {
-  var cur = (root.FFF_UI && root.FFF_UI.ST && root.FFF_UI.ST.set && root.FFF_UI.ST.set.foeStr) || 'normal';
-  if (cur !== 'weak' && cur !== 'strong' && cur !== 'max') cur = 'normal';
-  return { diff: cur, bond: 'keep', cards: 'keep', enh: 'keep', ess: 'keep', acc: 'keep', items: 'keep', yen: 'keep', level: 'keep', tech: 'keep', rep: 'keep' };
-}
-function v640NgFresh() { return { diff: 'normal', bond: 'balanced', cards: 'fresh', enh: 'fresh', ess: 'reset', acc: 'hide', items: 'reset', yen: 'reset', level: 'reset', tech: 'reset', rep: 'reset' }; }
-function v640NgSame(a, b) { return a && b && ['diff', 'bond', 'cards', 'enh', 'ess', 'acc', 'items', 'yen', 'level', 'tech', 'rep'].every(function (k) { return a[k] === b[k]; }); }
+/* ===== New Game Plus = the normal new-game start (fresh()) plus a whitelist of carried-over keys =====
+ * Nothing is "reset by hand" any more: ngBuild() starts from fresh() and copies only what is registered here, so every system added
+ * later (roaming packs, Ch2 quests, boss splashes, ...) starts clean in NG+ with no extra work. To carry something over:
+ *   ngKeep(['key', ...])                        always carried (Codex, tips, recipes, counters ...)
+ *   ngOpt({ k, sec, title, ch, keys, apply })   a row on the New Game Plus screen: its keys are carried, apply(S, choice, opts) edits them
+ *   ngSkill('gang' | 'tech', { k: 'saveKey' })  a learned-skill store. One line: the Gang skills / Genji's techniques option
+ *                                               (Keep / Learn again) clears it. { k: 'cxNew', prefix: 'gsk_' } clears only those entries. */
+var NG_OPTS = [], NG_KEEP = {}, NG_SKILLS = { gang: [], tech: [] };
+var NG_SETTINGS = ['binds', 'padBinds', 'padRev', 'pcScale', 'rumble', 'autoRun', 'audioMode', 'txtSize', 'musVol', 'sfxVol', 'shake', 'cam', 'flash', 'deadz', 'autoAdv', 'sort', 'ambRate', 'itemScarce', 'xpMode'];
+function ngKeep(keys) { keys.forEach(function (k) { NG_KEEP[k] = 1; }); }
+function ngSkill(group, st) { (NG_SKILLS[group] = NG_SKILLS[group] || []).push(st); NG_KEEP[st.k] = 1; }
+function ngSkillReset(S, group) { (NG_SKILLS[group] || []).forEach(function (st) {
+  if (st.prefix) { var m = S[st.k]; if (m && typeof m === 'object') Object.keys(m).forEach(function (n) { if (n.indexOf(st.prefix) === 0) delete m[n]; }); }
+  else S[st.k] = st.def === undefined ? null : JSON.parse(JSON.stringify(st.def)); }); }
+function ngOpt(d) { d.keys = d.keys || []; NG_OPTS.push(d); ngKeep(d.keys); return d; }
+function ngChars(S) { return [S].concat(Object.keys(S.chars || {}).map(function (k) { return S.chars[k]; }).filter(Boolean)); }
+function ngFoeNow() { var cur = (root.FFF_UI && root.FFF_UI.ST && root.FFF_UI.ST.set && root.FFF_UI.ST.set.foeStr) || 'normal'; return (cur === 'weak' || cur === 'strong' || cur === 'max') ? cur : 'normal'; }
+ngKeep(['cx', 'cxNew', 'cxItem', 'cxFood', 'cxSeen', 'sodaSeen', 'gseen', 'tips', 'tipsV', 'icard', 'journalLog', 'craft', 'n9craft', 'phBag', 'phMig', 'bagUp', 'wins', 'losses', 'essV', 'enhIntro']); /* Codex, tutorial tips, taught recipes, bag size, counters: always stay */
+ngOpt({ k: 'diff', sec: 'STORY &amp; CHALLENGE', title: 'Difficulty', base: ngFoeNow, fresh: 'normal', keepV: 'normal', ch: [['weak', 'Weaker'], ['normal', 'Normal'], ['strong', 'Stronger'], ['max', 'Strongest']],
+  rv: { weak: 'Weaker', normal: 'Normal', strong: 'Stronger', max: 'Strongest' }, apply: function (S, v) { S.foeStr = v || 'normal'; } });
+ngOpt({ k: 'bond', sec: 'STORY &amp; CHALLENGE', title: 'Bond path', base: 'keep', fresh: 'balanced', ch: [['keep', 'Keep'], ['fierce', 'Fierce'], ['strategic', 'Strategic'], ['balanced', 'Compassionate']],
+  rv: { keep: 'Kept', fierce: 'Fierce', strategic: 'Strategic', balanced: 'Compassionate' }, keys: ['bond'], apply: function (S, v) { if (v && v !== 'keep') { S.bond = S.bond || { px: 0, picks: {} }; S.bond.path = v; } } });
+ngOpt({ k: 'cards', sec: 'DECK &amp; CARDS', title: 'Cards', base: 'keep', fresh: 'fresh', ch: [['keep', 'Keep collection'], ['fresh', 'Fresh starter deck']], rv: { keep: 'Kept', fresh: 'Fresh starter deck' },
+  keys: ['deck', 'own', 'cards', 'nk', 'chars'], apply: function (S, v) { if (v === 'fresh') { ngChars(S).forEach(function (C) { C.deck = null; C.own = null; C.cards = null; C.nk = 0; }); if (STORY && STORY.ensure) STORY.ensure(S); } } });
+ngOpt({ k: 'enh', sec: 'DECK &amp; CARDS', title: 'Enhancements', base: 'keep', fresh: 'fresh', ch: [['keep', 'Keep'], ['fresh', 'Fresh']], rv: { keep: 'Kept', fresh: 'Fresh' },
+  keys: ['lv', 'lp', 'sigLv', 'ds'], apply: function (S, v, o) { if (v === 'fresh') { var back = 0; ngChars(S).forEach(function (C) { back += refundChar(C); }); if (o.ess !== 'reset') S.ess = (S.ess | 0) + back; } } });
+ngOpt({ k: 'ess', sec: 'DECK &amp; CARDS', title: 'Spirit essences', base: 'keep', fresh: 'reset', ch: [['keep', 'Keep'], ['reset', 'Reset']], rv: { keep: 'Kept', reset: 'Reset' },
+  keys: ['ess', 'seal', 'books'], apply: function (S, v) { if (v === 'reset') { S.ess = 0; S.seal = 0; S.books = { common: 0, uncommon: 0 }; } } });
+ngOpt({ k: 'acc', sec: 'GEAR &amp; BAG', title: 'Accessories', base: 'keep', fresh: 'hide', ch: [['keep', 'Keep'], ['hide', 'Hidden again in the world']], rv: { keep: 'Kept', hide: 'Hidden in the world' },
+  keys: ['gear'], apply: function (S, v) { if (v === 'hide' && S.gear) { S.gear.own = {}; S.gear.of = {}; S.gear.ofNew = {}; Object.keys(S.gear.eq || {}).forEach(function (ch) { if (S.gear.eq[ch]) { S.gear.eq[ch].head = null; S.gear.eq[ch].acc = null; S.gear.eq[ch].tm = null; } }); } } });
+ngOpt({ k: 'items', sec: 'GEAR &amp; BAG', title: 'Items &amp; ingredients', base: 'keep', fresh: 'reset', ch: [['keep', 'Keep'], ['reset', 'Reset']], rv: { keep: 'Kept', reset: 'Reset' },
+  keys: ['heal', 'soda', 'sodaOn', 'sodaK', 'herbs'], apply: function (S, v) { if (v === 'reset') { S.heal = []; S.soda = {}; S.sodaOn = 0; S.sodaK = ''; S.herbs = S.herbs || {}; ['leaf', 'ginger', 'gauze', 'tape', 'kelp', 'bonito', 'pearl'].forEach(function (k) { S.herbs[k] = 0; }); } } });
+ngOpt({ k: 'yen', sec: 'GEAR &amp; BAG', title: 'Yen', base: 'keep', fresh: 'reset', ch: [['keep', 'Keep'], ['reset', 'Reset']], rv: { keep: 'Kept', reset: 'Reset' },
+  keys: ['items'], apply: function (S, v) { if (v === 'reset') S.items = 0; } });
+ngOpt({ k: 'level', sec: 'PROGRESS', title: 'Ryo &amp; Aoi\u2019s level', base: 'keep', fresh: 'reset', ch: [['keep', 'Keep'], ['reset', 'Back to 1']], rv: { keep: 'Kept', reset: 'Back to 1' },
+  keys: ['c2hp'], apply: function (S, v) { if (v === 'reset') { if (S.bond) S.bond.px = 0; S.c2hp = 0; } } });
+ngOpt({ k: 'tech', sec: 'PROGRESS', title: 'Genji\u2019s techniques', base: 'keep', fresh: 'reset', ch: [['keep', 'Keep'], ['reset', 'Learn again']], rv: { keep: 'Kept', reset: 'Learn again' },
+  apply: function (S, v) { if (v === 'reset') ngSkillReset(S, 'tech'); } });
+ngOpt({ k: 'gang', sec: 'PROGRESS', title: 'Gang skills', base: 'keep', fresh: 'reset', ch: [['keep', 'Keep'], ['reset', 'Learn again']], rv: { keep: 'Kept', reset: 'Learn again' },
+  apply: function (S, v) { if (v === 'reset') ngSkillReset(S, 'gang'); } });
+ngOpt({ k: 'rep', sec: 'PROGRESS', title: 'Crew rep', base: 'keep', fresh: 'reset', ch: [['keep', 'Keep'], ['reset', 'Neutral']], rv: { keep: 'Kept', reset: 'Neutral' },
+  keys: ['crewRep'], apply: function (S, v) { var st = (S.dg && S.dg.c2 && S.dg.c2.stand) || {}; S.crewRep = v === 'reset' ? { arc: 0, neo: 0, bat: 0, dep: 0 } : { arc: st.arc | 0, neo: st.neo | 0, bat: st.bat | 0, dep: st.dep | 0 }; } });
+/* learned-skill stores: add a line here when a new learned skill gets a save key (or a Codex flag) */
+ngSkill('tech', { k: 'c2les', def: null }); ngSkill('tech', { k: 'c2lesReady', def: '' }); ngSkill('tech', { k: 'c2kos', def: 0 }); ngSkill('tech', { k: 'evoLesson', def: 0 }); /* Genji: Sync Break / Cover / Sneak, the Common to Uncommon lesson, and what offers them */
+ngSkill('gang', { k: 'gsk', def: null }); ngSkill('gang', { k: 'cxNew', prefix: 'gsk_' }); /* gang skills (Hanabi Shot, Grand Finale, Kamikaze Line, Redline, Alley Cat, Cheap Shot, House, Ace) and their Codex NEW badges */
+function v640NgBase() { var o = {}; NG_OPTS.forEach(function (d) { o[d.k] = typeof d.base === 'function' ? d.base() : d.base; }); return o; }
+function v640NgFresh() { var o = {}; NG_OPTS.forEach(function (d) { o[d.k] = d.fresh; }); return o; }
+function v640NgSame(a, b) { return a && b && NG_OPTS.every(function (d) { return a[d.k] === b[d.k]; }); }
 function v640NgMode() { var o = W.ngOpt || v640NgBase(); if (v640NgSame(o, v640NgBase())) return 'classic'; if (v640NgSame(o, v640NgFresh())) return 'fresh'; return 'custom'; }
+/* the whole New Game Plus start as a pure function: old save + choices -> the save the run starts from (fresh() + the carried keys) */
+function ngBuild(old, o) {
+  var S = JSON.parse(JSON.stringify(old)), N = fresh(); o = o || v640NgBase();
+  if (!S.chars || typeof S.chars !== 'object') S.chars = {};
+  NG_OPTS.forEach(function (d) { var v = o[d.k]; if (v == null) v = typeof d.base === 'function' ? d.base() : d.base; if (d.apply) d.apply(S, v, o); });
+  NG_SETTINGS.forEach(function (k) { if (S[k] !== undefined) N[k] = S[k]; });
+  Object.keys(NG_KEEP).forEach(function (k) { if (S[k] !== undefined) N[k] = S[k]; });
+  N.foeStr = S.foeStr || 'normal'; N.ngp = (old.ngp | 0) + 1;
+  Object.keys(N.chars || {}).forEach(function (k) { var C = N.chars[k]; if (C) { C.gouki = 0; C.sp = 0; } });
+  if (N.bond && typeof N.bond === 'object') { N.bond.picks = {}; delete N.bond.ask; }
+  try { if (STORY && STORY.ensure) STORY.ensure(N); } catch (e) {}
+  return N;
+}
 function v640NgOpen(review) {
   if (!v640Cleared() && !(SAVE && (SAVE.ch1 || SAVE.gouki))) { toast('Locked until Gouki.'); return; }
   try { if (!SAVE.ch1 && !SAVE.gouki) load(); } catch (e) {}
   if (!W.ngOpt) W.ngOpt = v640NgBase();
+  NG_OPTS.forEach(function (d) { if (W.ngOpt[d.k] == null) W.ngOpt[d.k] = typeof d.base === 'function' ? d.base() : d.base; });
   var o = W.ngOpt, mode = v640NgMode(), box = document.getElementById('ngplus');
   if (!box) { box = document.createElement('div'); box.id = 'ngplus'; document.getElementById('app').appendChild(box); }
-  var diff = [['weak', 'Weaker'], ['normal', 'Normal'], ['strong', 'Stronger'], ['max', 'Strongest']];
-  var bond = [['keep', 'Keep'], ['fierce', 'Fierce'], ['strategic', 'Strategic'], ['balanced', 'Balanced']];
-  function seg(key, opts) { return '<div class="ngseg">' + opts.map(function (p) { return '<button type="button" data-k="' + key + '" data-v="' + p[0] + '"' + (o[key] === p[0] ? ' class="on"' : '') + '>' + p[1] + '</button>'; }).join('') + '</div>'; }
-  function row(k, title, opts) { return '<div class="ngrow"><b>' + title + '</b>' + seg(k, opts) + '</div>'; }
+  function seg(d) { return '<div class="ngseg">' + d.ch.map(function (p) { return '<button type="button" data-k="' + d.k + '" data-v="' + p[0] + '"' + (o[d.k] === p[0] ? ' class="on"' : '') + '>' + p[1] + '</button>'; }).join('') + '</div>'; }
+  function row(d) { return '<div class="ngrow"><b>' + d.title + '</b>' + seg(d) + '</div>'; }
+  var secs = []; NG_OPTS.forEach(function (d) { if (secs.indexOf(d.sec) < 0) secs.push(d.sec); });
   var h = '<header><button type="button" data-a="back">\u2039 Back</button><b>' + (review ? 'Review' : 'New Game Plus') + '</b></header>';
   if (!review) {
     h += '<p class="ngslot">Slot 1 \u00b7 Story cleared \u00b7 Save stays safe</p><p class="nglead">Choose a starting path</p>';
@@ -24324,16 +24346,11 @@ function v640NgOpen(review) {
     h += '<button type="button" data-pre="fresh"' + (mode === 'fresh' ? ' class="on"' : '') + '><b>Fresh Start</b><small>Reset all but the Codex</small></button></div>';
     h += '<button type="button" class="ngcustom' + (mode === 'custom' ? ' on' : '') + '" data-pre="custom"><b>Custom</b><small>Set each choice yourself</small></button>';
     h += '<p class="nghint">' + (mode === 'classic' ? 'Classic NG+ fills every choice. Change one to switch to Custom.' : mode === 'fresh' ? 'Fresh Start resets the run and keeps the Codex.' : 'Custom. Change any choice, or tap a preset above.') + '</p>';
-    h += '<section><p class="ngk">STORY &amp; CHALLENGE</p>' + row('diff', 'Difficulty', diff) + row('bond', 'Bond path', bond) + '</section>';
-    h += '<section><p class="ngk">DECK &amp; CARDS</p>' + row('cards', 'Cards', [['keep', 'Keep collection'], ['fresh', 'Fresh starter deck']]) + row('enh', 'Enhancements', [['keep', 'Keep'], ['fresh', 'Fresh']]) + row('ess', 'Spirit essences', [['keep', 'Keep'], ['reset', 'Reset']]) + '</section>';
-    h += '<section><p class="ngk">GEAR &amp; BAG</p>' + row('acc', 'Accessories', [['keep', 'Keep'], ['hide', 'Hidden again in the world']]) + row('items', 'Items & ingredients', [['keep', 'Keep'], ['reset', 'Reset']]) + row('yen', 'Yen', [['keep', 'Keep'], ['reset', 'Reset']]) + '</section>';
-    h += '<section><p class="ngk">PROGRESS</p>' + row('level', 'Ryo & Aoi\u2019s level', [['keep', 'Keep'], ['reset', 'Back to 1']]) + row('tech', 'Genji\u2019s techniques', [['keep', 'Keep'], ['reset', 'Learn again']]) + row('rep', 'Crew rep', [['keep', 'Keep'], ['reset', 'Neutral']]) + '</section>';
+    secs.forEach(function (s) { h += '<section><p class="ngk">' + s + '</p>' + NG_OPTS.filter(function (d) { return d.sec === s; }).map(row).join('') + '</section>'; });
     h += '<p class="ngalways">Codex and Journal stay with you. Side quests begin again.</p><button type="button" class="nggo" data-a="review">Review</button>';
   } else {
-    var lab = { diff: { weak: 'Weaker', normal: 'Normal', strong: 'Stronger', max: 'Strongest' }, bond: { keep: 'Kept', fierce: 'Fierce', strategic: 'Strategic', balanced: 'Balanced' }, cards: { keep: 'Kept', fresh: 'Fresh starter deck' }, enh: { keep: 'Kept', fresh: 'Fresh' }, ess: { keep: 'Kept', reset: 'Reset' }, acc: { keep: 'Kept', hide: 'Hidden in the world' }, items: { keep: 'Kept', reset: 'Reset' }, yen: { keep: 'Kept', reset: 'Reset' }, level: { keep: 'Kept', reset: 'Back to 1' }, tech: { keep: 'Kept', reset: 'Learn again' }, rep: { keep: 'Kept', reset: 'Neutral' } };
-    var names = [['diff', 'Difficulty'], ['bond', 'Bond path'], ['cards', 'Cards'], ['enh', 'Enhancements'], ['ess', 'Spirit essences'], ['acc', 'Accessories'], ['items', 'Items & ingredients'], ['yen', 'Yen'], ['level', 'Ryo & Aoi\u2019s level'], ['tech', 'Genji\u2019s techniques'], ['rep', 'Crew rep']];
     h += '<p class="nglead">Here\u2019s how this run will start.</p><section class="ngrev">';
-    names.forEach(function (n) { var keep = o[n[0]] === 'keep' || (n[0] === 'diff' && o.diff === 'normal'); h += '<p><i>' + (keep ? '\u2713' : '\u25cb') + '</i><b>' + n[1] + '</b><em>' + ((lab[n[0]] && lab[n[0]][o[n[0]]]) || o[n[0]]) + '</em></p>'; });
+    NG_OPTS.forEach(function (d) { var keep = o[d.k] === (d.keepV || 'keep'); h += '<p><i>' + (keep ? '\u2713' : '\u25cb') + '</i><b>' + d.title + '</b><em>' + ((d.rv && d.rv[o[d.k]]) || o[d.k]) + '</em></p>'; });
     h += '</section><p class="ngalways">Your cleared save stays safe in its slot. Codex and Journal records stay with you. Side quests always begin again.</p>';
     h += '<button type="button" class="nggo" data-a="start">Start New Game Plus</button><button type="button" class="ngback" data-a="edit">Back</button>';
   }
@@ -24355,22 +24372,6 @@ function v640JournalSnap() {
   if (typeof C2SQ_IDS !== 'undefined') C2SQ_IDS.forEach(function (id) { if ((c2Sq(id).st | 0) === 9) names.push(C2SQ[id].n); });
   SAVE.journalLog = names.filter(function (n, i) { return names.indexOf(n) === i; });
 }
-function v640ApplyCarry(o) {
-  var chs = [SAVE].concat(Object.keys(SAVE.chars || {}).map(function (k) { return SAVE.chars[k]; }).filter(Boolean));
-  if (o.cards === 'fresh') { chs.forEach(function (C) { if (!C) return; C.deck = null; C.own = null; C.cards = null; C.nk = 0; }); if (STORY && STORY.ensure) STORY.ensure(SAVE); }
-  if (o.enh === 'fresh') { var back = 0; chs.forEach(function (C) { if (C) back += refundChar(C); }); if (o.ess !== 'reset') SAVE.ess = (SAVE.ess | 0) + back; }
-  if (o.ess === 'reset') SAVE.ess = 0;
-  if (o.yen === 'reset') SAVE.items = 0;
-  if (o.items === 'reset') { SAVE.heal = []; SAVE.soda = {}; SAVE.sodaOn = 0; SAVE.sodaK = ''; SAVE.herbs = SAVE.herbs || {}; ['leaf', 'ginger', 'gauze', 'tape', 'kelp', 'bonito', 'pearl'].forEach(function (k) { SAVE.herbs[k] = 0; }); }
-  if (o.acc === 'hide' && SAVE.gear) { SAVE.gear.own = {}; Object.keys(SAVE.gear.eq || {}).forEach(function (ch) { if (SAVE.gear.eq[ch]) { SAVE.gear.eq[ch].head = ''; SAVE.gear.eq[ch].acc = ''; } }); }
-  if (o.level === 'reset' && SAVE.bond) SAVE.bond.px = 0;
-  if (o.bond && o.bond !== 'keep') { SAVE.bond = SAVE.bond || { px: 0, picks: {} }; SAVE.bond.path = o.bond; }
-  var stand = (SAVE.dg && SAVE.dg.c2 && SAVE.dg.c2.stand) || {};
-  SAVE.crewRep = o.rep === 'reset' ? { arc: 0, neo: 0, bat: 0, dep: 0 } : { arc: stand.arc | 0, neo: stand.neo | 0, bat: stand.bat | 0, dep: stand.dep | 0 };
-  if (o.tech === 'reset') SAVE.c2les = {};
-  SAVE.foeStr = o.diff || 'normal';
-  try { var U = root.FFF_UI; if (U && U.ST && U.ST.set) { U.ST.set.foeStr = SAVE.foeStr; localStorage.setItem('fff_set', JSON.stringify(U.ST.set)); } } catch (e) {}
-}
 function v640NgStart(o) {
   o = o || v640NgBase();
   /* v6.5.13 (Ernest): New Game Plus from the title never entered the world. The map loop and camera never started, so the
@@ -24381,20 +24382,20 @@ function v640NgStart(o) {
   v640JournalSnap();
   try { localStorage.setItem(NGP_BAK, JSON.stringify(SAVE)); localStorage.setItem(NGP_BAK + '_t', String(Date.now())); } catch (e3) {}
   if (SAVE.act && SAVE.act !== 'ryo' && typeof switchChar === 'function') { try { switchChar('ryo'); } catch (e4) {} }
-  v640ApplyCarry(o);
-  W.scGen = (W.scGen | 0) + 1; W.opFade = 0; W.scr = 0;
+  var N = ngBuild(SAVE, o);
+  /* leave the world the way Reset story / Leave chapter do, then become the new save in place */
+  W.scGen = (W.scGen | 0) + 1; try { if (typeof scKill === 'function') scKill(); } catch (eK) {}
+  W.opMus = 0; W.opMapOn = 0; W.opFade = 0; W.scr = 0;
   if (W.inside && typeof intExit === 'function') intExit(true);
-  var world = document.getElementById('world'); if (world) world.classList.remove('c2', 'c2town');
-  var f = fresh();
-  ['x', 'y', 'intro', 'mb', 'sc', 'chapter', 'hint', 'freeT', 'vm'].forEach(function (k) { SAVE[k] = f[k]; });
-  if (SAVE.bond) SAVE.bond.picks = {};
-  SAVE.ch1 = 0; SAVE.gouki = 0; SAVE.dbl = 0; SAVE.gkPh = 0; SAVE.gkRevives = 0; SAVE.gkPhp = null; SAVE.gkPsp = null;
-  Object.keys(SAVE.chars || {}).forEach(function (k) { if (SAVE.chars[k]) SAVE.chars[k].gouki = 0; });
-  SAVE.ngp = (SAVE.ngp | 0) + 1; SAVE.hp = MAXHP; SAVE.sp = 0;
-  SAVE.sq = {}; SAVE.dg = {}; SAVE.qa = ''; SAVE.qTrack = ''; SAVE.qTrackPick = 0; SAVE.qOff = {};
-  if (typeof sqWipe === 'function') sqWipe('all');
+  Object.keys(SAVE).forEach(function (k) { delete SAVE[k]; }); Object.keys(N).forEach(function (k) { SAVE[k] = N[k]; });
+  try { var U = root.FFF_UI; if (U && U.ST && U.ST.set) { U.ST.set.foeStr = SAVE.foeStr; localStorage.setItem('fff_set', JSON.stringify(U.ST.set)); } } catch (eS) {}
+  W.dgF = []; W.dgRelay = null; W.gymGouki = null; W.intBul = null; W.intNurse = null; W.carry = null; W.bxMem = {}; W.sitMem = {}; W.lvHud = null;
+  var world = document.getElementById('world'); if (world) world.classList.remove('inside', 'inroom', 'c2', 'c2town', 'c3');
+  try { chSync(); } catch (eC) {}
+  try { if (typeof c2ApplyHp === 'function') c2ApplyHp(); } catch (eH) {}
+  SAVE.hp = MAXHP; SAVE.sp = 0;
+  try { pcApply(); } catch (eP) {}
   var bqN = document.getElementById('wquest'); if (bqN) { bqN._qgen = (bqN._qgen | 0) + 1; bqN.className = ''; bqN.style.visibility = 'hidden'; bqN.dataset.k = ''; bqN.dataset.done = ''; }
-  Object.keys(SAVE.qs || {}).forEach(function (k) { if (/^(sq_|cq2_|cq3_|q_)/.test(k)) delete SAVE.qs[k]; });
   clearRoam(); W.crowdL = {}; W.fire = 0; if (typeof restockVend === 'function') restockVend();
   if (W.ryo) { W.ryo.x = SAVE.x; W.ryo.y = SAVE.y; W.ryo.dir = 3; if (W.aoi) { W.aoi.x = SAVE.x; W.aoi.y = SAVE.y + 60; } resetTrail(SAVE.x, SAVE.y, 3); leaderSprites(); }
   if (typeof syncMinis === 'function') syncMinis();
@@ -24411,7 +24412,6 @@ var pause640 = pause;
 pause = function (tab) { v640ClearReadyFloat(); return pause640(tab); };
 var phOpenSettings640 = phOpenSettings;
 phOpenSettings = function (from) { v640ClearReadyFloat(); return phOpenSettings640(from); };
-ngAsk = function () { ev('world:ngplus:ask'); v640NgOpen(false); };
 root.FFF_NG_OPEN = function () { v640NgOpen(false); };
 root.V640 = {
   cleared: v640Cleared,
