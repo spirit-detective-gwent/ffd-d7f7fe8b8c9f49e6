@@ -12320,7 +12320,7 @@ function koHint(id) { /* from the foe's own deck, so it never goes stale */
   if (ctr) out.push(ctr.n + ' guards for ' + ctr.v + ' and counters for ' + ctr.ctr + '.');
   if (!out.length) { big = all.filter(function (q) { return q.t === 'atk'; }).sort(function (a, b) { return tot(b) - tot(a); })[0]; if (big) out.push(big.n + ' hits for ' + tot(big) + '. Keep Guard up for it.'); }
   return out.slice(0, 2).join(' '); }
-function koTier(st, id) { var c = (st && st.ctx) || {}; return !!(st && (st.boss || st.mini)) || !!(c.c2boss || c.mini || c.enfDoom) || !!CHAR_INTRO[id] || !!CHAR_INTRO[String(id || '').replace(/g$/, '')]; }
+function koTier(st, id) { var c = (st && st.ctx) || {}, bid = String(id || '').replace(/g$/, ''); return !!(CHAR_INTRO[id] || CHAR_INTRO[bid] || (st && (id === st.mini || (st.boss && id === 'gouki'))) || (c.c2boss && id === 'c2_boss') || (c.mini && id === c.mini)); } /* the winner himself is a named boss / mini-boss (a bully who joined his fight is not) */
 function koArt(st, id) { /* { url, fit, plate } for #rArt */
   var tier = koTier(st, id), c = koChar(id), bid = CHAR_INTRO[id] ? id : String(id || '').replace(/g$/, ''), u = koBust(id, tier), fit = 'bust', name = String(c.name || '').replace(/\s*\(sparring\)$/, '');
   if (!u) { var f = IMG[c.fig || ''] || ''; if (f) { u = f; fit = 'fig'; } }
