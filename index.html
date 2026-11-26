@@ -16252,7 +16252,8 @@ function bondAsk(id, cb) {
     var qm = /<b>([\s\S]*?)<\/b>\s*<p>([\s\S]*?)<\/p>/.exec(Q.q), ql = qm ? qm[1] : '', qt = qm ? qm[2] : Q.q, asker = /Aoi/i.test(ql) ? 'aoi' : me, pt = asker === 'ryo' ? ryoPt() : PT[asker]; /* v6.5.63 ch2-bond: nameplate is Aoi when Aoi asks */
     var _pq = ptPaintUrl(asker, ptMoodOf(asker)), html = '<div class="sh' + (first ? ' bfxsh' : '') + (_pq ? ' pt-hang' : '') + '"><i class="pt2" style="background-image:url(' + (_pq || IMG[pt]) + ')"></i>' + (GEAR ? gearPt(asker) : '') + '<b class="snm">' + (NM[asker] || CNAME[asker]) + '</b></div>' +
       '<div class="tw bq"><p class="dim bqq">' + (ql ? '<strong>' + ql + ':</strong> ' : '') + qt + '</p></div>';
-    dialog(html, STORY.BOND.P.map(function (p) { return [first ? '\u201c' + Q.o[p][0] + '.\u201d<small>' + Q.o[p][1] + '</small>' : '\u201c' + Q.o[p][0] + '.\u201d', function () { pick(p); }, 'bondopt bline bond-' + p + (first ? ' bcol' : '')]; }));
+    var faceKey = asker === 'ryo' ? (ryoPt() || PT.ryo) : (PT[asker] || (asker + '_fig'));
+    dialog(html, STORY.BOND.P.map(function (p) { return [first ? '\u201c' + Q.o[p][0] + '.\u201d<small>' + Q.o[p][1] + '</small>' : '\u201c' + Q.o[p][0] + '.\u201d', function () { pick(p); }, 'bondopt bline bond-' + p + (first ? ' bcol' : '')]; }), faceKey, { speaker: 1, name: NM[asker] || CNAME[asker], face: faceKey });
     $('#wdlg').classList.add('scene', 'bask'); if (first) $('#wdlg').classList.add('bfirst'); ev('world:bond:say:' + id);
     if (first) bfxWire();
     if (cxAdd('bond', 1)) setTimeout(function () { if (!W.dlg) cxNote(['bond']); }, 2400); }

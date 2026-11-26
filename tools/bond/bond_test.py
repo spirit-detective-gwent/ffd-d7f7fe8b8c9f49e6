@@ -10,7 +10,7 @@ R = []
 def ok(name, cond, extra=''):
     R.append((name, bool(cond), extra)); print(('PASS ' if cond else 'FAIL ') + name + (' :: ' + str(extra) if (extra and not cond) else ''))
 CLICK = """(i)=>{var b=[...document.querySelectorAll('#wdlg.on button')].filter(e=>e.offsetParent&&!e.disabled&&!/Auto/.test(e.textContent));if(!b.length)return null;var x=b[i||0]||b[0];x.click();return x.textContent.trim()}"""
-POLL = """(function(){var d=document.getElementById('wdlg');var on=!!(d&&d.classList.contains('on'));var tw=d&&d.querySelector('.tw');var nm=d&&d.querySelector('.snm');return {on:on,bond:!!document.querySelector('#wdlg.on button.bondopt'),seal:!!c2S().e.seal_sento,who:(nm&&nm.textContent)||'',txt:((tw&&tw.textContent)||'')}})()"""
+POLL = """(function(){var d=document.getElementById('wdlg');var on=!!(d&&d.classList.contains('on'));var tw=d&&d.querySelector('.tw');var nm=d&&d.querySelector('.snm');return {on:on,bond:!!document.querySelector('#wdlg.on button.bondopt'),seal:!!c2S().e.seal_sento,who:((d&&(d.querySelector('.d2-nm,.snm,.d2-title')))||{}).textContent||'',txt:((tw&&tw.textContent)||'')}})()"""
 async def newpage(b, body, path='balanced', run=True):
     ctx = await b.new_context(viewport={'width': 390, 'height': 844}, device_scale_factor=1, is_mobile=True, has_touch=True)
     pg = await ctx.new_page(); errs = []
