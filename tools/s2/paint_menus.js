@@ -280,6 +280,8 @@
     tapeCorner(22, H - 26, 0.5); tapeCorner(W - 22, H - 26, -0.35);
     /* navy shop plate like the counter sign */
     rr(g, 28, 36, W - 56, 70, 4, '#2a3a70', INK, 3);
+    txt(g, '\u9577\u8c37 \u6574\u5099', W / 2, 62, 20, '#f4ead2', '900 ', FONT);
+    txt(g, 'Hase Repair', W / 2, 84, 11, '#c8d0e8', '700 ', FONT);
     /* oil smear on the board */
     stain(g, 60, 180, 30, 10, 'rgba(20,16,8,.3)');
     stain(g, W - 80, 400, 36, 12, 'rgba(80,40,8,.2)');
@@ -339,6 +341,27 @@
   };
   S2P.menuChromeUrl = function (theme, w, h) { return S2P.menuChromeCanvas(theme, w, h).toDataURL('image/png'); };
 
+  /* Stencil clerk used until phase 5 supplies nq_depclk. */
+  S2P.menuClerkCanvas = function (theme, s) {
+    s = s || 128;
+    var c = document.createElement('canvas'); c.width = s; c.height = s;
+    var g = c.getContext('2d'), sc = s / 60, px = 0, py = 0, pcx = 30, pcy = 30;
+    g.imageSmoothingEnabled = true; g.scale(sc, sc);
+    g.fillStyle = theme === 'depot' ? '#2a323e' : '#2a2b44'; g.fillRect(px, py, 60, 60);
+    if (theme === 'depot') {
+      g.fillStyle = '#e8c040';
+      g.beginPath(); g.moveTo(pcx - 14, pcy - 2); g.lineTo(pcx - 12, pcy - 16); g.lineTo(pcx + 12, pcy - 16); g.lineTo(pcx + 16, pcy - 2); g.closePath(); g.fill();
+      g.fillRect(pcx - 18, pcy - 4, 36, 4);
+      g.strokeStyle = INK; g.lineWidth = 1.6; g.stroke();
+      g.fillStyle = '#c4a882';
+      g.beginPath(); g.ellipse(pcx, pcy + 6, 10, 9, 0, 0, 7); g.fill(); g.stroke();
+      g.fillStyle = '#3a4a70';
+      g.beginPath(); g.moveTo(pcx - 16, pcy + 30); g.lineTo(pcx - 12, pcy + 14); g.lineTo(pcx + 12, pcy + 14); g.lineTo(pcx + 16, pcy + 30); g.closePath(); g.fill(); g.stroke();
+    }
+    return c;
+  };
+  S2P.menuClerkUrl = function (theme, s) { return S2P.menuClerkCanvas(theme, s).toDataURL('image/png'); };
+
   /* A full static preview of a shop menu (for stills / self-review). */
   S2P.menuPreview = function (g, theme, opt) {
     opt = opt || {};
@@ -348,8 +371,11 @@
     var ink = theme === 'chiyo' ? '#5a2c28' : theme === 'hase' ? '#f0e4c0' : '#2a2a28';
     var accent = theme === 'chiyo' ? '#8e3b52' : theme === 'hase' ? '#e8c040' : '#8a2a28';
     var titleY = theme === 'depot' ? 148 : theme === 'hase' ? 70 : 100;
-    txt(g, opt.jp || '', W / 2, titleY, theme === 'hase' ? 20 : 22, theme === 'hase' ? '#f4ead2' : ink, '900 ', fonts);
-    txt(g, opt.en || '', W / 2, titleY + 20, 11, theme === 'hase' ? '#c8d0e8' : accent, '700 ', fonts);
+    /* Hase's shop name is already lettered on the navy plate in haseChrome. */
+    if (theme !== 'hase') {
+      txt(g, opt.jp || '', W / 2, titleY, 22, ink, '900 ', fonts);
+      txt(g, opt.en || '', W / 2, titleY + 20, 11, accent, '700 ', fonts);
+    }
     /* portrait + quote + vit, kept on separate columns so nothing collides */
     var px = 32, py = titleY + 36;
     var pcx = px + 30, pcy = py + 30;

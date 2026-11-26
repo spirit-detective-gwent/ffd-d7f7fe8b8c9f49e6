@@ -30,17 +30,20 @@
     try { if (root.FFF_S2P && FFF_S2P.menuChromeUrl) return FFF_S2P.menuChromeUrl(theme, 390, 844); } catch (e) {}
     return '';
   }
-  function ptUrl(who) {
+  function ptUrl(who, theme) {
     try {
-      if (typeof ptPaintUrl === 'function') {
+      if (who && typeof ptPaintUrl === 'function') {
         var u = ptPaintUrl(who, typeof ptMoodOf === 'function' ? ptMoodOf(who) : 'neutral');
         if (u) return u;
       }
-      if (typeof IMG !== 'undefined') {
+      if (who && typeof IMG !== 'undefined') {
         if (IMG[who + '_fig']) return IMG[who + '_fig'];
         if (typeof PT !== 'undefined' && PT[who] && IMG[PT[who]]) return IMG[PT[who]];
       }
     } catch (e) {}
+    try {
+      if (theme === 'depot' && root.FFF_S2P && FFF_S2P.menuClerkUrl) return FFF_S2P.menuClerkUrl('depot', 128);
+    } catch (e2) {}
     return '';
   }
 
@@ -244,10 +247,13 @@
     m.dataset.shop = id;
     m.className = 'on s2m s2m-' + shop.theme;
     var bg = chromeUrl(shop.theme);
-    var pt = ptUrl(shop.who);
+    var pt = ptUrl(shop.who, shop.theme);
+    var titles = shop.theme === 'hase'
+      ? '<div class="s2m-titles"><p>“' + esc(lineOf(shop)) + '”</p></div>'
+      : '<div class="s2m-titles"><b class="jp">' + esc(shop.jp) + '</b><small>' + esc(shop.n) + '</small><p>“' + esc(lineOf(shop)) + '”</p></div>';
     var head = '<div class="s2m-hd">' +
       '<i class="s2m-pt" style="' + (pt ? 'background-image:url(' + pt + ')' : '') + '"></i>' +
-      '<div class="s2m-titles"><b class="jp">' + esc(shop.jp) + '</b><small>' + esc(shop.n) + '</small><p>“' + esc(lineOf(shop)) + '”</p></div>' +
+      titles +
       '<div class="s2m-vit"><span>HP ' + ((typeof SAVE !== 'undefined' ? SAVE.hp : 0) | 0) + '/' + hpM() + '</span><br><span>SP ' + ((typeof SAVE !== 'undefined' ? SAVE.sp : 0) | 0) + '/' + spM() + '</span><br><span>¥' + yen() + '</span>' +
       (nails ? '<em class="s2m-np">Nails’ price · 20% off</em>' : '') + '</div></div>';
     var list = '<div class="s2m-list">';

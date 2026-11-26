@@ -108,10 +108,37 @@ async def close_menu(pg):
       return 1;
     })()""")
 
+async def start_chiyo_order(pg):
+    """Walk Chiyo to the counter, then open the themed menu. Player stays put."""
+    return await ev(pg, """(function(){
+      try { if (typeof c2Pop === 'function') c2Pop(); } catch (e) {}
+      SAVE.items=40; SAVE.hp=30; SAVE.sp=10; try{hud();}catch(eH){}
+      root.FFF_EATG_BOT='win';
+      try {
+        var st=c2S(); st.q=st.q||{}; st.q.cq2_s2_waga=9;
+        if (root.FFF_S2 && FFF_S2.setStg) FFF_S2.setStg('done');
+      } catch (e2) {}
+      var M=root.FFF_S2MENUS;
+      if (M && M.SHOPS && M.SHOPS.s2_chiyo) {
+        if (!M.SHOPS.s2_chiyo._nails0) M.SHOPS.s2_chiyo._nails0 = M.SHOPS.s2_chiyo.nails;
+        M.SHOPS.s2_chiyo.nails=function(){return true;};
+      }
+      function openMenu(){ try { if (M) M.open('s2_chiyo'); } catch (e3) {} }
+      var chi = (typeof W !== 'undefined' && W.c2n && W.c2n.s2) || null;
+      if (root.FFF_S2 && typeof FFF_S2.chiyoToCounter === 'function') FFF_S2.chiyoToCounter(openMenu);
+      else openMenu();
+      return { chi: !!(chi && chi.el), cx: chi && chi.x, cy: chi && chi.y, x: W.ryo && W.ryo.x, y: W.ryo && W.ryo.y, room: typeof c2Room==='function'?c2Room():null };
+    })()""")
+
 async def buy_item(pg, iid):
-    # click the buy button for this item
+    # click the buy button for this item (double-quoted attr so eval stays valid)
     loc = await ev(pg, f"""(function(){{
-      var b=document.querySelector('.s2m-it[data-i={iid!r}] button');
+      var id={iid!r};
+      var b=document.querySelector('.s2m-it[data-i="'+id+'"] button');
+      if(!b){{
+        var nodes=document.querySelectorAll('.s2m-it');
+        for(var i=0;i<nodes.length;i++){{ if(nodes[i].getAttribute('data-i')===id) b=nodes[i].querySelector('button'); }}
+      }}
       if(!b||b.disabled) return null;
       var r=b.getBoundingClientRect();
       return [r.x+r.width/2, r.y+r.height/2, b.innerText];
@@ -196,7 +223,8 @@ async def main():
         await shot(pg, 'hase_menu_nails')
         await close_menu(pg)
 
-        # Depot UI staged only (not wired into phase 5)
+        # Depot UI staged only (not wired into phase 5). Customer side of the time-clock desk.
+        await go_room(pg, 'dclock', 550, 780)
         print('depot full', await open_menu(pg, 's2_depot', nails=False), flush=True)
         await pg.wait_for_timeout(250)
         await shot(pg, 'depot_menu_fullprice')
@@ -208,20 +236,27 @@ async def main():
 
         # ----- order clips -----
         foods = [
-            ('s2_chiyo', 'roll', 'waga', 640, 720, 'order_sweetroll.mp4', 12),
-            ('s2_chiyo', 'dango', 'waga', 640, 720, 'order_dango.mp4', 12),
-            ('s2_chiyo', 'hojicha', 'waga', 640, 720, 'order_hojicha.mp4', 8),
+            ('s2_chiyo', 'roll', 'waga', 640, 720, 'order_sweetroll.mp4', 16),
+            ('s2_chiyo', 'dango', 'waga', 640, 720, 'order_dango.mp4', 16),
+            ('s2_chiyo', 'hojicha', 'waga', 640, 720, 'order_hojicha.mp4', 12),
             ('s2_hase', 'cancoffee', 'mshop', 760, 660, 'order_cancoffee.mp4', 8),
         ]
         for sid, iid, room, x, y, fname, secs in foods:
             await go_room(pg, room, x, y)
             await ev(pg, "SAVE.items=40; SAVE.hp=30; SAVE.sp=10; try{hud();}catch(e){} root.FFF_EATG_BOT='win';")
-            print('open for', iid, await open_menu(pg, sid, nails=True), flush=True)
-            await pg.wait_for_timeout(300)
             tmp = Path('/tmp/s2m-clip') / iid
             if tmp.exists(): shutil.rmtree(tmp)
             tmp.mkdir(parents=True)
-            async def act():
+            # Record the walk-up (Chiyo) or menu open, then the handoff and eat/drink.
+            grab = asyncio.create_task(grab_frames(pg, tmp, fps=12, seconds=secs + 4))
+            try:
+                if sid == 's2_chiyo':
+                    print('chiyo walk for', iid, await start_chiyo_order(pg), flush=True)
+                    opened = await wait_menu(pg, 8000)
+                    print('menu after walk', iid, opened, flush=True)
+                else:
+                    print('open for', iid, await open_menu(pg, sid, nails=True), flush=True)
+                    await pg.wait_for_timeout(300)
                 r = await buy_item(pg, iid)
                 print('buy', iid, r, flush=True)
                 if iid in ('roll', 'dango'):
@@ -230,16 +265,13 @@ async def main():
                 else:
                     await pg.wait_for_timeout(2000)
                     await wait_menu(pg, 4000)
-            # grab frames concurrently with the buy
-            grab = asyncio.create_task(grab_frames(pg, tmp, fps=12, seconds=secs + 4))
-            await act()
-            await pg.wait_for_timeout(600)
-            grab.cancel()
-            try:
-                await grab
-            except asyncio.CancelledError:
-                pass
-            # if too few frames, grab a couple more
+            finally:
+                await pg.wait_for_timeout(400)
+                grab.cancel()
+                try:
+                    await grab
+                except asyncio.CancelledError:
+                    pass
             if len(list(tmp.glob('f*.png'))) < 8:
                 await grab_frames(pg, tmp, fps=8, seconds=1)
             encode_clip(tmp, CLIP / fname, fps=12)
