@@ -833,5 +833,13 @@
     face2: { brow: 'flat', browW: 1.2, mouth: 'flat', jaw: 'pointed', w: 0.96, eyeQ: 0.38, mouthQ: 0.55 },
     hands: 1, armsCol: '#2a3858', handsCol: '#c48a62' };
 
+
+  /* v6.5.63 seal2 phase 4: Sada, Masa's quay dispatcher. Punk proportions, older lieutenant. */
+  SPEC.sada = { base: 'punk', glove: 0, nozig: 1, noScar: 1, clean: 1, skinRe: 1, skin: '#c89268',
+    bulk: 0.14, pal: { 3: tri('#3a3228'), 4: tri('#3a463c'), 5: tri('#c9a04a'), 6: tri('#2e382e'), 7: tri('#1a1c20') },
+    pockets: 0.12, closeV: 0.42, stubble: 1, hair: 'pomp', hairCol: '#3a3228', hairHi: '#6a5a48', hairCol2: '#8a8070',
+    face2: { brow: 'flat', browW: 1.3, mouth: 'flat', jaw: 'square', w: 1.02, eyeQ: 0.36, mouthQ: 0.5 },
+    hands: 1, armsCol: '#3a463c', handsCol: '#c89268' };
+
   root.FFF_YK = { SPEC: SPEC, paintCell: paintCell, paintSheet: paintSheet, tri: tri };
 })(window);
