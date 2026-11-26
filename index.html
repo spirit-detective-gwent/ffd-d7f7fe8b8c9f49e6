@@ -12023,6 +12023,61 @@ function ambStingHandoff() { var g = W.ambSg, wv = g && g.wv, z; if (!g || !wv) 
   ev('world:amb2:handoff:' + z.toFixed(2));
   var a = wv.animate([{ scale: z }, { scale: 1 }], { duration: 2000, easing: 'cubic-bezier(.45,.05,.2,1)', fill: 'forwards' });
   a.onfinish = function () { try { a.cancel(); } catch (e) {} wv.style.transformOrigin = ''; wv.style.scale = ''; wv.style.translate = ''; }; }
+  /* v6564-gangcam: street / ambush / pack encounter zoom lives on #wv (sting + FFF_SCAM).
+   * Restore eases it back to the default follow on every fight exit (win, loss, flee,
+   * cancelled run-up, dialogue after). Never a snap. Boss arrivals and the Archive cam
+   * are left alone (v6564-mizunocam). */
+  function encCamBossHold() {
+    try { if (root.FFF_SCAM && FFF_SCAM.st && FFF_SCAM.st.boss) return true; } catch (e) {}
+    return !!(W.libCamHold || W.bossCamHold);
+  }
+  function encCamRead() {
+    var v = document.getElementById('wv'), z = 1, x = 0, y = 0;
+    try {
+      if (v) {
+        var cs = getComputedStyle(v), t = String(cs.translate || '').split(/\s+/);
+        z = (cs.scale && cs.scale !== 'none') ? (parseFloat(cs.scale) || 1) : 1;
+        if (cs.translate && cs.translate !== 'none') { x = parseFloat(t[0]) || 0; y = parseFloat(t[1]) || 0; }
+      }
+    } catch (eR) {}
+    return { v: v, z: z, x: x, y: y, sting: !!W.ambSg, held: !!(W.ambSg || (z > 1.02 || Math.abs(x) > 1 || Math.abs(y) > 1)) };
+  }
+  function encCamClearStyle(v) {
+    if (!v) return;
+    v.style.transformOrigin = ''; v.style.scale = ''; v.style.translate = '';
+  }
+  function encCamUnlock() {
+    if (W.pan && !W.pan.teach && !W.pan.nurse) W.pan = null;
+    W.scrCam = null;
+    if (W.camFocus && !W.g38Ring && !W.c2lesBusy) W.camFocus = null;
+  }
+  function encCamHandoffIntoFight() {
+    if (encCamBossHold()) return;
+    if (typeof ambStingHandoff === 'function' && W.ambSg) ambStingHandoff();
+    try { if (root.FFF_SCAM && FFF_SCAM.st && FFF_SCAM.st.on && !FFF_SCAM.st.boss) FFF_SCAM.end(); } catch (eH) {}
+    ev('world:enccam:handoff');
+  }
+  function encCamRestore(ms, done) {
+    if (encCamBossHold()) { ev('world:enccam:skip:boss'); if (done) done(); return; }
+    encCamUnlock();
+    if (typeof ambStingRelease === 'function' && W.ambSg) {
+      ev('world:enccam:sting'); ambStingRelease(ms || 1800, function () { if (done) done(); }); return;
+    }
+    var H = encCamRead(), v = H.v, dur;
+    try {
+      if (root.FFF_SCAM && FFF_SCAM.st && FFF_SCAM.st.on && !FFF_SCAM.st.boss) {
+        ev('world:enccam:scam'); FFF_SCAM.reset(Math.max(ms || 0, 1800), function () { if (done) done(); }); return;
+      }
+    } catch (eS) {}
+    if (!H.held || !v) { encCamClearStyle(v); ev('world:enccam:clear'); if (done) done(); return; }
+    dur = Math.max(ms || 0, 1600);
+    ev('world:enccam:ease:' + H.z.toFixed(2) + ':' + dur);
+    if (!v.animate) { encCamClearStyle(v); if (done) done(); return; }
+    var a = v.animate([{ scale: H.z, translate: H.x + 'px ' + H.y + 'px' }, { scale: 1, translate: '0px 0px' }], { duration: dur, easing: 'cubic-bezier(.45,.05,.2,1)', fill: 'forwards' });
+    var fin = function () { if (fin.d) return; fin.d = 1; try { a.cancel(); } catch (eF) {} encCamClearStyle(v); if (done) done(); };
+    a.onfinish = fin; setTimeout(fin, dur + 80);
+  }
+  root.FFF_ENC_CAM = { restore: encCamRestore, read: encCamRead, handoff: encCamHandoffIntoFight, unlock: encCamUnlock };
 function ambFight(q) { var r = W.ryo, A = W.ambOn, amb = { k: A.fx.k, side: A.side }, I = W.inside, D = I ? INT[I.id] : null, s = q.s; s.el.classList.remove('ambhit'); q.ambd = 0;
   var grp = noticedPack(q, ambList());
   ev('world:amb2:fight:' + grp.length + ':' + amb.side + ':' + amb.k);
@@ -12109,7 +12164,7 @@ function runUpTarget(grp, boss) { var ids = boss ? ['gouki'] : grp, best = null,
 function runUp(grp, boss, go, tg, ch) { var r = W.ryo, t = r && (tg ? { x: tg.x, y: tg.y, d: Math.hypot(tg.x - r.x, tg.y - r.y) } : runUpTarget(grp, boss)); if (root.FFF_NO_RUNUP || !t) return false;
   if (ch && ch.length && t.d > 62) { var fw = !!(W.fastWalkCharge || (ch[0] && ch[0].fastWalk) || (typeof root.FFF_T37 !== 'undefined' && root._fw)); if (!fw) { try { fw = !!(root.FFF_UI && root.FFF_UI.ST && root.FFF_UI.ST.story && root.FFF_UI.ST.story.ctx && root.FFF_UI.ST.story.ctx.fastWalk); } catch (eFw) {} } if (fw && typeof chargeWalk === 'function') return chargeWalk(t, ch, go); return chargeUp(t, ch, go); } /* v6.5.37: new encounters fast-walk; existing charges still run */
   var ux = (r.x - t.x) / t.d, uy = (r.y - t.y) / t.d, sx = t.x + ux * 58, sy = t.y + uy * 58, t0 = performance.now(); W.runUp = true; W.path = []; KEYS = {}; stickEnd(); ev('world:runup:start');
-  var lim = Math.max(3000, t.d / 200 * 1000 + 1500), ok = t.d < 62 ? true : walkTo(sx, sy, true, true); if (ok === false) { W.runUp = false; return false; }
+  var lim = Math.max(3000, t.d / 200 * 1000 + 1500), ok = t.d < 62 ? true : walkTo(sx, sy, true, true); if (ok === false) { W.runUp = false; if (typeof encCamRestore === 'function') encCamRestore(); return false; }
   (function wait() { var d = Math.hypot(r.x - sx, r.y - sy); if ((d < 16 || !W.path || !W.path.length) && performance.now() - t0 > 250 || performance.now() - t0 > lim) { r.dir = dirTo(r, t.x, t.y); place(r, 0); setTimeout(function () { W.runUp = false; ev('world:runup:end'); go(); }, 180); return; } setTimeout(wait, 60); })();
   return true; }
 /* v4.37a (Ernest t895u): a CHARGE: Ryo and the bullies (ch = their sprites) run at each other with the drawn run cycles and meet
@@ -12171,6 +12226,7 @@ function fight(grp, boss, ctx) { if (typeof commentHide === 'function') commentH
   if (STORY && STORY.isOpen && STORY.isOpen()) STORY.close(); // never leave the cards screen over a fight
   if ($('#wpause').classList.contains('on')) { $('#wpause').className = ''; W.paused = false; }
   if (W.libCamHold) { W.libCamHold = 0; if (typeof libBossCamOff === 'function') libBossCamOff(); } /* v5.3 #11: the Archive framing holds through miniDialog and the run-up */
+  if (typeof encCamHandoffIntoFight === 'function') encCamHandoffIntoFight(); /* v6564-gangcam: settle sting / story zoom behind the board */
   W.fightT = performance.now(); W.on = false; save(); var n = grp.length; ctx = ctx || {}; if (typeof c2On === 'function' && c2On() && !(ctx.c2spar || ctx.matspar)) W.v640LossKind = ctx.enfDoom ? 'enforcer' : (n > 1 || boss || ctx.mini ? 'many' : 'one'); if (ctx.flv == null && !boss) ctx.flv = fightLv(ctx); if (ctx.flvs && ctx.flvs.length !== n) ctx.flvs = null; // v4.24: the enemies' level (Bond XP falls off below the party)
   var join = boss ? MINIS.filter(function (m) { return !beaten(m.id); }).map(function (m) { return m.id + '_j'; }) : [], foes = boss ? ['gouki'].concat(join) : ctx.mini ? [ctx.mini] : n === 1 ? grp : grp.map(function (id) { return id + 'g'; });
   var base = boss ? 5 + join.length : ctx.mini ? 3 : n, extra = 0; // v4.7 soda: +1 item, 50% +2 in a group / relay fight, +2 vs Gouki; uses one of its 2 fights
@@ -12362,10 +12418,10 @@ function aoiDullOk(st) { var c = (st && st.ctx) || {}; if (!st || !(st.aoiSword 
   if (W.libPend || W.dlg || W.cut || (STORY && STORY.isOpen && STORY.isOpen())) return false; return true; }
 function aoiDull() { SAVE.sc.aoi_dull = 1; save(); ev('world:aoi:dull'); scene(null, AOI_DULL); }
 function back(win, st) { rdyOff(W.ryo); rdyOff(W.aoi); var bb = $('#wbub'); if (bb) bb.classList.remove('go'); document.querySelectorAll('.wbub2,.wsay').forEach(function (e) { e.remove(); });
-  if (st && st.ctx && st.ctx.gkBond) { clearFoes(); W.busy = false; W.forced = null; W.cool = SP.bossCool; if (st.endHp != null) SAVE.hp = Math.max(1, Math.min(MAXHP, st.endHp)); SAVE.hp = Math.min(SAVE.hp, Math.max(8, Math.floor(MAXHP * 0.28))); keepPartnerSp(st); save(); enter(true); syncVend(); hud(); ev('world:back:gkbond'); gkFinaleBond(); return; }
-  if (st && st.ctx && st.ctx.c2spar) { clearFoes(); W.busy = false; W.forced = null; W.cool = 2; settle(win, st); if (typeof c2SparBack === 'function') c2SparBack(win, st); save(); enter(true); syncVend(); hud(); ev('world:back:spar:' + (win ? 'win' : 'lose')); if (typeof c2SparAfter === 'function') c2SparAfter(win, st); return; } /* v5.3: the sparring round restores its snapshot (no penalty, no wake) */
+  if (st && st.ctx && st.ctx.gkBond) { clearFoes(); W.busy = false; W.forced = null; W.cool = SP.bossCool; if (st.endHp != null) SAVE.hp = Math.max(1, Math.min(MAXHP, st.endHp)); SAVE.hp = Math.min(SAVE.hp, Math.max(8, Math.floor(MAXHP * 0.28))); keepPartnerSp(st); if (typeof encCamRestore === 'function') encCamRestore(); save(); enter(true); syncVend(); hud(); ev('world:back:gkbond'); gkFinaleBond(); return; }
+  if (st && st.ctx && st.ctx.c2spar) { clearFoes(); W.busy = false; W.forced = null; W.cool = 2; settle(win, st); if (typeof c2SparBack === 'function') c2SparBack(win, st); if (typeof encCamRestore === 'function') encCamRestore(); save(); enter(true); syncVend(); hud(); ev('world:back:spar:' + (win ? 'win' : 'lose')); if (typeof c2SparAfter === 'function') c2SparAfter(win, st); return; } /* v5.3: the sparring round restores its snapshot (no penalty, no wake) */
   if (st && st.ctx && st.ctx.gkLoop && !win) { /* v4.64: player hit 0 during item-revival loop — skip defeat/nurse; Bond unlock */
-    clearFoes(); W.busy = false; W.forced = null; W.cool = SP.bossCool; SAVE.gkPhp = 0; keepPartnerSp(st); save(); enter(true); syncVend(); hud();
+    clearFoes(); W.busy = false; W.forced = null; W.cool = SP.bossCool; SAVE.gkPhp = 0; keepPartnerSp(st); if (typeof encCamRestore === 'function') encCamRestore(); save(); enter(true); syncVend(); hud();
     ev('world:back:gkloop:lose:' + (SAVE.gkRevives | 0)); gkFinaleBond(); return; }
   if (st && st.ctx && st.ctx.nurse && (!win || st.escaped)) intExit(true); // v4.11: lost / fled the office fight: back outside its door
   if (st && st.ctx && st.ctx.dg) { dgAfter(win, st); if (st.ctx.dg === 'lib') libBack(win, st); if (st.ctx.dg === 'art') artBack(win, st); if (st.ctx.dg === 'cafe') cafBack(win, st); if (st.ctx.dg === 'field') fldBack(win, st); if (st.ctx.dg === 'c2') c2Back(win, st); } if (!win && !(st && st.escaped) && W.inside && INT[W.inside.id].dg && !INT[W.inside.id].c2) intExit(true); // v4.13: lost in a dungeon: Aoi carries you out
@@ -12380,6 +12436,7 @@ function back(win, st) { rdyOff(W.ryo); rdyOff(W.aoi); var bb = $('#wbub'); if (
   if (win) { SAVE.wins++; SAVE.hp = Math.max(1, SAVE.hp); var gi = yenRoll(gearFx('it')); if (gi && st) { SAVE.items += gi; st.drop = (st.drop | 0) + gi; ev('world:gear:items:' + gi); } var gw = gearFx('hw'); if (gw && SAVE.hp < MAXHP) { SAVE.hp = Math.min(MAXHP, SAVE.hp + Math.ceil(MAXHP * gw)); ev('world:gear:heal'); } if (W.dgRelay && st && st.mini && beaten(W.dgRelay.el.dataset.mb)) { var rr = W.dgRelay; W.dgRelay = null; rr.el.classList.add('out'); setTimeout(function () { rr.el.remove(); }, 600); } } // v4.3: rewards were applied in settle()
   if (!win) { var scriptLoss = st.ctx && (st.ctx.ckDoom || st.ctx.enfDoom); if (!(st.ctx && st.ctx.ckDoom)) SAVE.losses++; // v4.3 fix: this branch used to hang off the restock check, so a win without a restock was booked as a loss. A scripted club dump does not add a loss.
     var ch2Wake = typeof c2On === 'function' && c2On() && C2W, matSpar = !!(st.ctx && st.ctx.matspar); SAVE.hp = WAKE_HP; var pc = scriptLoss ? 0 : koYenLoss(SAVE.items), lostMats = scriptLoss ? {} : koStripMats(); if (!scriptLoss) SAVE.items -= pc; var nurseMats = !matSpar && !ch2Wake; if (nurseMats) { koGrantMat('gauze', 1); koGrantMat('tape', 1); } W.pen = { coins: pc, heal: 0, mats: lostMats, exempt: koYenExempt(), nurse: nurseMats ? { gauze: 1, tape: 1 } : null }; ev('world:penalty:' + pc + ':' + (lostMats.gauze | 0) + ':' + (lostMats.tape | 0) + (W.pen.exempt ? ':exempt' : '')); W.safe = 6; clearRoam(); W.roamT = 4; if (!(st.ctx && st.ctx.matspar)) { var nu = W.inside && INT[W.inside.id].c2 ? [W.ryo.x, W.ryo.y] : (ch2Wake ? [W.ryo.x, W.ryo.y] : nurseAt()); if (!ch2Wake || !(W.inside && INT[W.inside.id].c2)) { W.ryo.x = nu[0]; W.ryo.y = nu[1]; W.ryo.dir = 0; W.aoi.x = W.ryo.x; W.aoi.y = W.ryo.y + 50; resetTrail(W.ryo.x, W.ryo.y, 3); } ev('world:respawn:' + (ch2Wake ? 'gym' : 'nurse') + ':' + Math.round(W.ryo.x) + ',' + Math.round(W.ryo.y) + ':' + SAVE.hp); } } // Both chapters wake on low HP. Chapter 1: the nurse then stands and fills it. Chapter 2: Genji's gym, no full heal. A mat spar stays on the mat.
+  if (typeof encCamRestore === 'function') encCamRestore(); /* v6564-gangcam */
   save(); enter(true);
   syncVend();
   var CARDS = root.ENGINE.cards(), newC = res.cards || []; if (typeof waveBack === 'function') { var _wv = waveBack(win, st, newC, cxu); if (_wv === 1) return; if (_wv && _wv.cards) { newC = _wv.cards; cxu = _wv.cx; } } /* v6.5.30 chain battles */
@@ -12427,6 +12484,7 @@ function escaped(st) {
   clearFoes(); W.busy = false; W.cool = 0; W.rollAcc = 0; // v4.22: no global grace; the ones you got away from are dazed for a moment instead
   if (st.endHp != null) { SAVE.hp = Math.max(1, Math.min(MAXHP, st.endHp)); SAVE.sp = Math.max(0, Math.min(SPMAX, st.endSpirit | 0)); } keepPartnerSp(st); // v4.24.1
   keep.forEach(function (f, i) { if (W.roam.length >= SP.roamMax) { f.s.el.remove(); return; } var id = (st.grp && st.grp[i]) || BULLIES[0]; f.s.el.classList.add('foe', 'roam'); W.roam.push({ id: id, s: f.s, hx: f.s.x, hy: f.s.y, path: [], wait: 2 + Math.random(), st: 'wander', door: null, t: 1, dazed: SP.daze }); });
+  if (typeof encCamRestore === 'function') encCamRestore(); /* v6564-gangcam */
   save(); enter(true); syncVend(); ev('world:back:escape');
 }
 /* ---------- HUD / dialogs ---------- */
