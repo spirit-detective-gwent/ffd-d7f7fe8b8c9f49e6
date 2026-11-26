@@ -123,5 +123,21 @@ if pm.exists():
         raise SystemExit('S2P5_END missing; cannot inject S2MENUS')
     print('injected S2MENUS', len(modm))
 
+
+# GGD-50 garden (clinic pots, chance picks, yard map, meal edge). After S2MENUS.
+pg = HERE / 's2garden.js'
+BG, EG = '/* S2GARDEN_BEGIN v6563-ggd50 */\n', '\n/* S2GARDEN_END */\n'
+if pg.exists():
+    modg = pg.read_text(encoding='utf8').rstrip('\n')
+    if BG in s:
+        i = s.index(BG); j = s.index(EG, i) + len(EG)
+        s = s[:i] + BG + modg + EG + s[j:]
+    elif EM in s:
+        i = s.index(EM) + len(EM)
+        s = s[:i] + BG + modg + EG + s[i:]
+    else:
+        raise SystemExit('S2MENUS_END missing; cannot inject S2GARDEN')
+    print('injected S2GARDEN', len(modg))
+
 INDEX.write_text(s, encoding='utf8')
 print('injected S2P+S2 into', INDEX, 'paint', len(paint), 's2', len(mod))

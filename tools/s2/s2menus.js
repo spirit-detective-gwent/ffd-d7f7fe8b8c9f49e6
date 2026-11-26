@@ -81,7 +81,9 @@
     { id: 'onigiri', n: 'Onigiri', jp: 'おにぎり', icon: 'onigiri', hp: 10, base: 6, cost: 5, eat: 'onigiri', prov: 1,
       eff: '+10 HP  ·  eat now', flavor: 'From the break-room rice cooker. Still a little warm.' },
     { id: 'cancoffee', n: 'Canned coffee', jp: '缶コーヒー', icon: 'cancoffee', sp: 6, base: 4, cost: 3, drink: 1, prov: 1,
-      eff: '+6 SP  ·  drink now', flavor: 'Night-shift blend, stenciled can.' }
+      eff: '+6 SP  ·  drink now', flavor: 'Night-shift blend, stenciled can.' },
+    { id: 'yardmap', n: 'Yard map', jp: '庭地図', icon: 'map', base: 5, cost: 4, stock: 1,
+      eff: 'Marks live ginger this cycle', flavor: 'Endō’s sketch of the waterfront beds. One sheet, this cycle only. No heal.' }
   ];
 
   var SHOPS_M = M.SHOPS = {
@@ -425,6 +427,11 @@
     if (id === 's2_chiyo') ev('world:s2:waga:buy:' + it.id + ':' + c);
     hideOnly();
     var after = function () { stayPut(); reopen(id); };
+    if (it.id === 'yardmap') {
+      try { if (root.FFF_S2GARDEN && FFF_S2GARDEN.buyYardMap) FFF_S2GARDEN.buyYardMap(); } catch (eY) {}
+      after();
+      return;
+    }
     if (it.eat && !it.bag) {
       handoff(shop, it, function () { playEat(shop, it, after); });
     } else if (it.drink && !it.bag) {
