@@ -32968,7 +32968,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
   function c2IsEntry() {
     try {
       var S = typeof c2S === 'function' ? c2S() : null, e = (S && S.e) || {}, L = SAVE.c2les || {};
-      if (e.arrive || e.gymIn || e.genji || e.lossArc || e.trained || e.gymDescent || (e.c2loss | 0) > 0) return false;
+      if (e.arrive || e.gymIn || e.genji || e.lossArc || e.trained || (e.gymDescent && !SAVE.ngp) || (e.c2loss | 0) > 0) return false; /* NG+: v640Repair flags gymDescent from the kept Sneak technique the moment Ch2 begins, before the arrival snapshot */
       if (SAVE.ngp) return true; /* NG+: the kept Genji techniques, recipes and counters are carry-over, not Ch2 progress in this run (the e.* flags above are the run's own) */
       if (SAVE.c2kos) return false;
       if (L.sneak || L.assist || L.cover) return false;
