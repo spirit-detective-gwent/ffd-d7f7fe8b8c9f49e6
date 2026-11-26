@@ -40379,7 +40379,7 @@ function camPan(to, o, done) {
   function carryPlace(x, y) { var e = GS && GS.carry, C = CARRYC, sc = carrySc(); if (!e) return;
     GS.cx = x; GS.cy = y; e.style.transform = 'translate3d(' + (x - C.w * sc / 2).toFixed(1) + 'px,' + (y - C.base * sc).toFixed(1) + 'px,0)'; e.style.zIndex = 100 + Math.round(y); }
   function mkCarry(x, y) { var C = CARRYC, sc = carrySc(), e = document.createElement('div');
-    e.className = 'wsp wdown'; e.dataset.npc = 'mb2_sento_carry';
+    e.className = 'wsp'; e.dataset.npc = 'mb2_sento_carry';
     e.style.width = (C.w * sc).toFixed(1) + 'px'; e.style.height = (C.h * sc).toFixed(1) + 'px';
     e.style.backgroundImage = 'url(' + C.src + ((root.FFF_BUILD) ? '?v=' + root.FFF_BUILD : '') + ')';
     e.style.backgroundSize = (4 * C.cw * sc).toFixed(1) + 'px ' + (2 * C.ch * sc).toFixed(1) + 'px';
@@ -40393,19 +40393,20 @@ function camPan(to, o, done) {
     mkCarry(x, y); ev('world:c2:goda:carry:lift'); }
   function carryBob() { if (!GS || !GS.carry) return; carryStop();
     var t0 = performance.now(), x = GS.cx, y = GS.cy;
-    (function tick(now) { if (!GS || !GS.carry || GS.carryGo) return;
-      carryPlace(x, y + Math.sin((now - t0) / 380) * 1.4); GS.carryRaf = requestAnimationFrame(tick); })(t0); }
+    (function tick() { if (!GS || !GS.carry || GS.carryGo) return;
+      carryPlace(x, y + Math.sin((performance.now() - t0) / 380) * 1.4); GS.carryRaf = requestAnimationFrame(tick); })(); }
   /* 60 fps: the group walks as one, frame from distance, no camera follow */
   function carryWalk(tx, ty, sp, done) { if (!GS || !GS.carry) { if (done) done(); return; }
     carryStop(); GS.carryGo = 1; var last = performance.now(), t0 = last, x0 = GS.cx, y0 = GS.cy, dist0 = 0;
     var lim = 1000 * (Math.hypot(tx - x0, ty - y0) / Math.max(20, sp)) + 2500;
-    (function step(now) { if (!GS || !GS.carry) { if (done) done(); return; }
-      var dt = Math.min(0.05, (now - last) / 1000); last = now;
+    /* same stepper as c2Walk: always read performance.now() (not the rAF timestamp), so virtual-time clips stay smooth */
+    (function step() { if (!GS || !GS.carry) { if (done) done(); return; }
+      var now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
       var dx = tx - GS.cx, dy = ty - GS.cy, d = Math.hypot(dx, dy), mv = Math.min(d, sp * dt);
       if (d < 1.5 || now - t0 > lim) { carryPlace(tx, ty); carryFr((GS.carry.dataset.cfr | 0), tx < x0); if (done) done(); return; }
       carryPlace(GS.cx + dx / d * mv, GS.cy + dy / d * mv);
       dist0 += mv; carryFr(Math.floor(dist0 / 12) % 4, tx < x0);
-      GS.carryRaf = requestAnimationFrame(step); })(t0); }
+      GS.carryRaf = requestAnimationFrame(step); })(); }
   function stageCarryIn(next) { if (!GS) { next(); return; }
     var doorX = 780, doorY = 500, x = GS.x, y = GS.y;
     try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {}
