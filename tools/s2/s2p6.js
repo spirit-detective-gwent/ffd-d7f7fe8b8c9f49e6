@@ -482,9 +482,9 @@
     if (again) later(200, sing);
   }
   P6.sing = sing; P6.afterSong = afterSong;
-  /* one-fight song edge: SAVE.j6edge (one at a time, a new one replaces the old; spent at the next real fight's bell) */
+  /* one-fight song edge: J().edge (quest state, so NG+ starts clean) (one at a time, a new one replaces the old; spent at the next real fight's bell) */
   var EDGE_N = { anthem: 'Anthem', ballad: 'Ballad', punk: 'Punk', duet: 'Duet' };
-  function setEdge(k) { if (!EDGE_N[k]) return; var had = SAVE.j6edge; SAVE.j6edge = k; try { save(); } catch (e) {} ev('world:s2p6:edge:set:' + k + (had ? ':over:' + had : ''));
+  function setEdge(k) { if (!EDGE_N[k]) return; var had = J().edge; J().edge = k; try { save(); } catch (e) {} ev('world:s2p6:edge:set:' + k + (had ? ':over:' + had : ''));
     var X = root.FFF_S2ARC, d = X && X.EDGE && X.EDGE[k] ? X.EDGE[k].d : ''; var m = EDGE_N[k] + ' edge ready: ' + d + (had && had !== k ? ' (replaces ' + EDGE_N[had] + ')' : ''); later(700, function () { whenFree(function () { toastS(m); }); }); }
   P6.setEdge = setEdge;
   function edgeOk(o) { var c = (o && o.ctx) || {}; if (!o || o.tut || c.c2spar || c.matspar || c.c2lesson || c.gkLoop || c.ckDoom) return false; try { if (typeof c2On === 'function' && !c2On()) return false; } catch (e) {} return true; }
@@ -492,7 +492,7 @@
     var UI = root.FFF_UI; if (!UI || typeof UI.startMatch !== 'function') return false; if (UI.startMatch._j6) return true;
     var sm0 = UI.startMatch;
     UI.startMatch = function (ch, o) {
-      var k = SAVE.j6edge, use = k && edgeOk(o);
+      var k = J().edge, use = k && edgeOk(o);
       try {
         if (o && o.ctx && o.ctx.j6nm && o.foes) { o.foeNm = o.foeNm || {}; o.foes.forEach(function (id, i) { if (i === 0) o.foeNm[id] = o.ctx.j6nm; }); }
         if (use && o && o.pst) { if (k === 'anthem') o.pst.spirit = Math.min(40, (o.pst.spirit | 0) + 10); if (k === 'punk') o.pst.buff = (o.pst.buff | 0) + 3; }
@@ -500,7 +500,7 @@
       var r = sm0.apply(this, arguments);
       if (use) {
         try { var b = UI.ST && UI.ST.b; if (b && b.s && b.s[0]) { if (k === 'ballad') b.s[0].guard = (b.s[0].guard | 0) + 4; if (k === 'duet') { b.s[0].buff = (b.s[0].buff | 0) + 2; if (b.bench) b.bench.buff = (b.bench.buff | 0) + 2; } } } catch (eB) {}
-        SAVE.j6edge = ''; try { save(); } catch (eS) {} ev('world:s2p6:edge:use:' + k);
+        J().edge = ''; try { save(); } catch (eS) {} ev('world:s2p6:edge:use:' + k);
         try { if (typeof toast === 'function') setTimeout(function () { toast('\u266a ' + EDGE_N[k] + ' edge!'); }, 900); } catch (eT) {}
       }
       return r;
