@@ -1,0 +1,138 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Seal 2 Phase 5 — Masa's Seal preview</title>
+<style>
+  body { margin: 0; background: #16121a; color: #f0e4c8; font: 14px/1.4 "Noto Sans CJK JP", sans-serif; }
+  h1 { font-size: 20px; margin: 16px 24px 4px; }
+  h2 { font-size: 15px; margin: 20px 24px 8px; color: #d8c8a0; }
+  p { margin: 0 24px 12px; max-width: 960px; opacity: .85; }
+  canvas { background: #0e0c12; margin: 8px 24px; image-rendering: auto; display: block; }
+  .row { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 24px 16px; align-items: flex-start; }
+  .row canvas { margin: 0; }
+  .card { background: #221c28; padding: 8px; border-radius: 6px; }
+  .card label { display: block; font-size: 12px; margin-bottom: 4px; color: #c8b898; }
+  img.pt { width: 180px; height: 240px; object-fit: cover; background: #111; }
+</style>
+<h1>Seal 2 · Phase 5 · Masa’s Seal — art preview</h1>
+<p>Thirteen depot rooms at bathhouse scale. Meet Masa at the yard gate; fight him at the cargo-lift shutter. Existing Foreman Masa portraits and <code>mb2_depotK</code> sheets are reused (no retouch unless the sheet shows a mismatch). Path lines and the new post-fight bond question are add-only. Preview only until self-review.</p>
+
+<h2>Masa — portrait and sprite (reuse)</h2>
+<div class="row">
+  <div class="card"><label>calm / angry / beaten</label>
+    <img class="pt" src="portraits/masa_calm.webp" alt="masa calm">
+    <img class="pt" src="portraits/masa_angry.webp" alt="masa angry">
+    <img class="pt" src="portraits/masa_beaten.webp" alt="masa beaten">
+  </div>
+  <div class="card"><label>portrait next to mb2_depotK sheets</label><canvas id="sheet_masa" width="1100" height="900"></canvas></div>
+</div>
+
+<h2>Thirteen depot rooms</h2>
+<div class="row" id="rooms"></div>
+
+<h2>Shutter after-win states</h2>
+<div class="row">
+  <div class="card"><label>Leave him (Fierce)</label><canvas id="depShutterLeave" width="1280" height="900" style="width:640px;height:450px"></canvas></div>
+  <div class="card"><label>The notes (Strategic)</label><canvas id="depShutterNotes" width="1280" height="900" style="width:640px;height:450px"></canvas></div>
+  <div class="card"><label>Help him up (Compassionate)</label><canvas id="depShutterHelp" width="1280" height="900" style="width:640px;height:450px"></canvas></div>
+</div>
+
+<h2>Battle · lift shutter</h2>
+<div class="row">
+  <div class="card"><label>Masa’s fight — detailed sides, clear centre lane, no indoor rain</label><canvas id="battleShutter" width="720" height="1280" style="width:360px;height:640px"></canvas></div>
+  <div class="card"><label>Ref: Hase workshop v3</label><img id="refHase" style="width:390px;height:auto;background:#111" alt="Hase"></div>
+  <div class="card"><label>Ref: quay garage interior v3</label><img id="refGar" style="width:390px;height:auto;background:#111" alt="Garage"></div>
+  <div class="card"><label>Ref: battle garage v3</label><img id="refBt" style="width:360px;height:auto;background:#111" alt="Battle garage"></div>
+</div>
+
+<h2>Path voice and bond (add only)</h2>
+<div class="row">
+  <div class="card"><label>Fierce</label><canvas id="line_fierce" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Strategic</label><canvas id="line_strategic" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Compassionate</label><canvas id="line_compassionate" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Bond question</label><canvas id="line_bond" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Leave him</label><canvas id="line_leave" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>The notes</label><canvas id="line_notes" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Help him up</label><canvas id="line_help" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Mori after the seal</label><canvas id="line_mori" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Nao after the seal</label><canvas id="line_nao" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+  <div class="card"><label>Haru after the seal</label><canvas id="line_haru" width="900" height="420" style="width:450px;height:210px"></canvas></div>
+</div>
+
+<h2>Manifest item</h2>
+<div class="row">
+  <div class="card"><label>Freight manifest with Kagerō’s gray seal</label><canvas id="manifestItem" width="360" height="480" style="width:180px;height:240px"></canvas></div>
+</div>
+
+<script src="c2bt_lib.js"></script>
+<script src="paint.js"></script>
+<script src="paint_p2.js"></script>
+<script src="paint_p3.js"></script>
+<script src="paint_p4.js"></script>
+<script src="paint_p5.js"></script>
+<script>
+(function () {
+  var P = window.FFF_S2P;
+  function ctx(id) { return document.getElementById(id).getContext('2d'); }
+  var host = document.getElementById('rooms');
+  (P.DEPOT_ROOMS || []).forEach(function (pair) {
+    var id = pair[0], lab = pair[1];
+    var card = document.createElement('div'); card.className = 'card';
+    var label = document.createElement('label'); label.textContent = lab;
+    var c = document.createElement('canvas'); c.id = id; c.width = 1280; c.height = 900;
+    c.style.width = '640px'; c.style.height = '450px';
+    card.appendChild(label); card.appendChild(c); host.appendChild(card);
+    if (typeof P[id] === 'function') P[id](ctx(id), false);
+  });
+  P.depShutterLeave(ctx('depShutterLeave'));
+  P.depShutterNotes(ctx('depShutterNotes'));
+  P.depShutterHelp(ctx('depShutterHelp'));
+  P.battleShutter(ctx('battleShutter'));
+  P.manifestItem(ctx('manifestItem'));
+  ['fierce','strategic','compassionate','bond','leave','notes','help','mori','nao','haru'].forEach(function (w) {
+    P.lineCardDep(ctx('line_' + w), w);
+  });
+  document.getElementById('refHase').src = '/workspace/v6560-review/seal2/phase2/wired/05_workshop_v3.png';
+  document.getElementById('refGar').src = '/workspace/v6560-review/seal2/phase4/wired/02_garage_interior_v3.png';
+  document.getElementById('refBt').src = '/workspace/v6560-review/seal2/phase4/wired/06_battle_garage_v3.png';
+
+  function load(src) {
+    return new Promise(function (res) {
+      var im = new Image();
+      im.onload = function () { res(im); };
+      im.onerror = function () { res(null); };
+      im.src = src;
+    });
+  }
+  var g = ctx('sheet_masa'), c = g.canvas;
+  g.fillStyle = '#16121a'; g.fillRect(0, 0, c.width, c.height);
+  Promise.all([
+    load('portraits/masa_calm.webp'),
+    load('sprites/masa_idle.webp'),
+    load('sprites/masa_walk.webp'),
+    load('sprites/masa_map.webp'),
+    load('sprites/masa_fig.webp')
+  ]).then(function (ims) {
+    var pt = ims[0], idle = ims[1], walk = ims[2], map = ims[3], fig = ims[4];
+    if (pt) g.drawImage(pt, 12, 20, 180, 240);
+    g.fillStyle = '#c8b898'; g.font = '12px sans-serif';
+    g.fillText('Foreman Masa  ·  マサ  ·  existing portraits + mb2_depotK sheets', 12, 14);
+    function strip(im, x, y, cols, label) {
+      if (!im) return;
+      var cw = im.naturalWidth / (cols || 8), ch = im.naturalHeight / 4, i;
+      g.fillStyle = '#c8b898'; g.fillText(label, x, y - 4);
+      for (i = 0; i < 4; i++) g.drawImage(im, 0, i * ch, cw, ch, x + i * (cw + 8), y, cw, ch);
+    }
+    strip(idle, 210, 36, 4, 'idle, four facings');
+    if (walk) {
+      var cw = walk.naturalWidth / 8, ch = walk.naturalHeight / 4, r, i;
+      g.fillStyle = '#c8b898'; g.fillText('walk, four facings (front / right / left / back)', 210, 330);
+      for (r = 0; r < 4; r++) for (i = 0; i < 4; i++) {
+        g.drawImage(walk, i * cw, r * ch, cw, ch, 210 + i * (cw * 0.55 + 4), 336 + r * (ch * 0.55 + 4), cw * 0.55, ch * 0.55);
+      }
+    }
+    if (fig) { g.drawImage(fig, 900, 40, fig.naturalWidth * 1.6, fig.naturalHeight * 1.6); g.fillStyle = '#c8b898'; g.fillText('fig', 900, 32); }
+    if (map) { g.drawImage(map, 900, 400, map.naturalWidth * 1.4, map.naturalHeight * 1.4); g.fillStyle = '#c8b898'; g.fillText('map', 900, 392); }
+    document.title = document.title + ' ready';
+  });
+})();
+</script>
