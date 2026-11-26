@@ -3279,6 +3279,7 @@ html.pc-desk #wstat>#wbag{position:static;top:auto;right:auto;left:auto;margin-l
 #ngplus .ngrow{margin:8px 0}
 #ngplus .ngseg{display:flex;flex-wrap:wrap;gap:6px}
 #ngplus .ngseg button{flex:1;min-width:70px;min-height:40px;border:0;border-radius:12px;background:#e7e0d2;color:#1a3148}
+#ngplus .ngrow.ng2x2 .ngseg button{flex:1 1 calc(50% - 6px);min-width:0;box-sizing:border-box} /* Bond path: Compassionate wraps to a 2x2 so it stays inside the card at 390px */
 #ngplus .ngseg button.on,.ngpres button.on,.ngcustom.on{background:#1f7a72;color:#f6f1e4}
 #ngplus .ngpres{display:flex;gap:8px}
 #ngplus .ngpres button,.ngcustom{flex:1;border:0;border-radius:16px;background:#24384f;color:#d5e4f2;min-height:84px;text-align:left;padding:12px}
@@ -24337,7 +24338,7 @@ function v640NgOpen(review) {
   var o = W.ngOpt, mode = v640NgMode(), box = document.getElementById('ngplus');
   if (!box) { box = document.createElement('div'); box.id = 'ngplus'; document.getElementById('app').appendChild(box); }
   function seg(d) { return '<div class="ngseg">' + d.ch.map(function (p) { return '<button type="button" data-k="' + d.k + '" data-v="' + p[0] + '"' + (o[d.k] === p[0] ? ' class="on"' : '') + '>' + p[1] + '</button>'; }).join('') + '</div>'; }
-  function row(d) { return '<div class="ngrow"><b>' + d.title + '</b>' + seg(d) + '</div>'; }
+  function row(d) { return '<div class="ngrow' + (d.k === 'bond' ? ' ng2x2' : '') + '"><b>' + d.title + '</b>' + seg(d) + '</div>'; }
   var secs = []; NG_OPTS.forEach(function (d) { if (secs.indexOf(d.sec) < 0) secs.push(d.sec); });
   var h = '<header><button type="button" data-a="back">\u2039 Back</button><b>' + (review ? 'Review' : 'New Game Plus') + '</b></header>';
   if (!review) {
