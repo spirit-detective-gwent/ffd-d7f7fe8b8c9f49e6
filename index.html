@@ -12058,8 +12058,8 @@ function ambStingHandoff() { var g = W.ambSg, wv = g && g.wv, z; if (!g || !wv) 
     ev('world:enccam:handoff');
   }
   function encCamRestore(ms, done) {
-    if (encCamBossHold()) { ev('world:enccam:skip:boss'); if (done) done(); return; }
     W._encCamTok = (W._encCamTok | 0) + 1; var tok = W._encCamTok;
+    if (encCamBossHold()) { ev('world:enccam:skip:boss'); if (done) done(); return; }
     encCamUnlock();
     if (typeof ambStingRelease === 'function' && W.ambSg) {
       ev('world:enccam:sting'); ambStingRelease(ms || 1800, function () { if (tok === W._encCamTok && !encCamBossHold() && done) done(); }); return;
