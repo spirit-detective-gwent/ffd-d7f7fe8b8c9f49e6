@@ -9,6 +9,8 @@ INDEX = HERE.parent.parent / 'index.html'
 OUT = Path('/workspace/v6560-review/seal2/phase5/wired')
 OUT.mkdir(parents=True, exist_ok=True)
 PORT = int(os.environ.get('PORT', '8895'))
+SUFFIX = os.environ.get('SHOT_SUFFIX', '')
+ONLY = set(filter(None, os.environ.get('SHOTS', '').split(',')))
 
 ROOMS = [
     ('dyard', '01_yard_gate'),
@@ -59,7 +61,10 @@ async def shot(pg, name, hush=True):
     if hush:
         await ev(pg, HUSH)
         await pg.wait_for_timeout(200)
-    path = OUT / f'{name}.png'
+    if ONLY and name not in ONLY and (name + SUFFIX) not in ONLY:
+        print('skip', name, flush=True)
+        return None
+    path = OUT / f'{name}{SUFFIX}.png'
     await pg.screenshot(path=str(path), type='png')
     print('shot', path, flush=True)
     return path
@@ -237,6 +242,45 @@ async def main():
         await pg.wait_for_timeout(400)
         await ev(pg, HUSH)
         await shot(pg, '20_shutter_sealed')
+
+        # Genji / city map after down_dep: SE quarter Punk red, X4 Punk vs Syndicate
+        mmap = await ev(pg, """(function(){
+          var P5=root.FFF_S2P5, st=c2S();
+          st.e.run_fac='arc'; st.e.down_dep=1; st.e.seal_depot=1; st.e.eastSeal=1;
+          st.e.masaFate='help'; P5.setStg('done'); st.q.cq2_s2_depot=9;
+          try { if (P5.applySeTurf) P5.applySeTurf(); else if (P5.flipEast) P5.flipEast(); } catch(e){}
+          try { if (root.FFF_C2LMAP && FFF_C2LMAP.openAll) FFF_C2LMAP.openAll({ focus:'city' }); } catch(e2){ return {err:String(e2)}; }
+          var T=root.FFF_C2TURF, col=FFF_C2LMAP&&FFF_C2LMAP.ownerCol&&FFF_C2LMAP.ownerCol('masa');
+          return { col:col, x4:T&&T.B&&T.B.X4&&T.B.X4.g, map:!!document.getElementById('c2citymap'), rlen:T&&T.Q&&T.Q.R&&T.Q.R.length };
+        })()""")
+        print('map', mmap, flush=True)
+        # let the board img and layout settle
+        await pg.wait_for_timeout(800)
+        try:
+            await pg.wait_for_function("() => { var b=document.querySelector('#c2citymap.on .c2cm-board img'); return b && b.complete && b.naturalWidth>0; }", timeout=4000)
+        except Exception as e:
+            print('map wait', e, flush=True)
+        await pg.wait_for_timeout(400)
+        await shot(pg, '21_map_after_masa', hush=False)
+        await ev(pg, """(function(){ try { if (root.FFF_C2LMAP && FFF_C2LMAP.hide) FFF_C2LMAP.hide(); } catch(e){} var box=document.getElementById('c2citymap'); if(box&&box.parentNode)box.parentNode.removeChild(box); return 1; })()""")
+
+        # yard meeting during the talk, Masa behind the desk
+        await ev(pg, """(function(){
+          var P5=root.FFF_S2P5, st=c2S();
+          st.e.seal_depot=0; st.e.masaFate=''; st.e.down_dep=0; st.e.eastSeal=0;
+          P5.setStg('open'); st.q.cq2_s2_depot=0;
+          return P5.stg();
+        })()""")
+        info = await go_room(pg, 'dyard', 530, 790)
+        print('yard talk setup', info, flush=True)
+        await ev(pg, """(function(){
+          try { if (W.ryo) { W.ryo.x=500; W.ryo.y=800; place(W.ryo,0); } if (W.aoi) { W.aoi.x=600; W.aoi.y=810; place(W.aoi,0); } camera(true); } catch(e){}
+          try { W.dlg=false; W.cut=false; W.busy=false; if (root.FFF_S2P5 && FFF_S2P5.yardTalk) FFF_S2P5.yardTalk(); } catch(e2){}
+          var m=W.c2n&&W.c2n.s2masa;
+          return { masa:m&&[m.x,m.y], dlg:!!W.dlg };
+        })()""")
+        await pg.wait_for_timeout(500)
+        await shot(pg, '01_yard_gate_talk', hush=False)
 
         print('ERRS', errs[:8], flush=True)
         await b.close()

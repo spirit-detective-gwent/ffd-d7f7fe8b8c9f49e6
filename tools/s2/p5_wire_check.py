@@ -43,6 +43,7 @@ async def main():
     ok('S2P5 injected', 'FFF_S2P5' in src and 'cq2_s2_depot' in src and 'S2P5_BEGIN' in src)
     ok('P5 painters in source', 'depYard' in src and 'depShutter' in src and 'battleShutter' in src and 'palletJack' in src)
     ok('FFF_BUILD unchanged', 'window.FFF_BUILD="v6562"' in src)
+    ok('lift sign source is 貨物昇降機', '\\u8ca8\\u7269\\u6607\\u964d\\u6a5f' in src and '\\u8ca0\\u7269' not in src[src.find('/* S2P5_BEGIN'):src.find('/* S2P5_END')+20] if 'S2P5_BEGIN' in src else True)
     s = TS(('127.0.0.1', PORT), functools.partial(Q, directory=str(INDEX.parent)))
     threading.Thread(target=s.serve_forever, daemon=True).start()
     errs = []
@@ -203,6 +204,46 @@ async def main():
         ok('takeSeal sets seal_depot and closes Masa\u2019s Seal', after and after.get('sealed') and after.get('done') and after.get('stg')=='done', after)
         ok('east-block flip is set without a second sting', after and after.get('eastSeal') and after.get('depotWon') and after.get('after') and after.get('stung')==0, after)
         ok('Riders stand down after the depot seal', after and after.get('down'), after)
+        turf = await ev(pg, """(function(){
+          var P5=root.FFF_S2P5, st=c2S();
+          try { if (P5.applySeTurf) P5.applySeTurf(); } catch(e){}
+          var T=root.FFF_C2TURF;
+          var col = (root.FFF_C2LMAP && FFF_C2LMAP.ownerCol) ? FFF_C2LMAP.ownerCol('masa') : null;
+          var punk = (root.C2L_PIECE|| (FFF_C2LMAP&&{})) ;
+          return {
+            x4: T && T.B && T.B.X4 && T.B.X4.g,
+            rlen: T && T.Q && T.Q.R && T.Q.R.length,
+            seOnP: !!(T && T.Q && T.Q.P && T.Q.P.some(function(r){ return r[0]===3460 || r[0]===3700 || r[0]===3520; })),
+            col: col,
+            punk: '#c42830'
+          };
+        })()""")
+        ok('after down_dep, X4 is Punk vs Syndicate and SE is on Punk turf', turf and turf.get('x4')=='PS' and turf.get('seOnP') and turf.get('rlen')==0, turf)
+        ok('Genji map paints Masa\u2019s quarter in Punk red after down_dep', turf and turf.get('col')=='#c42830', turf)
+
+        yardpos = await ev(pg, """(function(){
+          var P5=root.FFF_S2P5, st=c2S();
+          st.e.seal_depot=0; st.e.down_dep=0; st.e.eastSeal=0; st.e.masaFate='';
+          /* keep quest open for the yard meeting */
+          try { st.q.cq2_s2_depot=0; if (P5.setStg) P5.setStg('open'); } catch(e){}
+          try { c2Go('dyard',[530,790,0]); if (typeof c2Pop==='function') c2Pop(); if (P5.popMasa) {} } catch(e2){}
+          var m=W.c2n&&W.c2n.s2masa;
+          return { x:m&&m.x, y:m&&m.y, room:typeof c2Room==='function'?c2Room():null };
+        })()""")
+        ok('Masa stands behind the yard desk, not in the party', yardpos and yardpos.get('room')=='dyard' and (yardpos.get('y') or 99)<620 and (yardpos.get('x') or 0)>=500, yardpos)
+
+        heal = await ev(pg, """(function(){
+          var H=typeof HITEM!=='undefined'&&HITEM;
+          var rec={ patch:H&&H.patch&&H.patch.hp, bpart:H&&H.bpart&&H.bpart.hp, patchPct:H&&H.patch&&H.patch.pct, bpartPct:H&&H.bpart&&H.bpart.pct };
+          var hp0=SAVE.hp, max=MAXHP, bag=(SAVE.heal||[]).slice();
+          SAVE.hp=Math.max(1, max-20); SAVE.heal=['patch','bpart'];
+          var a=useHeal(0), hp1=SAVE.hp;
+          SAVE.heal=['bpart']; var b=useHeal(0), hp2=SAVE.hp;
+          SAVE.hp=hp0; SAVE.heal=bag; try{save();hud();}catch(e){}
+          rec.d6=hp1-(max-20); rec.d10=hp2-hp1; rec.ok=a&&b;
+          return rec;
+        })()""")
+        ok('Hase patch kit heals +6 and spare tube +10, not 20% bandage', heal and heal.get('patch')==6 and heal.get('bpart')==10 and heal.get('d6')==6 and heal.get('d10')==10 and heal.get('patchPct') is None, heal)
         lines = (after or {}).get('lines') or {}
         ok('after-seal Mori line is new (freight quiet)', any('quiet for good' in (x or '').lower() or 'kettle' in (x or '').lower() for x in lines.get('mori') or []), lines.get('mori'))
         ok('after-seal Nao line is new (day job)', any('day job' in (x or '').lower() for x in lines.get('nao') or []), lines.get('nao'))

@@ -31290,8 +31290,10 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
   }
   function c2lXY(wx, wy, cw, ch) { return [Math.round(wx / 5040 * cw), Math.round(wy / 4032 * ch)]; }
   function c2lOwnerCol(id) {
-    var fac = C2L_FAC[id], st = S(), run = st && st.run_fac;
-    if (run && st.e && st.e['down_' + fac] && C2L_PIECE[C2L_ID_OF[run]]) return C2L_PIECE[C2L_ID_OF[run]].col;
+    var fac = C2L_FAC[id], st = S(), e = st && st.e, run = e && e.run_fac;
+    var code = (typeof C2S_FAC === 'object' && C2S_FAC[fac]) || fac;
+    var ownLm = (typeof C2S_LMOF === 'object' && C2S_LMOF[run]) || run;
+    if (run && e && e['down_' + code] && C2L_PIECE[C2L_ID_OF[ownLm]]) return C2L_PIECE[C2L_ID_OF[ownLm]].col;
     return C2L_PIECE[id].col;
   }
   function c2lMask(cw, ch, rects) {
@@ -31351,6 +31353,41 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
       if (tid === pulseId) { var k = c2lPulseK(pulseT); pk = k[0]; pulse = k[1]; }
       if (pk <= 0) return;
       c2lPaintDist(g, c2lMask(cv.width, cv.height, rects), c2lOwnerCol(tid), (0.40 + 0.18 * bold + 0.20 * pulse) * pk, (0.88 + 0.10 * bold + 0.12 * pulse) * pk);
+    });
+    if (bold) c2lPaintBorders(g);
+  }
+  var C2L_GCOL = { H: '#e8a828', P: '#c42830', R: '#1f7a72', S: '#4070dc' };
+  function c2lPaintBorders(g) {
+    var T = typeof FFF_C2TURF !== 'undefined' ? FFF_C2TURF : null; if (!T || !T.B) return;
+    var cw = g.canvas.width, ch = g.canvas.height;
+    Object.keys(T.B).forEach(function (k) {
+      var b = T.B[k]; if (!b || !b.r || !b.g || b.g.length < 2) return;
+      var cA = C2L_GCOL[b.g.charAt(0)], cB = C2L_GCOL[b.g.charAt(1)];
+      if (!cA || !cB) return;
+      var pair = ((T.NAME && T.NAME[b.g.charAt(0)]) || b.g.charAt(0)) + ' vs ' + ((T.NAME && T.NAME[b.g.charAt(1)]) || b.g.charAt(1));
+      (b.r || []).forEach(function (r) {
+        var a = c2lXY(r[0], r[1], cw, ch), z = c2lXY(r[2], r[3], cw, ch);
+        var x = a[0], y = a[1], w = Math.max(1, z[0] - a[0]), hh = Math.max(1, z[1] - a[1]);
+        g.save();
+        g.beginPath(); g.rect(x, y, w, hh); g.clip();
+        g.globalAlpha = 0.46; g.fillStyle = cA; g.fillRect(x, y, w, Math.ceil(hh / 2));
+        g.fillStyle = cB; g.fillRect(x, y + Math.floor(hh / 2), w, Math.ceil(hh / 2));
+        var i, step = Math.max(4, Math.round(Math.min(w, hh) / 4));
+        g.globalAlpha = 0.55; g.lineWidth = 2;
+        g.strokeStyle = cA;
+        for (i = -hh; i < w + hh; i += step * 2) { g.beginPath(); g.moveTo(x + i, y); g.lineTo(x + i + hh, y + hh); g.stroke(); }
+        g.strokeStyle = cB;
+        for (i = -hh + step; i < w + hh; i += step * 2) { g.beginPath(); g.moveTo(x + i, y); g.lineTo(x + i + hh, y + hh); g.stroke(); }
+        g.restore();
+        g.globalAlpha = 0.9; g.strokeStyle = '#1a140c'; g.lineWidth = 1.5; g.strokeRect(x + 0.5, y + 0.5, w - 1, hh - 1);
+        g.globalAlpha = 1;
+        var lx = x + w / 2, ly = y + hh / 2;
+        g.font = '700 11px system-ui,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        var tw = Math.max(g.measureText(k).width, g.measureText(pair).width) + 10, th = 26;
+        g.fillStyle = 'rgba(246,241,228,.94)'; g.fillRect(lx - tw / 2, ly - th / 2, tw, th);
+        g.fillStyle = '#1a140c'; g.fillText(k, lx, ly - 6);
+        g.font = '600 9px system-ui,sans-serif'; g.fillText(pair, lx, ly + 7);
+      });
     });
   }
   function c2lTurfPulse(id, done) {
@@ -31784,6 +31821,35 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
       return r;
     };
   }
+
+  function c2lMapOpenAll(opts) {
+    opts = opts || {};
+    W.c2lTurf = opts.turf || ['nails', 'jin', 'goda', 'masa'];
+    W.c2lBold = 1;
+    W.c2lFocus = opts.focus || 'city';
+    c2lMapShow();
+    c2lLegendShow();
+    var box = c2lMapEl(); if (!box) return;
+    var pcs = box.querySelector('.c2cm-pcs');
+    if (pcs) {
+      pcs.innerHTML = '';
+      W.c2lTurf.forEach(function (id) {
+        var P = C2L_PIECE[id]; if (!P) return;
+        var p = c2lPct(P.wx, P.wy);
+        var wrap = document.createElement('div');
+        wrap.className = 'c2cm-pc';
+        wrap.style.left = p.l + '%'; wrap.style.top = p.t + '%';
+        wrap.appendChild(c2lDrawPiece(P.kind, c2lOwnerCol(id)));
+        var lab = document.createElement('i'); lab.className = 'c2cm-lab';
+        lab.textContent = P.lab; wrap.appendChild(lab);
+        pcs.appendChild(wrap);
+      });
+    }
+    c2lMapLayout();
+    c2lClampLabs();
+    c2lTurf();
+  }
+  try { window.FFF_C2LMAP = { show: c2lMapShow, hide: c2lMapHide, turf: c2lTurf, legend: c2lLegendShow, focus: c2lMapFocus, openAll: c2lMapOpenAll, ownerCol: c2lOwnerCol, paintBorders: c2lPaintBorders }; } catch (eM) {}
 
   ev('world:c2:13l:ready');
 })();
@@ -43617,7 +43683,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     R(g, x, y, w, 28, '#2a2c34', INK, 3);
     caution(g, x + 28, y + 6, w - 56, 16);
     R(g, x + w / 2 - 70, y + 32, 140, 20, '#f0e4c8', INK, 2);
-    txt(g, '\u8ca0\u7269\u6607\u964d\u6a5f', x + w / 2, y + 42, 12, '#5a2a28', '800 ');
+    txt(g, '\u8ca8\u7269\u6607\u964d\u6a5f', x + w / 2, y + 42, 12, '#5a2a28', '800 ');
     ellipse(g, x + 50, y + 40, 12, 12, '#6a707c', INK, 2);
     ellipse(g, x + w - 50, y + 40, 12, 12, '#6a707c', INK, 2);
     chainHang(g, x + 50, y + 50, y + h - 8);
@@ -43668,7 +43734,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     R(g, 280, 314, 600, 8, '#4a4e58', INK, 2);
     caution(g, 466, 270, 388, 12);
     R(g, 540, 44, 200, 22, '#f0e4c8', INK, 2);
-    txt(g, '\u5730\u4e0b\u9244\u8ca0\u7269', 640, 55, 13, '#5a2a28');
+    txt(g, '\u5730\u4e0b\u9244\u8ca8\u7269', 640, 55, 13, '#5a2a28');
     lamp(g, 220, 70); lamp(g, 1060, 70);
     concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 11);
     oilStain(g, 300, 700, 50, 16); oilStain(g, 900, 640, 60, 18); oilStain(g, 240, 500, 36, 12);
@@ -43692,7 +43758,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     stool(g, 560, 740);
     lockers(g, 880, 500, 4, 140);
     hardhat(g, 900, 492); hardhat(g, 960, 492);
-    crate(g, 140, 700, 90, 70, '\u8ca0\u7269');
+    crate(g, 140, 700, 90, 70, '\u8ca8\u7269');
     drum(g, 240, 720, 36, 60, '#3a4a38');
     pallet(g, 140, 780, 120, 24);
     cone(g, 360, 800);
@@ -43833,7 +43899,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     steelDoor(g, 140, 80, 90, 200, '\u6253\u523b');
     /* forklift mid-left, walk lane from the south kept clear */
     forklift(g, 140, 520, 1.05);
-    crate(g, 140, 700, 110, 80, '\u8ca0\u7269');
+    crate(g, 140, 700, 110, 80, '\u8ca8\u7269');
     crate(g, 160, 630, 90, 70, '');
     pallet(g, 140, 790, 140, 26);
     crate(g, 1030, 700, 110, 80, '');
@@ -43865,7 +43931,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     oilStain(g, 300, 700, 50, 16); oilStain(g, 980, 760, 46, 14);
     steelDoor(g, 140, 80, 90, 200, '\u8377\u5f79');
     steelDoor(g, 1050, 80, 90, 200, '\u51b7\u51cd');
-    signPlate(g, 250, 90, 90, 40, '\u8ca0\u7269', '#d8c8a0');
+    signPlate(g, 250, 90, 90, 40, '\u8ca8\u7269', '#d8c8a0');
     /* stacked aisles left and right, a narrow walk down the middle */
     var stack = function (sx, sy, rows, cols, lab) {
       var r, c, w = 90, h = 70;
@@ -43873,7 +43939,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
         crate(g, sx + c * 96, sy - r * 62, w, h, r === rows - 1 && c === 0 ? lab : '');
       }
     };
-    stack(140, 740, 4, 3, '\u8ca0\u7269');
+    stack(140, 740, 4, 3, '\u8ca8\u7269');
     stack(860, 740, 4, 3, '');
     pallet(g, 140, 810, 280, 26);
     pallet(g, 860, 810, 280, 26);
@@ -43886,7 +43952,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     chainCoil(g, 200, 840, 16);
     cableRun(g, 100, 328, 250, 328);
     cone(g, 540, 820); cone(g, 720, 820);
-    shell(g, '\u8ca0\u7269', 'Crate stacks');
+    shell(g, '\u8ca8\u7269', 'Crate stacks');
   };
 
   /* ---------- 5. Cold store ---------- */
@@ -44379,7 +44445,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     R(g, 952, 590, 56, 16, '#1a1220', INK, 1.5);
     txt(g, '\u540a\u308a\u6a5f', 980, 470, 11, '#f0e4c8');
     /* staged freight at the sides */
-    crate(g, 140, 700, 110, 80, '\u8ca0\u7269');
+    crate(g, 140, 700, 110, 80, '\u8ca8\u7269');
     crate(g, 160, 630, 90, 70, '');
     pallet(g, 140, 790, 140, 24);
     crate(g, 1030, 700, 110, 80, '');
@@ -44437,7 +44503,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     warningBox(g, 360, 340, 560, 90);
     oilStain(g, 280, 780, 60, 18); oilStain(g, 1000, 740, 50, 16); oilStain(g, 220, 520, 36, 12);
     /* side props, centre lane clear for the fight */
-    crate(g, 140, 700, 110, 80, '\u8ca0\u7269');
+    crate(g, 140, 700, 110, 80, '\u8ca8\u7269');
     crate(g, 160, 630, 100, 70, '');
     crate(g, 150, 560, 90, 70, '');
     drum(g, 260, 720, 36, 60, '#6a3a28');
@@ -44535,7 +44601,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     oilStain(g, 580, 900, 60, 18);
     oilStain(g, 160, 1100, 70, 20);
     /* side props, centre lane (~260-460) clear */
-    crate(g, 16, 500, 80, 56, '\u8ca0\u7269');
+    crate(g, 16, 500, 80, 56, '\u8ca8\u7269');
     crate(g, 24, 440, 70, 50, '');
     drum(g, 20, 600, 32, 56, '#6a3a28');
     drum(g, 56, 620, 28, 48, '#3a4a38');
@@ -44619,7 +44685,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     ['depYard', 'Yard gate  \u9580'],
     ['depClock', 'Time clock  \u6253\u523b'],
     ['depBay', 'Loading bay  \u8377\u5f79'],
-    ['depCrates', 'Crate stacks  \u8ca0\u7269'],
+    ['depCrates', 'Crate stacks  \u8ca8\u7269'],
     ['depCold', 'Cold store  \u51b7\u51cd'],
     ['depCage', 'Parts cage  \u90e8\u54c1'],
     ['depBikes', 'Bike bay  \u99d0\u8f2a'],
@@ -45629,17 +45695,55 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   try { later(0, hookBattle); } catch (eB) { try { setTimeout(hookBattle, 0); } catch (eB2) {} }
 
   /* ---------------- shop ---------------- */
+  /* Isolated heal-amount fix (menus executor restyles these in ffd-menus):
+     Patch kit / Spare tube must heal the flat +6 / +10 HP the menu lists, not HITEM.bandage's 20%.
+     Shop `h` is the bag key; useHeal honors HITEM[k].hp when set and pct is absent. */
+  if (typeof HITEM !== 'undefined') {
+    if (!HITEM.patch) HITEM.patch = { n: 'Patch kit', hp: 6, ic: '\ud83e\ude79', rank: 2 };
+    if (!HITEM.bpart) HITEM.bpart = { n: 'Spare tube', hp: 10, ic: '\ud83e\ude79', rank: 2 };
+  }
   if (typeof ITEMS !== 'undefined') {
     if (!ITEMS.etape) ITEMS.etape = { n: 'Electrical tape', k: 'herb', hb: 'tape', d: 'For wiring, or a knuckle.' };
-    if (!ITEMS.patch) ITEMS.patch = { n: 'Patch kit', k: 'heal', h: 'bandage', hp: 6, d: 'A cheap roadside repair kit.' };
-    if (!ITEMS.bpart) ITEMS.bpart = { n: 'Spare tube', k: 'heal', h: 'bandage', hp: 10, d: 'A patched inner tube. You can wrap a cut with it.' };
+    if (!ITEMS.patch) ITEMS.patch = { n: 'Patch kit', k: 'heal', h: 'patch', hp: 6, d: 'A cheap roadside repair kit.' };
+    if (!ITEMS.bpart) ITEMS.bpart = { n: 'Spare tube', k: 'heal', h: 'bpart', hp: 10, d: 'A patched inner tube. You can wrap a cut with it.' };
+    else { ITEMS.patch.h = 'patch'; ITEMS.bpart.h = 'bpart'; }
+  }
+  if (typeof useHeal === 'function' && !root._s2HaseFlatHeal) {
+    root._s2HaseFlatHeal = 1;
+    var useHeal0 = useHeal;
+    useHeal = function (i) {
+      var k = SAVE.heal[i], it = (typeof HITEM !== 'undefined') && HITEM[k];
+      if (it && it.hp != null && it.pct == null) {
+        if (W.busy || (!W.on && !W.room)) return false;
+        if (typeof gkHealLocked === 'function' && gkHealLocked()) {
+          try { AU.play('tap'); } catch (eA) {}
+          try { if (typeof comment === 'function') comment(['ryo', 'Not during this.']); } catch (eC) {}
+          ev('world:heal:locked:gouki'); return false;
+        }
+        if (SAVE.hp >= MAXHP) {
+          try { AU.play('tap'); } catch (eA2) {}
+          try { if (typeof hpFullBanter === 'function') hpFullBanter(); else if (typeof comment === 'function') comment([SAVE.act === 'aoi' ? 'aoi' : 'ryo', "I'm fine. Save the gauze for later."]); } catch (eC2) {}
+          return false;
+        }
+        var was = SAVE.hp;
+        SAVE.hp = Math.min(MAXHP, SAVE.hp + (it.hp | 0));
+        SAVE.heal.splice(i, 1); save(); hud();
+        try { AU.play('pl_heal', { gain: 0.7 }); } catch (eAu) {}
+        var st = (typeof $ === 'function') && $('#wstat'); if (st) { st.classList.remove('heal'); void st.offsetWidth; st.classList.add('heal'); }
+        try { if (typeof actPlay === 'function') actPlay('bandage'); } catch (eP) {}
+        try { if (typeof vitFlo === 'function') vitFlo('hp', SAVE.hp - was); } catch (eV) {}
+        ev('world:heal:use:' + k + ':' + (SAVE.hp - was));
+        return true;
+      }
+      return useHeal0.apply(this, arguments);
+    };
   }
   function nailsOn() { return qDone() || !!(NS().won && NS().won.east); }
   function shopCost(base) { var c = base; if (nailsOn()) c = Math.max(1, Math.round(base * 0.8)); return c; }
   P2.MENU = [
     { id: 'etape', k: 'herb', hb: 'tape', n: 'Electrical tape', base: 3, cost: 2, stock: 3, d: 'For wiring, or a knuckle.' },
-    { id: 'patch', k: 'heal', h: 'bandage', n: 'Patch kit', base: 4, cost: 3, stock: 3, hp: 6, d: 'A cheap roadside repair kit. +6 HP.' },
-    { id: 'bpart', k: 'heal', h: 'bandage', n: 'Spare tube', base: 6, cost: 5, stock: 2, hp: 10, d: 'A patched inner tube. +10 HP.' }
+    { id: 'patch', k: 'heal', h: 'patch', n: 'Patch kit', base: 4, cost: 3, stock: 3, hp: 6, d: 'A cheap roadside repair kit. +6 HP.' },
+    { id: 'bpart', k: 'heal', h: 'bpart', n: 'Spare tube', base: 6, cost: 5, stock: 2, hp: 10, d: 'A patched inner tube. +10 HP.' }
   ];
   function menuNow() { return P2.MENU.map(function (it) { var o = {}; Object.keys(it).forEach(function (k) { o[k] = it[k]; }); o.cost = shopCost(it.base); return o; }); }
   if (typeof SHOPS !== 'undefined') {
@@ -46950,7 +47054,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   };
   var NAMES = {
     dyard: 'Yard gate \u00b7 \u9580', dclock: 'Time clock \u00b7 \u6253\u523b', dbay: 'Loading bay \u00b7 \u8377\u5f79',
-    dcrate: 'Crate stacks \u00b7 \u8ca0\u7269', dcold: 'Cold store \u00b7 \u51b7\u51cd', dcage: 'Parts cage \u00b7 \u90e8\u54c1',
+    dcrate: 'Crate stacks \u00b7 \u8ca8\u7269', dcold: 'Cold store \u00b7 \u51b7\u51cd', dcage: 'Parts cage \u00b7 \u90e8\u54c1',
     dbike: 'Bike bay \u00b7 \u99d0\u8f2a', dloft: 'Dispatch loft \u00b7 \u914d\u8eca', dbreak: 'Break room \u00b7 \u4f11\u61a9',
     dtun: 'Tunnel spur \u00b7 \u6a2a\u5751', dman: 'Manifest office \u00b7 \u7a4d\u8377', dant: 'Lift anteroom \u00b7 \u6607\u964d\u6a5f\u524d',
     dshut: 'Lift shutter \u00b7 \u30b7\u30e3\u30c3\u30bf\u30fc'
@@ -47006,7 +47110,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   roomDef('dclock');
   roomDef('dbay', { spots: [
     doorSpot('s2_d_clock', 140, '\u6253\u523b'),
-    { id: 's2_d_crate', r: [1080, 400, 1190, 700], at: [1060, 700], face: 1, lab: '\u8ca0\u7269' },
+    { id: 's2_d_crate', r: [1080, 400, 1190, 700], at: [1060, 700], face: 1, lab: '\u8ca8\u7269' },
     { id: 's2_d_bike', r: [90, 400, 200, 700], at: [220, 700], face: 2, lab: '\u99d0\u8f2a' }
   ] });
   roomDef('dcrate', { spots: [
@@ -47014,7 +47118,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     doorSpot('s2_d_cold', 1050, '\u51b7\u51cd')
   ] });
   roomDef('dcold', { spots: [
-    { id: 's2_d_crate', r: [140, 70, 250, 300], at: [195, 310], face: 3, lab: '\u8ca0\u7269' },
+    { id: 's2_d_crate', r: [140, 70, 250, 300], at: [195, 310], face: 3, lab: '\u8ca8\u7269' },
     { id: 's2_d_cage', r: [1080, 400, 1190, 700], at: [1060, 700], face: 1, lab: '\u90e8\u54c1' }
   ] });
   roomDef('dcage', { spots: [doorSpot('s2_d_cold', 140, '\u51b7\u51cd')] });
@@ -47190,6 +47294,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     var ch = 0;
     if (!qOn() && !qDone()) { qOpen(); if (!stg()) setStg('open'); ch = 1; }
     if (E().seal_depot && !qDone()) { finishQuest(); ch = 1; }
+    if (E().seal_depot || E().down_dep || E().eastSeal || qDone()) applySeTurf();
     if (ch) ev('world:s2p5:repair');
   }
   P5.chainRepair = chainRepair;
@@ -47223,7 +47328,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   function popMasa() {
     var k = room();
     var want = null;
-    if (k === 'dyard' && qOn() && !met()) want = [500, 700, Math.PI / 2];
+    if (k === 'dyard' && qOn() && !met()) want = [540, 590, Math.PI / 2];
     if (k === 'dshut' && qOn() && met() && !won()) want = [640, 620, Math.PI / 2];
     if (!want) { if (MASA) { try { kill(MASA); } catch (eK) {} MASA = null; } return; }
     if (MASA && MASA.el && MASA.el.parentNode && MASA._rk === k) {
@@ -47397,14 +47502,26 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     }
     pry();
   }
+  /* After down_dep, the SE Rider quarter is Punk turf and X4 is Punk vs Syndicate. Re-applied on load. */
+  function applySeTurf() {
+    try {
+      var T = root.FFF_C2TURF, EAST_R = [3760, 2760, 4900, 3300];
+      if (!(T && T.Q && T.Q.P)) return;
+      if (!T.Q.P.some(function (r) { return r[0] === 3760 && r[1] === 2760 && r[2] === 4900; })) T.Q.P.push(EAST_R.slice());
+      if (T.Q.R && T.Q.R.length) {
+        T.Q.R.forEach(function (r) {
+          if (!T.Q.P.some(function (p) { return p[0] === r[0] && p[1] === r[1] && p[2] === r[2] && p[3] === r[3]; })) T.Q.P.push(r.slice());
+        });
+        T.Q.R = [];
+      }
+      if (T.B && T.B.X4) T.B.X4.g = 'PS';
+    } catch (eT) {}
+  }
   function flipEast() {
     var n = NS(); n.won = n.won || {};
     var already = !!(n.won.east || E().vend_eastst);
     n.won.east = 1; n.won.depot = 1; E().vend_eastst = 1; E().eastSeal = 1;
-    try {
-      var T = root.FFF_C2TURF, EAST_R = [3760, 2760, 4900, 3300];
-      if (T && T.Q && T.Q.P && !T.Q.P.some(function (r) { return r[0] === 3760 && r[1] === 2760 && r[2] === 4900; })) T.Q.P.push(EAST_R.slice());
-    } catch (eT) {}
+    applySeTurf();
     try { if (root.FFF_NQ && root.FFF_NQ.BLK && !root.FFF_NQ.BLK.east) root.FFF_NQ.BLK.east = { n: 'MINATO-S\u014c', r: [3760, 2760, 4900, 3300] }; } catch (eB) {}
     if (!already) {
       try { var P2 = root.FFF_S2P2; if (P2 && typeof P2.takeEastTurf === 'function') P2.takeEastTurf(); } catch (eE) {}
@@ -47426,7 +47543,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     talk(pv(table), function () { lockIn(0); });
     return true;
   }
-  P5.askBond = askBond; P5.takeSeal = takeSeal; P5.flipEast = flipEast; P5.finishQuest = finishQuest;
+  P5.yardTalk = yardTalk; P5.askBond = askBond; P5.takeSeal = takeSeal; P5.flipEast = flipEast; P5.finishQuest = finishQuest; P5.applySeTurf = applySeTurf;
   P5.afterSeal = afterSeal; P5.fateOf = fateOf; P5.tenantAfter = tenantAfter;
 
   if (typeof onFightEnd === 'function') {

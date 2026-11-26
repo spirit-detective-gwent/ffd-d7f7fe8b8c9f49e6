@@ -347,7 +347,7 @@
     R(g, x, y, w, 28, '#2a2c34', INK, 3);
     caution(g, x + 28, y + 6, w - 56, 16);
     R(g, x + w / 2 - 70, y + 32, 140, 20, '#f0e4c8', INK, 2);
-    txt(g, '\u8ca0\u7269\u6607\u964d\u6a5f', x + w / 2, y + 42, 12, '#5a2a28', '800 ');
+    txt(g, '\u8ca8\u7269\u6607\u964d\u6a5f', x + w / 2, y + 42, 12, '#5a2a28', '800 ');
     ellipse(g, x + 50, y + 40, 12, 12, '#6a707c', INK, 2);
     ellipse(g, x + w - 50, y + 40, 12, 12, '#6a707c', INK, 2);
     chainHang(g, x + 50, y + 50, y + h - 8);
@@ -398,7 +398,7 @@
     R(g, 280, 314, 600, 8, '#4a4e58', INK, 2);
     caution(g, 466, 270, 388, 12);
     R(g, 540, 44, 200, 22, '#f0e4c8', INK, 2);
-    txt(g, '\u5730\u4e0b\u9244\u8ca0\u7269', 640, 55, 13, '#5a2a28');
+    txt(g, '\u5730\u4e0b\u9244\u8ca8\u7269', 640, 55, 13, '#5a2a28');
     lamp(g, 220, 70); lamp(g, 1060, 70);
     concFloor(g, 90, 320, 1100, 530, '#6a6460', '#5a5450', 11);
     oilStain(g, 300, 700, 50, 16); oilStain(g, 900, 640, 60, 18); oilStain(g, 240, 500, 36, 12);
@@ -422,7 +422,7 @@
     stool(g, 560, 740);
     lockers(g, 880, 500, 4, 140);
     hardhat(g, 900, 492); hardhat(g, 960, 492);
-    crate(g, 140, 700, 90, 70, '\u8ca0\u7269');
+    crate(g, 140, 700, 90, 70, '\u8ca8\u7269');
     drum(g, 240, 720, 36, 60, '#3a4a38');
     pallet(g, 140, 780, 120, 24);
     cone(g, 360, 800);
@@ -563,7 +563,7 @@
     steelDoor(g, 140, 80, 90, 200, '\u6253\u523b');
     /* forklift mid-left, walk lane from the south kept clear */
     forklift(g, 140, 520, 1.05);
-    crate(g, 140, 700, 110, 80, '\u8ca0\u7269');
+    crate(g, 140, 700, 110, 80, '\u8ca8\u7269');
     crate(g, 160, 630, 90, 70, '');
     pallet(g, 140, 790, 140, 26);
     crate(g, 1030, 700, 110, 80, '');
@@ -595,7 +595,7 @@
     oilStain(g, 300, 700, 50, 16); oilStain(g, 980, 760, 46, 14);
     steelDoor(g, 140, 80, 90, 200, '\u8377\u5f79');
     steelDoor(g, 1050, 80, 90, 200, '\u51b7\u51cd');
-    signPlate(g, 250, 90, 90, 40, '\u8ca0\u7269', '#d8c8a0');
+    signPlate(g, 250, 90, 90, 40, '\u8ca8\u7269', '#d8c8a0');
     /* stacked aisles left and right, a narrow walk down the middle */
     var stack = function (sx, sy, rows, cols, lab) {
       var r, c, w = 90, h = 70;
@@ -603,7 +603,7 @@
         crate(g, sx + c * 96, sy - r * 62, w, h, r === rows - 1 && c === 0 ? lab : '');
       }
     };
-    stack(140, 740, 4, 3, '\u8ca0\u7269');
+    stack(140, 740, 4, 3, '\u8ca8\u7269');
     stack(860, 740, 4, 3, '');
     pallet(g, 140, 810, 280, 26);
     pallet(g, 860, 810, 280, 26);
@@ -616,7 +616,7 @@
     chainCoil(g, 200, 840, 16);
     cableRun(g, 100, 328, 250, 328);
     cone(g, 540, 820); cone(g, 720, 820);
-    shell(g, '\u8ca0\u7269', 'Crate stacks');
+    shell(g, '\u8ca8\u7269', 'Crate stacks');
   };
 
   /* ---------- 5. Cold store ---------- */
@@ -1109,7 +1109,7 @@
     R(g, 952, 590, 56, 16, '#1a1220', INK, 1.5);
     txt(g, '\u540a\u308a\u6a5f', 980, 470, 11, '#f0e4c8');
     /* staged freight at the sides */
-    crate(g, 140, 700, 110, 80, '\u8ca0\u7269');
+    crate(g, 140, 700, 110, 80, '\u8ca8\u7269');
     crate(g, 160, 630, 90, 70, '');
     pallet(g, 140, 790, 140, 24);
     crate(g, 1030, 700, 110, 80, '');
@@ -1167,7 +1167,7 @@
     warningBox(g, 360, 340, 560, 90);
     oilStain(g, 280, 780, 60, 18); oilStain(g, 1000, 740, 50, 16); oilStain(g, 220, 520, 36, 12);
     /* side props, centre lane clear for the fight */
-    crate(g, 140, 700, 110, 80, '\u8ca0\u7269');
+    crate(g, 140, 700, 110, 80, '\u8ca8\u7269');
     crate(g, 160, 630, 100, 70, '');
     crate(g, 150, 560, 90, 70, '');
     drum(g, 260, 720, 36, 60, '#6a3a28');
@@ -1265,7 +1265,7 @@
     oilStain(g, 580, 900, 60, 18);
     oilStain(g, 160, 1100, 70, 20);
     /* side props, centre lane (~260-460) clear */
-    crate(g, 16, 500, 80, 56, '\u8ca0\u7269');
+    crate(g, 16, 500, 80, 56, '\u8ca8\u7269');
     crate(g, 24, 440, 70, 50, '');
     drum(g, 20, 600, 32, 56, '#6a3a28');
     drum(g, 56, 620, 28, 48, '#3a4a38');
@@ -1349,7 +1349,7 @@
     ['depYard', 'Yard gate  \u9580'],
     ['depClock', 'Time clock  \u6253\u523b'],
     ['depBay', 'Loading bay  \u8377\u5f79'],
-    ['depCrates', 'Crate stacks  \u8ca0\u7269'],
+    ['depCrates', 'Crate stacks  \u8ca8\u7269'],
     ['depCold', 'Cold store  \u51b7\u51cd'],
     ['depCage', 'Parts cage  \u90e8\u54c1'],
     ['depBikes', 'Bike bay  \u99d0\u8f2a'],

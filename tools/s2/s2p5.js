@@ -161,7 +161,7 @@
   };
   var NAMES = {
     dyard: 'Yard gate \u00b7 \u9580', dclock: 'Time clock \u00b7 \u6253\u523b', dbay: 'Loading bay \u00b7 \u8377\u5f79',
-    dcrate: 'Crate stacks \u00b7 \u8ca0\u7269', dcold: 'Cold store \u00b7 \u51b7\u51cd', dcage: 'Parts cage \u00b7 \u90e8\u54c1',
+    dcrate: 'Crate stacks \u00b7 \u8ca8\u7269', dcold: 'Cold store \u00b7 \u51b7\u51cd', dcage: 'Parts cage \u00b7 \u90e8\u54c1',
     dbike: 'Bike bay \u00b7 \u99d0\u8f2a', dloft: 'Dispatch loft \u00b7 \u914d\u8eca', dbreak: 'Break room \u00b7 \u4f11\u61a9',
     dtun: 'Tunnel spur \u00b7 \u6a2a\u5751', dman: 'Manifest office \u00b7 \u7a4d\u8377', dant: 'Lift anteroom \u00b7 \u6607\u964d\u6a5f\u524d',
     dshut: 'Lift shutter \u00b7 \u30b7\u30e3\u30c3\u30bf\u30fc'
@@ -217,7 +217,7 @@
   roomDef('dclock');
   roomDef('dbay', { spots: [
     doorSpot('s2_d_clock', 140, '\u6253\u523b'),
-    { id: 's2_d_crate', r: [1080, 400, 1190, 700], at: [1060, 700], face: 1, lab: '\u8ca0\u7269' },
+    { id: 's2_d_crate', r: [1080, 400, 1190, 700], at: [1060, 700], face: 1, lab: '\u8ca8\u7269' },
     { id: 's2_d_bike', r: [90, 400, 200, 700], at: [220, 700], face: 2, lab: '\u99d0\u8f2a' }
   ] });
   roomDef('dcrate', { spots: [
@@ -225,7 +225,7 @@
     doorSpot('s2_d_cold', 1050, '\u51b7\u51cd')
   ] });
   roomDef('dcold', { spots: [
-    { id: 's2_d_crate', r: [140, 70, 250, 300], at: [195, 310], face: 3, lab: '\u8ca0\u7269' },
+    { id: 's2_d_crate', r: [140, 70, 250, 300], at: [195, 310], face: 3, lab: '\u8ca8\u7269' },
     { id: 's2_d_cage', r: [1080, 400, 1190, 700], at: [1060, 700], face: 1, lab: '\u90e8\u54c1' }
   ] });
   roomDef('dcage', { spots: [doorSpot('s2_d_cold', 140, '\u51b7\u51cd')] });
@@ -401,6 +401,7 @@
     var ch = 0;
     if (!qOn() && !qDone()) { qOpen(); if (!stg()) setStg('open'); ch = 1; }
     if (E().seal_depot && !qDone()) { finishQuest(); ch = 1; }
+    if (E().seal_depot || E().down_dep || E().eastSeal || qDone()) applySeTurf();
     if (ch) ev('world:s2p5:repair');
   }
   P5.chainRepair = chainRepair;
@@ -434,7 +435,7 @@
   function popMasa() {
     var k = room();
     var want = null;
-    if (k === 'dyard' && qOn() && !met()) want = [500, 700, Math.PI / 2];
+    if (k === 'dyard' && qOn() && !met()) want = [540, 590, Math.PI / 2];
     if (k === 'dshut' && qOn() && met() && !won()) want = [640, 620, Math.PI / 2];
     if (!want) { if (MASA) { try { kill(MASA); } catch (eK) {} MASA = null; } return; }
     if (MASA && MASA.el && MASA.el.parentNode && MASA._rk === k) {
@@ -608,14 +609,26 @@
     }
     pry();
   }
+  /* After down_dep, the SE Rider quarter is Punk turf and X4 is Punk vs Syndicate. Re-applied on load. */
+  function applySeTurf() {
+    try {
+      var T = root.FFF_C2TURF, EAST_R = [3760, 2760, 4900, 3300];
+      if (!(T && T.Q && T.Q.P)) return;
+      if (!T.Q.P.some(function (r) { return r[0] === 3760 && r[1] === 2760 && r[2] === 4900; })) T.Q.P.push(EAST_R.slice());
+      if (T.Q.R && T.Q.R.length) {
+        T.Q.R.forEach(function (r) {
+          if (!T.Q.P.some(function (p) { return p[0] === r[0] && p[1] === r[1] && p[2] === r[2] && p[3] === r[3]; })) T.Q.P.push(r.slice());
+        });
+        T.Q.R = [];
+      }
+      if (T.B && T.B.X4) T.B.X4.g = 'PS';
+    } catch (eT) {}
+  }
   function flipEast() {
     var n = NS(); n.won = n.won || {};
     var already = !!(n.won.east || E().vend_eastst);
     n.won.east = 1; n.won.depot = 1; E().vend_eastst = 1; E().eastSeal = 1;
-    try {
-      var T = root.FFF_C2TURF, EAST_R = [3760, 2760, 4900, 3300];
-      if (T && T.Q && T.Q.P && !T.Q.P.some(function (r) { return r[0] === 3760 && r[1] === 2760 && r[2] === 4900; })) T.Q.P.push(EAST_R.slice());
-    } catch (eT) {}
+    applySeTurf();
     try { if (root.FFF_NQ && root.FFF_NQ.BLK && !root.FFF_NQ.BLK.east) root.FFF_NQ.BLK.east = { n: 'MINATO-S\u014c', r: [3760, 2760, 4900, 3300] }; } catch (eB) {}
     if (!already) {
       try { var P2 = root.FFF_S2P2; if (P2 && typeof P2.takeEastTurf === 'function') P2.takeEastTurf(); } catch (eE) {}
@@ -637,7 +650,7 @@
     talk(pv(table), function () { lockIn(0); });
     return true;
   }
-  P5.askBond = askBond; P5.takeSeal = takeSeal; P5.flipEast = flipEast; P5.finishQuest = finishQuest;
+  P5.yardTalk = yardTalk; P5.askBond = askBond; P5.takeSeal = takeSeal; P5.flipEast = flipEast; P5.finishQuest = finishQuest; P5.applySeTurf = applySeTurf;
   P5.afterSeal = afterSeal; P5.fateOf = fateOf; P5.tenantAfter = tenantAfter;
 
   if (typeof onFightEnd === 'function') {
