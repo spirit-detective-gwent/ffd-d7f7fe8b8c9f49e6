@@ -204,6 +204,7 @@
       try {
         if (k && typeof k === 'string') {
           if (k.indexOf('world:s2m:buy:j6_') === 0) P6._ate = 1;
+          if (k.indexOf('world:s2m:buy:j6_ramen:') === 0 && /:0$/.test(k) && (J().freeBowls | 0) > 0) { J().freeBowls = (J().freeBowls | 0) - 1; sv(); }
           else if (k === 'world:shop:close' && afterMeal && P6._ate) { var f = afterMeal; afterMeal = null; P6._ate = 0; setTimeout(function () { whenFree(f); }, 400); }
           if (P6.onEv) P6.onEv(k);
         }
@@ -227,11 +228,14 @@
       eff: '+6 SP  \u00b7  drink now', flavor: 'Cold, from the glass bottle in the case.' }
   ];
   P6.RAMEN_ITEMS = RAMEN_ITEMS;
+  /* after the Suits fight Tetsuo feeds them free: J().freeBowls bowls at ¥0 (tea still costs) */
+  function ramenItems() { var n = J().freeBowls | 0; if (!n) return RAMEN_ITEMS; return RAMEN_ITEMS.map(function (it) { if (it.drink) return it; var o = Object.assign({}, it); o.base = 0; o.cost = 0; o.eff = it.eff + '  \u00b7  on the house (' + n + ' left)'; return o; }); }
+  P6.ramenItems = ramenItems;
   function regShops() {
     var M = menus(); if (!M || !M.SHOPS) return false;
     M.SHOPS.j6_ramen = { id: 'j6_ramen', theme: 'ramen', n: 'Ramen Kitsuneya', jp: '\u3089\u30fc\u3081\u3093 \u72d0\u5c4b', who: 'j6_tetsuo', leave: '\u3054\u3061\u305d\u3046\u3055\u307e  \u00b7  Done',
       hi: { fierce: 'Sit. Eat. Don\u2019t start anything in my shop.', strategic: 'Order by the number. The machine\u2019s broken, I take yen.', balanced: 'Sit, sit. The broth\u2019s been on since noon.' },
-      nails: function () { return false; }, items: function () { return RAMEN_ITEMS; } };
+      nails: function () { return false; }, items: function () { return ramenItems(); } };
     return true;
   }
   P6.regShops = regShops;
@@ -347,12 +351,175 @@
   var TALK = P6.TALK = { j6_tetsuo: function () { return ramenOrder(); } };
   var ARRIVE = P6.ARRIVE = { ramen: ramenArrive };
   var POP = P6.POP = [popRamen];
-  function enterRoom(k) { if (W.fading) return; W.path = []; W.dlg = true; ev('world:c2:enter:' + k);
-    try { intFade(function () { W.dlg = false; c2Go(k); try { AU.play('door', { gain: 0.55 }); } catch (eA) {} }, function () { var f = ARRIVE[k]; if (f) f(); }); }
-    catch (eE) { W.dlg = false; try { c2Go(k); } catch (e2) {} } }
+  function enterRoom(k, pos) { if (W.fading) return; W.path = []; W.dlg = true; ev('world:c2:enter:' + k);
+    try { intFade(function () { W.dlg = false; if (pos) c2Go(k, pos); else c2Go(k); try { AU.play('door', { gain: 0.55 }); } catch (eA) {} }, function () { var f = ARRIVE[k]; if (f) f(); }); }
+    catch (eE) { W.dlg = false; try { if (pos) c2Go(k, pos); else c2Go(k); } catch (e2) {} } }
   P6.enterRoom = enterRoom;
   function popAll() { POP.forEach(function (f) { try { f(); } catch (e) { ev('world:s2p6:err:pop:' + (e && e.message)); } }); }
   P6.popAll = popAll;
+
+  /* ---------------- 2. Karaoke Kitsune ---------------- */
+  try {
+    alias('j6_kaede', 'kaedef', (C2K && C2K.kaedef) || 1.0, 'Kaede (front desk)', 'kaede');
+    alias('j6_kanzaki', 'c2_suitR', (C2K && C2K.c2_suitR) || 1.15, 'Kanzaki', 'c2runner');
+    alias('j6_ksuit', 'c2_suit', (C2K && C2K.c2_suit) || 1.15, 'Syndicate Suit', 'c2suit');
+    if (typeof CHAR_INTRO !== 'undefined' && !CHAR_INTRO.j6_kanzaki) CHAR_INTRO.j6_kanzaki = { kind: 'mgs', name: 'Kanzaki', sub: 'Syndicate Lieutenant', tag: 'He keeps Jin\u2019s numbers.', who: 'c2runner', mood: 'calm' };
+  } catch (eK) { ev('world:s2p6:err:alias2:' + (eK && eK.message)); }
+  var KARA_PRICE = P6.KARA_PRICE = 8;
+  roomDef('kara', 'Karaoke Kitsune \u00b7 \u30ab\u30e9\u30aa\u30b1\u72d0', 'ck_surf', {
+    block: [[110, 296, 444, 400], [1066, 296, 1184, 454], [596, 596, 824, 672], [110, 740, 180, 820], [1110, 740, 1180, 820]],
+    spots: [{ id: 'j6_kara_desk', r: [110, 296, 444, 400], at: [280, 450], face: 3, lab: 'Desk' },
+      { id: 'j6_kara_b2', r: [478, 150, 602, 252], at: [540, 300], face: 3, lab: 'Booth 2' },
+      { id: 'j6_kara_b3', r: [718, 150, 842, 252], at: [780, 300], face: 3, lab: 'Booth 3' },
+      { id: 'j6_kara_b4', r: [968, 150, 1092, 252], at: [1030, 300], face: 3, lab: 'Booth 4' }]
+  });
+  roomDef('karaB', 'Booth 2 \u00b7 \u30ab\u30e9\u30aa\u30b1', 'c2night', { w: 1000, h: 900, open: [[90, 220, 910, 850], [440, 850, 560, 900]],
+    block: [[190, 380, 810, 414], [190, 380, 226, 640], [774, 380, 810, 640], [366, 456, 634, 574], [180, 56, 290, 176], [710, 56, 820, 176]],
+    spots: [{ id: 'j6_kara_sing', r: [366, 456, 634, 574], at: [500, 620], face: 3, lab: 'Sing' }] });
+  roomDef('karaV', 'Booth 4 \u00b7 VIP', 'ck_backroom', { w: 1100, h: 900, open: [[90, 220, 1010, 850], [490, 850, 610, 900]],
+    block: [[220, 380, 880, 414], [220, 380, 256, 660], [844, 380, 880, 660], [406, 466, 694, 594]],
+    spots: [{ id: 'j6_kara_vip', r: [406, 466, 694, 594], at: [550, 640], face: 3, lab: 'Look' }] });
+  P6.SURF.kara = 'wood'; P6.SURF.karaB = 'wood'; P6.SURF.karaV = 'wood';
+  AMB.kara = { top: 'rgba(255,120,220,.24)', bot: 'rgba(40,20,90,.30)', rain: 0, motes: 10, lamps: [[120, 140, '255,90,200', 60, 0.3, 'neon'], [300, 180, '90,216,255', 50, 0.26, 'neon']], neon: [[120, 120, 40, '255,90,200']] };
+  AMB.karaB = { top: 'rgba(160,120,255,.26)', bot: 'rgba(30,20,70,.30)', rain: 0, motes: 12, lamps: [[195, 160, '255,90,200', 60, 0.3, 'neon'], [195, 300, '90,216,255', 60, 0.24, 'neon']] };
+  AMB.karaV = { top: 'rgba(255,200,110,.24)', bot: 'rgba(40,24,10,.30)', rain: 0, motes: 8, lamps: [[195, 200, '255,200,90', 70, 0.3, 'lamp']] };
+  P6.PKEY.kara = function () { return at('kara') ? 'free' : 'vip'; };
+  P6.OPEN.kara = function () { return true; };
+  P6.BT.karaV = { name: 'Karaoke Kitsune \u00b7 Booth 4', lights: [[360, 120, '255,200,90', 100, 0.32, 'lamp']] };
+  P6.innerBack = P6.innerBack || {};
+  P6.innerBack.karaB = function () { enterRoom('kara', [540, 300, 0]); };
+  P6.innerBack.karaV = function () { enterRoom('kara', [1030, 300, 0]); };
+
+  VO.karaIn = V3([['j6_kaede', 'Welcome to Karaoke Kitsune! One song, \u00a5' + KARA_PRICE + '. Booth two is open.']], {
+    fierce: [['ryo', 'Booth four. Who\u2019s in it?'], ['j6_kaede', '\u2026Reserved. A regular. Please don\u2019t.']],
+    strategic: [['aoi', 'Booth four is taken tonight?'], ['j6_kaede', 'Every night. He books it by the month.']],
+    balanced: [['ryo', 'Busy night?'], ['j6_kaede', 'Booth four is always busy. Listen.'], ['', '<p class="dim">From behind the gold door, a man is murdering an enka standard.</p>']]
+  }, []);
+  VO.karaIn2 = [['j6_kaede', 'Booth two\u2019s yours. \u00a5' + KARA_PRICE + ' a song.']];
+  VO.b3 = [['', '<p class="dim">\u4f7f\u7528\u4e2d. Through the slit window: four office workers, ties around their heads, singing like a funeral.</p>']];
+  VO.b4Shut = [['j6_kaede', 'That\u2019s a VIP booth. Members only.']];
+  VO.b4Empty = [['', '<p class="dim">Booth four is empty now. Someone left a tie on the sofa.</p>']];
+  VO.vipIn = V3([['', '<p class="dim">Gold carpet. A man in a sharp suit holds the mic like a cigarette. A deal sheet sits under the ice bucket.</p>'],
+    ['j6_kanzaki', '\u2026and the neon cries for meeee\u2014 Who opened my door?']], {
+    fierce: [['ryo', 'The ramen shop pays nothing now. Tell your boss.'], ['j6_kanzaki', 'The schoolboy from Tetsuo\u2019s. You cost me two men and a song.']],
+    strategic: [['aoi', 'Kanzaki. You keep Jin\u2019s numbers.'], ['j6_kanzaki', 'And you keep poor company, Warden girl.']],
+    balanced: [['ryo', 'You sing like a car alarm.'], ['j6_kanzaki', 'Everybody\u2019s a critic.']]
+  }, [['j6_kanzaki', 'Sit. No? Then I\u2019ll do the next verse on your face.']]);
+  VO.vipWon = V3([['j6_kanzaki', 'Okay, okay! The mic\u2019s yours!']], {
+    fierce: [['ryo', 'Where\u2019s Jin\u2019s money going tonight?']],
+    strategic: [['aoi', 'The sheet under the bucket. Read it to us.']],
+    balanced: [['ryo', 'Talk, and you can finish your song.']]
+  }, [['j6_kanzaki', 'Hotel Chuo. Seventh floor. The Suits close a deal with the strip owners tonight. New rates, Jin\u2019s rates.'],
+    ['aoi', 'Who signs for Jin?'], ['j6_kanzaki', 'Not me. I just count. Go bother the man on seven.']]);
+  VO.duet = V3([['', '<p class="dim">The screen fades to a sunrise. The booth is very quiet.</p>']], {
+    fierce: [['ryo', '\u2026You sing better than you fight. And you fight like a demon.'], ['aoi', 'That\u2019s two compliments. Careful, Kazan.']],
+    strategic: [['aoi', 'You were half a beat behind the whole song.'], ['ryo', 'I was waiting for you.'], ['aoi', '\u2026Hm.']],
+    balanced: [['aoi', 'That was\u2026 fun. Don\u2019t tell anyone.'], ['ryo', 'Who would I tell? Nails?']]
+  }, [['aoi', 'Again sometime. When the strip is ours.']]);
+
+  var K_CAST = { k: null, z: null, s: null };
+  function popKara() {
+    var k = room();
+    if (k !== 'kara' && K_CAST.k) { kill(K_CAST.k); K_CAST.k = null; }
+    if (k !== 'karaV') { ['z', 's'].forEach(function (q) { if (K_CAST[q]) { kill(K_CAST[q]); K_CAST[q] = null; } }); }
+    if (k === 'kara' && (!K_CAST.k || !K_CAST.k.el || !K_CAST.k.el.parentNode)) { K_CAST.k = npc('j6_kaede', 280, 268, Math.PI / 2); try { waddle(K_CAST.k, 0, Math.PI / 2); } catch (e) {} }
+    if (k === 'karaV' && vipLive()) {
+      if (!K_CAST.z || !K_CAST.z.el || !K_CAST.z.el.parentNode) { K_CAST.z = npc('j6_kanzaki', 550, 440, Math.PI / 2); try { waddle(K_CAST.z, 0, Math.PI / 2); } catch (e) {} }
+      if (!K_CAST.s || !K_CAST.s.el || !K_CAST.s.el.parentNode) { K_CAST.s = npc('j6_ksuit', 800, 560, Math.PI); }
+    }
+  }
+  P6.K_CAST = K_CAST; P6.popKara = popKara;
+  function vipLive() { return qOn() && stg() === 'ramen'; }
+  function karaArrive() {
+    var j = J();
+    whenFree(function () { if (room() !== 'kara') return; lockIn(1); talk(!j.kIn ? VO.karaIn : VO.karaIn2, function () { j.kIn = 1; sv(); lockIn(0); }); });
+  }
+  function vipArrive() {
+    if (!vipLive()) return;
+    whenFree(function () {
+      if (room() !== 'karaV' || !vipLive()) return;
+      lockIn(1);
+      var lines = pv(VO.vipIn);
+      function go() { lockIn(0); startFight('karaV', ['c2_suit'], { bt: 'karaV', ctx: { toughHp: 44, flv: 7, j6nm: 'Kanzaki' } }); }
+      try { if (typeof bossEnt === 'function' && K_CAST.z) { bossEnt('j6_kanzaki', lines, go, { spr: K_CAST.z }); return; } } catch (eB) { ev('world:s2p6:err:bent:' + (eB && eB.message)); }
+      talk(lines, go);
+    });
+  }
+  FIGHT.karaV = {
+    win: function () {
+      if (K_CAST.s) { kill(K_CAST.s); K_CAST.s = null; }
+      lockIn(1);
+      talk(pv(VO.vipWon), function () { lockIn(0); if (K_CAST.z) { kill(K_CAST.z); K_CAST.z = null; } setStg('kara'); qStep(2); sv(); P6.resetPaint('kara'); toastS('Journal: Hotel Chuo, seventh floor.'); });
+    },
+    lose: function () { }
+  };
+  /* singing: Booth 2 */
+  function canPay() { return (SAVE.items | 0) >= KARA_PRICE; }
+  function sing() {
+    if (busy()) return true;
+    var X = root.FFF_S2ARC; if (!X || !X.karaMenu) { toastS('The song pad is rebooting.'); return true; }
+    var first = !J().kSung;
+    try { if (W.ryo) { W.ryo.v = 0; W.path = []; } } catch (e) {}
+    X.karaMenu({ price: KARA_PRICE, first: first, canPay: canPay,
+      pay: function () { SAVE.items = Math.max(0, (SAVE.items | 0) - KARA_PRICE); try { save(); hud(); } catch (e) {} ev('world:s2p6:kara:pay:' + KARA_PRICE); },
+      onEnd: function (res, again) { afterSong(res, first, again); } });
+    return true;
+  }
+  function afterSong(res, first, again) {
+    var j = J();
+    try { if (root.AUDIO && root.AUDIO.music) { var D = INT[C2R[room()]]; root.AUDIO.music((D && D.mus) || 'c2night'); } } catch (eM) {}
+    if (res && res.quit) { if (again) sing(); return; }
+    if (first) {
+      j.kSung = 1; sv();
+      whenFree(function () { lockIn(1); talk(pv(VO.duet), function () { lockIn(0);
+        var n = 5, g = null; try { g = STORY && STORY.bondGain && STORY.bond(SAVE).path ? STORY.bondGain(SAVE, n, 'banter') : null; } catch (eG) {}
+        try { if (g && typeof bxpPop === 'function') bxpPop(n, g.up); } catch (eP) {}
+        j.kBond = g ? n : 0; sv(); ev('world:s2p6:kara:duet:' + (g ? n : 0)); try { hud(); } catch (eH) {}
+        if (again) later(300, sing); }); });
+      return;
+    }
+    if (res && res.great) { setEdge(res.edge); }
+    if (again) later(200, sing);
+  }
+  P6.sing = sing; P6.afterSong = afterSong;
+  /* one-fight song edge: SAVE.j6edge (one at a time, a new one replaces the old; spent at the next real fight's bell) */
+  var EDGE_N = { anthem: 'Anthem', ballad: 'Ballad', punk: 'Punk', duet: 'Duet' };
+  function setEdge(k) { if (!EDGE_N[k]) return; var had = SAVE.j6edge; SAVE.j6edge = k; try { save(); } catch (e) {} ev('world:s2p6:edge:set:' + k + (had ? ':over:' + had : ''));
+    var X = root.FFF_S2ARC, d = X && X.EDGE && X.EDGE[k] ? X.EDGE[k].d : ''; var m = EDGE_N[k] + ' edge ready: ' + d + (had && had !== k ? ' (replaces ' + EDGE_N[had] + ')' : ''); later(700, function () { whenFree(function () { toastS(m); }); }); }
+  P6.setEdge = setEdge;
+  function edgeOk(o) { var c = (o && o.ctx) || {}; if (!o || o.tut || c.c2spar || c.matspar || c.c2lesson || c.gkLoop || c.ckDoom) return false; try { if (typeof c2On === 'function' && !c2On()) return false; } catch (e) {} return true; }
+  function hookMatch() {
+    var UI = root.FFF_UI; if (!UI || typeof UI.startMatch !== 'function') return false; if (UI.startMatch._j6) return true;
+    var sm0 = UI.startMatch;
+    UI.startMatch = function (ch, o) {
+      var k = SAVE.j6edge, use = k && edgeOk(o);
+      try {
+        if (o && o.ctx && o.ctx.j6nm && o.foes) { o.foeNm = o.foeNm || {}; o.foes.forEach(function (id, i) { if (i === 0) o.foeNm[id] = o.ctx.j6nm; }); }
+        if (use && o && o.pst) { if (k === 'anthem') o.pst.spirit = Math.min(40, (o.pst.spirit | 0) + 10); if (k === 'punk') o.pst.buff = (o.pst.buff | 0) + 3; }
+      } catch (eP) {}
+      var r = sm0.apply(this, arguments);
+      if (use) {
+        try { var b = UI.ST && UI.ST.b; if (b && b.s && b.s[0]) { if (k === 'ballad') b.s[0].guard = (b.s[0].guard | 0) + 4; if (k === 'duet') { b.s[0].buff = (b.s[0].buff | 0) + 2; if (b.bench) b.bench.buff = (b.bench.buff | 0) + 2; } } } catch (eB) {}
+        SAVE.j6edge = ''; try { save(); } catch (eS) {} ev('world:s2p6:edge:use:' + k);
+        try { if (typeof toast === 'function') setTimeout(function () { toast('\u266a ' + EDGE_N[k] + ' edge!'); }, 900); } catch (eT) {}
+      }
+      return r;
+    };
+    UI.startMatch._j6 = 1; return true;
+  }
+  if (!hookMatch()) later(0, hookMatch);
+  P6.hookMatch = hookMatch;
+
+  ACT.j6_kara_desk = function () { if (busy()) return true; lockIn(1); talk(VO.karaIn2, function () { lockIn(0); }); return true; };
+  ACT.j6_kara_b2 = function () { if (busy()) return true; enterRoom('karaB'); return true; };
+  ACT.j6_kara_b3 = function () { if (busy()) return true; lockIn(1); talk(VO.b3, function () { lockIn(0); }); return true; };
+  ACT.j6_kara_b4 = function () { if (busy()) return true; if (vipLive()) { enterRoom('karaV'); return true; } if (at('kara')) { enterRoom('karaV'); return true; } lockIn(1); talk(VO.b4Shut, function () { lockIn(0); }); return true; };
+  ACT.j6_kara_sing = function () { return sing(); };
+  ACT.j6_kara_vip = function () { if (busy()) return true; if (vipLive()) return true; lockIn(1); talk(VO.b4Empty, function () { lockIn(0); }); return true; };
+  TALK.j6_kaede = function () { return ACT.j6_kara_desk(); };
+  ARRIVE.kara = karaArrive; ARRIVE.karaV = vipArrive;
+  POP.push(popKara);
+  PIN.ramen = function () { return { room: 'town', x: TOWN_DOORS.kara.at[0], y: TOWN_DOORS.kara.at[1] - 60, lab: 'Karaoke', loc: 'High Score \u00b7 Karaoke Kitsune, booth 4' }; };
 
   if (typeof c2Tags === 'function') {
     var tags0 = c2Tags;
