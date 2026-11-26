@@ -356,6 +356,12 @@
   function paintRoom() {
     var m = document.getElementById('wimap') || document.getElementById('world');
     if (!m || room() !== 'waga') return;
+    /* Drop leftover Minato / depot canvases (z-index 1) so they cannot sit on the wagashi board. */
+    try {
+      [].forEach.call(document.querySelectorAll('[id^="s2P2Room_"], [id^="s2P5Room_"]'), function (el) {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      });
+    } catch (eS) {}
     if (!RCV) {
       RCV = document.createElement('canvas'); RCV.width = RW; RCV.height = RH;
       var g = RCV.getContext('2d');
