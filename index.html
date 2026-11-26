@@ -38753,7 +38753,7 @@ function camPan(to, o, done) {
 /* v6.5.60 FFF_NQ (Nails questline, phase 2): the Punks route from Lookout Corner to Gōda's first seal.
  * Six quests (Lookout Corner rework, Hold the West Street, Cold Water, Wet Paint, The Door Man, Gōda's Seal), the street
  * layout moves (bathhouse to the Fox Mart slot by the station, the herbalist into the old Kitsune-no-Yu building, Fox Mart
- * east to the old Kampo slot), the Lantern Alley informant + his two gray-coat men, Ban's lantern post past Lucky 7,
+ * east to the old Kampo slot), the Lantern Alley informant, Ban's lantern post past Lucky 7,
  * four new cel interiors drawn in-engine once per entry (Kitsune Udon, Machi Motors, the Kitsune Hotel lobby, the
  * bathhouse walk-through), Nails' price (20% off) on won blocks, the Ginko stall openings, and the turf-gain map sting.
  * Wraps only; every hook falls through outside Chapter 2. No always-running loops: frame work rides c2Frame. */
@@ -39025,8 +39025,11 @@ function camPan(to, o, done) {
   }
   function facades2() { facades(); if (on() && inTown()) propSwap(); }
   NQ.facades = facades2;
-  /* ================= Lantern Alley: the informant's two gray-coat men, Ban's lantern post, the one way east ================= */
-  var INF = [4850, 2690], GRAYS = [[4792, 2650, Math.PI], [4800, 2734, Math.PI]], POLE = (typeof V640_POLE !== 'undefined' && V640_POLE) || [3300, 2668];
+  /* ================= Lantern Alley (Ban's lantern post, the one way east). Gray-coat men stand beside Kagerō in the rooftop shrine. ================= */
+  var INF = [4850, 2690], POLE = (typeof V640_POLE !== 'undefined' && V640_POLE) || [3300, 2668];
+  /* placeholder: the two gray coats flank Kagerō in the Central Tower rooftop shrine. The informant stays in Lantern Alley. Interior path + Ban comes later. */
+  var KR = (C2LM.roof && C2LM.roof.bat) || [640, 380];
+  var GRAYS = [[KR[0] - 90, KR[1] + 40, Math.PI / 2], [KR[0] + 90, KR[1] + 40, Math.PI / 2]];
   var LN = { grays: [] };
   function infHere() { var e = E(); return !e.ch2done; }
   function lanternPost() { /* a wooden post with a red paper lantern, Ban leans on it */
@@ -39047,12 +39050,15 @@ function camPan(to, o, done) {
     if (!POST) POST = lanternPost();
     propEl(POST, POLE[0] + 14, POLE[1] - 108, POLE[1] + 18);
     /* the glow pool under it (static) */
+  }
+  function grayProps() {
     LN.grays = [];
-    if (infHere() && IMG.c2_gray_map) GRAYS.forEach(function (p, i) { var s = npc('c2_gray', p[0], p[1], p[2]); s.el.dataset.npc = 'c2_gray'; s.nqGray = i; LN.grays.push(s); });
+    if (!on() || room() !== 'roof' || !infHere() || !IMG.c2_gray_map) return;
+    GRAYS.forEach(function (p, i) { var s = npc('c2_gray', p[0], p[1], p[2]); s.el.dataset.npc = 'c2_gray'; s.nqGray = i; LN.grays.push(s); });
   }
   var GRAY_SAY = [
     [['c2_gray', '{quiet}Keep walking.{/quiet}']],
-    [['c2_gray', '\u2026'], ['aoi', '{quiet}Same coat as the man Genji talked about.{/quiet}'], ['ryo', '{quiet}Then why\u2019s he standing guard on a guy who talks?{/quiet}']]
+    [['c2_gray', '\u2026'], ['aoi', '{quiet}Same coat as the man Genji talked about.{/quiet}'], ['ryo', '{quiet}Then why\u2019s he standing right next to him?{/quiet}']]
   ];
   /* the one way east: before Ban's third knockout, the lane past the Lucky 7 crossing turns you back */
   var CROSS = [3470, 2610, 3730, 2780];
@@ -40350,13 +40356,22 @@ function camPan(to, o, done) {
   var facades0 = facades; facades = function () { facades0(); if (!on() || !inTown()) return; if (!FAC.hotel) FAC.hotel = facHotel(); propEl(FAC.hotel, 1660, 741, 760); };
   NQ.facades = facades2;
   /* the gray coats: Talk tags */
-  GRAYS.forEach(function (p, i) { INT.c2_town.spots.push({ id: 'nq_gray' + i, r: [p[0] - 30, p[1] - 100, p[0] + 30, p[1] + 6], at: [p[0] - 60, p[1]], face: 0, lab: 'Talk' }); }); delete INT.c2_town.G;
+  (function () {
+    var roof = INT.c2_roof; if (!roof) return;
+    GRAYS.forEach(function (p, i) {
+      var side = i === 0 ? -1 : 1;
+      roof.spots.push({ id: 'nq_gray' + i, r: [p[0] - 30, p[1] - 80, p[0] + 30, p[1] + 8], at: [p[0] + side * 72, p[1] + 16], face: side < 0 ? 0 : Math.PI, lab: 'Talk' });
+    });
+    delete roof.G;
+  })();
   var tagOk0 = tagOk; tagOk = function (id, key) { var a = key.split(':')[1] || ''; if (/^nq_gray\d$/.test(a)) return infHere() && LN.grays.length > 0; return tagOk0(id, key); };
   var act1 = c2ActC; c2ActC = function (k, a) { var m = /^nq_gray(\d)$/.exec(a); if (m && on()) { var s = LN.grays[+m[1]]; if (s) face(s, W.ryo.x, W.ryo.y); talk(GRAY_SAY[+m[1]] || GRAY_SAY[0]); return true; } return act1.apply(this, arguments); };
   /* ================= pop + frame ================= */
   var pop0 = c2Pop;
   c2Pop = function () { var r = pop0.apply(this, arguments); try { if (!on()) return r; var k = room();
+      LN.grays = [];
       if (k === 'town') { facades2(); laneProps(); if (nailsRun()) { beatReset(false); chainRepair(); shutterOn(); } crewSync(); }
+      if (k === 'roof') grayProps();
       else if (k === 'sento') sentoPop(); else if (INT[C2R[k]] && INT[C2R[k]].nq) { roomPop(k); if (INT[C2R[k]].nqWing) wingPop(k); }
     } catch (e) { ev('world:nq:err:pop:' + (e && e.message)); } return r; };
   var frN0 = c2Frame;
