@@ -30333,7 +30333,7 @@ v640Enforcer = function () {
 var C2S_BANL = {
   1: [['enforcer', '{slow}Name\u2019s Ban.{/slow}{p=600} Remember who put you down.', { cam: 'bars+push', z: 1.65, ms: 2600 }], ['enforcer', 'You telegraph that punch. I saw it from Lucky 7.', { cam: 'hold' }]], /* v6.5.61: slow push-in on Ban, held (future arch-rival) */
   2: [['enforcer', 'Two of you, and you still swing alone.', { cam: 'bars+push', z: 1.6, ms: 2400 }], ['enforcer', 'Kazan.{p=500} {slow}You fight like I used to.{/slow}{p} Not a compliment.', { cam: 'hold' }]],
-  3: [['enforcer', 'You eat every hit whole. A fight isn\u2019t one punch.', { cam: 'bars+push', z: 1.6, ms: 2400 }], ['', '<p class="dim">Ban is breathing hard. He wipes his mouth.</p>'], ['enforcer', '{slow}Come back when you\u2019ve got a crew behind you.{/slow}', { cam: 'hold' }]] };
+  3: [['enforcer', 'You eat every hit whole. A fight isn\u2019t one punch.', { cam: 'bars+push', z: 1.6, ms: 2400 }], ['', '<p class="dim">Ban is breathing hard. He wipes his mouth.</p>'], ['enforcer', '{slow}Come back when you\u2019re stronger.{/slow}', { cam: 'hold' }]] };
 var c2sWake0 = c2GymWake;
 c2GymWake = function () { var n = W.c2sBanLoss | 0; W.c2sBanLoss = 0;
   if (!c2sOn() || !n || !C2S_BANL[n]) { c2sWake0(); return; }
