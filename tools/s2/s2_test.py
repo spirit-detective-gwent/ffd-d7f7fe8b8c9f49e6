@@ -595,7 +595,7 @@ async def main():
         ok('menu painters injected', 'menuChrome' in src2 and 'menuIcons' in src2)
         ok('Chiyo eat hooks still call EATG', 'EATG.open' in src2.split('S2MENUS_BEGIN')[-1].split('S2MENUS_END')[0])
         ok('food handoff does not move the player', 'stayPut' in src2 and 'c2Go(' not in src2.split('S2MENUS_BEGIN')[-1].split('S2MENUS_END')[0])
-        ok('depot shop stays unwired', 's2_depot' in src2 and 'wired: false' in src2.split('S2MENUS_BEGIN')[-1].split('S2MENUS_END')[0])
+        ok('depot shop stays shut until afterSeal', 's2_depot' in src2 and 'afterSeal' in src2.split('S2MENUS_BEGIN')[-1].split('S2MENUS_END')[0] and 'wired:' in src2.split('S2MENUS_BEGIN')[-1].split('S2MENUS_END')[0])
 
         menu = await ev(pg, """(function(){
           var M=root.FFF_S2MENUS, P=root.FFF_S2P;

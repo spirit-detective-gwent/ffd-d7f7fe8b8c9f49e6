@@ -128,11 +128,16 @@
       nails: function () { try { return !!(root.FFF_S2P2 && FFF_S2P2.nailsOn && FFF_S2P2.nailsOn()); } catch (e) { return false; } },
       items: function () { return HASE_ITEMS = haseItems(); }
     },
-    /* Data + art only. Phase 5 must open this after Masa’s seal; do not call open() from here. */
+    /* Opens only after FFF_S2P5.afterSeal() / e.seal_depot. Clerk talk in s2p5 calls open().
+     * Provisional clerk name Endō (遠藤) — pending Erik. Stock/restock unchanged. */
     s2_depot: {
       id: 's2_depot', theme: 'depot', n: 'Depot Counter', jp: '出庫窓口', who: 'nq_depclk',
       leave: '閉じる  ·  Close',
-      wired: false,
+      provName: 1,
+      wired: function () {
+        try { return !!(root.FFF_S2P5 && typeof FFF_S2P5.afterSeal === 'function' && FFF_S2P5.afterSeal()); }
+        catch (e) { return false; }
+      },
       hi: {
         fierce: 'Counter’s open. Sign the pad. Don’t linger.',
         strategic: 'Manifest window’s open. Nails’ price is on the sheet.',
@@ -143,8 +148,15 @@
     }
   };
   M.CHIYO_ITEMS = CHIYO_ITEMS; M.HASE_ITEMS = HASE_ITEMS; M.DEPOT_ITEMS = DEPOT_ITEMS;
-  M.has = function (id) { return !!(SHOPS_M[id] && SHOPS_M[id].wired !== false); };
+  function isWired(shop) {
+    if (!shop) return false;
+    var w = shop.wired;
+    if (typeof w === 'function') { try { return !!w(); } catch (e) { return false; } }
+    return w !== false;
+  }
+  M.has = function (id) { return !!(SHOPS_M[id] && isWired(SHOPS_M[id])); };
   M.hasArt = function (id) { return !!SHOPS_M[id]; };
+  M.isWired = isWired;
 
   /* ---------------- CSS (injected once, scoped to #wshop.s2m) ---------------- */
   function css() {
@@ -445,7 +457,7 @@
 
   function open(id) {
     var shop = SHOPS_M[id]; if (!shop) return;
-    if (shop.wired === false) { ev('world:s2m:unwired:' + id); return; }
+    if (!isWired(shop)) { ev('world:s2m:unwired:' + id); return; }
     stayPut();
     if (typeof W !== 'undefined') { W.dlg = true; W.path = []; try { if (typeof stickEnd === 'function') stickEnd(); } catch (e) {} }
     render(id);
@@ -474,8 +486,8 @@
   M.syncShops = syncShops;
   try { syncShops(); } catch (e0) {}
 
-  /* Wrap c2Shop so Hase (and any future themed id) gets the designed menu.
-   * Existing un-themed shops are unchanged. Depot stays unwired. */
+  /* Wrap c2Shop so Hase and the depot (once afterSeal) get the designed menu.
+   * Existing un-themed shops are unchanged. */
   if (typeof c2Shop === 'function') {
     var c2Shop0 = c2Shop;
     c2Shop = function (id) {
@@ -505,8 +517,8 @@
   M.depotWiring = {
     shopId: 's2_depot',
     theme: 'depot',
-    open: 'FFF_S2MENUS.open("s2_depot") after the seal, following the shopkeeper talk. Do not open from s2menus.js.',
-    who: 'A residual Rider clerk at the time-clock / manifest desk (出庫窓口). Add nq_depclk sprite + portrait, then set SHOPS / FFF_S2MENUS.SHOPS.s2_depot.who and wired=true (or delete the wired:false flag).',
+    open: 'FFF_S2MENUS.open("s2_depot") after the seal, following the shopkeeper talk in s2p5.clerkTalk. Do not open from s2menus.js itself.',
+    who: 'Provisional name Endō (遠藤) — pending Erik. Residual night-shift Rider clerk (nq_depclk, portrait endo) at the time-clock desk (出庫窓口). wired is a function of FFF_S2P5.afterSeal().',
     nails: 'Nails’ price once e.seal_depot or e.down_dep is set. Compassionate uses the warmer hi.balanced line.',
     items: DEPOT_ITEMS,
     food: 'onigiri uses EATG onigiri (already in ITEMS). Canned coffee drinks with actPlay("drink"), or FFF_EATG_SP(blend) if that game can open. Handoff plays first; the player is not moved.',

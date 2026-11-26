@@ -3,8 +3,9 @@
  * at the yard gate, fight him at the lift shutter with CHAR_INTRO.mb2_depot.
  * After the shutter win: add-only BOND_Q.c2_masa_after, path payoffs (leave / notes
  * / help), the shutter seal pry, and after-seal east-block tenant lines (wrap only).
- * Wraps only; no new always-running loops. Does not edit S2 / S2P2 / S2P3 / S2P4 VO
- * or the landmark depot path. */
+ * After the seal, a residual Rider clerk (nq_depclk, provisional name Endō) opens the
+ * time-clock window (FFF_S2MENUS.open('s2_depot')). Wraps only; no new always-running
+ * loops. Does not edit S2 / S2P2 / S2P3 / S2P4 VO or the landmark depot path. */
 (function () {
   try {
   if (typeof c2S !== 'function' || typeof C2W === 'undefined' || !C2W || typeof INT === 'undefined' || !INT.c2_town) {
@@ -92,6 +93,46 @@
   VO.emptyYard = [['', 'The desk is empty. Masa is not at the gate.']];
   VO.emptyShut = [['', 'The lift shutter is quiet. The gray seal is still on the sheet.']];
   VO.emptyShutDone = [['', 'The lift shutter is quiet. The gray seal is off the sheet.']];
+
+  /* Provisional clerk name — pending Erik: Endō (遠藤). */
+  if (typeof NM !== 'undefined') NM.nq_depclk = 'Endō';
+  function wireWho(id, pre, ck, figAlias) {
+    if (typeof wUrl !== 'function' || typeof IMG === 'undefined') return;
+    IMG[id + '_walk'] = wUrl(pre + '_walk');
+    IMG[id + '_idle'] = wUrl(pre + '_idle');
+    IMG[id + '_map'] = wUrl(pre + '_map');
+    IMG[id + '_fig'] = wUrl(pre + '_fig');
+    IMG[id + '_run'] = IMG[id + '_walk'];
+    ['hurt', 'kn', 'lie', 'fig_hurt', 'fig_down'].forEach(function (sh) { IMG[id + '_' + sh] = IMG[id + '_fig']; });
+    if (typeof SHC !== 'undefined') { SHC[id + '_walk'] = 8; SHC[id + '_idle'] = 4; }
+    if (typeof SHR !== 'undefined') { SHR[id + '_idle'] = 4; if (SHR.c2_punk_walk != null) SHR[id + '_walk'] = SHR.c2_punk_walk; }
+    if (typeof BW_IDS !== 'undefined') BW_IDS[id] = 1;
+    if (typeof C2K !== 'undefined') C2K[id] = ck;
+    PT[id] = id + '_fig';
+    if (typeof PT_PAINT !== 'undefined') PT_PAINT[id] = figAlias;
+    if (typeof PT_HAS !== 'undefined') PT_HAS[figAlias + '_neutral'] = 1;
+  }
+  wireWho('nq_depclk', 'nq_depclk', 1.04, 'endo');
+
+  VO.clkShut = V3(
+    [],
+    {
+      fierce: [['ryo', 'Shuttered. Come back when the yard is ours.']],
+      strategic: [['aoi', 'Closed until the seal is done. The sheet stays on that side.']],
+      balanced: [['ryo', 'Someone still clocks in here. Not tonight.']]
+    },
+    []
+  );
+  VO.clkOpen = V3(
+    [],
+    {
+      fierce: [['nq_depclk', 'Counter’s open. Sign the pad. Don’t linger.']],
+      strategic: [['nq_depclk', 'Manifest window’s open. Nails’ price is on the sheet.']],
+      balanced: [['nq_depclk', 'You ended the gray schedule. Sit a minute. The kettle’s on in the back.']]
+    },
+    []
+  );
+
   VO.leave = V3(
     [['', 'Masa stays on the floor. His hard hat rolls once and stops.']],
     {
@@ -214,7 +255,10 @@
     doorSpot('s2_d_bay', 1020, '\u8377\u5f79'),
     { id: 's2_talk_masa', r: [400, 580, 660, 760], at: [530, 790], face: 0, lab: 'Talk' }
   ] });
-  roomDef('dclock');
+  roomDef('dclock', { spots: [
+    { id: 's2_depot_shop', r: [400, 700, 700, 830], at: [550, 780], face: 3, lab: 'Window' }
+  ] });
+
   roomDef('dbay', { spots: [
     doorSpot('s2_d_clock', 140, '\u6253\u523b'),
     { id: 's2_d_crate', r: [1080, 400, 1190, 700], at: [1060, 700], face: 1, lab: '\u8ca8\u7269' },
@@ -449,6 +493,24 @@
     try { if (!W.c2n) W.c2n = {}; W.c2n.s2masa = MASA; } catch (eN) {}
   }
 
+  /* Residual Rider clerk behind the time-clock desk. Customer stays on the south side. */
+  var CLK = null;
+  var CLK_AT = [550, 518];
+  function popClerk() {
+    var k = room();
+    var want = (afterSeal() && k === 'dclock') ? [CLK_AT[0], CLK_AT[1], Math.PI / 2] : null;
+    if (!want) { if (CLK) { try { kill(CLK); } catch (eK) {} CLK = null; } return; }
+    if (CLK && CLK.el && CLK.el.parentNode && CLK._rk === k) {
+      try { if (!W.c2n) W.c2n = {}; W.c2n.s2depclk = CLK; } catch (eN) {}
+      return;
+    }
+    if (CLK) { try { kill(CLK); } catch (eK) {} CLK = null; }
+    CLK = npc('nq_depclk', want[0], want[1], want[2]);
+    CLK._rk = k;
+    try { if (typeof waddle === 'function') waddle(CLK, 0, want[2]); } catch (eW) {}
+    try { if (!W.c2n) W.c2n = {}; W.c2n.s2depclk = CLK; } catch (eN) {}
+  }
+
   /* ---------------- talks + fight ---------------- */
   var fighting = 0;
   function startShutterFight() {
@@ -498,6 +560,24 @@
     if (!met()) { setStg('met'); qStep(1); }
     lockIn(1);
     introThenFight();
+    return true;
+  }
+
+  function clerkTalk() {
+    if (busy()) return true;
+    if (!afterSeal()) {
+      lockIn(1);
+      talk(pv(VO.clkShut), function () { lockIn(0); });
+      return true;
+    }
+    lockIn(1);
+    talk(pv(VO.clkOpen), function () {
+      lockIn(0);
+      try {
+        if (W.ryo) { W.ryo.v = 0; W.path = []; }
+        if (root.FFF_S2MENUS && typeof FFF_S2MENUS.open === 'function') FFF_S2MENUS.open('s2_depot');
+      } catch (eO) { ev('world:s2p5:err:shop:' + (eO && eO.message)); }
+    });
     return true;
   }
 
@@ -641,6 +721,7 @@
     if (!cleared()) { setStg('done'); qClose(); }
     flipEast();
     ev('world:s2p5:done');
+    try { later(0, popClerk); } catch (eC) {}
   }
   function tenantAfter(who) {
     if (busy()) return true;
@@ -652,6 +733,7 @@
   }
   P5.yardTalk = yardTalk; P5.askBond = askBond; P5.takeSeal = takeSeal; P5.flipEast = flipEast; P5.finishQuest = finishQuest; P5.applySeTurf = applySeTurf;
   P5.afterSeal = afterSeal; P5.fateOf = fateOf; P5.tenantAfter = tenantAfter;
+  P5.popClerk = popClerk; P5.clerkTalk = clerkTalk; P5.CLK_AT = CLK_AT;
 
   if (typeof onFightEnd === 'function') {
     var of0 = onFightEnd;
@@ -667,7 +749,22 @@
     };
   }
 
+  if (typeof c2Tags === 'function') {
+    var tags0 = c2Tags;
+    c2Tags = function (id, D) {
+      var out = tags0.apply(this, arguments);
+      try {
+        if (out && on()) out = out.filter(function (t) {
+          if (!t || !t.key) return true;
+          if (t.key.indexOf(':s2_depot_shop') >= 0) return room() === 'dclock';
+          return true;
+        });
+      } catch (e) {}
+      return out;
+    };
+  }
   if (typeof c2ActC === 'function') {
+
     var act0 = c2ActC;
     c2ActC = function (k, a) {
       try {
@@ -679,6 +776,7 @@
             if (room() === 'dshut') return shutterTalk();
             return yardTalk();
           }
+          if (a === 's2_depot_shop') return clerkTalk();
           if (afterSeal() && (a === 's2_talk_mori' || a === 's2_talk_nao' || a === 's2_talk_haru')) {
             return tenantAfter(a.replace('s2_talk_', ''));
           }
@@ -697,6 +795,7 @@
             if (room() === 'dshut') return shutterTalk();
             return yardTalk();
           }
+          if (id === 'nq_depclk') return clerkTalk();
           if (afterSeal() && (id === 'nq_mori' || id === 'nq_nao' || id === 'nq_haru')) {
             return tenantAfter(id.replace('nq_', ''));
           }
@@ -714,6 +813,7 @@
             if (room() === 'dshut') return shutterTalk();
             return yardTalk();
           }
+          if (id === 'nq_depclk') return clerkTalk();
           if (afterSeal() && (id === 'nq_mori' || id === 'nq_nao' || id === 'nq_haru')) {
             return tenantAfter(id.replace('nq_', ''));
           }
@@ -726,19 +826,19 @@
   var lastPaintK = null;
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { chainRepair(); var k = room(); if (k !== lastPaintK) { lastPaintK = k; popMasa(); paintRoom(); } } } catch (e) { if (!P5.ferr) { P5.ferr = 1; ev('world:s2p5:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { chainRepair(); var k = room(); if (k !== lastPaintK) { lastPaintK = k; popMasa(); popClerk(); paintRoom(); } } } catch (e) { if (!P5.ferr) { P5.ferr = 1; ev('world:s2p5:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Go === 'function') {
     var goX = c2Go;
     c2Go = function () {
       var r = goX.apply(this, arguments);
-      try { if (on()) { later(0, function () { popMasa(); paintRoom(); }); later(350, function () { popMasa(); paintRoom(); }); } } catch (eG) {}
+      try { if (on()) { later(0, function () { popMasa(); popClerk(); paintRoom(); }); later(350, function () { popMasa(); popClerk(); paintRoom(); }); } } catch (eG) {}
       return r;
     };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
-    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); hookBattle(); popMasa(); paintRoom(); } } catch (eP) {} };
+    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); hookBattle(); popMasa(); popClerk(); paintRoom(); } } catch (eP) {} };
   }
   try { chainRepair(); } catch (eC) {}
   ev('world:s2p5:ready');

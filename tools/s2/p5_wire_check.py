@@ -227,6 +227,60 @@ async def main():
         ok('after down_dep, Masa\u2019s pin and the Riders legend chip read stood down',
            turf and turf.get('down') and 'stood down' in (turf.get('pin') or '') and 'Riders' in (turf.get('chip') or '') and 'stood down' in (turf.get('chip') or ''), turf)
 
+
+        shop = await ev(pg, """(function(){
+          var P5=root.FFF_S2P5, M=root.FFF_S2MENUS;
+          try { if (typeof ST!=='undefined'){ ST.events=ST.events||[]; } } catch(eE){}
+          var evN=(typeof ST!=='undefined'&&ST.events)?ST.events.length:0;
+          try { c2Go('dclock',[550,780,3]); if (typeof c2Pop==='function') c2Pop(); if (P5.popClerk) P5.popClerk(); } catch(eG){}
+          var clk=W.c2n&&W.c2n.s2depclk;
+          if (W.ryo) { W.ryo.x=550; W.ryo.y=780; W.ryo.v=0; W.path=[]; }
+          var x0=W.ryo&&W.ryo.x, y0=W.ryo&&W.ryo.y;
+          root.__s2mPos={x0:x0,y0:y0,evN:evN};
+          var has=!!(M&&M.has&&M.has('s2_depot'));
+          var after=!!(P5&&P5.afterSeal&&P5.afterSeal());
+          try { if (typeof SAVE!=='undefined'){ SAVE.yen=(SAVE.yen|0)+40; SAVE.hp=Math.max(1,(typeof MAXHP!=='undefined'?MAXHP:40)-12); if (typeof hud==='function') hud(); } } catch(eY){}
+          try { M.open('s2_depot'); } catch(eO){}
+          var box=document.getElementById('wshop');
+          var html=box?box.innerHTML:'';
+          var open=!!(box && /s2m/.test(box.className) && /s2m-depot/.test(box.className) && box.className.indexOf('on')>=0);
+          var title=html.indexOf('\u51fa\u5eab\u7a93\u53e3')>=0;
+          var nails=/<s>¥/.test(html) || /<s>&yen;/.test(html) || (html.indexOf('nqp')>=0 && html.indexOf('<s>')>=0);
+          var pt=html.indexOf('endo_neutral')>=0 || html.indexOf('portraits/endo')>=0;
+          try { M.buy('s2_depot','onigiri'); } catch(eB){}
+          return {
+            after:after, has:has, room:(typeof c2Room==='function'?c2Room():null),
+            clk:!!clk, cx:clk&&Math.round(clk.x), cy:clk&&Math.round(clk.y),
+            deskSide:!!(clk && clk.y < 540),
+            x0:x0, y0:y0, open:open, title:title, nails:nails, pt:pt,
+            evN:evN, cls:(box&&box.className)||'', hp:typeof SAVE!=='undefined'?SAVE.hp:null
+          };
+        })()""")
+        await pg.wait_for_timeout(1100)
+        shop2 = await ev(pg, """(function(){
+          var evs=[], evN=(root.__s2mPos&&root.__s2mPos.evN)|0;
+          try { evs=(ST.events||[]).slice(evN); } catch(e){}
+          var p=root.__s2mPos||{};
+          try { if (root.FFF_S2MENUS && FFF_S2MENUS.close) FFF_S2MENUS.close(); } catch(eC){}
+          try { if (typeof eatgHold==='function') eatgHold(false); } catch(eH){}
+          try { if (root.EATG && typeof EATG.close==='function') EATG.close(); } catch(eG){}
+          try { var eg=document.getElementById('eatg'); if(eg&&eg.parentNode) eg.parentNode.removeChild(eg); } catch(eR){}
+          try { W.busy=false; W.dlg=false; W.cut=false; W.path=[]; } catch(eW){}
+          var box=document.getElementById('wshop');
+          return {
+            evs:evs.filter(function(s){ return /s2m:handoff|eatg:open|s2m:open:s2_depot/.test(String(s)); }),
+            all:evs.slice(-12),
+            x0:p.x0, y0:p.y0, x1:W.ryo&&W.ryo.x, y1:W.ryo&&W.ryo.y,
+            closed:!(box && box.classList && box.classList.contains('on'))
+          };
+        })()""")
+        ok('after the seal, the depot shop is wired and the clerk stands behind the time-clock desk',
+           shop and shop.get('after') and shop.get('has') and shop.get('room')=='dclock' and shop.get('clk') and shop.get('deskSide') and (shop.get('cy') or 99)<540, shop)
+        ok('after the seal, open(s2_depot) shows the themed window with Nails prices and the Endo portrait',
+           shop and shop.get('open') and shop.get('title') and shop.get('nails') and shop.get('pt'), shop)
+        ok('ordering onigiri at the depot fires handoff then EATG and does not move the player',
+           shop2 and 'world:s2m:handoff:s2_depot:onigiri' in (shop2.get('evs') or []) and 'world:eatg:open:onigiri' in (shop2.get('evs') or []) and shop2.get('x0')==shop2.get('x1') and shop2.get('y0')==shop2.get('y1'), shop2)
+
         yardpos = await ev(pg, """(function(){
           var P5=root.FFF_S2P5, st=c2S();
           st.e.seal_depot=0; st.e.down_dep=0; st.e.eastSeal=0; st.e.masaFate='';
@@ -238,7 +292,33 @@ async def main():
         })()""")
         ok('Masa stands behind the yard desk, not in the party', yardpos and yardpos.get('room')=='dyard' and (yardpos.get('y') or 99)<620 and (yardpos.get('x') or 0)>=500, yardpos)
 
+        shut = await ev(pg, """(function(){
+          var P5=root.FFF_S2P5, M=root.FFF_S2MENUS;
+          try { if (M.close) M.close(); } catch(e0){}
+          try { c2Go('dclock',[550,780,3]); if (typeof c2Pop==='function') c2Pop(); if (P5.popClerk) P5.popClerk(); } catch(eG){}
+          var clk=W.c2n&&W.c2n.s2depclk;
+          var box=document.getElementById('wshop');
+          var before=!!(box && box.classList && box.classList.contains('on'));
+          try { M.open('s2_depot'); } catch(eO){}
+          box=document.getElementById('wshop');
+          var afterOpen=!!(box && box.classList && box.classList.contains('s2m-depot') && box.classList.contains('on'));
+          try { if (M.close) M.close(); } catch(eC){}
+          return {
+            after:!!(P5&&P5.afterSeal&&P5.afterSeal()),
+            has:!!(M&&M.has&&M.has('s2_depot')),
+            clk:!!clk, before:before, afterOpen:afterOpen,
+            room:(typeof c2Room==='function'?c2Room():null),
+            cls:(box&&box.className)||''
+          };
+        })()""")
+        ok('before the seal, the depot window stays shut and the clerk is absent',
+           shut and shut.get('after') is False and shut.get('has') is False and not shut.get('clk') and not shut.get('afterOpen'), shut)
+
+
         heal = await ev(pg, """(function(){
+          try { if (typeof eatgHold==='function') eatgHold(false); } catch(eH){}
+          try { if (root.EATG && typeof EATG.close==='function') EATG.close(); } catch(eG){}
+          try { W.busy=false; W.dlg=false; W.cut=false; } catch(eW){}
           var H=typeof HITEM!=='undefined'&&HITEM;
           var rec={ patch:H&&H.patch&&H.patch.hp, bpart:H&&H.bpart&&H.bpart.hp, patchPct:H&&H.patch&&H.patch.pct, bpartPct:H&&H.bpart&&H.bpart.pct };
           var hp0=SAVE.hp, max=MAXHP, bag=(SAVE.heal||[]).slice();
