@@ -2284,7 +2284,7 @@ body.teachcine #whud,body.teachcine #wcred,body.teachcine #wquest,body.teachcine
 #wkettle .kgo.now{background:linear-gradient(180deg,#3fae6a,#1d6a3a)}
 #wkettle .kgo:disabled{background:linear-gradient(180deg,#4a4030,#2a2418);color:#cbbd9c;cursor:default}
 #wkettle .kx{display:block;margin:10px auto 0;border:0;border-radius:12px;padding:10px 12px;min-height:44px;min-width:90px;font:800 calc(13px * var(--ts, 1)) system-ui;color:#fff;background:linear-gradient(180deg,#3a2e14,#1d170a)}
-#wdlg .kmug,#wdlg .kbooks{display:flex;align-items:center;gap:10px}#wdlg .kmug .hbsvg{width:40px;height:40px;flex:none}
+#wdlg .kmug,#wdlg .kbooks{display:flex;align-items:center;gap:10px}#wdlg .kmug .hbsvg{width:40px;height:40px;flex:none}#wdlg.d2 .d2-q .hbsvg,#wdlg.d2 .d2-rest .hbsvg{width:40px;height:40px;flex:none;vertical-align:middle}#wdlg.d2 .d2-q:has(> .hbsvg){display:flex;align-items:center;gap:10px}
 #wdlg .kbooks span{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1}#wdlg .kbooks .hbsvg{width:40px;height:40px}#wdlg .kbooks small{opacity:.8}
 .pbook,.pherb{list-style:none;margin:4px 0;padding:0;display:flex;flex-direction:column;gap:4px}
 .pbook li,.pherb li{display:flex;align-items:center;gap:6px;font:700 calc(13px * var(--ts, 1)) system-ui}.pbook .hbsvg,.pherb .hbsvg{width:26px;height:26px;flex:none}.pbook small{opacity:.75}
@@ -50597,7 +50597,7 @@ root.WORLD_API.reloadEnter = function () { titleReset(); enter(true); };
   /* Ch1/Ch2 toast backstop: only a short keep-list may still raise #wtoast. */
   if (typeof toast === 'function') {
     var _toast = toast;
-    var KEEP = ['Could not save', 'Empty pack', 'Energy upgrades now have', 'Upgrade items are now yen', 'New lesson at Genji']; /* v6.5.38 */
+    var KEEP = ['Could not save', 'Empty pack', 'Energy upgrades now have', 'Upgrade items are now yen', 'New lesson at Genji', '¥5 in the dirt.', 'A length of gauze in the mud.', 'A length of tape in the mud.', 'Need mugwort seeds.']; /* v6.5.38; v6563 garden toasts */
     toast = function (t) {
       var s = String(t == null ? '' : t);
       if (chNow() <= 2) {

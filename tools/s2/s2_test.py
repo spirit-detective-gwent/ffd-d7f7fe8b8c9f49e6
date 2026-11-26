@@ -771,6 +771,36 @@ async def main():
         ok('tapping a pot walks to its stand (not the Garden spot) and plants it', gp1 and gp1.get('ok') and gp1.get('spot')=='garden' and gp1.get('arrive')=='g50:gp1' and gp1.get('goalD',99)<=12 and gp2 and gp2.get('st')=='planted' and gp2.get('seed')==2, [gp0, gp1, gp2])
         await ev(pg, "(function(){root.FFF_ACT_K=null;return 1})()")
 
+        # GGD-50: d2 dialog must keep herb icons at 40px (Seeds + Mugwort Bundles).
+        ico = await ev(pg, """(function(){
+          try{
+            var S=c2S(); S.e=S.e||{}; S.e.sumire=1; S.e.gardenIntro=1;
+            try{c2AbortTalk()}catch(e){} try{scKill()}catch(e){}
+            W.dlg=false; W.cut=false; W.busy=false;
+            c2MugShop();
+            var s=document.querySelector('#wdlg svg.hbsvg, #wdlg .hbsvg');
+            var r=s&&s.getBoundingClientRect();
+            var cls=document.getElementById('wdlg').className;
+            return {w:r&&Math.round(r.width), h:r&&Math.round(r.height), cls:cls, has:!!s};
+          }catch(e){ return {err:String(e&&e.message||e)}; }
+        })()""")
+        ok('Seeds shop herb icon is 40px in the d2 dialog', ico and ico.get('has') and 26<=(ico.get('w') or 0)<=50 and 26<=(ico.get('h') or 0)<=50, ico)
+        # GGD-50: garden toasts must pass the Ch1/Ch2 allowlist
+        toast = await ev(pg, """(function(){
+          try{c2AbortTalk()}catch(e){} W.dlg=false;
+          var d=document.getElementById('wdlg'); if(d) d.className='';
+          document.body.classList.remove('fff-dlg-on');
+          var blocked=[], ev0=ev;
+          ev=function(k){ if(String(k).indexOf('world:toast:blocked:')===0) blocked.push(String(k).slice(21)); return ev0.apply(this,arguments); };
+          var lines=['¥5 in the dirt.','A length of gauze in the mud.','A length of tape in the mud.','Need mugwort seeds.'];
+          lines.forEach(function(s){ toast(s); });
+          ev=ev0;
+          var f=document.getElementById('wtoast');
+          var q=(root.FFF_POPQ&&root.FFF_POPQ.list)?root.FFF_POPQ.list().length:0;
+          return {ch:(typeof chN==='function'?chN():null), blocked:blocked, go:!!(f&&f.classList.contains('go')), t:(f&&f.textContent)||'', q:q};
+        })()""")
+        ok('garden toasts show on the Ch1/Ch2 allowlist', toast and not toast.get('blocked') and toast.get('go') and 'dirt' in (toast.get('t') or ''), toast)
+
         # no page errors
         ok('no page errors', not errs, errs[:4])
         await b.close()

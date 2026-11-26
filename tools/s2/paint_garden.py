@@ -274,6 +274,21 @@ def draw_sparkle(d, x, y):
     d.ellipse((x - 2, y - 2, x + 2, y + 2), fill=(255, 248, 200), outline=INK_S, width=1)
 
 
+
+def apply_feathered_wash(im: Image.Image) -> Image.Image:
+    """Warm window light on the nook floor, edges blurred so it is not a visible box."""
+    wx0, wy0, wx1, wy1 = NOOK[0] + 8, NOOK[1] + 10, NOOK[2] - 8, NOOK[3] - 6
+    wash = Image.new("RGBA", im.size, (0, 0, 0, 0))
+    ImageDraw.Draw(wash).ellipse((wx0 - 10, wy0 - 5, wx1 + 10, wy1 - 5), fill=(255, 214, 140, 48))
+    wash = wash.filter(ImageFilter.GaussianBlur(radius=36))
+    mask = Image.new("L", im.size, 0)
+    ImageDraw.Draw(mask).rectangle((NOOK[0] - 4, NOOK[1] + 16, NOOK[2] + 4, NOOK[3] + 20), fill=255)
+    mask = mask.filter(ImageFilter.GaussianBlur(radius=10))
+    r, g, b, a = wash.split()
+    wash = Image.merge("RGBA", (r, g, b, ImageChops.multiply(a, mask)))
+    return Image.alpha_composite(im, wash)
+
+
 def paint_room(state="bloomed", sparkle_i=None) -> Image.Image:
     base = Image.open(CLINIC).convert("RGBA")
     im = restore_wall_and_floor(base)
@@ -283,13 +298,8 @@ def paint_room(state="bloomed", sparkle_i=None) -> Image.Image:
     draw_nook_floor(d, im)
     draw_window(d, glow)
     draw_mini_cabinet(d)
-    # sunlit wash on the nook boards (keeps the original plank lines)
-    wash = Image.new("RGBA", im.size, (0, 0, 0, 0))
-    wd = ImageDraw.Draw(wash)
-    # soft sun, no hard rug edge
-    wx0, wy0, wx1, wy1 = NOOK[0] + 8, NOOK[1] + 10, NOOK[2] - 8, NOOK[3] - 6
-    wd.ellipse((wx0 - 30, wy0 - 20, wx1 + 30, wy1 + 10), fill=(255, 214, 140, 32))
-    im = Image.alpha_composite(im, wash)
+    # sunlit wash on the nook boards: feathered so there is no visible box
+    im = apply_feathered_wash(im)
     # composite window glow under the pots but over the floor
     im = Image.alpha_composite(im, glow)
     d = ImageDraw.Draw(im)
