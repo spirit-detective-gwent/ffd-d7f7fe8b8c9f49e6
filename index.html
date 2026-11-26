@@ -4507,7 +4507,7 @@ function bondPerks(b, si, me, op, c, fx) {
   if (c.mark && op && op.hp > 0) { op.mark = Math.max(op.mark | 0, c.mark | 0); fx.ev.push({ t: 'mark', side: 1 - si, n: op.mark }); fx.log.push('target marked: next attack on them +' + op.mark); }
   if (c.reveal && op && op.hp > 0 && op.hand && op.hand.length) { var rv = op.hand.filter(function (x) { return x.t === 'atk'; })[0] || op.hand[0]; fx.reveal = rv.n; fx.log.push('read their hand: ' + rv.n); op.shown = rv.u; }
   if (c.burn && op && op.hp > 0) { op.burn = { n: c.burn, t: 3 }; fx.ev.push({ t: 'burn', side: 1 - si, n: c.burn }); fx.log.push('set ablaze (' + c.burn + ' a turn, 3 turns)'); }
-  if (c.bulw && si === 0 && me && me.hp > 0 && !b.over) { if (c.bulwCap) b.rebCap = c.bulwCap; b.bulw = { t: c.bulw, g: c.bulwG }; fx.bulwOn = (fx.bulwOn | 0) + 1; fx.ev.push({ t: 'bulwark', side: 0, n: c.bulw }); fx.log.push('Bulwark: ' + c.bulw + ' turn' + (c.bulw === 1 ? '' : 's') + ', Guard ' + c.bulwG); }
+  if (c.bulw && si === 0 && me && me.hp > 0 && !b.over) { if (c.bulwCap) b.rebCap = c.bulwCap; b.bulw = { t: c.bulw, g: c.bulwG }; b.bulwWait = 0; /* a fresh / refreshed window gets its full duration */ fx.bulwOn = (fx.bulwOn | 0) + 1; fx.ev.push({ t: 'bulwark', side: 0, n: c.bulw }); fx.log.push('Bulwark: ' + c.bulw + ' turn' + (c.bulw === 1 ? '' : 's') + ', Guard ' + c.bulwG); }
   if (si === 0 && !fx.dbl) {
     if (c.keepSp && me.hp > 0) {
       var ks0 = me.spirit | 0; me.spirit = Math.min(R.spiritMax, me.spirit + c.keepSp); var kg = me.spirit - ks0;
