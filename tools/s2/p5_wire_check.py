@@ -215,11 +215,17 @@ async def main():
             rlen: T && T.Q && T.Q.R && T.Q.R.length,
             seOnP: !!(T && T.Q && T.Q.P && T.Q.P.some(function(r){ return r[0]===3460 || r[0]===3700 || r[0]===3520; })),
             col: col,
-            punk: '#c42830'
+            punk: '#c42830',
+            down: !!(root.FFF_C2LMAP && FFF_C2LMAP.down && FFF_C2LMAP.down('masa')),
+            pin: root.FFF_C2LMAP && FFF_C2LMAP.pinLab && FFF_C2LMAP.pinLab('masa'),
+            chip: root.FFF_C2LMAP && FFF_C2LMAP.chipLab && FFF_C2LMAP.chipLab('masa'),
+            gChip: root.FFF_C2LMAP && FFF_C2LMAP.chipLab && FFF_C2LMAP.chipLab('goda')
           };
         })()""")
         ok('after down_dep, X4 is Punk vs Syndicate and SE is on Punk turf', turf and turf.get('x4')=='PS' and turf.get('seOnP') and turf.get('rlen')==0, turf)
         ok('Genji map paints Masa\u2019s quarter in Punk red after down_dep', turf and turf.get('col')=='#c42830', turf)
+        ok('after down_dep, Masa\u2019s pin and the Riders legend chip read stood down',
+           turf and turf.get('down') and 'stood down' in (turf.get('pin') or '') and 'Riders' in (turf.get('chip') or '') and 'stood down' in (turf.get('chip') or ''), turf)
 
         yardpos = await ev(pg, """(function(){
           var P5=root.FFF_S2P5, st=c2S();

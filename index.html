@@ -30833,7 +30833,11 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
       '#c2citymap .c2cm-legend{position:absolute;left:6px;right:6px;top:8px;z-index:6;display:grid;grid-template-columns:1fr 1fr;gap:5px 6px;opacity:0;pointer-events:none;transition:opacity .35s}',
       '#c2citymap .c2cm-legend.on{opacity:1}',
       '#c2citymap .c2cm-key{display:flex;align-items:center;gap:3px;background:rgba(246,241,228,.96);color:#1a2740;border:2px solid currentColor;border-radius:8px;padding:1px 6px 1px 1px;font:700 10px/1.2 system-ui;white-space:nowrap;box-shadow:0 1px 2px rgba(0,0,0,.3);min-width:0}',
-      '#c2citymap .c2cm-key canvas{width:26px;height:30px;display:block;image-rendering:pixelated}'
+      '#c2citymap .c2cm-key canvas{width:26px;height:30px;display:block;image-rendering:pixelated}',
+      '#c2citymap .c2cm-key.down{color:#5c6168;border-color:#8a8f99;background:rgba(220,218,214,.96)}',
+      '#c2citymap .c2cm-key.down b{color:#4a4e54}',
+      '#c2citymap .c2cm-pc.down{filter:grayscale(.85) drop-shadow(0 3px 2px rgba(0,0,0,.55));opacity:.92}',
+      '#c2citymap .c2cm-pc.down .c2cm-lab{background:rgba(220,218,214,.96);color:#4a4e54}'
     ].join('\n');
     (document.head || document.documentElement).appendChild(s);
   })();
@@ -31127,6 +31131,30 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
   var C2L_HOLE = [[800, 1980, 1280, 2820], [910, 2588, 4920, 2776]];
   var C2L_FAC = { nails: 'arcade', jin: 'game', goda: 'sento', masa: 'depot' };
   var C2L_ID_OF = { arcade: 'nails', game: 'jin', sento: 'goda', depot: 'masa' };
+  var C2L_CREW = { nails: 'Punks', jin: 'Syndicate', goda: 'Hustlers', masa: 'Riders' };
+  var C2L_DOWN_COL = '#6a6e76';
+  function c2lFacCode(id) {
+    var fac = C2L_FAC[id];
+    return (typeof C2S_FAC === 'object' && C2S_FAC[fac]) || fac;
+  }
+  function c2lDown(id) {
+    var st = S(), e = st && st.e, code = c2lFacCode(id);
+    return !!(e && code && e['down_' + code]);
+  }
+  /* Pin names the beaten leader; the legend chip names the crew, same as Hustlers after Gōda. */
+  function c2lPinLab(id) {
+    var P = C2L_PIECE[id]; if (!P) return '';
+    if (!c2lDown(id)) return P.lab;
+    return P.lab.split(' \u00b7 ')[0] + ' \u00b7 stood down';
+  }
+  function c2lChipLab(id) {
+    var P = C2L_PIECE[id]; if (!P) return '';
+    if (c2lDown(id)) return (C2L_CREW[id] || id) + ' \u00b7 stood down';
+    return P.lab;
+  }
+  function c2lPinCol(id) {
+    return c2lDown(id) ? C2L_DOWN_COL : c2lOwnerCol(id);
+  }
   /* World-space focus: each leader window is the whole district plus neighboring borders.
      Zoom is 1.6–2.2× the full-city fit (width contain). 'all' / 'city' are the pulled-back fit. */
   var C2L_FOCUS = {
@@ -31221,17 +31249,17 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
   function c2lLegendShow() {
     var box = c2lMapEl(); if (!box) return;
     var lg = box.querySelector('.c2cm-legend'); if (!lg) return;
-    if (!lg.dataset.ready) {
-      lg.innerHTML = '';
-      ['nails', 'jin', 'goda', 'masa'].forEach(function (id) {
-        var P = C2L_PIECE[id], sp = document.createElement('span');
-        sp.className = 'c2cm-key'; sp.style.borderColor = P.col; sp.style.color = P.col;
-        var cv = c2lDrawPiece(P.kind, P.col);
-        var b = document.createElement('b'); b.style.color = '#1a2740'; b.textContent = P.lab;
-        sp.appendChild(cv); sp.appendChild(b); lg.appendChild(sp);
-      });
-      lg.dataset.ready = '1';
-    }
+    lg.innerHTML = '';
+    ['nails', 'jin', 'goda', 'masa'].forEach(function (id) {
+      var P = C2L_PIECE[id], down = c2lDown(id), col = down ? C2L_DOWN_COL : P.col;
+      var sp = document.createElement('span');
+      sp.className = 'c2cm-key' + (down ? ' down' : '');
+      sp.style.borderColor = col; sp.style.color = col;
+      var cv = c2lDrawPiece(P.kind, col, down);
+      var b = document.createElement('b'); b.style.color = down ? '#4a4e54' : '#1a2740'; b.textContent = c2lChipLab(id);
+      sp.appendChild(cv); sp.appendChild(b); lg.appendChild(sp);
+    });
+    lg.dataset.ready = '1';
     lg.classList.add('on');
     W.c2lBold = 1;
     ev('world:c2:map:pullback');
@@ -31267,7 +31295,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     setTimeout(function () { try { box.remove(); } catch (eH) {} if (done) done(); }, 380);
   }
   function c2lPct(wx, wy) { return { l: (wx / 5040) * 100, t: (wy / 4032) * 100 }; }
-  function c2lDrawPiece(kind, col) {
+  function c2lDrawPiece(kind, col, down) {
     var cv = document.createElement('canvas'); cv.width = 84; cv.height = 96;
     var g = cv.getContext('2d');
     g.imageSmoothingEnabled = false;
@@ -31275,18 +31303,23 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     g.fillStyle = 'rgba(0,0,0,.35)'; g.beginPath(); g.ellipse(0, 30, 16, 5, 0, 0, Math.PI * 2); g.fill();
     g.fillStyle = col; g.strokeStyle = '#1a140c'; g.lineWidth = 3;
     g.beginPath(); g.moveTo(0, -28); g.bezierCurveTo(18, -28, 22, -8, 20, 8); g.lineTo(12, 26); g.lineTo(-12, 26); g.lineTo(-20, 8); g.bezierCurveTo(-22, -8, -18, -28, 0, -28); g.closePath(); g.fill(); g.stroke();
-    g.fillStyle = '#f3e6c8'; g.beginPath(); g.arc(0, -6, 13, 0, Math.PI * 2); g.fill(); g.stroke();
+    g.fillStyle = down ? '#d8d4cc' : '#f3e6c8'; g.beginPath(); g.arc(0, -6, 13, 0, Math.PI * 2); g.fill(); g.stroke();
     g.fillStyle = '#1a140c';
     if (kind === 'spikes') {
       g.fillStyle = col; [['-16,-22'], ['0,-32'], ['16,-22']].forEach(function () {});
       [[-14, -20], [0, -30], [14, -20]].forEach(function (p) { g.beginPath(); g.moveTo(p[0], -8); g.lineTo(p[0] - 5, p[1]); g.lineTo(p[0] + 5, p[1] + 6); g.closePath(); g.fill(); g.stroke(); });
     } else if (kind === 'suit') {
-      g.fillStyle = '#1a140c'; g.fillRect(-10, 10, 20, 16); g.fillStyle = '#f3e6c8'; g.fillRect(-2, 10, 4, 10);
+      g.fillStyle = '#1a140c'; g.fillRect(-10, 10, 20, 16); g.fillStyle = down ? '#d8d4cc' : '#f3e6c8'; g.fillRect(-2, 10, 4, 10);
     } else if (kind === 'grin') {
       g.beginPath(); g.arc(-5, -8, 1.6, 0, Math.PI * 2); g.arc(5, -8, 1.6, 0, Math.PI * 2); g.fill();
       g.strokeStyle = '#1a140c'; g.beginPath(); g.arc(0, -2, 7, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke();
     } else {
       g.fillStyle = col; g.beginPath(); g.arc(0, -14, 16, Math.PI, 0); g.fill(); g.stroke();
+    }
+    if (down) {
+      g.strokeStyle = '#2a2c30'; g.lineWidth = 4; g.lineCap = 'round';
+      g.beginPath(); g.moveTo(-18, -24); g.lineTo(18, 22); g.stroke();
+      g.beginPath(); g.moveTo(18, -24); g.lineTo(-18, 22); g.stroke();
     }
     return cv;
   }
@@ -31409,8 +31442,10 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     var wrap = document.createElement('div');
     wrap.className = 'c2cm-pc drop';
     wrap.style.left = p.l + '%'; wrap.style.top = p.t + '%';
-    wrap.appendChild(c2lDrawPiece(P.kind, P.col));
-    var lab = document.createElement('i'); lab.className = 'c2cm-lab'; lab.textContent = P.lab; wrap.appendChild(lab);
+    var down = c2lDown(id);
+    if (down) wrap.classList.add('down');
+    wrap.appendChild(c2lDrawPiece(P.kind, down ? C2L_DOWN_COL : P.col, down));
+    var lab = document.createElement('i'); lab.className = 'c2cm-lab'; lab.textContent = c2lPinLab(id); wrap.appendChild(lab);
     pcs.appendChild(wrap);
     ev('world:c2:map:drop:' + id);
     requestAnimationFrame(function () {
@@ -31837,13 +31872,13 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
       pcs.innerHTML = '';
       W.c2lTurf.forEach(function (id) {
         var P = C2L_PIECE[id]; if (!P) return;
-        var p = c2lPct(P.wx, P.wy);
+        var p = c2lPct(P.wx, P.wy), down = c2lDown(id);
         var wrap = document.createElement('div');
-        wrap.className = 'c2cm-pc';
+        wrap.className = 'c2cm-pc' + (down ? ' down' : '');
         wrap.style.left = p.l + '%'; wrap.style.top = p.t + '%';
-        wrap.appendChild(c2lDrawPiece(P.kind, c2lOwnerCol(id)));
+        wrap.appendChild(c2lDrawPiece(P.kind, c2lPinCol(id), down));
         var lab = document.createElement('i'); lab.className = 'c2cm-lab';
-        lab.textContent = P.lab; wrap.appendChild(lab);
+        lab.textContent = c2lPinLab(id); wrap.appendChild(lab);
         pcs.appendChild(wrap);
       });
     }
@@ -31851,7 +31886,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     c2lClampLabs();
     c2lTurf();
   }
-  try { window.FFF_C2LMAP = { show: c2lMapShow, hide: c2lMapHide, turf: c2lTurf, legend: c2lLegendShow, focus: c2lMapFocus, openAll: c2lMapOpenAll, ownerCol: c2lOwnerCol, paintBorders: c2lPaintBorders }; } catch (eM) {}
+  try { window.FFF_C2LMAP = { show: c2lMapShow, hide: c2lMapHide, turf: c2lTurf, legend: c2lLegendShow, focus: c2lMapFocus, openAll: c2lMapOpenAll, ownerCol: c2lOwnerCol, paintBorders: c2lPaintBorders, down: c2lDown, pinLab: c2lPinLab, chipLab: c2lChipLab }; } catch (eM) {}
 
   ev('world:c2:13l:ready');
 })();
