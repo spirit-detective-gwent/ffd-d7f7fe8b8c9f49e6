@@ -66,7 +66,7 @@ async def main():
         # ---- Journal (the Status > Bond block is the live "Aoi's calls" list; the old bondPane is dead code but kept consistent) ----
         h = await bh.ev(pg, """(function(){var B=STORY.bond(SAVE);B.picks={first:'fierce',c2nq_door:'fierce',c2lm_arcade:'strategic',c2lm_game:'balanced',c2lm_sento:'fierce',c2lm_depot:'fierce',c2_goda:'balanced',c2_eve:'fierce',mini_mb_lib:'fierce',dg_gouki:'fierce',c2lm_market:'fierce'};B.path='fierce';return statusBondBlock()})()""")
         ok('Journal list renders the calls', 'bpicks' in h and 'Aoi' in h, h[:200])
-        for raw in ['c2nq_door', 'c2lm_', 'c2_goda', 'c2_eve']: ok(f'Journal list has no raw id {raw}', raw not in h)
+        for raw in ['c2nq_door', 'c2lm_', 'c2_goda', 'c2_eve', 'dg_gouki']: ok(f'Journal list has no raw id {raw}', raw not in h)
         for nm in ['Kitsune-no-Yu door: <b>Straight through him</b>', 'G\u014dda on the clay: <b>Help him up and show him the fire\u2019s fine</b>', 'The night before the roof: <b>', 'The courtyard:', 'Kitsune-no-Yu Bathhouse: <b>']:
             ok(f'Journal list shows name "{nm[:34]}"', nm in h, '')
         pay = await bh.ev(pg, "(function(){var o={};['c2nq_door','c2_goda','c2_eve','c2lm_sento','c2lm_market','mini_mb_lib','dg_gouki'].forEach(function(id){o[id]=['best','mid','clash'].map(function(g){return bondCallPay(id,g)})});return o})()")

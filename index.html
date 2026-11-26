@@ -15026,7 +15026,7 @@ function ringSvg(p, lv, cap, frac, cur) {
     '<text x="50" y="57" text-anchor="middle">' + lv + '</text></svg>';
 }
 /* v6.5.63 ch2-bond: Journal names + real pay for Aoi's calls (Ch2 ids used to print raw, and every grade printed the 118/59/24 default) */
-var BCALL_NAME = { first: 'The courtyard', c2nq_door: 'Kitsune-no-Yu door', c2_goda: 'G\u014dda on the clay', c2_cheap: 'The Cheap Shot job', c2_offer: 'The coat\u2019s offer', c2_ledger: 'Tetsu\u2019s ledger', c2_eve: 'The night before the roof' };
+var BCALL_NAME = { first: 'The courtyard', c2nq_door: 'Kitsune-no-Yu door', c2_goda: 'G\u014dda on the clay', c2_cheap: 'The Cheap Shot job', c2_offer: 'The coat\u2019s offer', c2_ledger: 'Tetsu\u2019s ledger', c2_eve: 'The night before the roof', dg_gouki: 'Gouki\u2019s doors', c2lm_market: 'The cold-room door', c2lm_pier: 'The pier', c2lm_dock: 'The dock' };
 function bondCallName(id) { id = String(id); if (id.indexOf('mini_') === 0 && CD.chars[id.slice(5)]) return CD.chars[id.slice(5)].name; if (BCALL_NAME[id]) return BCALL_NAME[id];
   if (id.indexOf('dg_') === 0 && DGS[id.slice(3)]) return DGS[id.slice(3)].n || id; var m = /^c2lm_(\w+)$/.exec(id); if (m && typeof C2LM === 'object' && C2LM[m[1]] && C2LM[m[1]].n) return C2LM[m[1]].n; return id; }
 function bondCallPay(id, g) { var BD = STORY.BOND, n = ((BD.PAY || {})[id] || BD.XP.GRADE)[g] | 0, ch3 = /^c2lm_(market|pier|dock)$/.test(id); if (SAVE.xpMode === 'grinder' && !ch3 && /^(mini_|dg_|c2)/.test(id)) n = Math.max(1, Math.round(n * 0.5)); return n; }
