@@ -12,3 +12,7 @@ clears old bangs and hair spikes), skinRe, pin (pinstripes), suit.collar (open c
 (baseball cap), hood, zip, pockets, closeV (buttoned coverall), reflV (reflective braces), stubble, crosses (gold cross-stitch rows), cuff (wristbands), headClamp.
   ./bake2.py ksJin2,ksBouncer2,ksSuit2,ksRun2,sabu2,dpRider2,dpDock2,dpMasa2 walk,fig ; python3 lineups_v2.py kd -> kitsune_lineup_v2.png, depot_lineup_v2.png
 When wired: delete the old art for these characters from index.html entirely (no fallback to old sheets; see the old/new flicker bug).
+Wired (v6.5.63 ch2-gangs): python3 tools/yk/gangs/wire.py --art <baked dir>  (idempotent; after a merge: take either side of index.html, re-run wire.py).
+  Bake: ./bake2.py <specs> walk,run,hurt,kn,lie,map,fig,fig_hurt,fig_down,act ; python3 mkidle.py <spec>_walk.webp <spec>_idle.webp
+  Club staff: ckHostess on the Hina rig (kinds hwalk,hmap,hfig; figpose.py makes fig_hurt/fig_down), ckDealer on the punk rig. ckCashier = preview only.
+  Check: tools/yk/gangs/test_no_old_art_gangs.py <worktree> [port] [quick] ; shots: shots.py <worktree> <port>
