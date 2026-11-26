@@ -228,12 +228,29 @@ async def t7(p):
     await ev(pg, "document.getElementById('ngplus').scrollTop=0"); await pg.screenshot(path=str(SHOTS / 'review_fresh.png'))
     ok('T7 no page errors (options screen)', not errs, errs[:3]); await b.close()
 
+
+async def t8(p):
+    """NG+ from the title screen (cold: world not built yet), Fresh Start preset, through the real buttons"""
+    errs = []; b, pg = await newpage(p, errs)
+    await boot(pg); await ev(pg, FIXTURE_JS)
+    await ev(pg, "(function(){SAVE.ch1=1;SAVE.gouki=1;SAVE.chapter=1;SAVE.intro=1;save();return 1})()")
+    await pg.reload(); await pg.wait_for_timeout(3500)
+    await pg.evaluate("[...document.querySelectorAll('button')].filter(e=>e.offsetParent&&/New Game ?\\+|Plus/i.test(e.textContent))[0].click()"); await pg.wait_for_timeout(1500)
+    await ev(pg, "root.FFF_NO_TUT=1")
+    await pg.evaluate("document.querySelector('#ngplus [data-pre=fresh]').click()"); await pg.wait_for_timeout(300)
+    await pg.evaluate("document.querySelector('#ngplus [data-a=review]').click()"); await pg.wait_for_timeout(300)
+    await pg.evaluate("document.querySelector('#ngplus [data-a=start]').click()"); await pg.wait_for_timeout(4000)
+    s = json.loads(await ev(pg, "JSON.stringify({ngp:SAVE.ngp,on:W.on,ch:SAVE.chapter,items:SAVE.items,gsk:SAVE.gsk,bond:SAVE.bond&&SAVE.bond.path,ess:SAVE.ess,cx:SAVE.cx,intro:SAVE.intro,scr:W.scr})"))
+    ok('T8 title -> New Game+ -> Fresh Start: world entered, run reset, Codex kept', s['ngp'] == 2 and s['on'] and s['ch'] == 1 and s['items'] == 0 and not s['gsk'] and s['bond'] == 'balanced' and s['ess'] == 0 and s['cx'] == {'tip_howto': 1}, s)
+    await pg.screenshot(path=str(SHOTS / 'title_ngp_start.png'))
+    ok('T8 no page errors (title start)', not errs, errs[:3]); await b.close()
+
 async def main():
     serve(PORT, INDEX.parent)
     async with async_playwright() as p:
         errs = []; b, pg = await newpage(p, errs); await boot(pg); await ev(pg, FIXTURE_JS)
         await t1(pg); await t2(pg); await t6(pg); await t3(pg, errs); await b.close()
-        await t4(p, None); await t5(p); await t7(p)
+        await t4(p, None); await t5(p); await t7(p); await t8(p)
     bad = [r for r in RES if not r[0]]
     print(f'\n{len(RES) - len(bad)}/{len(RES)} passed'); sys.exit(1 if bad else 0)
 asyncio.run(main())
