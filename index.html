@@ -4386,7 +4386,8 @@ function applyPst(b, p, pst, bench) { if (!pst) return; { // v4.1 story: the pla
     // v4.2 story: the player's own (upgraded) deck and signature(s); sig2 null = not unlocked yet
     if (pst.deck && pst.deck.length) { p.deck = pst.deck.map(mkFrom); p.hand = []; deal(p); if (!p.gcap || p.gcap < 10) p.gcap = 10; /* provisional: the draft's suggested Guard cap. Enemies keep their own gcap. */ }
     if (pst.combo) p.combo = true; // v4.3 story combos
-    if (pst.ctrPlus) p.ctrPlus = pst.ctrPlus | 0; if (pst.dgPlus) p.dgPlus = pst.dgPlus | 0; // v4.13 bond: Strategic counters, Balanced dodge
+    if (pst.ctrPlus) p.ctrPlus = pst.ctrPlus | 0; if (pst.dgPlus) p.dgPlus = pst.dgPlus | 0; // v4.13 bond: Strategic counters; dgPlus kept for leftover dodge gear
+    if (pst.rebCap && b && b.s) b.rebCap = pst.rebCap | 0; /* v6.5.63 Compassionate Rebound cap */
     if (pst.buff) p.buff = (p.buff | 0) + (pst.buff | 0); // v4.18 headwear: the first attack hits harder
     if (pst.read && !bench) { p.glamp = pst.lamp | 0; var t0 = (b.grp && b.grp[0]) || (b.s && b.s[1]); if (t0) { readOne(t0); if (t0.shown != null) t0.lampU = t0.shown; } } // v6.5.36 Lampglass Earring: only one enemy card is read per battle; +Spirit when they play it
     if (pst.gspork) p.gspork = pst.gspork | 0; if (pst.gbcap) p.gbcap = pst.gbcap | 0; if (pst.gofuda) p.gofuda = pst.gofuda | 0; // v6.5.24 Spork Pin / Black Cap / Spirit Ofuda (this fighter's own gear)
@@ -4451,6 +4452,8 @@ function mulligan(b, si, uids) {
 /* v4.4 Guard: raising Guard adds up to the fighter's cap (R.guardCap 5; a char may set gcap). Guard stays until it is used up:
  * a hit removes only as much Guard as it blocked. Guard Break (pierce, signatures, charge strip) still removes all of it. */
 function addGuard(s, n) { if (s && s.noG > 0) return 0; var g0 = s.guard; s.guard = Math.min(s.gcap || R.guardCap, s.guard + n); return s.guard - g0; }
+/* v6.5.63 Compassionate Bulwark / Rebound: party store (b.reb / b.rebCap). Unspent Rebound lasts after Bulwark ends. */
+function rebAdd(b, n, fx) { if (!b || !(n > 0) || !(b.rebCap > 0)) return 0; var s0 = b.reb | 0; b.reb = Math.min(b.rebCap, s0 + n); var g = b.reb - s0; if (g && fx) fx.rebS = (fx.rebS | 0) + g; return g; }
 /* v4.4 story discard (player only, never on AI turns): pay R.discardCost spirit, the card goes back into the deck and a
  * replacement is drawn into the same slot. Does not end the turn. s.disc = discards left this fight (0 in duel mode). */
 function canDiscard(s) { return !!s && s.hand.length > 0 && ((s.freeDisc | 0) > 0 || (s.disc > 0 && s.spirit >= R.discardCost)); }
@@ -4504,6 +4507,7 @@ function bondPerks(b, si, me, op, c, fx) {
   if (c.mark && op && op.hp > 0) { op.mark = Math.max(op.mark | 0, c.mark | 0); fx.ev.push({ t: 'mark', side: 1 - si, n: op.mark }); fx.log.push('target marked: next attack on them +' + op.mark); }
   if (c.reveal && op && op.hp > 0 && op.hand && op.hand.length) { var rv = op.hand.filter(function (x) { return x.t === 'atk'; })[0] || op.hand[0]; fx.reveal = rv.n; fx.log.push('read their hand: ' + rv.n); op.shown = rv.u; }
   if (c.burn && op && op.hp > 0) { op.burn = { n: c.burn, t: 3 }; fx.ev.push({ t: 'burn', side: 1 - si, n: c.burn }); fx.log.push('set ablaze (' + c.burn + ' a turn, 3 turns)'); }
+  if (c.bulw && si === 0 && me && me.hp > 0 && !b.over) { if (c.bulwCap) b.rebCap = c.bulwCap; b.bulw = { t: c.bulw, g: c.bulwG }; fx.bulwOn = (fx.bulwOn | 0) + 1; fx.ev.push({ t: 'bulwark', side: 0, n: c.bulw }); fx.log.push('Bulwark: ' + c.bulw + ' turn' + (c.bulw === 1 ? '' : 's') + ', Guard ' + c.bulwG); }
   if (si === 0 && !fx.dbl) {
     if (c.keepSp && me.hp > 0) {
       var ks0 = me.spirit | 0; me.spirit = Math.min(R.spiritMax, me.spirit + c.keepSp); var kg = me.spirit - ks0;
@@ -4559,11 +4563,12 @@ function resolve00(b, si, me, op, c, fx, add) { /* v6.5.16: resolve() wraps this
     if (b.enfDoom && !b.enfThr && si === 0) { dodged = true; fx.dodged = true; fx.ev.push({ t: 'dodge', side: 1, n: 0 }); fx.log.push(c.n + ': dodged'); }
     else if (c.t !== 'sig' && (op.dodge > 0 || op.echoDg > 0)) { var dcap = op.ladderDodge ? 60 : dgCap(op), dch = Math.min(dcap, (op.dodge || 0) + (op.echoDg || 0) + (op.dgPlus || 0)), /* v6.5.16 Path Echo dodge lasts until your next turn */ roll = b.dRoll != null ? b.dRoll : rnd(); if (!op.dgAll) op.dodge = 0; if (roll * 100 < dch) { dodged = true; fx.dodged = true; fx.ev.push({ t: 'dodge', side: 1 - si, n: dch }); op.punR = 1; if (op.dgPay) op.buff = (op.buff || 0) + op.dgPay; if (op.dgG && !op.dgGUsed) { op.dgGUsed = 1; var dgg = addGuard(op, op.dgG); if (dgg) fx.ev.push({ t: 'guard', side: 1 - si, n: dgg }); } if (op.dsb && (op.dsbN | 0) < 2) { op.dsbN = (op.dsbN | 0) + 1; strikeBack(me, op, op.dsb, fx, si); } } }
     if (!dodged && op.hp > 0 && fx._mark) { op.mark = 0; fx.ev.push({ t: 'mark:spend', side: 1 - si, n: fx._mark }); fx.log.push('mark +' + fx._mark); delete fx._mark; }
+    var relS = 0; if (!dodged && si === 0 && (c.t === 'atk' || c.t === 'sig') && (b.reb | 0) > 0) { relS = b.reb | 0; b.reb = 0; fx.rel = (fx.rel | 0) + relS; fx.log.push('Rebound +' + relS); }
     var hitsN = (c.hits || 1) + (c.extraHit || 0), baseHits = c.hits || 1, pPierce = !!c.pierce, pBrk = c.brk || 0;
     if (me.nextPierce) { pPierce = true; pBrk += me.nextPierce; me.nextPierce = 0; }
     for (var h = 0; h < hitsN && op.hp > 0 && !dodged; h++) {
       var hitV = (h >= baseHits && c.extraV) ? c.extraV : c.v, hitPierce = pPierce || (h === 0 && c.brk1) || (h === hitsN - 1 && c.lastBrk), hitBrk = pBrk + (h === 0 && c.brk1 ? c.brk1 : 0) + (h === hitsN - 1 && c.lastBrk ? c.lastBrk : 0);
-      var d = Math.max(0, hitV + (h === 0 ? extra - wk + (c.fd || 0) + (me.punR && c.pun ? c.pun : 0) : 0)), blocked = 0;
+      var d = Math.max(0, hitV + (h === 0 ? extra - wk + (c.fd || 0) + (me.punR && c.pun ? c.pun : 0) + relS : 0)), blocked = 0;
       if (h > 0 && si === 1 && b.cover && c.t === 'atk') { var cd0 = d; d = Math.max(0, d - 1); if (d < cd0) fx.coverN = (fx.coverN || 0) + 1; } /* v6.3.4 Cover Up: an enemy's later hits in the same attack card deal 1 less */
       if (h === 0 && me.punR && c.pun) me.punR = 0;
       if (h === 0 && op.brace && me.shown != null && c.u === me.shown) { var bz = Math.min(op.brace, d); d -= bz; fx.braced = (fx.braced || 0) + bz; me.shown = null; fx.log.push('seen coming: ' + bz + ' less'); } // v4.18 Lampglass Charm
@@ -4578,6 +4583,7 @@ function resolve00(b, si, me, op, c, fx, add) { /* v6.5.16: resolve() wraps this
       else if (op.guard > 0 || (op.each && !op.eachSpent && h < 3)) { // v4.4: the hit wears the Guard down by what it blocked; the rest stays. Hold the Line covers the first 3 hits of one attack at the Guard it had, then wears by the biggest of those.
         if (op.each && !op.eachSpent && h >= 3) { op.guard = Math.max(0, op.guard - (op.eachMax || 0)); op.eachSpent = 1; if (!op.guard) op.ctr = 0; }
         blocked = Math.min(op.guard, d); d -= blocked; blockedT += blocked;
+        if (blocked > 0 && si === 1 && b.bulw && b.bulw.t > 0) rebAdd(b, blocked, fx);
         if (op.each && !op.eachSpent) op.eachMax = Math.max(op.eachMax || 0, blocked); else op.guard -= blocked;
         if (op.ctr && blocked > 0 && (op.ctrHits | 0) < 2) { var cn = op.ctr; if (op.ctrFirst && !op.ctrFirstUsed) { cn += op.ctrFirst; op.ctrFirstUsed = 1; fx.ctrFirst = op.ctrFirst; } fx.counter = cn; op.ctrHits = (op.ctrHits | 0) + 1; op.punR = 1; if (op.ctrPay) op.buff = (op.buff || 0) + op.ctrPay; if (op.ctrG && !op.ctrGUsed) { op.ctrGUsed = 1; var cg1 = addGuard(op, op.ctrG); if (cg1) fx.ev.push({ t: 'guard', side: 1 - si, n: cg1 }); } if ((op.ctrLeft | 0) > 1) op.ctrLeft--; else op.ctr = 0; }
         if (!op.guard && !(op.each && !op.eachSpent)) op.ctr = 0;
@@ -4720,6 +4726,16 @@ function serveTick(b, si, me, fx) { var V = b.serve, boss = V.boss;
   V.tray = 1; fx.ev.push({ t: 'serve', side: 1, n: 0 }); }
 function finish(b, si, me, mv, fx) {
   me.turns++; b.n++;
+  if (b.bulw && b.bulw.t > 0 && !b.over) { /* v6.5.63 Bulwark: one tick per enemy phase, not per foe in the line */
+    if (si === 0) {
+      if (b.bulwWait) { b.bulw.t--; b.bulwWait = 0; }
+      var plB = b.s[0];
+      if (b.bulw.t > 0 && plB && plB.hp > 0 && plB.guard < b.bulw.g) {
+        var bg0 = addGuard(plB, b.bulw.g - plB.guard);
+        if (bg0) { fx.bulwG = (fx.bulwG | 0) + bg0; fx.ev.push({ t: 'guard', side: 0, n: bg0 }); fx.log.push('Bulwark: Guard ' + plB.guard); }
+      }
+    } else b.bulwWait = 1;
+  }
   if (si === 0 && b.redSp > 0 && me.hp > 0 && !b.over) { b.redSp--; var rs0 = me.spirit; me.spirit = Math.min(R.spiritMax, me.spirit + 5); if (me.spirit > rs0) { fx.spirit = (fx.spirit | 0) + (me.spirit - rs0); fx.ev.push({ t: 'spirit', side: 0, n: me.spirit - rs0 }); fx.log.push('Redline +' + (me.spirit - rs0) + ' spirit'); } } /* v6.5.40 batch 9 */
   if (si === 0) (b.grp || [b.s[1]]).forEach(function (s) { if (s && s.noG) s.noG--; });
   if (me.burn && me.burn.t > 0 && me.hp > 0) { var bn = Math.min(me.burn.n, me.hp - (me.floor || 0)); if (bn > 0) { me.hp -= bn; fx.ev.push({ t: 'burnt', side: si, n: bn, sk: me.burn.sk || '' }); fx.log.push((me.burn.sk ? 'sparks ' : 'burn ') + bn); } if (--me.burn.t <= 0) me.burn = null; } // v4.13 Fierce max-level burn
@@ -4912,7 +4928,7 @@ function dueJoin(b) {
  * here: Path Echo, Sync Break II, In Sync, Awakening. */
 var SB_TYPE = { c2_suit: 'G', c2_suitg: 'G', c2_boso: 'G', c2_bosog: 'G', bouncer: 'G', mb2_sento: 'G', mb2_depot: 'G', c2_boss: 'G', mb2_game: 'GA', chinpira1: 'A', chinpira1g: 'A', c2_punk: 'A', c2_punkg: 'A', c2_hustler: 'A', c2_hustlerg: 'A', mb2_arcade: 'A' };
 var SB_BOSS = { mb2_sento: 1, mb2_depot: 1, mb2_game: 1, mb2_arcade: 1, c2_boss: 1 };
-var SB = { lv8: 3, inSync: 5, echo: 0.2, echo10: 0.35, echoDg: 8, burn10: 3, heal10: 8, guard10: 5 };
+var SB = { lv8: 3, inSync: 5, echo: 0.2, echo10: 0.35, echoDg: 8, burn10: 3, heal10: 3, guard10: 3 };
 function sbType(b, s) { if (!s) return ''; var o = b && b.sbTypes && b.sbTypes[s.ch]; return o != null ? o : (SB_TYPE[s.ch] || ''); }
 function sbBench(b, n) { if (!b || !b.bench || !(n > 0)) return 0; var s0 = b.bench.spirit; b.bench.spirit = Math.min(R.spiritMax, b.bench.spirit + n); return b.bench.spirit - s0; }
 /* called at the end of finish(), before the turn flips. Opens a window when this play (or the enemy's attack) caused a break. */
@@ -4956,7 +4972,7 @@ function sbStay(b, back) {
   return { stay: inn.ch, back: true };
 }
 /* v6.5.16 Bond Lv 7 Path Echo (b.echo = {k: path, p: chance}) around one card of the player's: Fierce +1 guard break (the card
- * pierces), Strategic Mark +1 (next attack +1), Compassionate +8% dodge until your next turn. Lv 8: the incoming partner's
+ * pierces), Strategic Mark +1 (next attack +1), Compassionate Rebound +1 (stored, released on the next attack). Lv 8: the incoming partner's
  * first attack always echoes (s.sbEcho). */
 function resolve(b, si, me, op, c, fx, add) {
   var ek = null, sv = null;
@@ -4966,7 +4982,7 @@ function resolve(b, si, me, op, c, fx, add) {
   if (sv) { if (sv[0]) c.pierce = sv[0]; else delete c.pierce; if (sv[1] != null) c.brk = sv[1]; else delete c.brk; }
   if (ek) { fx.echo = (fx.echo || []).concat([{ k: ek, ch: me.ch, card: c.id }]);
     if (ek === 'strategic' && op && op.hp > 0) { op.mark = (op.mark | 0) + 1; fx.log.push('Path Echo: mark +1'); }
-    else if (ek === 'balanced' && me.hp > 0) { me.echoDg = SB.echoDg; fx.log.push('Path Echo: +' + SB.echoDg + '% dodge until your next turn'); }
+    else if (ek === 'balanced' && me.hp > 0) { var eg = rebAdd(b, 1, fx); fx.log.push(eg ? 'Path Echo: Rebound +' + eg : 'Path Echo: Rebound (full)'); }
     else if (ek === 'fierce') fx.log.push('Path Echo: +1 guard break'); }
 }
 /* v6.5.16 Bond Lv 10 Awakening after a double move: Fierce burns every foe, Strategic stuns the target, Compassionate heals and guards */
@@ -9305,7 +9321,7 @@ var BOND = { P: ['fierce', 'strategic', 'balanced'], N: { fierce: 'Fierce', stra
   TH0: [0, 3, 6, 10, 15], // the v4.13-v4.15 point thresholds (Lv 1-5); only used to convert old saves
   PERK: { fierce: ['Guard break +1', 'Guard break +1', 'Guard break +2', 'Guard break +2', 'Guard break +2 · BURN 2 a turn (3 turns)', 'Guard break +2 · BURN 3 a turn (3 turns)', 'BURN 3 · Path Echo 20% (+1 guard break)', 'BURN 3 · Echo 20% · Sync Break II (+3)', 'BURN 3 · Echo 20% · Sync Break II · In Sync', 'BURN 3 · Echo 35% · Awakening: burns all foes'],
     strategic: ['Mark: next attack +2 · counters +1', 'Mark +2 · counters +1', 'Mark +3 · counters +2', 'Mark +3 · counters +2', 'Mark +3 · counters +2 · Keep +10 · Bench +5', 'Mark +4 · counters +3 · Keep +15 · Bench +10', 'Mark +4 · counters +3 · Path Echo: 20% to add +1 Mark to the enemy', 'Mark +4 · counters +3 · Echo 20% (+1 Mark to the enemy) · Sync Break II (+3)', 'Mark +4 · counters +3 · Echo 20% (+1 Mark to the enemy) · Sync Break II · In Sync', 'Mark +4 · counters +3 · Echo 35% (+1 Mark to the enemy) · Awakening: stun'],
-    balanced: ['Dodge +8%', 'Dodge +10%', 'Guard break +1, mark +1 · dodge +12%', 'Dodge +14%', 'Guard break +2, mark +2 · dodge +16%', 'Guard break +2, mark +2 · dodge +18%', 'Dodge +18% · Path Echo 20% (+8% dodge)', 'Dodge +18% · Echo 20% · Sync Break II (+3)', 'Dodge +18% · Echo 20% · Sync Break II · In Sync', 'Dodge +18% · Echo 35% · Awakening: heal + guard'] } }; /* v6.5.16 Bond Lv 6-10 */
+    balanced: ['Bulwark 1 turn · Guard 2', 'Bulwark 1 turn · Guard 2', 'Bulwark 2 turns · Guard 3', 'Bulwark 2 turns · Guard 3', 'Bulwark 3 turns · Guard 4 · REBOUND (stored up to 6)', 'Bulwark 4 turns · Guard 5 · Rebound up to 10', 'Bulwark 4 · Guard 5 · Rebound 10 · Path Echo 20% (+1 Rebound)', 'Bulwark 4 · Guard 5 · Rebound 10 · Echo 20% (+1 Rebound) · Sync Break II (+3)', 'Bulwark 4 · Guard 5 · Rebound 10 · Echo 20% · Sync Break II · In Sync', 'Bulwark 4 · Guard 5 · Rebound 10 · Echo 35% (+1 Rebound) · Awakening: heal 3 + Guard 3'] } }; /* v6.5.63 Compassionate Bulwark / Rebound */
 function bondNeed(l) { var N = BOND.XP.NEED; if (l - 1 < N.length) return N[l - 1]; return Math.round(N[N.length - 1] * Math.pow(BOND.XP.GROW, l - N.length)); } // XP from Lv l to l+1
 /* cumulative XP at the start of each level: bondTot(1) = 0 */
 function bondTot(l) { var t = 0; for (var i = 1; i < l; i++) t += bondNeed(i); return t; }
@@ -9356,10 +9372,13 @@ function bondSig(S, ch) { var B = bond(S), who = ch || S.act || 'ryo', p = B.pat
   var c = E.upgraded(id, 0); c.v = bondDmg(lv); c.lv = lv; c.bond = p || ''; if (!p) return c;
   if (p === 'fierce') { c.brk = lv >= 3 ? 2 : 1; if (lv >= 5) c.burn = lv >= 6 ? 3 : 2; } /* v6.5.16 Lv 6 Path Perk II: burn 3, Mark 4 */
   else if (p === 'strategic') { c.mark = lv >= 6 ? 4 : lv >= 3 ? 3 : 2; if (lv >= 5) { c.keepSp = lv >= 6 ? 15 : 10; c.benchSp = lv >= 6 ? 10 : 5; } }
-  else if (lv >= 3) { c.brk = lv >= 5 ? 2 : 1; c.mark = lv >= 5 ? 2 : 1; }
+  else if (p === 'balanced') { /* v6.5.63 Compassionate: Bulwark on the special, Rebound from Lv 5. No dodge, no leftover brk/mark. */
+    c.bulw = lv >= 6 ? 4 : lv >= 5 ? 3 : lv >= 3 ? 2 : 1;
+    c.bulwG = lv >= 6 ? 5 : lv >= 5 ? 4 : lv >= 3 ? 3 : 2;
+    if (lv >= 5) c.bulwCap = lv >= 6 ? 10 : 6; }
   return c; }
-function bondFight(S) { var B = bond(S), p = B.path, lv = bondLv(S); return { ctrPlus: p === 'strategic' ? (lv >= 6 ? 3 : lv >= 3 ? 2 : 1) : 0, dgPlus: p === 'balanced' ? (lv >= 6 ? 18 : 6 + 2 * lv) : 0 }; } /* v6.5.16 Lv 6: counters +3, dodge 18% */
-function loadout(S) { ensure(S); var bf = bondFight(S); return { deck: S.deck.map(function (k) { return card(S, k); }), sig: bondSig(S), sig2: null, cmax: comboMax(S), ctrPlus: bf.ctrPlus, dgPlus: bf.dgPlus }; }
+function bondFight(S) { var B = bond(S), p = B.path, lv = bondLv(S); return { ctrPlus: p === 'strategic' ? (lv >= 6 ? 3 : lv >= 3 ? 2 : 1) : 0, dgPlus: 0, rebCap: p === 'balanced' ? (lv >= 6 ? 10 : lv >= 5 ? 6 : 0) : 0 }; } /* v6.5.63: Compassionate Rebound cap; dodge dropped */
+function loadout(S) { ensure(S); var bf = bondFight(S); return { deck: S.deck.map(function (k) { return card(S, k); }), sig: bondSig(S), sig2: null, cmax: comboMax(S), ctrPlus: bf.ctrPlus, dgPlus: bf.dgPlus, rebCap: bf.rebCap | 0 }; }
 function comboMax(S) { return (SD.comboMax && SD.comboMax[S.chapter || 1]) || 3; }
 function caps(S) { var c = Object.assign({}, SD.caps); c.sig = (SD.caps.sig || 5) * (S.chapter || 1); return c; } // v4.5 signature cap: 5 per chapter
 function rarOf(S, k) { if (k === 'sig') return 'sig'; var r = rec(S, k); return r ? C(r.id).rarity : 'common'; }
@@ -12143,7 +12162,7 @@ function fight(grp, boss, ctx) { if (typeof commentHide === 'function') commentH
   if (ctx.gkPhase === 2 && (ctx.gkFin || SAVE.dbl)) { SAVE.sp = SPMAX; var _o = other(SAVE.act), _pc = SAVE.chars[_o] || (SAVE.chars[_o] = {}); _pc.sp = SPMAX; save(); } /* v4.59: spirit refill after bond unlock / finish only */
 ST.inWorld = false; ev('world:fight:' + SAVE.act + ':' + foes.join(','));
   var foeNm = {}; foes.forEach(function (id) { var lab = heavyLabel(id, ctx); if (lab) foeNm[id] = lab; });
-  var pst0 = gearPst({ combo: true, hp: SAVE.hp, max: MAXHP > ((CD.rules && CD.rules.hp) || 46) ? MAXHP : 0 /* v6.5.16 Conditioning */, spirit: SAVE.sp, deck: lo.deck, sig: lo.sig, sig2: lo.sig2, disc: boss || ctx.mini ? 2 : 1 /* v4.4 discards this fight */, cmax: lo.cmax, ctrPlus: lo.ctrPlus | 0, dgPlus: lo.dgPlus | 0, soda: sodaFx });
+  var pst0 = gearPst({ combo: true, hp: SAVE.hp, max: MAXHP > ((CD.rules && CD.rules.hp) || 46) ? MAXHP : 0 /* v6.5.16 Conditioning */, spirit: SAVE.sp, deck: lo.deck, sig: lo.sig, sig2: lo.sig2, disc: boss || ctx.mini ? 2 : 1 /* v4.4 discards this fight */, cmax: lo.cmax, ctrPlus: lo.ctrPlus | 0, dgPlus: lo.dgPlus | 0, rebCap: lo.rebCap | 0, soda: sodaFx });
   fightVsOpen(fightVsId(boss, ctx, grp), function () { swirl(function () { UI.startMatch(SAVE.act, { foes: foes, foeNm: foeNm, hp: ctx.toughHp || (n === 3 ? GROUP3_HP : 0), boss: boss, drop: yb + ye, soda: ye, sodaLeft: SAVE.sodaOn, mini: ctx.mini || null, koLine: ctx.mini ? koLine(ctx.mini) : '', partner: CNAME[other(SAVE.act)], pst: pst0 /* v4.18 gear */,
     esc: (ctx.ckDoom || ctx.enfDoom) ? 0 : ((ctx.c2spar || ctx.matspar) ? 1 : escChance(boss, ctx.mini)), grp: grp, ctx: ctx, bench: benchOf(boss, ctx), assist: typeof c2AssistOn === 'function' && c2AssistOn(ctx) ? 1 : 0, /* v4.24 tag-in; v4.56 dbl gated; v6.5.16: 'assist' = Sync Break learned (the save key stays c2les.assist). Every Ryo vs Aoi fight is a spar: Stop Sparring always ends it. */
     settle: function (win, st) { return settle(win, st); }, onEnd: function (win, st) { back(win, st); } }); }); });
@@ -12155,7 +12174,7 @@ function benchOf(boss, ctx) { if (!STORY || !STORY.bond || root.FFF_NO_BENCH || 
   var o = other(SAVE.act), T = viewOf(o), lo = STORY.loadout(T), allow = dblUnlocked() || (ctx && (ctx.gkFin || ctx.c2lesson));
   var later = (SAVE.chapter | 0) >= 2; /* v6.3.3: after Chapter 1 the partner keeps their own Spirit. Chapter 1 still starts the bench full once the double is unlocked; the Gouki finish fight fills both either way. */
   var psp = (ctx && ctx.gkFin || (SAVE.dbl && !later)) ? SPMAX : (T.sp | 0);
-  return { ch: o, path: allow ? (B.path || 'fierce') : null, pst: gearPst({ combo: true, hp: SAVE.hp, spirit: psp, deck: lo.deck, sig: lo.sig, sig2: null, disc: 0, cmax: lo.cmax, ctrPlus: lo.ctrPlus | 0, dgPlus: lo.dgPlus | 0 }, o) }; }
+  return { ch: o, path: allow ? (B.path || 'fierce') : null, pst: gearPst({ combo: true, hp: SAVE.hp, spirit: psp, deck: lo.deck, sig: lo.sig, sig2: null, disc: 0, cmax: lo.cmax, ctrPlus: lo.ctrPlus | 0, dgPlus: lo.dgPlus | 0, rebCap: lo.rebCap | 0 }, o) }; }
 /* v4.6 battle-start transition (in the spirit of Final Fantasy III): the map freezes into a picture that ripples sideways in
  * growing sine waves while a recorded cymbal swell rises (CC0, see CREDITS.md); the fight board opens under it at the peak and
  * the rippling picture fades away. One full-screen canvas, ~1 s, drawn as horizontal bands (cheap enough for iPad). */
