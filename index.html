@@ -13490,7 +13490,7 @@ function dlgTopSlot(d) {
   var hb = 0;
   try { if (hud) hb = hud.getBoundingClientRect().bottom; } catch (eH) {}
   var slot = d.getBoundingClientRect();
-  var top = wr.top + Math.max(12, Math.round((hb || (wr.top + 52)) + 8 - wr.top));
+  var top = wr.top + Math.max(12, Math.round((hb || (wr.top + 52)) + 8 - wr.top + dlgHangH(d)));
   return { left: slot.left, right: slot.right, width: slot.width, height: slot.height, top: top, bottom: top + slot.height };
 }
 function dlgPickSide(d, who) {
@@ -13505,13 +13505,20 @@ function dlgPickSide(d, who) {
   if (botBad && topBad) return (ot.cover < ob.cover) ? 'top' : 'bottom';
   return 'bottom';
 }
+function dlgHangH(d) {
+  /* hanging painted bust is 150px + 4px gap above .sh (see #wdlg.scene .sh.pt-hang .pt2).
+   * Use the hanging size whenever a bust will hang, even before pt-up is classed. */
+  if (!d || !d.querySelector) return 0;
+  if (!(d.classList.contains('pt-up') || d.querySelector('.sh.pt-hang'))) return 0;
+  return 154;
+}
 function dlgDockTop(d) {
   var world = document.getElementById('world') || d.parentNode;
   var wr = world.getBoundingClientRect();
   var hud = document.getElementById('wstat') || document.getElementById('whud');
   var hb = 0;
   try { if (hud) hb = hud.getBoundingClientRect().bottom; } catch (eH) {}
-  var topPx = Math.max(12, Math.round((hb || (wr.top + 52)) + 8 - wr.top));
+  var topPx = Math.max(12, Math.round((hb || (wr.top + 52)) + 8 - wr.top + dlgHangH(d)));
   d.classList.add('dock-top');
   d.style.top = topPx + 'px';
   d.style.bottom = 'auto';
@@ -13822,7 +13829,7 @@ function miniDialog(m, o) { o = o || {}; if (o.base && !o._ic && m && CHAR_INTRO
 var SCF = { tut2: 1, tut3: 1, after: 1 };
 function ryoPt() { return W.fire ? 'ryo_concept_fig' : 'ryo_plain_fig'; }
 /* v6.5.63: painted dialogue busts (URL files, not packed). Hang above the box; one-shot slam on angry/rage. */
-var PT_PAINT = {ryo:'ryo',aoi:'aoi',kurata:'kurata',mb_cafe:'kurata',gouki:'gouki',mizuno:'mizuno',mb_lib:'mizuno',mai:'mai',bando:'bando',mb_field:'bando',hall_mon:'saeki',saeki:'saeki',enforcer:'shigure',shigure:'shigure',nails:'nails',mb2_arcade:'nails',kagero:'kagero',c2_boss:'kagero',goda:'goda',mb2_sento:'goda',kaneda:'kaneda',c2_doorman:'kaneda',jin:'jin',mb2_game:'jin',masa:'masa',mb2_depot:'masa',nurse:'nurse',shiraishi:'nurse',kurogane:'genji',genji:'genji',tsukikage:'tsukikage',hina:'hina',kenta:'kenta',yuto:'yuto',mio:'mio',s_mio:'mio',s_boy:'sota',sota:'sota',s_pony:'rin',rin:'rin',aya:'aya',ayaf:'aya',riku:'riku',rikuf:'riku',kaede:'kaede',kaedef:'kaede',cafe_stu:'cafestu',cafestu:'cafestu',art_stu:'artstu',artstu:'artstu',paint:'artstu',drum:'drum',tut1:'student',bully1:'student',tanaka:'student',student:'student',tut2:'bully4',bully4:'bully4',shun:'bully4',tut3:'bully2',bully2:'bully2',bully3:'bully3',warden1:'sora',sora:'sora',warden2:'kenji',kenji:'kenji',warden3:'yuki',yuki:'yuki',npc_clerk:'mina',mina:'mina',attendant:'attendant',courier:'courier',npc_ramen:'tetsuo',tetsuo:'tetsuo',npc_stall:'rei',rei:'rei',npc_fence:'fence',hachi:'fence',fence:'fence',npc_fence2:'moku',moku:'moku',npc_fence3:'fence3',fence3:'fence3',informant:'informant',bouncer:'bouncer',chinpira1:'chinpira',chinpira:'chinpira',c2_punk:'c2punk',c2punk:'c2punk',c2_suit:'c2suit',c2suit:'c2suit',c2_boso:'c2boso',c2boso:'c2boso',c2_hustler:'c2hustler',c2hustler:'c2hustler',npc_attendant:'attendant',npc_courier:'courier'}, PT_HAS = {aoi_angry:1,aoi_happy:1,aoi_neutral:1,aoi_rage:1,aoi_sad:1,artstu_neutral:1,attendant_neutral:1,aya_neutral:1,bando_angry:1,bando_beaten:1,bando_calm:1,bouncer_neutral:1,bully2_neutral:1,bully3_neutral:1,bully4_neutral:1,c2boso_neutral:1,c2hustler_neutral:1,c2punk_neutral:1,c2suit_neutral:1,cafestu_neutral:1,chinpira_neutral:1,courier_neutral:1,drum_neutral:1,fence3_neutral:1,fence_neutral:1,genji_neutral:1,goda_angry:1,goda_beaten:1,goda_calm:1,gouki_angry:1,gouki_beaten:1,gouki_calm:1,hina_neutral:1,informant_neutral:1,jin_angry:1,jin_beaten:1,jin_calm:1,kaede_neutral:1,kagero_angry:1,kagero_beaten:1,kagero_calm:1,kaneda_angry:1,kaneda_beaten:1,kaneda_calm:1,kenji_neutral:1,kenta_neutral:1,kurata_angry:1,kurata_beaten:1,kurata_calm:1,mai_angry:1,mai_beaten:1,mai_calm:1,masa_angry:1,masa_beaten:1,masa_calm:1,mina_neutral:1,mio_neutral:1,mizuno_angry:1,mizuno_beaten:1,mizuno_calm:1,moku_neutral:1,nails_angry:1,nails_beaten:1,nails_calm:1,nurse_neutral:1,rei_neutral:1,riku_neutral:1,rin_neutral:1,ryo_angry:1,ryo_happy:1,ryo_neutral:1,ryo_rage:1,ryo_sad:1,saeki_angry:1,saeki_beaten:1,saeki_calm:1,shigure_angry:1,shigure_beaten:1,shigure_calm:1,sora_neutral:1,sota_neutral:1,student_neutral:1,tetsuo_neutral:1,tsukikage_neutral:1,yuki_neutral:1,yuto_neutral:1};
+var PT_PAINT = {ryo:'ryo',aoi:'aoi',kurata:'kurata',mb_cafe:'kurata',gouki:'gouki',mizuno:'mizuno',mb_lib:'mizuno',mai:'mai',bando:'bando',mb_field:'bando',hall_mon:'saeki',saeki:'saeki',enforcer:'shigure',shigure:'shigure',nails:'nails',mb2_arcade:'nails',kagero:'kagero',c2_boss:'kagero',goda:'goda',mb2_sento:'goda',kaneda:'kaneda',c2_doorman:'kaneda',jin:'jin',mb2_game:'jin',masa:'masa',mb2_depot:'masa',nurse:'nurse',shiraishi:'nurse',kurogane:'genji',genji:'genji',tsukikage:'tsukikage',hina:'hina',kenta:'kenta',yuto:'yuto',mio:'mio',s_mio:'mio',s_boy:'sota',sota:'sota',s_pony:'rin',rin:'rin',aya:'aya',ayaf:'aya',riku:'riku',rikuf:'riku',kaede:'kaede',kaedef:'kaede',cafe_stu:'cafestu',cafestu:'cafestu',art_stu:'artstu',artstu:'artstu',paint:'artstu',drum:'drum',tut1:'student',bully1:'student',tanaka:'student',student:'student',tut2:'bully4',bully4:'bully4',shun:'bully4',tut3:'bully2',bully2:'bully2',bully3:'bully3',warden1:'sora',sora:'sora',warden2:'kenji',kenji:'kenji',warden3:'yuki',yuki:'yuki',npc_clerk:'mina',mina:'mina',attendant:'attendant',courier:'courier',npc_ramen:'tetsuo',tetsuo:'tetsuo',npc_stall:'rei',rei:'rei',npc_fence:'fence',hachi:'fence',fence:'fence',npc_fence2:'moku',moku:'moku',npc_fence3:'fence3',fence3:'fence3',informant:'informant',bouncer:'bouncer',chinpira1:'chinpira',chinpira:'chinpira',c2_punk:'c2punk',c2punk:'c2punk',c2_suit:'c2suit',c2suit:'c2suit',c2_boso:'c2boso',c2boso:'c2boso',c2_hustler:'c2hustler',c2hustler:'c2hustler',npc_attendant:'attendant',npc_courier:'courier',n13sb:'sabu',sabu:'sabu',n13flip:'flip',flip:'flip',n13gk:'gekko',gekko:'gekko',c2_gray:'graycoat',graycoat:'graycoat',nq_udon:'oda',oda:'oda',nq_mech:'machi',machi:'machi',nq_clerk:'kanda',kanda:'kanda',nq_tome:'tome',tome:'tome',nq_bandai:'sato',sato:'sato',nq_dagashi:'fumi',fumi:'fumi',nq_drug:'ono',ono:'ono',nq_books:'hon',hon:'hon',nq_gacha:'gachakid',gachakid:'gachakid',ck_hostess:'ckhostess',ckhostess:'ckhostess',ck_dealer:'ckdealer',ckdealer:'ckdealer',ck_bartender:'ckdealer',n13hus:'c2hustler',ck_brute:'bouncer',c2_suitR:'c2runner',c2_suit_b:'c2runner',c2runner:'c2runner',c2_bosoD:'c2dock',c2_boso_b:'c2dock',c2dock:'c2dock',ck_cashier:'ckcashier',ckcashier:'ckcashier'}, PT_HAS = {aoi_angry:1,aoi_happy:1,aoi_neutral:1,aoi_rage:1,aoi_sad:1,artstu_neutral:1,attendant_neutral:1,aya_neutral:1,bando_angry:1,bando_beaten:1,bando_calm:1,bouncer_neutral:1,bully2_neutral:1,bully3_neutral:1,bully4_neutral:1,c2boso_neutral:1,c2hustler_neutral:1,c2punk_neutral:1,c2suit_neutral:1,cafestu_neutral:1,chinpira_neutral:1,courier_neutral:1,drum_neutral:1,fence3_neutral:1,fence_neutral:1,genji_neutral:1,goda_angry:1,goda_beaten:1,goda_calm:1,gouki_angry:1,gouki_beaten:1,gouki_calm:1,hina_neutral:1,informant_neutral:1,jin_angry:1,jin_beaten:1,jin_calm:1,kaede_neutral:1,kagero_angry:1,kagero_beaten:1,kagero_calm:1,kaneda_angry:1,kaneda_beaten:1,kaneda_calm:1,kenji_neutral:1,kenta_neutral:1,kurata_angry:1,kurata_beaten:1,kurata_calm:1,mai_angry:1,mai_beaten:1,mai_calm:1,masa_angry:1,masa_beaten:1,masa_calm:1,mina_neutral:1,mio_neutral:1,mizuno_angry:1,mizuno_beaten:1,mizuno_calm:1,moku_neutral:1,nails_angry:1,nails_beaten:1,nails_calm:1,nurse_neutral:1,rei_neutral:1,riku_neutral:1,rin_neutral:1,ryo_angry:1,ryo_happy:1,ryo_neutral:1,ryo_rage:1,ryo_sad:1,saeki_angry:1,saeki_beaten:1,saeki_calm:1,shigure_angry:1,shigure_beaten:1,shigure_calm:1,sora_neutral:1,sota_neutral:1,student_neutral:1,tetsuo_neutral:1,tsukikage_neutral:1,yuki_neutral:1,yuto_neutral:1,sabu_neutral:1,flip_neutral:1,gekko_neutral:1,graycoat_neutral:1,oda_neutral:1,machi_neutral:1,kanda_neutral:1,tome_neutral:1,sato_neutral:1,fumi_neutral:1,ono_neutral:1,hon_neutral:1,gachakid_neutral:1,c2runner_neutral:1,c2dock_neutral:1,ckhostess_neutral:1,ckdealer_neutral:1,ckcashier_neutral:1};
 function ptPaintId(who) { return (who && (PT_PAINT[who] || PT_PAINT[String(who).replace(/f$/, '')] || '')) || ''; }
 function ptMoodOf(who, opt, txt) {
   opt = opt || {};
@@ -13845,6 +13852,20 @@ function ptPaintUrl(who, mood) {
   else { add('neutral'); add('calm'); }
   for (var i = 0; i < tryM.length; i++) if (PT_HAS[id + '_' + tryM[i]]) return 'portraits/' + id + '_' + tryM[i] + '.webp';
   return '';
+}
+/* v6.5.63 ch2-ports: painted bust HTML for hardcoded dialog heads (same hang as scene()). */
+function ptFace(who, name, fig) {
+  var u = ptPaintUrl(who, ptMoodOf(who));
+  var src = u || fig || (PT[who] && IMG[PT[who]]) || (who && IMG[who + '_fig']) || '';
+  return '<div class="sh' + (u ? ' pt-hang' : '') + '">' + (src ? '<i class="pt2" style="background-image:url(' + src + ')"></i>' : '') + (name ? '<b class="snm">' + name + '</b>' : '') + '</div>';
+}
+function ptLift(d) {
+  d = d || (typeof $ === 'function' ? $('#wdlg') : document.getElementById('wdlg'));
+  if (d && d.querySelector && d.querySelector('.sh.pt-hang')) {
+    d.classList.add('pt-up');
+    /* same turn as dialog() + dlgPlace, so the reserved gap is in place before first paint */
+    if (d.classList.contains('dock-top') && typeof dlgDockTop === 'function') dlgDockTop(d);
+  } else if (d && d.classList) d.classList.remove('pt-up');
 }
 function ptReduced() { try { return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); } catch (eR) { return false; } }
 function ptSlam(kind) {
@@ -20102,8 +20123,8 @@ function c2Sumire(wake) { c2SumireD(wake); } /* v5.3: the tea menu, mugwort bund
 var C2_TEA = 26; /* v5.3 (t1199u): the paid full heal costs more than crafting; c2Wake's cup stays free */
 function c2HealAsk(free) { var full = SAVE.hp >= MAXHP, c = free ? 0 : C2_TEA, poor = SAVE.items < c;
   if (full) { scene(null, [['tsukikage', 'Your color\u2019s fine. Off you go. Don\u2019t come back bleeding.', { mood: 'neutral' }]]); return; }
-  dialog('<div class="sh"><i class="pt2" style="background-image:url(' + IMG.tsukikage_fig + ')"></i><b class="snm">Dr. Tsukikage</b></div><div class="tw"><p class="q">\u201c' + (free ? 'First cup\u2019s on the house. Sit.' : 'Bitter tea and a poultice. Back to full.') + '\u201d</p><p class="vst"><span>HP <b>' + SAVE.hp + '/' + MAXHP + '</b></span><span>' + (free ? 'Free' : 'Cost <b>\u00a5' + c + '</b> \u00b7 you have \u00a5' + SAVE.items) + '</span></p></div>',
-    [['Not now', null], [poor ? 'Heal \u00b7 she waves it off' : 'Drink the tea' + (c ? ' \u00b7 \u00a5' + c : ''), function () { c2Heal(poor ? 0 : c); }, 'hot']]); $('#wdlg').classList.add('scene'); }
+  dialog(ptFace('tsukikage', 'Dr. Tsukikage', IMG.tsukikage_fig) + '<div class="tw"><p class="q">\u201c' + (free ? 'First cup\u2019s on the house. Sit.' : 'Bitter tea and a poultice. Back to full.') + '\u201d</p><p class="vst"><span>HP <b>' + SAVE.hp + '/' + MAXHP + '</b></span><span>' + (free ? 'Free' : 'Cost <b>\u00a5' + c + '</b> \u00b7 you have \u00a5' + SAVE.items) + '</span></p></div>',
+    [['Not now', null], [poor ? 'Heal \u00b7 she waves it off' : 'Drink the tea' + (c ? ' \u00b7 \u00a5' + c : ''), function () { c2Heal(poor ? 0 : c); }, 'hot']]); $('#wdlg').classList.add('scene'); ptLift(); }
 function c2Heal(cost) { var h0 = SAVE.hp; SAVE.items = Math.max(0, SAVE.items - (cost | 0)); save(); hud(); if (cost) try { bumpItems(); } catch (eBi) {} ev('world:c2:heal:' + cost);
   W.busy = true; W.path = []; var o = $('#wrest'), rs = 2.6; o.style.setProperty('--rt', rs + 's'); o.className = 'on act tea'; var b = o.querySelector('b'); if (b) b.textContent = C2_HEAL_LBL;
   if (!o.querySelector('.c2cup')) o.insertAdjacentHTML('afterbegin', '<div class="c2cup" aria-hidden="true"><i></i><i></i><i></i><svg viewBox="0 0 120 90"><path d="M18 30h72l-8 44a10 10 0 0 1-10 8H36a10 10 0 0 1-10-8z" fill="#3f6a4a" stroke="#14110d" stroke-width="4"/><path d="M24 36h60l-2 10H26z" fill="#9bc07a"/><path d="M90 40c18 0 18 24 0 24" fill="none" stroke="#14110d" stroke-width="5"/><path d="M28 30h52" stroke="#d8f0b8" stroke-width="3"/></svg></div>');
@@ -20672,7 +20693,7 @@ if (typeof shopIc === 'function') { var shopIc0 = shopIc; shopIc = function (it)
 function shopWhy(id, it) { if (it.k === 'outfit' && ofOwned(it.of)) return 'Owned'; if (it.k === 'key' && (gearS().keys || {})[it.key]) return 'Owned'; if (!(it.stock | 0)) return 'Nothing for sale'; if (!shopLeft(id, it)) return 'Sold out';
   if (it.unlock && !it.unlock()) return '\ud83d\udd12 ' + (it.why || 'Locked'); if (it.k === 'heal' && SAVE.heal.length >= hSlots()) return 'Bag full'; if ((SAVE.items | 0) < it.cost) return 'Need \u00a5' + it.cost; return ''; }
 function c2Shop(id) { var P = SHOPS[id]; if (!P) return; W.dlg = true; W.path = []; stickEnd(); var m = $('#wshop'); if (!m) { m = document.createElement('div'); m.id = 'wshop'; $('#world').appendChild(m); }
-  var h = '<div class="shbox" role="dialog" aria-label="' + P.n + '"><div class="shhd"><i class="shpt" style="background-image:url(' + IMG[P.who + '_fig'] + ')"></i><div><b>' + P.n + '</b><p>\u201c' + P.hi + '\u201d</p></div><span class="shyen">\u00a5' + (SAVE.items | 0) + '</span></div><div class="shlist">';
+  var h = '<div class="shbox" role="dialog" aria-label="' + P.n + '"><div class="shhd"><i class="shpt" style="background-image:url(' + (ptPaintUrl(P.who, ptMoodOf(P.who)) || IMG[P.who + '_fig'] || (PT[P.who] && IMG[PT[P.who]]) || '') + ')"></i><div><b>' + P.n + '</b><p>\u201c' + P.hi + '\u201d</p></div><span class="shyen">\u00a5' + (SAVE.items | 0) + '</span></div><div class="shlist">';
   P.items.forEach(function (it) { var why = shopWhy(id, it), left = shopLeft(id, it);
     h += '<div class="shit' + (why ? ' off' : '') + '" data-i="' + it.id + '">' + shopIc(it) + '<div class="shtx"><b>' + shopName(it) + '</b><small>' + (it.k === 'outfit' ? OF_D[it.of] + (typeof GANG_OF !== 'undefined' && GANG_OF[it.of] ? ' Lead wears it. That crew will not start a fight in Chapter 2.' : ' Looks only \u2014 fits Ryo and Aoi.') : it.k === 'heal' ? '+' + Math.round(HITEM[it.h].pct * 100) + '% HP, into your bag.' : it.d || (it.k === 'card' ? 'One random card for Ryo or Aoi.' : it.k === 'intel' ? 'A fence\u2019s tip on a fight ahead.' : '')) + '</small>' +
       '<em>' + it.k.toUpperCase() + (it.stock ? ' \u00b7 ' + left + ' left' : '') + '</em></div><button data-a="buy" data-i="' + it.id + '"' + (why ? ' disabled' : '') + '>' + (why || (it.cost ? '\u00a5' + it.cost : 'Free')) + '</button></div>'; });
@@ -20895,12 +20916,12 @@ function c2SumireD(wake) { if (c2Room() !== 'clinic') return; var S = c2S(); c2C
 function c2SumireMenu() { var S = c2Cyc(), full = SAVE.hp >= MAXHP, poor = (SAVE.items | 0) < C2_TEA, m = S.mugLeft | 0;
   var b = [[full ? 'Full Heal Tea \u00b7 \u00a5' + C2_TEA + ' (HP full)' : 'Full Heal Tea \u00b7 \u00a5' + C2_TEA + (poor ? ' (need \u00a5' + C2_TEA + ')' : ''), function () { c2Heal(C2_TEA); }, 'hot', full || poor],
     ['Buy Herbs \u00b7 ' + m + '/' + C2_MUG + ' bundles', function () { setTimeout(c2MugShop, 0); }], ['Later', null]];
-  dialog('<div class="sh"><i class="pt2" style="background-image:url(' + IMG.tsukikage_fig + ')"></i><b class="snm">Dr. Tsukikage</b></div><div class="tw"><p class="q">\u201c' + C2_TEA_SAY[(S.tsi = ((S.tsi | 0) + 1)) % C2_TEA_SAY.length] + '\u201d</p><p class="vst"><span>HP <b>' + SAVE.hp + '/' + MAXHP + '</b></span><span>\u00a5' + (SAVE.items | 0) + '</span><span>\ud83c\udf3f ' + herbN('leaf') + ' \u00b7 ginger ' + herbN('ginger') + ' \u00b7 gauze ' + herbN('gauze') + '</span></p></div>', b);
-  $('#wdlg').classList.add('scene'); ev('world:c2:sumire:menu:' + (full ? 'full' : 'hurt') + ':' + m); }
+  dialog(ptFace('tsukikage', 'Dr. Tsukikage', IMG.tsukikage_fig) + '<div class="tw"><p class="q">\u201c' + C2_TEA_SAY[(S.tsi = ((S.tsi | 0) + 1)) % C2_TEA_SAY.length] + '\u201d</p><p class="vst"><span>HP <b>' + SAVE.hp + '/' + MAXHP + '</b></span><span>\u00a5' + (SAVE.items | 0) + '</span><span>\ud83c\udf3f ' + herbN('leaf') + ' \u00b7 ginger ' + herbN('ginger') + ' \u00b7 gauze ' + herbN('gauze') + '</span></p></div>', b);
+  $('#wdlg').classList.add('scene'); ptLift(); ev('world:c2:sumire:menu:' + (full ? 'full' : 'hurt') + ':' + m); }
 function c2MugShop() { var S = c2Cyc(), m = S.mugLeft | 0, y = SAVE.items | 0, all = Math.min(m, y);
-  dialog('<div class="sh"><i class="pt2" style="background-image:url(' + IMG.tsukikage_fig + ')"></i><b class="snm">Mugwort Bundles</b></div><div class="tw"><p class="kmug">' + herbSvg('leaf') + '<span>\u00a51 a bundle \u00b7 ' + C2_HERB_PER + ' leaves each. <b>' + m + '/' + C2_MUG + '</b> left until the next restock (when she restocks, or after a knockout).</span></p><p class="vst"><span>Leaves <b>' + herbN('leaf') + '</b></span><span>\u00a5' + y + '</span></p></div>',
+  dialog(ptFace('tsukikage', 'Mugwort Bundles', IMG.tsukikage_fig) + '<div class="tw"><p class="kmug">' + herbSvg('leaf') + '<span>\u00a51 a bundle \u00b7 ' + C2_HERB_PER + ' leaves each. <b>' + m + '/' + C2_MUG + '</b> left until the next restock (when she restocks, or after a knockout).</span></p><p class="vst"><span>Leaves <b>' + herbN('leaf') + '</b></span><span>\u00a5' + y + '</span></p></div>',
     [['Back', function () { setTimeout(c2SumireMenu, 0); }], ['Buy 1 \u00b7 \u00a51', function () { c2MugBuy(1); }, '', !m || y < 1], ['Buy ' + (all || m) + ' \u00b7 \u00a5' + (all || m), function () { c2MugBuy(all); }, 'hot', all < 2]]);
-  $('#wdlg').classList.add('scene'); ev('world:c2:mug:open:' + m); }
+  $('#wdlg').classList.add('scene'); ptLift(); ev('world:c2:mug:open:' + m); }
 function c2MugBuy(n) { var S = c2Cyc(); n = Math.min(n | 0, S.mugLeft | 0, SAVE.items | 0); if (n <= 0) return; S.mugLeft -= n; SAVE.items -= n; herbAdd('leaf', n * C2_HERB_PER); hud(); bumpItems(); AU.play('place');
   ev('world:c2:mug:buy:' + n + ':' + S.mugLeft); setTimeout(c2MugShop, 0); }
 /* glowing pickups: one per spot per stock cycle */
@@ -21003,7 +21024,7 @@ function c2LessonRows() {
     { id: 'cover', n: 'Cover Up', learned: !!L.cover, avail: !!L.assist && !L.cover && (kos >= 3 || fac >= 6) }
   ];
 }
-function c2GenjiFace() { return '<div class="sh"><i class="pt2" style="background-image:url(' + IMG.kurogane_fig + ')"></i><b class="snm">Genji</b></div><div class="tw"><p class="gess">\u2726 Spirit Essence <b>' + (SAVE.ess | 0) + '</b></p><p class="q">\u201cI show a move once. After that, you train it.\u201d</p></div>'; }
+function c2GenjiFace() { return ptFace('kurogane', 'Genji', IMG.kurogane_fig) + '<div class="tw"><p class="gess">\u2726 Spirit Essence <b>' + (SAVE.ess | 0) + '</b></p><p class="q">\u201cI show a move once. After that, you train it.\u201d</p></div>'; }
 function c2PatchLabel() { var left = c2PatchLeft(), hp = c2PatchAmt(); return left ? ('Patching in ' + left + ' s') : ('Patch me up (+' + hp + ' HP)'); }
 /* v6563 Genji's "Learn a basic": 5 Spirit Essence buys one more copy of one of the active fighter's five basics (own cap 6 per card).
  * Ryo and Aoi each have their own list; Ryo's Ground Crack and Aoi's Riposte stay out. The copy goes through the same teach scene as an evolve
@@ -21025,8 +21046,8 @@ function c2GenjiMenu() { var S = c2Cyc(), patch = c2PatchLabel(), ch3 = typeof c
       [patch, function () { setTimeout(c2Patch, 0); }],
       ['Conditioning (+2\u20134 max HP)', function () { setTimeout(function () { if (typeof c2CondAsk === 'function') c2CondAsk(); }, 0); }],
       ['Later', null]];
-    dialog('<div class="sh"><i class="pt2" style="background-image:url(' + IMG.kurogane_fig + ')"></i><b class="snm">Genji Kurogane</b></div><div class="tw"><p class="q">\u201c' + C2_GENJI_IDLE[(S.gi = ((S.gi | 0) + 1)) % C2_GENJI_IDLE.length] + '\u201d</p></div>', b3);
-    $('#wdlg').classList.add('scene', 'c2hq'); ev('world:c2:genji:menu'); return;
+    dialog(ptFace('kurogane', 'Genji Kurogane', IMG.kurogane_fig) + '<div class="tw"><p class="q">\u201c' + C2_GENJI_IDLE[(S.gi = ((S.gi | 0) + 1)) % C2_GENJI_IDLE.length] + '\u201d</p></div>', b3);
+    $('#wdlg').classList.add('scene', 'c2hq'); ptLift(); ev('world:c2:genji:menu'); return;
   }
   var open = c2LessonRows().filter(function (r) { return r.avail; });
   var btns = [['Evolve moves', function () { setTimeout(function () { if (root.ENH) { var o = trainOpt(); o.onBack = c2GenjiMenu; root.ENH.openEvo(SAVE, o); } }, 0); }, 'gmain'],
@@ -21035,7 +21056,7 @@ function c2GenjiMenu() { var S = c2Cyc(), patch = c2PatchLabel(), ch3 = typeof c
   open.forEach(function (r) { btns.push([r.n + ' \u00b7 Start', function () { setTimeout(function () { if (typeof c2LessonOffer === 'function') c2LessonOffer(r.id); }, 0); }, 'gmain']); });
   btns.push(['Later', null, 'glater']);
   dialog(c2GenjiFace() + '<p class="gnote">Evolve a move you own, or learn a basic from me. Signature moves stay as they are.</p>', btns);
-  $('#wdlg').classList.add('scene', 'c2hq', 'gtrain'); ev('world:c2:genji:menu'); }
+  $('#wdlg').classList.add('scene', 'c2hq', 'gtrain'); ptLift(); ev('world:c2:genji:menu'); }
 function c2Patch() { var S = c2Cyc(), add = c2PatchAmt(), left = c2PatchLeft();
   if (SAVE.hp >= MAXHP) { scene(null, [['kurogane', 'You\u2019re not bleeding. Save my tape for when you are.', { mood: 'neutral' }]]); ev('world:c2:patch:full'); return; }
   if (left) { scene(null, [['kurogane', 'Give it a minute. I can tape you again in ' + left + ' s.'], ['kurogane', 'Sit tight. It\u2019s a short wait.', { mood: 'neutral' }]]); ev('world:c2:patch:wait:' + left); return; }
@@ -21065,19 +21086,19 @@ function c2TrainHeal(why) {
 }
 function c2SparSnap() { W.sparSnap = JSON.parse(JSON.stringify({ hp: SAVE.hp, sp: SAVE.sp, chars: SAVE.chars, heal: SAVE.heal, soda: SAVE.soda, sodaOn: SAVE.sodaOn, sodaK: SAVE.sodaK, items: SAVE.items, ess: SAVE.ess, fights: SAVE.fights, wins: SAVE.wins, losses: SAVE.losses })); }
 function c2RingMenu() { var o = other(SAVE.act);
-  dialog('<div class="sh"><i class="pt2" style="background-image:url(' + IMG.kurogane_fig + ')"></i><b class="snm">In the ring</b></div><div class="tw"><p class="q">\u201cYou\u2019re inside. Spar ' + CNAME[o] + ', or train while you\u2019re here.\u201d</p></div>', [
+  dialog(ptFace('kurogane', 'In the ring', IMG.kurogane_fig) + '<div class="tw"><p class="q">\u201cYou\u2019re inside. Spar ' + CNAME[o] + ', or train while you\u2019re here.\u201d</p></div>', [
     ['Spar', function () { c2RingFight(); }, 'hot'],
     ['Enhance cards', function () { setTimeout(function () { if (root.ENH && root.ENH.openEnhance) { var opt = trainOpt(); opt.onBack = c2RingMenu; root.ENH.openEnhance(SAVE, opt); } }, 0); }],
     ['Change deck', function () { setTimeout(c2RingDeck, 0); }],
     ['Back', function () { var r = W.ryo, a = W.aoi; if (r) rdyOff(r); if (a) rdyOff(a); if (typeof g38RingBack === 'function' && g38RingBack()) return; W.g5busy = 0; W.cut = false; }, 'glater']
-  ]); $('#wdlg').classList.add('scene', 'c2hq'); ev('world:c2:ring:menu'); }
+  ]); $('#wdlg').classList.add('scene', 'c2hq'); ptLift(); ev('world:c2:ring:menu'); }
 function c2RingDeck() { if (!STORY || !STORY.open) { c2RingMenu(); return; } W.dlg = true; W.path = [];
   STORY.open(SAVE, { canSpend: true, tab: 'deck', save: function () { save(); hud(); }, onSwitch: function () { if (typeof switchChar === 'function') switchChar(); }, onClose: function () { setTimeout(c2RingMenu, 50); hud(); } }); ev('world:c2:ring:deck'); }
 function c2RingFight() { var r = W.ryo, a = W.aoi, o = other(SAVE.act); if (!a) return; c2SparSnap(); W.cut = true;
   scene(null, [[o, o === 'aoi' ? 'Guard up, Ryo. I won\u2019t go easy.' : 'Don\u2019t cry when I win, Aoi.', { hype: o === 'ryo' ? 1 : 0 }], ['kurogane', 'Touch gloves.{p} Clean round.{p} Go.', { mood: 'neutral' }]], function () {
     rdyOff(r); rdyOff(a); W.cut = false; W.g5busy = 0; var id = c2SparFoe(o); ev('world:c2:spar:fight:' + id + ':free'); fight([id], false, { dg: 'c2', dgk: 'spar', c2spar: 1, c2lesson: '', flv: 5 }); }); }
 function c2Spar() { var S = c2S(); if (!S.e.genji) { scene(null, C2SC.ring); return; } if (W.g5busy) return; var o = other(SAVE.act);
-  dialog('<div class="sh"><i class="pt2" style="background-image:url(' + IMG.kurogane_fig + ')"></i><b class="snm">Spar in the ring</b></div><div class="tw"><p class="q">\u201cOne round with ' + CNAME[o] + '. They use the deck they really fight with. Nobody bleeds on my canvas.\u201d</p><p class="dim">Step in. Then you can spar, train, or change the deck.</p></div>',
+  dialog(ptFace('kurogane', 'Spar in the ring', IMG.kurogane_fig) + '<div class="tw"><p class="q">\u201cOne round with ' + CNAME[o] + '. They use the deck they really fight with. Nobody bleeds on my canvas.\u201d</p><p class="dim">Step in. Then you can spar, train, or change the deck.</p></div>',
     [['Not now', null], ['Yes. Let\u2019s get in.', function () { if (typeof chN === 'function' && chN() === 3) c2SparGo(); else c2SparEnter(); }, 'hot']], 'kurogane_fig', { versus: 1, name: 'Genji Kurogane' }); ev('world:c2:spar:ask'); }
 function c2SparEnter() { var r = W.ryo, a = W.aoi; if (!a) return; W.g5busy = 1; W.cut = true; W.path = []; ev('world:c2:spar:enter:free');
   c2WalkAll([[r, 500, 520, 150], [a, 650, 520, 150]], function () { r.dir = 2; a.dir = 1; place(r, 0); place(a, 0); rdyOn(r, 2); rdyOn(a, 1); W.g5busy = 0; W.cut = false; c2RingMenu(); }); }
@@ -25518,6 +25539,7 @@ function ckChar(id, name, base) {
   NM[id] = name; PT[id] = PT[base] || (base + '_fig');
 }
 function ckFoes() { ckChar('ck_hostess', 'Club Hostess', 'c2_hustler'); ckChar('ck_dealer', 'Club Dealer', 'c2_hustler'); ckChar('ck_brute', 'Back-room Bouncer', 'bouncer'); }
+NM.ck_hostess = 'Club Hostess'; NM.ck_dealer = 'Club Dealer'; NM.ck_bartender = 'Club Bartender'; NM.ck_brute = 'Back-room Bouncer'; NM.ck_cashier = 'Cage Cashier';
 function ckBit(box, cls, x, y, w, h) { var e = document.createElement('i'); e.className = 'ckbit ' + cls; e.style.left = x + 'px'; e.style.top = y + 'px'; e.style.width = w + 'px'; e.style.height = h + 'px'; box.appendChild(e); return e; }
 function ckSeats() {
   var ys = [1080, 1260, 1440, 1620], out = [], i;
@@ -25951,12 +25973,12 @@ function ckStairs() {
   if (!ckSt().f.ck6) { if (typeof sayKey === 'function') sayKey('c2', 'stairs'); else toast('The stairs are in Punk\'s office.'); return; }
   scene(null, [['aoi', 'Lantern Alley. One way down.']], function () { c2Go('town', [4760, 2700, 0]); if (typeof sayKey === 'function') sayKey('c2', 'stairs_side'); else toast('The stairwell does not open from this side.'); });
 }
-function ckCoat() { var S = ckSt(); scene(null, [['npc_clerk', S.coat ? 'Your jacket is still on you. We do not check school coats twice.' : 'Coat check is for guests. The school jacket can stay on your shoulders.']], function () { S.coat = 1; save(); }); }
-function ckCage() { scene(null, [['npc_clerk', 'Cage is open. The floor takes five, ten, or twenty. I do not make change into anything else.']]); }
+function ckCoat() { var S = ckSt(); scene(null, [['ck_hostess', S.coat ? 'Your jacket is still on you. We do not check school coats twice.' : 'Coat check is for guests. The school jacket can stay on your shoulders.']], function () { S.coat = 1; save(); }); }
+function ckCage() { scene(null, [['ck_cashier', 'Cage is open. The floor takes five, ten, or twenty. I do not make change into anything else.']]); }
 function ckBar() {
   var suit = ckSuitMode();
-  scene(null, [['npc_ramen', 'What\'ll it be? House special is the Fox Tail.']], function () {
-    scene(null, [['npc_ramen', suit ? 'Nice suit, kid. Still not 20.' : 'Nice try, kid. ID?']], function () {
+  scene(null, [['ck_bartender', 'What\'ll it be? House special is the Fox Tail.']], function () {
+    scene(null, [['ck_bartender', suit ? 'Nice suit, kid. Still not 20.' : 'Nice try, kid. ID?']], function () {
       ckSt().playing = 0; ckSt().meter = 0; save(); ckCatchGo(Math.min(4, (ckSt().rung | 0) + 1));
     });
   });
@@ -36879,12 +36901,12 @@ var GINKO = (function () {
       rows.push([lab, function () { gkBuy(it); }, '', poor || full]); marks.push({ id: id, chef: id === 'omurice' || id === 'wiener' });
     });
     rows.push(['Later', null]);
-    var head = '<div class="sh"><i class="pt2" style="background-image:url(' + fig + ')"></i><b class="snm">Gekko</b></div>' +
+    var head = ptFace('n13gk', 'Gekko', fig) +
       '<div class="tw"><p class="q">\u201c' + line + '\u201d</p>' +
       '<p class="vst"><span>HP <b>' + (SAVE.hp | 0) + '/' + MAXHP + '</b></span><span>SP <b>' + (SAVE.sp | 0) + '/' + spM + '</b></span><span>\u00a5<b>' + y + '</b></span></p></div>';
     dialog(head, rows);
     var d = typeof $ === 'function' ? $('#wdlg') : document.getElementById('wdlg');
-    if (d) { d.classList.add('scene');
+    if (d) { d.classList.add('scene'); ptLift(d);
       try {
         gkmCss(); d.classList.add('gkm'); var body = d.querySelector('.d2-body'), list = d.querySelector('.d2-list'), btns = list ? list.querySelectorAll('button.d2-opt') : [];
         if (body && list) {
@@ -39705,9 +39727,9 @@ function camPan(to, o, done) {
       var why = full ? (it.bag ? ' (bag full)' : ' (full)') : poor ? ' (need \u00a5' + c + ')' : '';
       return [(it.jp ? '<span class="nqjp">' + it.jp + '</span> ' : '') + esc(it.n) + ' \u00b7 ' + eff + ' \u00b7 ' + priceHtml(it, o.nails) + why, function () { o.buy(it, c); }, it.hot ? 'hot' : '', poor || full]; });
     rows.push(['Later', null]);
-    var head = '<div class="sh"><i class="pt2" style="background-image:url(' + IMG[PT[o.who]] + ')"></i><b class="snm">' + esc(o.name) + '</b></div><div class="tw"><p class="q">\u201c' + esc(o.line) + '\u201d</p>' + (o.nails ? '<p class="nqnpl">' + NP + ' \u00b7 20% off on Nails\u2019 turf</p>' : '') +
+    var head = ptFace(o.who, esc(o.name), IMG[PT[o.who]]) + '<div class="tw"><p class="q">\u201c' + esc(o.line) + '\u201d</p>' + (o.nails ? '<p class="nqnpl">' + NP + ' \u00b7 20% off on Nails\u2019 turf</p>' : '') +
       '<p class="vst"><span>HP <b>' + (SAVE.hp | 0) + '/' + MAXHP + '</b></span><span>SP <b>' + (SAVE.sp | 0) + '/' + spMx + '</b></span><span>\u00a5' + y + '</span></p></div>';
-    dialog(head, rows); var d = document.getElementById('wdlg'); if (d) { d.classList.add('scene', 'nqmenu'); d.querySelectorAll('button').forEach(function (b) { if (/<(s|b|span)[ >]/.test(b.textContent)) b.innerHTML = b.textContent; }); }
+    dialog(head, rows); var d = document.getElementById('wdlg'); if (d) { d.classList.add('scene', 'nqmenu'); ptLift(d); d.querySelectorAll('button').forEach(function (b) { if (/<(s|b|span)[ >]/.test(b.textContent)) b.innerHTML = b.textContent; }); }
   }
   function applyVit(it) { var h0 = SAVE.hp | 0, s0 = SAVE.sp | 0, mx = spM();
     if (it.full) SAVE.hp = MAXHP; else if (it.hp) SAVE.hp = Math.min(MAXHP, h0 + it.hp);
@@ -39776,10 +39798,10 @@ function camPan(to, o, done) {
   NQ.udonFx = udonFx;
   /* Machi Motors: medical tape, bandages, canned sodas (Nails' price on the corner) */
   SHOPS.nq_motors = { n: 'Machi Motors', who: 'nq_mech', hi: 'Tape, bandages, cold cans. The bike stuff\u2019s not for kids.', nq: 1,
-    items: [{ id: 'tape', k: 'herb', hb: 'tape', n: 'Medical Tape', base: 2, cost: 1, stock: 3, d: 'For the 20% dressing, with clean gauze.' }, { id: 'band', k: 'heal', h: 'bandage', base: 3, cost: 2, stock: 3 }, { id: 'can', k: 'soda', n: 'Canned soda', base: 2, cost: 1, stock: 3, d: 'Cold from the fridge. One soda in your bag.' }] };
+    items: [{ id: 'tape', k: 'herb', hb: 'tape', n: 'Medical Tape', base: 3, cost: 2, stock: 3, d: 'For the 20% dressing, with clean gauze.' }, { id: 'band', k: 'heal', h: 'bandage', base: 4, cost: 3, stock: 3 }, { id: 'can', k: 'soda', n: 'Canned soda', base: 3, cost: 2, stock: 3, d: 'Cold from the fridge. One soda in your bag.' }] };
   /* the Ginko stalls Nails' wins open */
   SHOPS.nq_gk1 = { n: 'Dagashi Fumi', who: 'nq_dagashi', hi: 'Ten yen candy. Well. One yen, for you.', items: [{ id: 'ram', k: 'soda', n: 'Ramune', cost: 2, stock: 3, d: 'Marble soda. One soda in your bag.' }, { id: 'candy', k: 'heal', h: 'candy', cost: 1, stock: 3 }] };
-  SHOPS.nq_gk2 = { n: 'Ono Drugstore', who: 'nq_drug', hi: 'Bandages, potions, tape. Don\u2019t tell me how.', items: [{ id: 'band', k: 'heal', h: 'bandage', cost: 3, stock: 3 }, { id: 'pot', k: 'heal', h: 'potion', cost: 7, stock: 2 }, { id: 'tape', k: 'herb', hb: 'tape', n: 'Medical Tape', cost: 1, stock: 2, d: 'For the 20% dressing.' }] };
+  SHOPS.nq_gk2 = { n: 'Ono Drugstore', who: 'nq_drug', hi: 'Bandages, potions, tape. Don\u2019t tell me how.', items: [{ id: 'band', k: 'heal', h: 'bandage', cost: 4, stock: 3 }, { id: 'pot', k: 'heal', h: 'potion', cost: 7, stock: 2 }, { id: 'tape', k: 'herb', hb: 'tape', n: 'Medical Tape', cost: 3, stock: 2, d: 'For the 20% dressing.' }] };
   SHOPS.nq_gk3 = { n: 'Hon\u2019s Used Books', who: 'nq_books', hi: 'Old fight manuals. Some of them even work.', nqBook: 1, items: [{ id: 'bkc', k: 'book', bk: 'common', n: 'Dog-eared manual', cost: 10, stock: 2, d: 'Open it: +1 ' + (typeof essName === 'function' ? essName() : 'essence') + '.' }, { id: 'bku', k: 'book', bk: 'uncommon', n: 'Rare fight manual', cost: 24, stock: 1, d: 'Open it: +3 ' + (typeof essName === 'function' ? essName() : 'essence') + '.' }] };
   SHOPS.nq_gk4 = { n: 'Gacha Corner', who: 'nq_gacha', hi: 'Turn the crank! Every capsule\u2019s a card!', items: [{ id: 'gc', k: 'card', rar: 'common', n: 'Capsule (common)', cost: 8, stock: 3 }, { id: 'gu', k: 'card', rar: 'uncommon', n: 'Gold capsule (uncommon)', cost: 20, stock: 1 }] };
   var GKS = { n1: 'nq_gk1', n2: 'nq_gk2', n3: 'nq_gk3', n4: 'nq_gk4' };
