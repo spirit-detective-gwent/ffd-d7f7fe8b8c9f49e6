@@ -628,6 +628,7 @@ async def main():
             tape: hs&&hs.some(function(i){return (i.id==='etape'||i.hb==='tape')&&i.base===3&&i.cost===2;}),
             depN: dp&&dp.length,
             depOnigiri: dp&&dp[0]&&dp[0].eat==='onigiri',
+            depMap: dp&&dp.some(function(i){return i.id==='yardmap'&&i.base===5&&i.cost===4&&i.stock===1&&!i.hp&&!i.sp&&!i.bag;}),
             depMats: dp&&dp.some(function(i){return i.id==='ptape'||i.id==='gauze'||i.k==='heal'||i.bag;}),
             openClass: el&&el.className, jp: html.indexOf('千代和菓子')>=0, struck:struck,
             posOk: x0===x1 && y0===y1, depotOpen:!!depotOpen, nailsCh:!!nailsCh
@@ -637,7 +638,7 @@ async def main():
         ok('Chiyo menu keeps sweet-roll prices and adds provisional hojicha', menu and menu.get('roll') and menu.get('hoji'), menu)
         ok('Chiyo menu has no to-go rows', menu and menu.get('togo') is False, menu)
         ok('Hase menu is tape and gauze at food-equivalent prices', menu and menu.get('tape') and menu.get('gauze') and menu.get('haseN')==2 and not menu.get('oil') and not menu.get('patch'), menu)
-        ok('depot catalog is food and drink only', menu and menu.get('depOnigiri') and menu.get('depN')==2 and not menu.get('depMats'), menu)
+        ok('depot catalog is food, drink, and a Yard map', menu and menu.get('depOnigiri') and menu.get('depMap') and menu.get('depN')==3 and not menu.get('depMats'), menu)
         ok('Chiyo themed menu opens with JP header and Nails strikethrough', menu and menu.get('jp') and menu.get('struck') and menu.get('nailsCh') and 's2m-chiyo' in str(menu.get('openClass')), menu)
         ok('opening the menu does not move the player', menu and menu.get('posOk'), menu)
         ok('depot open() is a no-op until phase 5 wires it', menu and menu.get('depotTried', True) is not False and not menu.get('depotOpen'), menu)
@@ -670,6 +671,71 @@ async def main():
           }catch(e){ return { err:String(e&&e.message||e) }; }
         })()""")
         ok('Hase themed menu shows full price, then Nails strikethrough after takeover', hase and hase.get('full') and hase.get('nails'), hase)
+
+
+        # GGD-50 garden, chance, meal edge, yard map, migration
+        g50 = await ev(pg, """(function(){
+          var G = root.FFF_S2GARDEN;
+          if (!G) return { err: 'no FFF_S2GARDEN' };
+          try { G.migrate(); } catch(e){}
+          var S = c2Cyc();
+          var h = herbS();
+          var clinic = C2HUB && C2HUB.clinic;
+          var drawers = clinic && clinic.block && clinic.block.some(function(b){ return b[0]===130 && b[1]===150 && b[2]===470 && b[3]===300; });
+          var pots = clinic && clinic.block && clinic.block.filter(function(b){ return b[3]-b[1]<=30 && b[2]-b[0]<=40; }).length;
+          var seedHerb = !!(HERB && HERB.seed);
+          var note = (typeof C2_HERB_NOTE==='string' && /seeds/i.test(C2_HERB_NOTE));
+          /* chance: 6% x2, 1% x3 */
+          var n1 = G.rollMult(0.08), n2 = G.rollMult(0.05), n3 = G.rollMult(0.005);
+          var rareNo = G.rollRare(0.01);
+          /* bloom on quest refresh, never on wake */
+          S.pots = S.pots || {};
+          S.pots.gp1 = { st: 'planted' }; S.pots.gp2 = { st: 'empty' };
+          var cyc0 = S.cyc | 0;
+          c2RefreshCycle('wake:gym');
+          var still = S.pots.gp1.st, cycW = S.cyc | 0;
+          c2RefreshCycle('quest:test');
+          var bloomed = S.pots.gp1.st, empty = S.pots.gp2.st, cycQ = S.cyc | 0;
+          /* meal edge: clean plate +2 after S-gate, never restores a failed S */
+          SAVE.mealEdge = { k: 'plate', item: 'onigiri' };
+          var gs = { dmg: 4, foe0: 8, hp0: 55, turns: 2, dbl: 2, tri: 0, sig: 0, wasted: 0, amb: 0, foes: 1 };
+          /* a mid A score (~80s) with HP below the gate */
+          var low = grade(gs, 30); /* 30/55 < 70% */
+          SAVE.mealEdge = { k: 'plate', item: 'onigiri' };
+          var low2 = grade(gs, 30);
+          SAVE.mealEdge = { k: 'plate', item: 'onigiri' };
+          var okHp = grade(gs, 50); /* 50/55 > 70% */
+          /* sip not from candy */
+          var candyNo = G.mealEligible({ item: 'candy' }) === false;
+          var plateYes = G.mealEligible({ item: 'onigiri', from: 'counter' }) === true;
+          var sipK = G.mealKind('blend');
+          var plateK = G.mealKind('onigiri');
+          /* yard map lasts the current cycle */
+          S.yardMap = { cyc: S.cyc | 0 };
+          var yOn = G.yardActive();
+          c2RefreshCycle('quest:map');
+          var yOff = G.yardActive();
+          /* migration flag */
+          var mig = !!S.gardenMig;
+          return {
+            g:!!G, drawers:!!drawers, pots:pots|0, seedHerb:!!seedHerb, note:!!note,
+            seed:h.seed|0, mug:S.mugLeft|0, n1:n1, n2:n2, n3:n3, rareNo:rareNo,
+            still:still, bloomed:bloomed, empty:empty, cyc0:cyc0, cycW:cycW, cycQ:cycQ,
+            lowK: low&&low.k, low2K: low2&&low2.k, low2sc: low2&&low2.score, okHpK: okHp&&okHp.k,
+            candyNo:candyNo, plateYes:plateYes, sipK:sipK, plateK:plateK,
+            yOn:!!yOn, yOff:!!yOff, mig:mig,
+            intro: G.G.INTRO && G.G.INTRO.length===3,
+            buy: G.G.BUY_LINE==='Seeds are ¥1 a packet'
+          };
+        })()""")
+        ok('S2GARDEN is injected', g50 and g50.get('g') and g50.get('intro') and g50.get('buy'), g50)
+        ok('clinic drawers block is gone and 9 pot footprints exist', g50 and g50.get('drawers') is False and g50.get('pots')>=9, g50)
+        ok('seed herb and help copy mention seeds', g50 and g50.get('seedHerb') and g50.get('note') and g50.get('mig'), g50)
+        ok('chance rolls are 6% x2 and 1% x3', g50 and g50.get('n1')==1 and g50.get('n2')==2 and g50.get('n3')==3 and g50.get('rareNo') is None, g50)
+        ok('pots bloom on quest refresh and not on a knockout wake', g50 and g50.get('still')=='planted' and g50.get('bloomed')=='bloomed' and g50.get('empty')=='empty' and g50.get('cycW')==g50.get('cyc0') and g50.get('cycQ')==g50.get('cyc0')+1, g50)
+        ok('Clean plate +2 cannot restore a failed S-gate', g50 and g50.get('lowK')!='S' and g50.get('low2K')!='S', g50)
+        ok('meal edge is a counter plate or sip, never bag candy', g50 and g50.get('candyNo') and g50.get('plateYes') and g50.get('sipK')=='sip' and g50.get('plateK')=='plate', g50)
+        ok('Yard map marks the current cycle only', g50 and g50.get('yOn') and g50.get('yOff') is False, g50)
 
         # no page errors
         ok('no page errors', not errs, errs[:4])
