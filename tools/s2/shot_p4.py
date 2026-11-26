@@ -106,8 +106,8 @@ async def main():
         await shot(pg, '01_garage_facade')
         # interior, Sada at the desk
         inside = await ev(pg, """(function(){
-          try{c2Go('gar',[640,700,0]);}catch(e){}
-          try{ if(W.ryo){ W.ryo.x=640; W.ryo.y=700; place(W.ryo,0);} if(W.aoi){ W.aoi.x=560; W.aoi.y=740; place(W.aoi,0);} camera(true);}catch(e2){}
+          try{c2Go('gar',[640,640,0]);}catch(e){}
+          try{ if(W.ryo){ W.ryo.x=640; W.ryo.y=640; place(W.ryo,0);} if(W.aoi){ W.aoi.x=560; W.aoi.y=680; place(W.aoi,0);} camera(true);}catch(e2){}
           try{ if(root.FFF_S2P4&&root.FFF_S2P4.paintRoom) root.FFF_S2P4.paintRoom(); }catch(e3){}
           var k=W.c2n&&W.c2n.s2sada;
           var rain=(function(){var e=document.getElementById('c2amb'); if(!e)return 'none'; return e.style.display||getComputedStyle(e).display;})();
@@ -122,7 +122,7 @@ async def main():
           var P4=root.FFF_S2P4, st=c2S();
           P4.setStg('done'); st.q.cq2_s2_gar=9;
           try{c2Pop();}catch(e){}
-          try{ if(W.ryo){ W.ryo.x=640; W.ryo.y=700; place(W.ryo,0);} camera(true);}catch(e2){}
+          try{ if(W.ryo){ W.ryo.x=640; W.ryo.y=640; place(W.ryo,0);} camera(true);}catch(e2){}
           try{ if(P4.paintRoom) P4.paintRoom(); }catch(e3){}
           return {room:typeof c2Room==='function'?c2Room():null, cleared:P4.cleared&&P4.cleared(), sada:!!(W.c2n&&W.c2n.s2sada)};
         })()""")

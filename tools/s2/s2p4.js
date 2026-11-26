@@ -270,7 +270,7 @@
     if (room() !== 'gar') { if (SADA) { try { kill(SADA); } catch (eK) {} SADA = null; } return; }
     if (cleared()) { if (SADA) { try { kill(SADA); } catch (eK) {} SADA = null; } return; }
     if (SADA && SADA.el && SADA.el.parentNode) return;
-    SADA = npc('nq_sada', 400, 700, Math.PI / 2);
+    SADA = npc('nq_sada', 500, 700, Math.PI / 2);
     try { if (typeof waddle === 'function') waddle(SADA, 0, Math.PI / 2); } catch (eW) {}
     try { if (W.c2n) W.c2n.s2sada = SADA; } catch (eN) {}
   }

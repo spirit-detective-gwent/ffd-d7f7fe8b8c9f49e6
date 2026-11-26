@@ -9,7 +9,8 @@ HERE = Path(__file__).resolve().parent
 OUT = Path('/workspace/v6560-review/seal2/phase4')
 V1 = OUT / 'v1'
 V2 = OUT / 'v2'
-PORT = 8896
+V3 = OUT / 'v3'
+PORT = int(__import__('os').environ.get('PORT','8899'))
 
 def font(size):
     for p in ('/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
@@ -24,6 +25,7 @@ def font(size):
 def sheet():
     V1.mkdir(parents=True, exist_ok=True)
     V2.mkdir(parents=True, exist_ok=True)
+    V3.mkdir(parents=True, exist_ok=True)
     cells, labels = [], [
         ('garSouth', 'Façade 配車'),
         ('garInside', 'Interior'),
@@ -50,17 +52,19 @@ def sheet():
     rows = (len(cells) + cols - 1) // cols
     sh = Image.new('RGB', (cols * W + 24, rows * H + 48), (16, 12, 20))
     d = ImageDraw.Draw(sh)
-    d.text((12, 10), 'Seal 2 Phase 4  ·  Off Schedule  ·  v1 preview sheet', fill=(244, 234, 210), font=font(18))
+    d.text((12, 10), 'Seal 2 Phase 4  ·  Off Schedule  ·  v3 preview sheet', fill=(244, 234, 210), font=font(18))
     for i, c in enumerate(cells):
         r, col = divmod(i, cols)
         sh.paste(c, (12 + col * W, 36 + r * H))
     sh.save(V1 / 'phase4_sheet_v1.png')
     sh.save(V2 / 'phase4_sheet_v2.png')
-    sh.save(OUT / 'phase4_sheet_v2.png')
+    sh.save(V3 / 'phase4_sheet_v3.png')
+    sh.save(OUT / 'phase4_sheet_v3.png')
     print('sheet', sh.size, 'cells', len(cells))
 
 async def main():
     V1.mkdir(parents=True, exist_ok=True)
+    V3.mkdir(parents=True, exist_ok=True)
     s = TS(('127.0.0.1', PORT), functools.partial(Q, directory=str(HERE)))
     threading.Thread(target=s.serve_forever, daemon=True).start()
     from playwright.async_api import async_playwright
@@ -83,6 +87,7 @@ async def main():
             im = Image.open(io.BytesIO(base64.b64decode(data.split(',', 1)[1]))).convert('RGB')
             im.save(V1 / f'{cid}.png')
             im.save(V2 / f'{cid}.png')
+            im.save(V3 / f'{cid}.png')
             print(cid, im.size)
         await b.close()
     sheet()

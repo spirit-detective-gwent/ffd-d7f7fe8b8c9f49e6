@@ -141,10 +141,11 @@
 
   /* ---------------- doors + rooms ---------------- */
   var BOAT_AT = [4830, 3580];
-  var QUAY_AT = [4100, 3720];
-  var GARAGE_AT = [4100, 3720];
+  /* south-quay walkway, not the canal (the old 4100,3720 pin sat in the water) */
+  var QUAY_AT = [4780, 3880];
+  var GARAGE_AT = [4040, 3900];
   var BOAT_DOOR = { r: [4780, 3480, 4880, 3600], at: BOAT_AT, to: 'boat', out: [BOAT_AT[0], BOAT_AT[1] + 24] };
-  var QUAY_SPOT = { r: [4060, 3660, 4160, 3780], at: QUAY_AT };
+  var QUAY_SPOT = { r: [4680, 3800, 4920, 3960], at: QUAY_AT };
   var RW = 1280, RH = 900;
   function roomDef(k, n, extra) {
     var id = 'c2_nq_' + k; C2R[k] = id;

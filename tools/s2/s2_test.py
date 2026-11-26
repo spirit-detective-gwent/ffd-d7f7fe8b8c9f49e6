@@ -400,6 +400,9 @@ async def main():
         })()""")
         ok('compassionate walk closes the quest', walked and walked.get('q')==9, walked)
         ok('after a close the pin is the quay garage and Off Schedule can open', walked and walked.get('pin') and 'garage' in str(walked['pin']).lower() and walked.get('p4')==0, walked)
+        pin_w = (walked or {}).get('pin') or {}
+        ok('garage pin after a close sits on the south quay, not in the canal',
+           pin_w.get('y') is not None and pin_w['y'] >= 3840 and not (pin_w.get('x') == 4100 and pin_w['y'] == 3720), walked)
 
         # skip path: Lookout Corner already done (n13r === 'dep') does not soft-lock
         skip = await ev(pg, """(function(){
@@ -416,6 +419,25 @@ async def main():
         ok('Lookout-Corner-already-done is detected (n13r === dep)', skip and skip.get('already') and skip.get('dep')=='dep', skip)
         ok('skip path closes the quest and does not soft-lock', skip and skip.get('q')==9 and not skip.get('soft'), skip)
         ok('skip path moves the pin to the garage', skip and skip.get('pin') and 'garage' in str(skip['pin']).lower(), skip)
+        pin_s = (skip or {}).get('pin') or {}
+        ok('skip-path garage pin sits on the south quay, not in the canal',
+           pin_s.get('y') is not None and pin_s['y'] >= 3840 and not (pin_s.get('x') == 4100 and pin_s['y'] == 3720), skip)
+
+        flank = await ev(pg, """(function(){
+          var P3=root.FFF_S2P3, st=c2S();
+          st.q.cq2_s2_boat=0; P3.setStg('open');
+          SAVE.bond=SAVE.bond||{}; SAVE.bond.path='strategic';
+          try { STORY.ensure(SAVE); } catch(e){}
+          var t = P3.s2Tgt && P3.s2Tgt();
+          /* restore the closed chain so Phase 4 tests still see a finished boat quest */
+          P3.setStg('done'); st.q.cq2_s2_boat=9;
+          try { if (root.FFF_S2P4 && root.FFF_S2P4.chainRepair) root.FFF_S2P4.chainRepair(); } catch(e2){}
+          return t && { lab:t.lab, loc:t.loc, x:t.x, y:t.y, gAt: P3.GARAGE_AT, qAt: P3.QUAY_AT };
+        })()""")
+        ok('strategic flank pin is on the south quay, not in the canal',
+           flank and 'flank' in str(flank).lower() and flank.get('y') is not None and flank['y'] >= 3840 and not (flank.get('x')==4100 and flank['y']==3720), flank)
+        ok('P3 stored garage/flank anchors are not the old canal pin',
+           flank and flank.get('gAt') != [4100, 3720] and flank.get('qAt') != [4100, 3720] and (flank.get('gAt') or [0,0])[1] >= 3840 and (flank.get('qAt') or [0,0])[1] >= 3840, flank)
 
         # -------- Phase 4 Off Schedule --------
         src = INDEX.read_text(encoding='utf-8')
