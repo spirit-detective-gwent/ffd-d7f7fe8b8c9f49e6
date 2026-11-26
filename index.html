@@ -40359,33 +40359,34 @@ function camPan(to, o, done) {
     aoiTo(-70, 34, 130, function () { AU.play('place', { gain: 0.6 }); paper(g.x - 46, g.y + 10, -8, 1); later(260, function () { paper(g.x - 22, g.y + 22, 6, 0); AU.play('place', { gain: 0.5 }); }); });
     ryoTo(64, 30, 130, function () { later(900, next); }); }
   function stageDealWalk(next) { var g = GS.g, s = seal(), P = c2Ok(s[0] - 40, s[1] + 40, g.x, g.y); gStand(g, -Math.PI / 4);
-    c2Walk(g, P[0], P[1], 56 / ck(), function () { c2Face(g, s[0], s[1]); try { bubbleOn(g, '\u2026'); } catch (e) {} glow(s[0], C2LM.sento.seal ? C2LM.sento.seal[1] + 30 : s[1], 'rgba(255,190,90,.9)', 150, 1300); AU.play('pl_heal', { gain: 0.5 }); later(1200, next); }); }
+    c2Walk(g, P[0], P[1], 56 / ck(), function () { c2Face(g, s[0], s[1]); try { bubbleOn(g, '\u2026'); } catch (e) {} glow(s[0], C2LM.sento.seal ? C2LM.sento.seal[1] + 30 : s[1], 'rgba(255,190,90,.9)', 150, 1300); glow(g.x, g.y - 74, 'rgba(255,210,140,.9)', 80, 1100); AU.play('pl_heal', { gain: 0.5 }); later(1200, next); }); }
   /* Compassionate: a hand, a shoulder, and the walk to the boiler */
   function stageHelp(next) { var g = GS.g; ryoTo(-46, 8, 110, function () { try { bubbleOn(W.ryo, '\u2026'); } catch (e) {} later(900, function () { gStand(g, 0); later(450, next); }); }); aoiTo(60, 40, 130, null); }
   function stageHelpWalk(next) { var g = GS.g, r = W.ryo, a = W.aoi, s = seal(), P = c2Ok(s[0] - 50, s[1] + 46, g.x, g.y); gStand(g, 0);
     var done = 0, one = function () { if (++done < 2) return; c2Face(g, s[0], s[1]); c2Face(r, s[0], s[1]); later(500, next); };
     c2Walk(g, P[0], P[1], 50 / ck(), one); c2Walk(r, P[0] - 34, P[1] + 8, 50 / ck(), one);
     if (a) c2Walk(a, P[0] - 72, P[1] + 30, 62 / ck(), null); }
-  function stageHelpPalm(next) { var s = seal(), gy = C2LM.sento.seal ? C2LM.sento.seal[1] + 30 : s[1]; glow(s[0] - 14, gy, 'rgba(255,170,80,.95)', 170, 1700); AU.play('fire_whoosh', { gain: 0.35 }); later(260, function () { AU.play('pl_heal', { gain: 0.6 }); }); later(1500, next); }
+  function stageHelpPalm(next) { var s = seal(), gy = C2LM.sento.seal ? C2LM.sento.seal[1] + 30 : s[1], g = GS.g; glow(s[0] - 14, gy, 'rgba(255,170,80,.95)', 170, 1700); if (g) glow(g.x - 18, g.y - 74, 'rgba(255,200,120,.95)', 90, 1500); AU.play('fire_whoosh', { gain: 0.35 }); later(260, function () { AU.play('pl_heal', { gain: 0.6 }); }); later(1500, next); }
 
   /* ---------- the rows ---------- */
   var VQ = { fierce: [['aoi', 'Club Kitsune. The door that wouldn\u2019t let us in.'], ['ryo', '{shout}It will now.{/shout}', { hype: 1 }]], strategic: [['aoi', 'Club Kitsune. The door that wouldn\u2019t let us in.'], ['ryo', 'It will. Tetsu just lost his warehouse.']], balanced: [['aoi', 'Club Kitsune. The door that wouldn\u2019t let us in.'], ['ryo', 'It will now.', { hype: 1 }]] };
-  function CF(z, o) { return Object.assign({ cam: 'frame', at: 'mb2_sento', at2: 'ryo', z: z || 1.5, ms: 1500 }, o || {}); }
-  function F(fn) { return ['@fn', fn]; }
+  function CF(z, o) { return Object.assign({ cam: 'frame', at: 'mb2_sento', at2: 'ryo', z: z || 1.7, f: 0.3, ms: 1500 }, o || {}); }
+  function F(fn) { return ['@fn', function (next) { try { if (root.FFF_SCAM) FFF_SCAM.st.keep = true; } catch (eK) {} /* no dialogue box during a staged beat: the camera frame holds (no watchdog zoom-out) */ fn(next); }]; }
+  function fadeLie(next) { if (GS && GS.lie) { fadeOut(GS.lie, 1100); GS.lie = null; } later(1100, next); }
   /* the answer's rows are spliced into the SAME scene after the pick, so the camera frame, bars and dialogue dock run as one scene */
   function seqFor(ans, P) {
     var vq = VQ[P] || VQ.balanced;
-    if (ans === 'fierce') return [F(stageKO), ['ryo', '{quiet}Gently enough.{/quiet}', CF(1.5)], ['aoi', '\u2026He\u2019s breathing. Out cold, but breathing.'], ['', '<p class="dim">A gray-coat pickup slip is pinned under the boiler lamp. One name in pencil: <b>TETSU</b>. Club Kitsune, back office.</p>'], ['aoi', 'Tetsu. The back office at Club Kitsune.']].concat(vq, [['', '<p class="dim">Old Sato and Tome-baa carry him up the stairs. He stirs once.</p>'], ['mb2_sento', '\u2026Hnh. A fist. A real one.{p} {slow}Thirty years.{/slow}']]);
-    if (ans === 'strategic') return [F(stageDeal), ['aoi', 'Condemned by March. The parts never came. They don\u2019t want your fire lit. They want your basement.', CF(1.5)], ['ryo', '{brisk}You give us the crates, the route, the nights. We give the city a boiler with no parts.{/brisk}'], ['mb2_sento', '\u2026{p=500}{slow}A deal.{/slow} Nobody\u2019s offered me one that wasn\u2019t a loan.'], F(stageDealWalk), ['mb2_sento', 'Tetsu. Back office. Thursdays the crates go up.{p} Door\u2019s behind the coat check.', CF(1.5, { at2: null })]].concat(vq);
-    return [F(stageHelp), ['mb2_sento', '\u2026{p=600}An \u014dzeki doesn\u2019t take a hand.', CF(1.5)], ['ryo', 'Then take it as a favor to me.'], ['aoi', '{quiet}Tome-baa! Towels. Hot water.{/quiet}'], F(stageHelpWalk), ['ryo', 'The fire\u2019s lit. It\u2019s been lit all along. The seal\u2019s only chalk.', CF(1.5)], ['ryo', 'Break it {slow}with{/slow} me.'], F(stageHelpPalm), ['aoi', 'The alley can pay for the parts. {quiet}It\u2019s been paying for the water for thirty years.{/quiet}'], ['mb2_sento', 'Tetsu. The back office at Club Kitsune.{p} {slow}Tome-baa will tell you the rest.{/slow}']].concat(vq); }
+    if (ans === 'fierce') return [F(stageKO), ['ryo', '{quiet}Gently enough.{/quiet}', CF(1.7)], ['aoi', '\u2026He\u2019s breathing. Out cold, but breathing.'], ['', '<p class="dim">A gray-coat pickup slip is pinned under the boiler lamp. One name in pencil: <b>TETSU</b>. Club Kitsune, back office.</p>'], ['aoi', 'Tetsu. The back office at Club Kitsune.']].concat(vq, [['mb2_sento', '\u2026Hnh. A fist. A real one.{p} {slow}Thirty years.{/slow}'], ['', '<p class="dim">Old Sato and Tome-baa carry him up the stairs. He doesn\u2019t open his eyes.</p>'], F(fadeLie)]);
+    if (ans === 'strategic') return [F(stageDeal), ['aoi', 'Condemned by March. The parts never came. They don\u2019t want your fire lit. They want your basement.', CF(1.7)], ['ryo', '{brisk}You give us the crates, the route, the nights. We give the city a boiler with no parts.{/brisk}'], ['mb2_sento', '\u2026{p=500}{slow}A deal.{/slow} Nobody\u2019s offered me one that wasn\u2019t a loan.'], F(stageDealWalk), ['mb2_sento', 'Tetsu. Back office. Thursdays the crates go up.{p} Door\u2019s behind the coat check.', CF(1.7, { at2: null })]].concat(vq);
+    return [F(stageHelp), ['mb2_sento', '\u2026{p=600}An \u014dzeki doesn\u2019t take a hand.', CF(1.7)], ['ryo', 'Then take it as a favor to me.'], ['aoi', '{quiet}Tome-baa! Towels. Hot water.{/quiet}'], F(stageHelpWalk), ['ryo', 'The fire\u2019s lit. It\u2019s been lit all along. The seal\u2019s only chalk.', CF(1.7)], ['ryo', 'Break it {slow}with{/slow} me.'], F(stageHelpPalm), ['aoi', 'The alley can pay for the parts. {quiet}It\u2019s been paying for the water for thirty years.{/quiet}'], ['mb2_sento', 'Tetsu. The back office at Club Kitsune.{p} {slow}Tome-baa will tell you the rest.{/slow}']].concat(vq); }
   function pathNow() { try { return STORY.bond(SAVE).path || 'balanced'; } catch (e) { return 'balanced'; } }
   function branch(rows, self, next) { var ans = ((STORY.bond(SAVE) || {}).picks || {}).c2_goda || pathNow(), e = E(); if (GS) GS.fate = ans; ev('world:c2:goda:' + ans);
     e.godaFate = ans === 'fierce' ? 'ko' : ans === 'strategic' ? 'deal' : 'help'; if (ans === 'strategic') e.ckTip = 1; save();
     var seq = seqFor(ans, pathNow()); Array.prototype.splice.apply(rows, [rows.indexOf(self) + 1, 0].concat(seq)); next(); }
   function godaRows() { var e = E(); e.ckNamed = 1; e.nq = e.nq && typeof e.nq === 'object' ? e.nq : {}; e.nq.named = 1; try { save(); } catch (x) {}
     var rows = [], self = F(function (next) { branch(rows, self, next); });
-    rows.push(['mb2_sento', '\u2026{p=600}{slow}Thirty years since anyone put me on the clay.{/slow}', { cam: 'bars+pull', z: 1.35, ms: 3600 }], F(godaRise),
-      ['mb2_sento', '\u2026Not the seal.{p} {slow}It keeps the fire lit.{/slow}', CF(1.5)], ['aoi', 'He\u2019s going to throw himself on it.'], ['@bond', 'c2_goda'], self);
+    rows.push(['mb2_sento', '\u2026{p=600}{slow}Thirty years since anyone put me on the clay.{/slow}', { cam: 'bars+push', at: 'mb2_sento', z: 1.7, f: 0.3, ms: 2600 }], F(godaRise),
+      ['mb2_sento', '\u2026Not the seal.{p} {slow}It keeps the fire lit.{/slow}', CF(1.7)], ['aoi', 'He\u2019s going to throw himself on it.'], ['@bond', 'c2_goda'], self);
     return rows; }
 
   /* ---------- wiring ---------- */
