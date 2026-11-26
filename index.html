@@ -354,6 +354,9 @@ body.cuc .sparks{z-index:19}
 /* v6.5.20: Equipment Bay + Side Court — lower the whole foe column (plate, icons, sprite, chips) 32px.
    Relative layout stays intact; mid HUD READY bar is well below. */
 #fE.bt-feet-lo{transform:translateY(32px)}
+/* v6.5.64 GGD-25 r2: Genji's spar ring — lift Ryo clear of the near ropes, and the foe a little higher, both still inside the ropes. Phone column only; does not change other rooms. */
+#game[data-bfx="c2_gym"] #fP{transform:translateY(-44px)}
+#game[data-bfx="c2_gym"] #fE{transform:translateY(-18px)}
 
 .fchip{position:relative;width:44px;height:52px;padding:0;border:0;border-radius:10px;background:#1a1530;box-shadow:inset 0 0 0 2px rgba(200,160,255,.35);overflow:hidden}
 .fchip i{position:absolute;inset:2px 2px 9px;background-size:auto 150%;background-position:50% 8%;background-repeat:no-repeat}
@@ -40156,7 +40159,7 @@ function gymRopes(x, G, t, s) { var UH = G.UH, BY = G.BY, FY = G.FY, bl = [G.X(-
 ROOMS.gym = { name: 'Genji’s gym · the ring', paint: function (x) {
     /* ch2-fixes GGD-25: the spar battle now stands in the SAME boxing ring as the Kurogane gym overworld (cream canvas, blue apron,
      * red/blue corner posts with grey pads, white-red-blue ropes, plank floor, brick wall with the three fighter posters).
-     * Both fighters are centred on x=360 and stand inside the ropes: foe feet ~y250 (back edge 175), Ryo/Aoi feet ~y805 (front edge 950). */
+     * Both fighters are centred on x=360. Front edge is FY=885; the phone column lifts #fP / #fE so their feet sit inside the ropes (not on the near ropes). */
     var h0 = H0, vp0 = VP; H0 = 150; VP = [360, -1300];
     bricks(x, 0, 0, WD, 150, '#6e4638', 'rgba(26,12,12,.38)');
     [[70, '#c73239', '#e9c9af'], [250, '#2d61c8', '#e9c9af'], [470, '#d9a43a', '#e9c9af']].forEach(function (P) { R(x, P[0], 12, 96, 112, P[1], INK, 3); R(x, P[0] + 8, 20, 80, 30, 'rgba(0,0,0,.28)', 0); [28, 58].forEach(function (dx) { x.beginPath(); x.ellipse(P[0] + dx + 4, 36, 8, 12, 0, 0, 6.28); x.fillStyle = P[2]; x.fill(); x.strokeStyle = INK; x.lineWidth = 2; x.stroke(); }); });
