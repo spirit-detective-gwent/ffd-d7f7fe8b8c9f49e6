@@ -162,7 +162,7 @@
     if (spec.skinRe) P[2] = skin; var PIN = spec.pin ? tri(spec.pin) : null, CUF = spec.cuff ? tri(spec.cuff) : null, pinG = Math.max(3, Math.round(4 * sc0));
     var SVY = shirt ? shirt.t + (hem - shirt.t) * ((spec.suit && spec.suit.v) || 0.62) : 0, REFL = tri('#d9dfe2');
     var shoeT = h; if (spec.geta) for (i = 0; i < N; i++) if (C[i] === 7 && (i / w | 0) > y0 + H * 0.8 && (i / w | 0) < shoeT) shoeT = i / w | 0;
-    for (i = 0; i < N; i++) { var k = C[i]; if (!k || k === 1 || k === 8) continue; Y = i / w | 0; X = i % w; var rl = L[i] / med[k];
+    for (i = 0; i < N; i++) { var k = C[i]; if (spec.noScar && k && k !== 1 && d[i * 4] - d[i * 4 + 1] >= 50 && d[i * 4] > 135 && d[i * 4 + 1] > 55) { var yq = i / w | 0; if (yq >= faceTop && yq <= chin + 1) { d[i * 4] = skin.b[0]; d[i * 4 + 1] = skin.b[1]; d[i * 4 + 2] = skin.b[2]; C[i] = 2; continue; } } if (!k || k === 1 || k === 8) continue; Y = i / w | 0; X = i % w; var rl = L[i] / med[k];
       if (k === 5 && spec.hara && shirt && (Y - shirt.t) / Math.max(1, shirt.b - shirt.t) > spec.hara) { put(i, HARA, (X % 3 === 0) ? 0.72 : 1); continue; } /* haramaki: a ribbed belly band */
       if (k === 5 && spec.shirt === 'irezumi' && shirt) { var qz = (Y - shirt.t) / Math.max(1, shirt.b - shirt.t); var iz = irez(X, Y, sc0, face); if (qz < 0.12 || !iz) put(i, skin, rl); else { var zc = IREZ[iz]; d[i * 4] = zc[0]; d[i * 4 + 1] = zc[1]; d[i * 4 + 2] = zc[2]; } continue; }
       if (k === 7 && spec.geta && Y > shoeT) { var gq = (Y - shoeT) / Math.max(1, y1 - shoeT); if (gq < 0.3) put(i, tri(spec.geta.strap), rl); else if (gq > 0.82) put(i, tri('#3a2a1e'), 1); else put(i, tri(spec.geta.wood), (Y % 3 === 0) ? 0.86 : rl); continue; }
@@ -175,7 +175,7 @@
       if (spec.zigCol && k === 4 && (!(d[i * 4 + 1] > d[i * 4] + 35) || d[i * 4 + 2] < d[i * 4 + 1] - 40)) { put(i, tri(spec.zigCol), 1); continue; } /* the old sukajan embroidery, re-threaded */
       if (spec.nozig && !spec.keepZig && k === 4 && (!(d[i * 4 + 1] > d[i * 4] + 35) || d[i * 4 + 2] < d[i * 4 + 1] - 40)) { put(i, P[4], Math.min(1, rl)); continue; } /* drop the old jacket's gold zigzag */
       if (spec.suit && k === 5 && shirt) { var sq = (Y - shirt.t) / Math.max(1, SVY - shirt.t), scx = (shirt.l + shirt.r) / 2, shw = (shirt.r - shirt.l) / 2 + 1; /* the jacket closes into a V */
-        if (face === 'front' ? (sq >= 1 || Math.abs(X - scx) > shw * (1 - sq * 0.94)) : sq > 0.3) { put(i, P[4], rl); continue; } }
+        if (face === 'front' ? (sq >= 1 || Math.abs(X - scx) > shw * (1 - sq * 0.94)) : sq > 0.3) { put(i, PIN && (X - x0) % pinG === 0 ? PIN : P[4], PIN && (X - x0) % pinG === 0 ? 1 : rl); continue; } }
       if (spec.refl && (spec.reflK || [4, 5, 6]).indexOf(k) >= 0) { var rq = (Y - y0) / H; if (spec.refl.some(function (b) { return rq >= b && rq < b + 0.024; })) { put(i, REFL, (X % 5 === 0) ? 1.25 : 1); continue; } } /* reflective tape */
       if (CUF && k === 4 && Y > hem - H * 0.22) { var cuN = 0; for (var cy7 = 1; cy7 <= Math.max(2, Math.round(3 * sc0)); cy7++) { var j7 = i + cy7 * w; if (j7 < N && HAND[j7]) cuN++; } if (cuN) { put(i, CUF, rl); continue; } } /* v6.5.63 gangs: gold wristbands */
       if (spec.reflV && k === 4 && Y <= hem && !sideF && shirt && Y > y0 + H * 0.17) { var vcx = (shirt.l + shirt.r) / 2, vo = (x1 - x0) * spec.reflV; if (Math.abs(Math.abs(X - vcx) - vo) < Math.max(1.2, 1.5 * sc0)) { put(i, REFL, 1); continue; } } /* reflective braces */
@@ -208,11 +208,11 @@
     if (spec.hair) { /* clear the old hair, lay a slick cap, put the face back, then the quiff / the perm on top */
       var hairBot = y0 + hh * 0.5; for (Y = y0; Y < y0 + H * 0.3; Y++) if (rowCount(Y, 3) >= 3) hairBot = Y;
       var chinH = Math.min(chin, Math.round(y0 + H * 0.2)), ft = face === 'back' ? hairBot : faceTop, cut = face === 'back' ? hairBot + 2 : ft + (chinH - ft) * 0.42, fext = [], fwM = 0;
-      if (face !== 'back') for (Y = faceTop; Y <= chinH; Y++) { var fe = rowExt(Y, 2); if (fe && FCX >= 0) { var flim = H * 0.075; fe = [Math.max(fe[0], Math.round(FCX - flim)), Math.min(fe[1], Math.round(FCX + flim))]; if (fe[1] < fe[0]) fe = null; } fext[Y] = fe; if (fe && fe[1] - fe[0] > fwM) fwM = fe[1] - fe[0]; }
+      if (face !== 'back') for (Y = faceTop; Y <= chinH; Y++) { var fe = rowExt(Y, 2); if (fe && FCX >= 0) { var flim = H * 0.075 * (spec.headFront || 1); fe = [Math.max(fe[0], Math.round(FCX - flim)), Math.min(fe[1], Math.round(FCX + flim))]; if (fe[1] < fe[0]) fe = null; } fext[Y] = fe; if (fe && fe[1] - fe[0] > fwM) fwM = fe[1] - fe[0]; }
       var cur = x.getImageData(0, 0, w, h), cd = cur.data, keep = x.getImageData(0, 0, w, h);
-      for (Y = Math.max(0, y0 - 2); Y < hairBot + 4; Y++) { var fe2 = face !== 'back' && Y >= faceTop ? fext[Y] : null; for (X = Math.max(0, hx0 - 10); X <= Math.min(w - 1, hx1 + 10); X++) { i = Y * w + X; var cl = C[i];
+      for (Y = Math.max(0, y0 - 2); Y < hairBot + 4; Y++) { var fe2 = face !== 'back' && Y >= faceTop ? fext[Y] : null; for (X = Math.max(0, hx0 - (spec.hairClr || 10)); X <= Math.min(w - 1, hx1 + (spec.hairClr || 10)); X++) { i = Y * w + X; var cl = C[i];
         var inFace = fe2 && X >= fe2[0] - 1 && X <= fe2[1] + 1;
-        var nearF = fe2 && X >= fe2[0] - 2 && X <= fe2[1] + 2; if (((spec.hair === 'bald' || spec.tight) && !cl && !inFace) || cl === 3 || (Y < cut && ((cl === 1 && !inFace) || (cl === 8 && !inFace))) || (Y >= cut && Y < Math.max(hairBot + 3, chin - 2) && (cl === 8 || cl === 1) && !nearF && face !== 'back')) cd[i * 4 + 3] = 0; } }
+        var nearF = fe2 && X >= fe2[0] - 2 && X <= fe2[1] + 2; if (((spec.hair === 'bald' || spec.tight) && !cl && !inFace) || cl === 3 || (spec.noScar && cl === 2 && fe2 && !nearF && Y < chin - 1) || (Y < cut && ((cl === 1 && !inFace) || (cl === 8 && !inFace))) || (Y >= cut && Y < Math.max(hairBot + 3, chin - 2) && (cl === 8 || cl === 1) && !nearF && face !== 'back')) cd[i * 4 + 3] = 0; } }
       x.putImageData(cur, 0, 0);
       var fL, fR, skW = face === 'front' ? Math.max(fwM * 0.62 + 3 * sc, hw * 0.44) : face === 'back' ? hw * 0.38 : Math.max(hw * 0.46, fwM * 0.72), fL = w, fR = 0; fext.forEach(function (fe) { if (fe) { fL = Math.min(fL, fe[0]); fR = Math.max(fR, fe[1]); } }); var capCx = face === 'front' || face === 'back' ? hcx : fR > fL ? (dir > 0 ? fR : fL) - dir * skW * 0.88 : hcx - dir * skW * 0.2,
         capTop = y0 + (ft - y0) * 0.1; capBot = face === 'front' ? ft + (chinH - ft) * 0.2 : face === 'back' ? hairBot + 2 : Math.max(Math.min(hairBot, ft + (chinH - ft) * 0.5), ft + (chinH - ft) * 0.36); var capCy = (capTop + capBot) / 2 + (face === 'front' ? (capBot - capTop) * 0.12 : 0), capRy = capCy - capTop;
@@ -230,7 +230,7 @@
       if (HP) HP(1.07); else { x.beginPath(); x.ellipse(capCx, capCy, capRx, capRy, 0, 0, Math.PI * 2); }
       x.fillStyle = rgb(ht.b); x.fill(); x.lineWidth = 2.2 * sc; x.strokeStyle = rgb(INK); x.stroke();
       if (spec.hair === 'bald') { x.lineCap = 'round'; x.lineWidth = 1.6 * sc; x.strokeStyle = 'rgba(255,255,255,0.75)'; x.beginPath(); x.ellipse(capCx - capRx * 0.25, capCy - capRy * 0.2, capRx * 0.45, capRy * 0.5, 0, Math.PI * 1.15, Math.PI * 1.55); x.stroke(); }
-      else if (spec.tight && !sideF) { x.lineCap = 'round'; x.lineWidth = 1.2 * sc; x.strokeStyle = rgb(ht.h); /* slicked back: comb lines swept from a side part */
+      else if (spec.tight && !sideF) { x.lineCap = 'round'; x.lineWidth = 1.2 * sc; x.strokeStyle = rgb(spec.hairHi ? hx(spec.hairHi) : ht.h); /* slicked back: comb lines swept from a side part */
         [0, 1, 2].forEach(function (k7) { x.beginPath(); x.moveTo(capCx - capRx * 0.55 + k7 * capRx * 0.1, capCy + capRy * 0.35 - k7 * capRy * 0.05); x.quadraticCurveTo(capCx - capRx * 0.1 + k7 * capRx * 0.3, capTop + capRy * 0.1, capCx + capRx * (0.45 + k7 * 0.18), capCy - capRy * 0.1 + k7 * capRy * 0.25); x.stroke(); });
         x.strokeStyle = rgb(ht.s); x.lineWidth = 1.4 * sc; x.beginPath(); x.moveTo(capCx - capRx * 0.62, capCy + capRy * 0.5); x.quadraticCurveTo(capCx - capRx * 0.66, capTop + capRy * 0.5, capCx - capRx * 0.4, capTop + capRy * 0.15); x.stroke(); }
       else { x.lineWidth = 1.3 * sc; x.strokeStyle = rgb(ht.s); for (var gl = -2; gl <= 2; gl++) { x.beginPath(); x.ellipse(capCx + gl * skW * 0.22, capCy + capRy * 0.2, skW * 0.3, capRy * 0.95, 0, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); } }
@@ -238,7 +238,7 @@
       /* the face back on top of the cap */
       var fc = document.createElement('canvas'); fc.width = w; fc.height = h; var fx3 = fc.getContext('2d'), fid = fx3.createImageData(w, h), kd = keep.data;
       if (face !== 'back') for (Y = faceTop; Y <= chinH + 6; Y++) { var fe3 = fext[Math.min(Y, chinH)]; if (!fe3) continue; for (X = fe3[0] - 1; X <= fe3[1] + 1; X++) { i = Y * w + X; if (C[i] === 3 || (C[i] === 8 && Y < hairBot + 3)) continue; if (Y < faceTop + (chinH - faceTop) * 0.14 && C[i] !== 2) continue; if (Y > chinH && C[i] !== 2 && C[i] !== 1) continue; if (spec.noScar && kd[i * 4] - kd[i * 4 + 1] >= 50 && kd[i * 4] > 135 && kd[i * 4 + 1] > 55 && C[i] !== 1) { fid.data[i * 4] = skin.b[0]; fid.data[i * 4 + 1] = skin.b[1]; fid.data[i * 4 + 2] = skin.b[2]; fid.data[i * 4 + 3] = 255; continue; } fid.data[i * 4] = kd[i * 4]; fid.data[i * 4 + 1] = kd[i * 4 + 1]; fid.data[i * 4 + 2] = kd[i * 4 + 2]; fid.data[i * 4 + 3] = kd[i * 4 + 3]; } }
-      fx3.putImageData(fid, 0, 0); var PROF = null; if (!(sideF && fR > fL)) x.drawImage(fc, 0, 0);
+      fx3.putImageData(fid, 0, 0); var PROF = null; if (!(sideF && fR > fL)) { x.drawImage(fc, 0, 0); if (spec.noScar && face === 'front') { var hf = x.getImageData(0, 0, w, h), hfd = hf.data, hfn = 0; for (Y = faceTop; Y <= chinH; Y++) { var fe9 = fext[Y]; if (!fe9) continue; for (X = fe9[0] + 1; X < fe9[1]; X++) { i = Y * w + X; if (hfd[i * 4 + 3] < 120) { hfd[i * 4] = skin.b[0]; hfd[i * 4 + 1] = skin.b[1]; hfd[i * 4 + 2] = skin.b[2]; hfd[i * 4 + 3] = 255; hfn++; } } } if (hfn) x.putImageData(hf, 0, 0); } }
       else { /* a drawn profile, in the sheet's own line weight: brow, eye, nose, mouth, ear */
         var fh = sHH, ex2 = fEdge - dir * sHH * 0.13, ey2 = sHT + sHH * 0.53; PROF = { ex: ex2, ey: ey2, fh: fh };
         x.lineCap = 'round'; x.strokeStyle = rgb(INK); x.fillStyle = rgb(INK);
@@ -247,6 +247,25 @@
         x.lineWidth = 1.4 * sc; x.beginPath(); x.moveTo(fEdge - dir * sHH * 0.02, sHT + sHH * 0.8); x.lineTo(fEdge - dir * sHH * 0.12, sHT + sHH * 0.79); x.stroke();
         var erx = fEdge - dir * sHH * 0.47, ery = sHT + sHH * 0.58; x.beginPath(); x.ellipse(erx, ery, 2.4 * sc, 3.8 * sc, 0, 0, 7); x.fillStyle = rgb(skin.s); x.fill(); x.lineWidth = 1.4 * sc; x.stroke(); }
       chin = chinH;
+      if (spec.face2 && face === 'front' && FCX >= 0) { /* v6.5.63 gangs: a clean redrawn face (no scar, no old bangs or hair spikes), jaw and features set per portrait */
+        var F2 = spec.face2, fT2 = faceTop, cB2 = Math.ceil(Math.min(capBot, capCy + capRy * 0.92)), fH2 = Math.max(8, chinH - faceTop), eyeY = fT2 + fH2 * (F2.eyeQ || 0.34), ew9 = Math.max(fwM / 2, H * 0.045) * (F2.w || 1) + 0.5, fc0 = FCX + (F2.dx || 0) * sc;
+        var fi = x.getImageData(0, 0, w, h), fd = fi.data, clrW = ew9 + H * 0.06;
+        for (Y = cB2 + 1; Y <= chinH + 2; Y++) for (X = Math.max(0, Math.round(fc0 - clrW)); X <= Math.min(w - 1, Math.round(fc0 + clrW)); X++) { i = Y * w + X; var cq = C[i]; if (cq === 4 || cq === 5 || cq === 6 || cq === 7 || H2[i]) continue; if (Y > chinH - 1 && Math.abs(X - fc0) < ew9 * 0.55) continue; fd[i * 4 + 3] = 0; }
+        x.putImageData(fi, 0, 0);
+        var jw = F2.jaw || 'round', jT = fT2 + fH2 * (jw === 'square' ? 0.66 : jw === 'wide' ? 0.6 : 0.5), cY = chinH + 1, cw2 = ew9 * (jw === 'square' ? 0.62 : jw === 'wide' ? 0.7 : jw === 'pointed' ? 0.3 : 0.45);
+        var facePath = function () { x.beginPath(); x.moveTo(fc0 - ew9, cB2 - 3 * sc); x.lineTo(fc0 - ew9, jT); x.quadraticCurveTo(fc0 - ew9 * (jw === 'pointed' ? 0.95 : 1), cY - fH2 * 0.08, fc0 - cw2, cY); x.lineTo(fc0 + cw2, cY); x.quadraticCurveTo(fc0 + ew9 * (jw === 'pointed' ? 0.95 : 1), cY - fH2 * 0.08, fc0 + ew9, jT); x.lineTo(fc0 + ew9, cB2 - 3 * sc); x.closePath(); };
+        x.save(); x.beginPath(); x.rect(0, cB2 - 0.5, w, h); x.clip();
+        [-1, 1].forEach(function (sd) { x.beginPath(); x.ellipse(fc0 + sd * (ew9 + 0.6 * sc), eyeY + 1.5 * sc, 1.6 * sc, 2.6 * sc, 0, 0, 7); x.fillStyle = rgb(skin.s); x.fill(); x.lineWidth = 1.3 * sc; x.strokeStyle = rgb(INK); x.stroke(); });
+        facePath(); x.fillStyle = rgb(skin.b); x.fill(); x.save(); facePath(); x.clip(); x.fillStyle = rgb(skin.s); x.fillRect(fc0 + ew9 - 1.8 * sc, 0, 4 * sc, h); x.fillRect(0, cY - 1.2 * sc, w, 3 * sc); x.restore();
+        facePath(); x.lineWidth = 1.9 * sc; x.lineJoin = 'round'; x.strokeStyle = rgb(INK); x.stroke(); x.restore();
+        var fc9 = fc0; x.save(); x.lineCap = 'round'; x.strokeStyle = rgb(INK); x.fillStyle = rgb(INK);
+        var exo = ew9 * 0.42;
+        if (!spec.shades) [-1, 1].forEach(function (sd) { var ex9 = fc9 + sd * exo; if (F2.eyes === 'soft') { x.beginPath(); x.ellipse(ex9, eyeY + 0.3 * sc, 1.5 * sc, 1.1 * sc, 0, Math.PI, Math.PI * 2); x.lineWidth = 1.2 * sc; x.stroke(); x.beginPath(); x.arc(ex9, eyeY + 0.5 * sc, 0.9 * sc, 0, 7); x.fill(); } else { x.beginPath(); x.ellipse(ex9, eyeY, 1.05 * sc, 1.6 * sc, 0, 0, 7); x.fill(); } });
+        var brY = eyeY - 2.6 * sc, bt9 = F2.brow || 'flat'; if (brY > cB2 + 0.5 && !spec.shades) [-1, 1].forEach(function (sd) { var bi9 = fc9 + sd * exo * 0.45, bo9 = fc9 + sd * exo * 1.55, tiltI = bt9 === 'angry' ? 1.3 * sc : bt9 === 'soft' ? -0.5 * sc : 0, tiltO = bt9 === 'soft' ? 0.5 * sc : 0; x.beginPath(); x.moveTo(bi9, brY + tiltI); x.lineTo(bo9, brY - (bt9 === 'angry' ? 0.6 * sc : 0) + tiltO); x.lineWidth = (F2.browW || 1.4) * sc; x.stroke(); });
+        x.strokeStyle = rgb(skin.s.map(function (v) { return v * 0.8; })); x.lineWidth = 1 * sc; x.beginPath(); x.moveTo(fc9 + 0.3 * sc, fT2 + fH2 * 0.5); x.lineTo(fc9 + 0.9 * sc, fT2 + fH2 * 0.64); x.lineTo(fc9 - 0.4 * sc, fT2 + fH2 * 0.66); x.stroke();
+        var mY = fT2 + fH2 * (F2.mouthQ || 0.76), mw = ew9 * (F2.mouthW || 0.38); x.strokeStyle = rgb(INK); x.lineWidth = 1.1 * sc; x.beginPath();
+        if (F2.mouth === 'smirk') { x.moveTo(fc9 - mw, mY); x.quadraticCurveTo(fc9, mY + 0.6 * sc, fc9 + mw * 1.1, mY - 1.1 * sc); } else if (F2.mouth === 'frown') { x.moveTo(fc9 - mw, mY + 0.6 * sc); x.quadraticCurveTo(fc9, mY - 0.8 * sc, fc9 + mw, mY + 0.6 * sc); } else { x.moveTo(fc9 - mw, mY); x.lineTo(fc9 + mw, mY); }
+        x.stroke(); if (spec.stubble) { x.save(); facePath(); x.clip(); x.fillStyle = 'rgba(60,40,36,0.5)'; for (Y = Math.round(fT2 + fH2 * 0.6); Y <= cY; Y++) for (X = Math.round(fc0 - ew9); X <= fc0 + ew9; X++) if (hash(X, Y * 3) < 0.26 && Math.abs(Y - mY) > 0.8) x.fillRect(X, Y, 1, 1); x.restore(); } x.restore(); }
       if (spec.hair === 'pomp') { var side = face === 'left' || face === 'right', rise = hh * 0.34, qx = side ? capCx + dir * skW * 0.5 : capCx, qy = capTop + (side ? rise * 0.12 : capRy * 0.12), qrx = side ? skW * 0.66 : skW * 0.84, qry = rise * (side ? 0.56 : 0.85);
         x.save(); x.translate(qx, qy); x.rotate(dir * -0.42);
         var ht2 = spec.hairCol2 ? tri(spec.hairCol2) : null; x.beginPath(); x.ellipse(0, 0, qrx, qry, 0, Math.PI * 0.92, Math.PI * 2.08); x.fillStyle = rgb(ht.b); x.lineWidth = 2.2 * sc; x.strokeStyle = rgb(INK); x.stroke(); x.fill();
@@ -349,20 +368,18 @@
         path(); x.lineWidth = 1.5 * sc; x.lineJoin = 'round'; x.strokeStyle = rgb(INK); x.stroke(); };
       x.save();
       if (face === 'front') { var c6 = capCx, t6 = capTop, br6 = faceTop + (chinH - faceTop) * 0.3;
-        [-1, 1].forEach(function (sd) { lockD([c6 + sd * R6 * 0.55, t6 + capRy * 0.6, c6 + sd * R6 * 1.0, faceTop, c6 + sd * R6 * 1.32, faceTop + (chinH - faceTop) * 0.55, sd * 2 * sc], 0.45);
-          lockD([c6 + sd * R6 * 0.7, faceTop - 2 * sc, c6 + sd * R6 * 0.98, faceTop + (chinH - faceTop) * 0.3, c6 + sd * R6 * 1.16, chinH + 1 * sc, sd * 1.5 * sc], 0.5);
-          lockD([c6 + sd * R6 * 0.8, t6 + capRy * 0.3, c6 + sd * R6 * 1.05, t6 + capRy * 1.1, c6 + sd * R6 * 1.4, t6 + capRy * 0.1, 0], 0.4); });
-        x.beginPath(); x.ellipse(c6, t6 + capRy * 0.8, R6 * 1.08, capRy * 0.95, 0, 0, 7); x.fillStyle = rgb(ht.b); x.fill(); x.lineWidth = 2 * sc; x.strokeStyle = rgb(INK); x.stroke();
-        [[-0.55, -0.9], [-0.1, -1.1], [0.4, -0.95]].forEach(function (u) { lockD([c6 + u[0] * R6 - R6 * 0.2, t6 + capRy * 0.5, c6 + u[0] * R6 + R6 * 0.25, t6 + capRy * 0.5, c6 + u[0] * R6 + R6 * 0.25, t6 + capRy * u[1] * 0.5, 0], 0); });
-        x.beginPath(); x.ellipse(c6, t6 + capRy * 0.85, R6 * 0.98, capRy * 0.7, 0, 0, 7); x.fillStyle = rgb(ht.b); x.fill();
-        x.strokeStyle = rgb(ht.h); x.lineWidth = 1.1 * sc; x.beginPath(); x.ellipse(c6 - R6 * 0.25, t6 + capRy * 0.6, R6 * 0.45, capRy * 0.3, -0.3, Math.PI * 1.1, Math.PI * 1.7); x.stroke();
-        [[-0.85, -0.35, 0.1], [-0.45, 0.05, 0.12], [-0.05, 0.45, 0.35], [0.35, 0.82, 0.55], [0.65, 1.0, 0.75]].forEach(function (b, n7) { lockD([c6 + b[0] * R6, t6 + capRy * 1.0, c6 + b[1] * R6, t6 + capRy * 1.0, c6 + b[2] * R6 + (n7 - 2) * 0.8 * sc, br6 + (n7 === 2 ? 2.5 : n7 % 2 ? 0.5 : 1.5) * sc, -1.2 * sc], n7 > 2 ? 0.32 : 0); }); }
-      else if (face === 'back') { var c7 = capCx, t7 = capTop;
-        x.beginPath(); x.ellipse(c7, (capTop + capBot) / 2, R6 * 1.15, (capBot - capTop) / 2 + 2 * sc, 0, 0, 7); x.fillStyle = rgb(ht.b); x.fill(); x.lineWidth = 2 * sc; x.strokeStyle = rgb(INK); x.stroke();
-        [-0.9, -0.45, 0, 0.45, 0.9].forEach(function (u, n7) { lockD([c7 + u * R6 - R6 * 0.28, capBot - 4 * sc, c7 + u * R6 + R6 * 0.28, capBot - 4 * sc, c7 + u * R6 * 1.2, capBot + (n7 % 2 ? 6 : 8) * sc, u * 2 * sc], 0.5); });
-        [[-0.5, -0.9], [0.1, -1.1], [0.6, -0.85]].forEach(function (u) { lockD([c7 + u[0] * R6 - R6 * 0.25, t7 + 4 * sc, c7 + u[0] * R6 + R6 * 0.25, t7 + 4 * sc, c7 + u[0] * R6 + R6 * 0.2, t7 + u[1] * 3 * sc, 0], 0); });
-        x.beginPath(); x.ellipse(c7, (capTop + capBot) / 2, R6 * 1.0, (capBot - capTop) / 2 - 1 * sc, 0, 0, 7); x.fillStyle = rgb(ht.b); x.fill();
-        x.strokeStyle = rgb(ht.h); x.lineWidth = 1.1 * sc; [-0.3, 0.25].forEach(function (u) { x.beginPath(); x.moveTo(c7 + u * R6, t7 + 4 * sc); x.quadraticCurveTo(c7 + u * R6 * 1.4, (capTop + capBot) / 2, c7 + u * R6 * 1.6, capBot); x.stroke(); }); }
+        [-1, 1].forEach(function (sd) { lockD([c6 + sd * R6 * 0.7, t6 + capRy * 0.7, c6 + sd * R6 * 1.0, t6 + capRy * 1.25, c6 + sd * R6 * 1.34, t6 + capRy * 1.75, sd * 1 * sc], 0.42);
+          lockD([c6 + sd * R6 * 0.68, t6 + capRy * 0.9, c6 + sd * R6 * 1.12, t6 + capRy * 0.95, c6 + sd * R6 * 1.14, chinH - 1 * sc, sd * 1.5 * sc], 0.42); });
+        x.beginPath(); x.ellipse(c6, t6 + capRy * 0.62, R6 * 1.1, capRy * 0.72, 0, 0, 7); x.fillStyle = rgb(ht.b); x.fill(); x.beginPath(); x.ellipse(c6, t6 + capRy * 0.62, R6 * 1.1, capRy * 0.72, 0, Math.PI * 0.92, Math.PI * 2.08); x.lineWidth = 2 * sc; x.strokeStyle = rgb(INK); x.stroke();
+        [[-0.6, -0.5], [0.05, -0.75], [0.55, -0.45]].forEach(function (u) { lockD([c6 + u[0] * R6 - R6 * 0.22, t6 + capRy * 0.3, c6 + u[0] * R6 + R6 * 0.22, t6 + capRy * 0.3, c6 + u[0] * R6 - R6 * 0.25, t6 + capRy * u[1] * 0.25, 0], 0); });
+        [-1, 1].forEach(function (sd) { lockD([c6 + sd * R6 * 0.5, t6 + capRy * 1.0, c6 + sd * R6 * 0.98, t6 + capRy * 1.0, c6 + sd * R6 * 0.94, faceTop + (chinH - faceTop) * 0.62, sd * 1 * sc], 0.4); });
+        x.strokeStyle = rgb(ht.h); x.lineWidth = 1.1 * sc; x.beginPath(); x.ellipse(c6 - R6 * 0.25, t6 + capRy * 0.45, R6 * 0.45, capRy * 0.28, -0.3, Math.PI * 1.1, Math.PI * 1.7); x.stroke();
+        [[-0.85, -0.38, -0.5], [-0.5, -0.02, -0.12], [-0.12, 0.36, 0.3], [0.26, 0.7, 0.62], [0.6, 0.98, 0.9]].forEach(function (b, n7) { lockD([c6 + b[0] * R6, t6 + capRy * 0.95, c6 + b[1] * R6, t6 + capRy * 0.95, c6 + b[2] * R6, br6 + (n7 === 1 ? 2.5 : n7 % 2 ? 1 : 0) * sc, -1 * sc], n7 === 4 ? 0.3 : 0); }); }
+      else if (face === 'back') { var c7 = capCx, t7 = capTop, m7 = (capTop + capBot) / 2, r7 = (capBot - capTop) / 2 + 2 * sc;
+        x.beginPath(); x.ellipse(c7, m7, R6 * 1.12, r7, 0, 0, 7); x.fillStyle = rgb(ht.b); x.fill(); x.lineWidth = 2 * sc; x.strokeStyle = rgb(INK); x.stroke();
+        [-1, 1].forEach(function (sd) { lockD([c7 + sd * R6 * 0.75, m7 - r7 * 0.2, c7 + sd * R6 * 1.0, m7 + r7 * 0.4, c7 + sd * R6 * 1.38, m7 + r7 * 0.3, 0], 0.42); });
+        [-0.8, -0.4, 0, 0.4, 0.8].forEach(function (u, n7) { lockD([c7 + u * R6 - R6 * 0.3, m7, c7 + u * R6 + R6 * 0.3, m7, c7 + u * R6 * 1.15, capBot + (n7 % 2 ? 6 : 9) * sc, u * 2 * sc], 0.42); });
+        x.strokeStyle = rgb(ht.h); x.lineWidth = 1.1 * sc; [-0.3, 0.25].forEach(function (u) { x.beginPath(); x.moveTo(c7 + u * R6, t7 + 3 * sc); x.quadraticCurveTo(c7 + u * R6 * 1.4, m7 - 2 * sc, c7 + u * R6 * 1.5, m7 + 2 * sc); x.stroke(); }); }
       else { var cS = capCx, tS = capTop, rS = capRx, bS = ft + (chinH - ft) * 0.42;
         lockD([cS - dir * rS * 0.2, tS + capRy * 0.9, cS - dir * rS * 0.95, tS + capRy * 0.8, cS - dir * rS * 1.25, chinH + 3 * sc, -dir * 2 * sc], 0.45);
         lockD([cS - dir * rS * 0.4, tS + capRy * 0.7, cS - dir * rS * 1.0, tS + capRy * 0.6, cS - dir * rS * 1.45, tS + capRy * 1.35, -dir * sc], 0.45);
@@ -371,17 +388,21 @@
         lockD([cS + dir * rS * 0.1, tS + capRy * 0.35, cS + dir * rS * 0.75, tS + capRy * 0.55, cS + dir * rS * 1.0, bS, dir * 1.5 * sc], 0.3);
         lockD([cS - dir * rS * 0.3, tS + capRy * 0.5, cS + dir * rS * 0.3, tS + capRy * 0.7, cS - dir * rS * 0.05, ft + (chinH - ft) * 0.3, 0], 0); }
       x.restore(); }
+    if (spec.part && spec.hair && capTop) { var pr6 = sideF ? capRx : skW, pt6 = tri(spec.hairCol || '#1e1a22'); x.save(); x.lineCap = 'round'; x.lineJoin = 'round'; /* v6.5.63: neat side-parted hair swept over (the Bouncer) */
+      if (face === 'front') { var pcy = capTop + capRy * 0.72, pry = capRy * 0.9; x.beginPath(); x.ellipse(capCx, pcy, pr6 * 1.06, pry, 0, Math.PI * 0.95, Math.PI * 2.05); x.lineTo(capCx + pr6 * 1.0, pcy + pry * 0.7); x.quadraticCurveTo(capCx + pr6 * 0.3, pcy + pry * 0.3, capCx - pr6 * 0.45, pcy + pry * 0.5); x.lineTo(capCx - pr6 * 1.0, pcy + pry * 0.62); x.closePath(); x.fillStyle = rgb(pt6.b); x.fill(); x.lineWidth = 2 * sc; x.strokeStyle = rgb(INK); x.stroke();
+        x.strokeStyle = rgb(pt6.s); x.lineWidth = 1.2 * sc; x.beginPath(); x.moveTo(capCx - pr6 * 0.45, capTop + capRy * 0.15); x.lineTo(capCx - pr6 * 0.5, pcy + pry * 0.3); x.stroke();
+        x.strokeStyle = rgb(hx(spec.hairHi || '#3a3946')); x.lineWidth = 1 * sc; [0, 1].forEach(function (k8) { x.beginPath(); x.moveTo(capCx - pr6 * (0.3 - k8 * 0.05), capTop + capRy * (0.3 + k8 * 0.25)); x.quadraticCurveTo(capCx + pr6 * 0.3, capTop + capRy * (0.2 + k8 * 0.25), capCx + pr6 * 0.85, pcy + pry * (0.1 + k8 * 0.25)); x.stroke(); }); }
+      x.restore(); }
     if (spec.cap && spec.hair && capTop) { var cc6 = tri(spec.cap.col || '#17161b'); x.save(); x.lineJoin = 'round';
       if (sideF && PROF) { var cy6 = sHT + sHH * 0.36, rx6 = sHH * 0.52, ry6 = cy6 - sHT + 3 * sc, cx6 = hcxS - dir * sHH * 0.02;
         x.beginPath(); x.ellipse(cx6, cy6, rx6, ry6, 0, Math.PI, Math.PI * 2); x.closePath(); x.fillStyle = rgb(cc6.b); x.fill(); x.lineWidth = 2 * sc; x.strokeStyle = rgb(INK); x.stroke();
         var vx0 = cx6 + dir * rx6 * 0.75; x.beginPath(); x.moveTo(vx0, cy6 - 1.5 * sc); x.quadraticCurveTo(vx0 + dir * sHH * 0.25, cy6 - 1.5 * sc, vx0 + dir * sHH * 0.42, cy6 + 1.5 * sc); x.lineTo(vx0 + dir * sHH * 0.38, cy6 + 3.2 * sc); x.quadraticCurveTo(vx0 + dir * sHH * 0.2, cy6 + 1.8 * sc, vx0 - dir * 1 * sc, cy6 + 1.8 * sc); x.closePath(); x.fillStyle = rgb(cc6.s); x.fill(); x.lineWidth = 1.5 * sc; x.stroke(); }
-      else { var cy7 = face === 'back' ? capTop + (capBot - capTop) * 0.75 : faceTop + (chinH - faceTop) * 0.12, rx7 = Math.max(capRx, skW) * 1.14, ry7 = cy7 - capTop + 2 * sc;
+      else { var cy7 = face === 'back' ? capTop + (capBot - capTop) * 0.75 : faceTop - 0.5 * sc, rx7 = Math.max(capRx, skW) * 1.1, ry7 = Math.max(4 * sc, (cy7 - capTop) * 0.86);
         x.beginPath(); x.ellipse(capCx, cy7, rx7, ry7, 0, Math.PI, Math.PI * 2); x.closePath(); x.fillStyle = rgb(cc6.b); x.fill(); x.save(); x.clip(); x.fillStyle = rgb(cc6.h); x.fillRect(capCx - rx7 * 0.6, cy7 - ry7, rx7 * 0.18, ry7); x.restore(); x.lineWidth = 2 * sc; x.strokeStyle = rgb(INK); x.stroke();
         x.lineWidth = 1 * sc; x.beginPath(); x.moveTo(capCx, cy7 - ry7); x.lineTo(capCx, cy7); x.stroke(); x.beginPath(); x.arc(capCx, cy7 - ry7, 1.3 * sc, 0, 7); x.fillStyle = rgb(cc6.b); x.fill(); x.stroke();
-        if (face === 'front') { x.beginPath(); x.moveTo(capCx - rx7 * 1.02, cy7); x.quadraticCurveTo(capCx, cy7 + 7 * sc, capCx + rx7 * 1.02, cy7); x.quadraticCurveTo(capCx, cy7 + 2.2 * sc, capCx - rx7 * 1.02, cy7); x.closePath(); x.fillStyle = rgb(cc6.s); x.fill(); x.lineWidth = 1.5 * sc; x.strokeStyle = rgb(INK); x.stroke(); }
+        if (face === 'front') { x.beginPath(); x.moveTo(capCx - rx7 * 1.12, cy7 - 0.5 * sc); x.quadraticCurveTo(capCx, cy7 + 6.5 * sc, capCx + rx7 * 1.12, cy7 - 0.5 * sc); x.quadraticCurveTo(capCx, cy7 + 2 * sc, capCx - rx7 * 1.12, cy7 - 0.5 * sc); x.closePath(); x.fillStyle = rgb(cc6.h); x.fill(); x.lineWidth = 1.5 * sc; x.strokeStyle = rgb(INK); x.stroke(); x.beginPath(); x.moveTo(capCx - rx7 * 0.8, cy7 + 1.8 * sc); x.quadraticCurveTo(capCx, cy7 + 5 * sc, capCx + rx7 * 0.8, cy7 + 1.8 * sc); x.lineWidth = 1 * sc; x.strokeStyle = rgb(cc6.s); x.stroke(); }
         else { x.beginPath(); x.ellipse(capCx, cy7 - 0.5 * sc, rx7 * 0.32, 2.2 * sc, 0, Math.PI, Math.PI * 2); x.fillStyle = rgb(ht.b); x.fill(); x.lineWidth = 1 * sc; x.strokeStyle = rgb(INK); x.stroke(); } }
       x.restore(); }
-    if (spec.stubble && face === 'front' && FCX >= 0) { x.save(); x.fillStyle = 'rgba(70,48,40,0.45)'; for (Y = Math.round(faceTop + (chinH - faceTop) * 0.62); Y <= chinH; Y++) { var fe8 = fext[Y]; if (!fe8) continue; for (X = fe8[0] + 1; X < fe8[1]; X++) if (hash(X, Y * 3) < 0.3 && C[Y * w + X] === 2) x.fillRect(X, Y, 1, 1); } x.restore(); }
     /* ---- 5. sunglasses ---- */
     if (spec.shades && face !== 'back') { var fy = faceTop + (chin - faceTop) * (spec.shadeQ != null ? spec.shadeQ : 0.3), fw = hw * 0.62, lw2 = fw * 0.4, lh = Math.max(3, (chin - faceTop) * 0.2);
       var lens = face === 'front' ? [hcx - fw * 0.27, hcx + fw * 0.27] : [typeof PROF === 'object' && PROF ? PROF.ex + dir * lw2 * 0.15 : hcx + dir * hw * 0.3]; if (face !== 'front' && PROF) fy = PROF.ey - PROF.fh * 0.02;
@@ -514,24 +535,24 @@
    * clean drops the light flecks left on dark cloth. ==== */
   /* "High-Score" Jin (portraits/jin_*): shaggy layered black hair with lime-green tips, a lime-green zip-up hoodie open on a black tee, black headphones with lime rings round the neck, slim */
   SPEC.ksJin2 = { base: 'punk', glove: 1, nozig: 1, noScar: 1, clean: 1, pal: { 3: tri('#141217'), 4: tri('#8ccf2a'), 5: tri('#1b1920'), 6: tri('#1f1d24'), 7: tri('#1b1920') }, happi: { eri: '#1b1920', hemCol: '#5f9a18' }, zip: '#c9ccd2',
-    hood: '#8ccf2a', phones: { cup: '#1d1c22', band: '#1a1820', ring: '#8ccf2a' }, bag: 2, hair: 'shag', hairCol: '#141217', hairCol2: '#9be03a' };
+    hood: '#8ccf2a', phones: { cup: '#1d1c22', band: '#1a1820', ring: '#8ccf2a' }, bag: 2, hair: 'shag', hairCol: '#141217', hairCol2: '#9be03a', face2: { eyes: 'soft', brow: 'soft', mouth: 'smirk', mouthW: 0.32, jaw: 'pointed', w: 0.95 } };
   /* the Black-Suit Bouncer (portraits/bouncer_neutral): slicked side-parted black hair, black shades, tanned, a black single-breasted suit, a white shirt open at the collar, no tie; head drawn bigger */
   SPEC.ksBouncer2 = { base: 'punk', glove: 1, nozig: 1, noScar: 1, clean: 1, skinRe: 1, skin: '#dca673', bulk: 0.62, bagSide: 0.5, headFront: 1.2, headSide: 1.28, neckQ: 0.15,
-    pal: { 3: tri('#121115'), 4: tri('#1f1e24'), 5: tri('#f2f1ec'), 6: tri('#1f1e24'), 7: tri('#0f0e12') }, suit: { lapel: '#2b2a31', db: 0, btn: '#2b2a31', collar: 1, v: 0.7 }, bag: 2, hair: 'slick', tight: 1, hairCol: '#121115', shades: 1 };
+    pal: { 3: tri('#121115'), 4: tri('#1f1e24'), 5: tri('#f2f1ec'), 6: tri('#1f1e24'), 7: tri('#0f0e12') }, suit: { lapel: '#2b2a31', db: 0, btn: '#2b2a31', collar: 1, v: 0.7 }, bag: 2, hair: 'slick', tight: 1, part: 1, hairCol: '#121115', hairHi: '#33323d', hairClr: 18, shades: 1, face2: { mouth: 'flat', mouthW: 0.42, jaw: 'square', w: 1.05 } };
   /* Kitsune "Suit", uniform A (portraits/c2suit_neutral): black baseball cap, black shades, charcoal pinstripe double-breasted suit with silver buttons, dark maroon shirt, no tie, stocky */
   SPEC.ksSuit2 = { base: 'punk', glove: 1, nozig: 1, noScar: 1, clean: 1, bulk: 0.3, bagSide: 0.5, pal: { 3: tri('#141217'), 4: tri('#2f2e36'), 5: tri('#6a1b27'), 6: tri('#2f2e36'), 7: tri('#141217') }, pin: '#77757f',
-    suit: { lapel: '#26252c', db: 1, btn: '#c9ccd2' }, bag: 2, hair: 'slick', tight: 1, hairCol: '#141217', cap: { col: '#17161b' }, shades: 1 };
+    suit: { lapel: '#26252c', db: 1, btn: '#c9ccd2' }, bag: 2, hair: 'slick', tight: 1, hairCol: '#141217', hairHi: '#34343f', cap: { col: '#17161b' }, shades: 1, face2: { mouth: 'flat', jaw: 'wide', w: 1.08 } };
   /* Kitsune "Runner", uniform B: no portrait, the approved look kept (crimson bomber, gold fox on the back); scar and flecks fixed */
   SPEC.ksRun2 = Object.assign({}, SPEC.ksRun, { noScar: 1, clean: 1 });
   /* Sabu: no dialogue portrait of his own (his talk box shows his battle figure), the approved look kept; scar fixed */
   SPEC.sabu2 = Object.assign({}, SPEC.sabu, { noScar: 1, clean: 1 });
   /* Depot "Rider", uniform A (portraits/c2boso_neutral): purple long tokkōfuku stitched with rows of gold crosses, sarashi, a tall black pompadour under a dark hachimaki, white surgical mask, gold wristbands */
   SPEC.dpRider2 = { base: 'punk', glove: 1, nozig: 1, noScar: 1, clean: 1, pal: { 3: tri('#16151a'), 4: tri('#4a2c86'), 6: tri('#2b2340'), 7: tri('#16151a') }, coat: '#4a2c86', coatLen: 0.8, emb: null, lining: '#2a1a48', bag: 9, shirt: 'sarashi',
-    crosses: '#e2b33a', cuff: '#d9a520', hair: 'pomp', hairCol: '#16151a', band: '#3a2622', mask: '#f3f1ec' };
+    crosses: '#e2b33a', cuff: '#d9a520', hair: 'pomp', hairCol: '#16151a', band: '#3a2622', mask: '#f3f1ec', face2: { brow: 'angry', jaw: 'round' } };
   /* Depot "Dock hand", uniform B: no portrait, the approved look kept (hi-vis coverall, tape, tenugui); scar and flecks fixed */
   SPEC.dpDock2 = Object.assign({}, SPEC.dpDock, { noScar: 1, clean: 1 });
   /* Foreman Masa (portraits/masa_*): heavy, a plain yellow hard hat, an orange coverall buttoned over a black tee, silver reflective braces + chest and shin bands, chest pockets, stubble. No coat. */
   SPEC.dpMasa2 = { base: 'punk', glove: 1, nozig: 1, noScar: 1, clean: 1, bulk: 0.95, bagSide: 0.5, pal: { 3: tri('#16151a'), 4: tri('#e8661c'), 5: tri('#1d1c21'), 6: tri('#e8661c'), 7: tri('#1a1a1e') },
-    refl: [0.4, 0.8], reflK: [4, 6], reflV: 0.15, pockets: 0.09, stubble: 1, bag: 4, hair: 'slick', hairCol: '#16151a', hat: { col: '#f0b419' } };
+    refl: [0.4, 0.8], reflK: [4, 6], reflV: 0.15, pockets: 0.09, stubble: 1, bag: 4, hair: 'slick', hairCol: '#16151a', hat: { col: '#f0b419' }, face2: { brow: 'flat', browW: 1.9, mouth: 'flat', jaw: 'wide', w: 1.12, eyeQ: 0.46, mouthQ: 0.8 } };
   root.FFF_YK = { SPEC: SPEC, paintCell: paintCell, paintSheet: paintSheet, tri: tri };
 })(window);
