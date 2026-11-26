@@ -738,6 +738,39 @@ async def main():
         ok('meal edge is a counter plate or sip, never bag candy', g50 and g50.get('candyNo') and g50.get('plateYes') and g50.get('sipK')=='sip' and g50.get('plateK')=='plate', g50)
         ok('Yard map marks the current cycle only', g50 and g50.get('yOn') and g50.get('yOff') is False, g50)
 
+        # GGD-50 regression (v6563): tapping a pot as a player walks to its stand and plants.
+        # The 'Garden' spot box covers every stand; the walk used to resolve to that spot
+        # ('Nothing useful.') and the pot never planted.
+        gp0 = await ev(pg, """(function(){
+          try{
+            var S=c2S(); S.e=S.e||{}; S.e.sumire=1; S.e.gardenIntro=1;
+            var C=c2Cyc(); C.pots={}; var h=herbS(); h.seed=3;
+            root.FFF_ACT_K=0.2;
+            try{c2AbortTalk()}catch(e){} try{scKill()}catch(e){}
+            WORLD_API.c2Go('clinic');
+            return {room:c2Room()};
+          }catch(e){ return {err:String(e&&e.message||e)}; }
+        })()""")
+        await pg.wait_for_timeout(1500)
+        gp1 = await ev(pg, """(function(){
+          try{
+            try{c2AbortTalk()}catch(e){} try{scKill()}catch(e){}
+            W.dlg=false; W.cut=false; W.busy=false; var d=document.getElementById('wdlg'); if(d){d.className='';}
+            var P=(W.g50p||[]); var o=P[0]; if(!o) return {err:'no pots', n:P.length};
+            var A=WORLD_API; W.ryo.x=o.sx+20; W.ryo.y=o.sy+150; if(!A.walkableAt(W.ryo.x,W.ryo.y)) return {err:'start not walkable'};
+            var spot=intSpotAt(o.sx,o.sy); var ok=walkTo(o.x,o.y-8,true,false);
+            var g=W.goal||[0,0];
+            return {room:c2Room(), ok:!!ok, spot:spot&&spot.id, arrive:W.arrive&&W.arrive.id, goalD:Math.round(Math.hypot(g[0]-o.sx,g[1]-o.sy)), path:(W.path||[]).length};
+          }catch(e){ return {err:String(e&&e.message||e)}; }
+        })()""")
+        gp2 = None
+        for _ in range(40):
+            await pg.wait_for_timeout(250)
+            gp2 = await ev(pg, "(function(){var p=c2Cyc().pots.gp1;return {st:p&&p.st, seed:herbS().seed|0, busy:!!W.busy}})()")
+            if gp2 and gp2.get('st')=='planted' and not gp2.get('busy'): break
+        ok('tapping a pot walks to its stand (not the Garden spot) and plants it', gp1 and gp1.get('ok') and gp1.get('spot')=='garden' and gp1.get('arrive')=='g50:gp1' and gp1.get('goalD',99)<=12 and gp2 and gp2.get('st')=='planted' and gp2.get('seed')==2, [gp0, gp1, gp2])
+        await ev(pg, "(function(){root.FFF_ACT_K=null;return 1})()")
+
         # no page errors
         ok('no page errors', not errs, errs[:4])
         await b.close()

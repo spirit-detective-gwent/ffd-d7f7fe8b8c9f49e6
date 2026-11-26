@@ -366,8 +366,15 @@
     maybeIntro(function () {
       if (!kind) return;
       if (Math.hypot(r.x - o.sx, r.y - o.sy) <= G.NEAR) { doPot(o, kind); return; }
-      var ok = (G.walk0 || walkTo)(o.sx, o.sy, true, run);
-      if (ok) W.arrive = { id: 'g50:' + o.p.id, tagFn: function () { doPot(o, kind); } };
+      /* v6563: the 'Garden' spot box covers every pot stand, so a plain walk
+       * resolved to that spot (walk to its edge, or 'Nothing useful.' when
+       * close) and never reached the pot. Walk to the stand itself. */
+      var ok;
+      G.noSpot = 1;
+      try { ok = (G.walk0 || walkTo)(o.sx, o.sy, true, run); } finally { G.noSpot = 0; }
+      if (!ok) return;
+      W.arrive = { id: 'g50:' + o.p.id, tagFn: function () { doPot(o, kind); } };
+      if (!W.path || !W.path.length) doPot(o, kind);
     });
     return true;
   }
@@ -648,6 +655,14 @@
           }
         } catch (e) {}
         return r;
+      };
+    }
+    if (typeof intSpotAt === 'function' && !G.spotWrap) {
+      G.spotWrap = 1;
+      var spot0 = intSpotAt;
+      intSpotAt = function () {
+        var s = spot0.apply(this, arguments);
+        return (G.noSpot && s && s.id === 'garden') ? null : s;
       };
     }
     if (typeof walkTo === 'function') {
