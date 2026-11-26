@@ -14,6 +14,9 @@ if p3p.exists():
 p4p = HERE / 'paint_p4.js'
 if p4p.exists():
     paint = paint + '\n' + p4p.read_text(encoding='utf8').rstrip('\n')
+p5p = HERE / 'paint_p5.js'
+if p5p.exists():
+    paint = paint + '\n' + p5p.read_text(encoding='utf8').rstrip('\n')
 pmp = HERE / 'paint_menus.js'
 if pmp.exists():
     paint = paint + '\n' + pmp.read_text(encoding='utf8').rstrip('\n')
@@ -90,7 +93,22 @@ if p4.exists():
         raise SystemExit('S2P3_END missing; cannot inject S2P4')
     print('injected S2P4', len(mod4))
 
-# Themed shop menus (Chiyo, Hase, depot art/data). After S2P4.
+# Phase 5 Masa's Seal, after S2P4
+p5 = HERE / 's2p5.js'
+B5, E5 = '/* S2P5_BEGIN v6563-seal2-p5 */\n', '\n/* S2P5_END */\n'
+if p5.exists():
+    mod5 = p5.read_text(encoding='utf8').rstrip('\n')
+    if B5 in s:
+        i = s.index(B5); j = s.index(E5, i) + len(E5)
+        s = s[:i] + B5 + mod5 + E5 + s[j:]
+    elif E4 in s:
+        i = s.index(E4) + len(E4)
+        s = s[:i] + B5 + mod5 + E5 + s[i:]
+    else:
+        raise SystemExit('S2P4_END missing; cannot inject S2P5')
+    print('injected S2P5', len(mod5))
+
+# Themed shop menus (Chiyo, Hase, depot art/data). After S2P5.
 pm = HERE / 's2menus.js'
 BM, EM = '/* S2MENUS_BEGIN v6563-shopmenus */\n', '\n/* S2MENUS_END */\n'
 if pm.exists():
@@ -98,11 +116,11 @@ if pm.exists():
     if BM in s:
         i = s.index(BM); j = s.index(EM, i) + len(EM)
         s = s[:i] + BM + modm + EM + s[j:]
-    elif E4 in s:
-        i = s.index(E4) + len(E4)
+    elif E5 in s:
+        i = s.index(E5) + len(E5)
         s = s[:i] + BM + modm + EM + s[i:]
     else:
-        raise SystemExit('S2P4_END missing; cannot inject S2MENUS')
+        raise SystemExit('S2P5_END missing; cannot inject S2MENUS')
     print('injected S2MENUS', len(modm))
 
 INDEX.write_text(s, encoding='utf8')

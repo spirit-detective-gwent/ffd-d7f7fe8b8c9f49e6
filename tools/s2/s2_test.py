@@ -54,7 +54,7 @@ async def newpage(p, errs):
     html = body()
     async def rt(route): await route.fulfill(body=html, content_type='text/html')
     await pg.route('**/index.html', rt)
-    await pg.goto(f'http://127.0.0.1:{PORT}/index.html'); await pg.wait_for_timeout(2200)
+    await pg.goto(f'http://127.0.0.1:{PORT}/index.html'); await pg.wait_for_timeout(2800)
     return b, pg
 
 async def boot_ch2_nails_seal(pg, path='fierce'):
@@ -147,6 +147,8 @@ async def main():
         ok('S2P + C2H painters live', art and art.get('s2p') and art.get('c2h'), art)
         ok('X3 clash picks the Wagashi battle room', art and art.get('room')=='c2_waga', art)
         ok('EATG knows sweetroll and dango', art and art.get('eatg'), art)
+        ok('Chiyo walks to the counter on order', 'chiyoToCounter' in src.split('S2_BEGIN')[-1].split('S2_END')[0] if 'S2_BEGIN' in src else False)
+        ok('Wagashi battle lifts shops onto a sidewalk', 'var LIFT = 56' in src and 'FOOT = H0 - LIFT' in src)
         ok('quest auto-opens after seal', info and info.get('q') == 0, info)
         ok('next rival is depot (Masa)', info and info.get('next') == 'depot', info)
         quote = (info or {}).get('quote') or ''
@@ -156,6 +158,48 @@ async def main():
         lab = str(tgt.get('lab') or '') + ' ' + str(tgt.get('loc') or '') + ' ' + str(tgt.get('n') or '') + ' ' + str(tgt.get('qid') or '')
         ok('pin is Wagashi / Flip / Masa, not Jin',
            any(s in lab for s in ('Wagashi', 'Flip', 'Masa', 'cq2_s2_waga')) and 'Neon' not in lab, tgt)
+
+        # t292: customer stays in front of the counter; Chiyo walks up from the back
+        shop = await ev(pg, """(function(){
+          var S2=root.FFF_S2, st=c2S();
+          st.q.cq2_s2_waga=9; if (S2&&S2.setStg) S2.setStg('done');
+          try { if (typeof c2QSync==='function') c2QSync(); save(); } catch(e){}
+          try { c2Go('waga',[640,700,3]); } catch(e2){}
+          try { if (W.ryo) { W.ryo.x=640; W.ryo.y=700; place(W.ryo,0);} camera(true);} catch(e3){}
+          try { if (S2&&S2.placeDoor) {} } catch(e4){}
+          var D = INT && INT.c2_nq_waga, sp = D && D.spots && D.spots.filter(function(s){return s.id==='s2_waga_order';})[0];
+          var blk = D && D.block && D.block[0];
+          function hit(x,y){ var B=D&&D.block||[]; for (var i=0;i<B.length;i++){ var r=B[i]; if(x>=r[0]&&x<r[2]&&y>=r[1]&&y<r[3]) return 1;} return 0; }
+          var chi = W.c2n && W.c2n.s2;
+          return {
+            room: typeof c2Room==='function'?c2Room():null,
+            at: sp && sp.at, rect: sp && sp.r, face: sp && sp.face,
+            blk: blk, behind: hit(640,360), aisle: hit(100,400), customer: hit(640,700),
+            chi: chi ? [Math.round(chi.x), Math.round(chi.y), !!chi.walker, chi.dir] : null,
+            back: S2 && S2.CHI_BACK, front: S2 && S2.CHI_FRONT,
+            fn: !!(S2 && S2.chiyoToCounter)
+          };
+        })()""")
+        ok('Wagashi interior opens', shop and shop.get('room') in ('waga','c2_nq_waga') or (shop and 'waga' in str(shop.get('room'))), shop)
+        at = (shop or {}).get('at') or [0, 0]
+        rect = (shop or {}).get('rect') or [0, 0, 0, 0]
+        ok('Order stand is on the customer side of the counter', at[1] >= 640, shop)
+        ok('Order rect is in front of the counter, not behind it', rect[1] >= 600, shop)
+        ok('player faces Chiyo at the counter', (shop or {}).get('face') == 3, shop)
+        ok('back of the shop is blocked', shop and shop.get('behind') == 1, shop)
+        ok('side aisle around the counter is blocked', shop and shop.get('aisle') == 1, shop)
+        ok('customer floor in front of the counter is open', shop and shop.get('customer') == 0, shop)
+        chi = (shop or {}).get('chi') or []
+        ok('Chiyo starts in the back, not at the counter front', chi and chi[1] <= 420 and chi[0] >= 700, shop)
+        ok('Chiyo is a walker (existing walk frames)', chi and chi[2] is True, shop)
+        # walk her up and confirm she stops behind the counter, facing the customer
+        await ev(pg, """(function(){ try { root.FFF_S2.chiyoToCounter(function(){ root.__chiReady=1; }); } catch(e){ root.__chiReady='err:'+e; } return 1; })()""")
+        await pg.wait_for_timeout(2200)
+        walked = await ev(pg, """(function(){ var c=W.c2n&&W.c2n.s2; return { x:c&&Math.round(c.x), y:c&&Math.round(c.y), dir:c&&c.dir, ready:root.__chiReady, front:root.FFF_S2&&root.FFF_S2.CHI_FRONT }; })()""")
+        ok('Chiyo arrives at the front of the counter', walked and walked.get('y') is not None and 430 <= walked['y'] <= 500 and 580 <= walked['x'] <= 720, walked)
+        ok('Chiyo faces the customer (down) after the walk', walked and walked.get('dir') == 0, walked)
+        # leave the room so later tests still start in town
+        await ev(pg, """(function(){ try{ c2Go('town',[2360,3300,0]); }catch(e){} try{ if(W.ryo){ W.ryo.x=2360; W.ryo.y=3300; place(W.ryo,0);} camera(true);}catch(e2){} return typeof c2Room==='function'?c2Room():null; })()""")
 
         # path voices
         voices = {}

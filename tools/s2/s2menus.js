@@ -58,18 +58,39 @@
     { id: 'hojicha', n: 'Hojicha', jp: 'ほうじ茶', icon: 'hojicha', sp: 6, base: 4, cost: 3, drink: 1, prov: 1,
       eff: '+6 SP  ·  drink now', flavor: 'Toasted tea, no sugar. Clears the last bite.' }
   ];
-  var HASE_ITEMS = [
-    { id: 'etape', n: 'Electrical tape', jp: '電気テープ', icon: 'etape', k: 'herb', hb: 'tape', base: 3, cost: 2, stock: 3,
-      eff: 'into your pouch', flavor: 'For wiring, or a knuckle.' },
-    { id: 'patch', n: 'Patch kit', jp: 'パンク修理', icon: 'patch', k: 'heal', h: 'bandage', hp: 6, base: 4, cost: 3, stock: 3,
-      eff: 'into your bag  ·  +6 HP', flavor: 'A cheap roadside repair kit.' },
-    { id: 'bpart', n: 'Spare tube', jp: '予備チューブ', icon: 'bpart', k: 'heal', h: 'bandage', hp: 10, base: 6, cost: 5, stock: 2,
-      eff: 'into your bag  ·  +10 HP', flavor: 'A patched inner tube. You can wrap a cut with it.' },
-    { id: 'chainoil', n: 'Chain oil', jp: 'チェーンオイル', icon: 'chainoil', k: 'herb', hb: 'oil', base: 5, cost: 4, stock: 2, prov: 1,
-      eff: 'into your pouch', flavor: 'Keeps a bike quiet. Or a hinge.' },
-    { id: 'cancoffee', n: 'Canned coffee', jp: '缶コーヒー', icon: 'cancoffee', sp: 6, base: 4, cost: 3, drink: 1, prov: 1,
-      eff: '+6 SP  ·  drink now', flavor: 'Hot from the machine in the bay.' }
+  /* Existing Hase rows (etape / patch / bpart) take k, h, hp, stock, and prices
+   * from FFF_S2P2.MENU so a later +6 / +10 HP bag fix flows through. Menu copy
+   * already says +6 / +10. Do not change stock or restock here. */
+  var HASE_META = {
+    etape: { jp: '電気テープ', icon: 'etape', flavor: 'For wiring, or a knuckle.', eff: 'into your pouch' },
+    patch: { jp: 'パンク修理', icon: 'patch', flavor: 'A cheap roadside repair kit.' },
+    bpart: { jp: '予備チューブ', icon: 'bpart', flavor: 'A patched inner tube. You can wrap a cut with it.' },
+    chainoil: { jp: 'チェーンオイル', icon: 'chainoil', flavor: 'Keeps a bike quiet. Or a hinge.', eff: 'into your pouch' },
+    cancoffee: { jp: '缶コーヒー', icon: 'cancoffee', flavor: 'Hot from the machine in the bay.', eff: '+6 SP  ·  drink now' }
+  };
+  var HASE_NEW = [
+    { id: 'chainoil', n: 'Chain oil', k: 'herb', hb: 'oil', base: 5, cost: 4, stock: 2, prov: 1 },
+    { id: 'cancoffee', n: 'Canned coffee', base: 4, cost: 3, sp: 6, drink: 1, prov: 1 }
   ];
+  var HASE_FALLBACK = [
+    { id: 'etape', n: 'Electrical tape', k: 'herb', hb: 'tape', base: 3, cost: 2, stock: 3 },
+    { id: 'patch', n: 'Patch kit', k: 'heal', h: 'bandage', hp: 6, base: 4, cost: 3, stock: 3 },
+    { id: 'bpart', n: 'Spare tube', k: 'heal', h: 'bandage', hp: 10, base: 6, cost: 5, stock: 2 }
+  ];
+  function decorateHase(it) {
+    var o = {}, m = HASE_META[it.id] || {};
+    Object.keys(it).forEach(function (k) { o[k] = it[k]; });
+    Object.keys(m).forEach(function (k) { o[k] = m[k]; });
+    if (o.hp && o.k === 'heal' && !m.eff) o.eff = 'into your bag  ·  +' + o.hp + ' HP';
+    return o;
+  }
+  function haseItems() {
+    var base = (root.FFF_S2P2 && FFF_S2P2.MENU && FFF_S2P2.MENU.length) ? FFF_S2P2.MENU.slice() : HASE_FALLBACK.slice();
+    var have = {}, out = base.map(function (it) { have[it.id] = 1; return decorateHase(it); });
+    HASE_NEW.forEach(function (it) { if (!have[it.id]) out.push(decorateHase(it)); });
+    return out;
+  }
+  var HASE_ITEMS = haseItems();
   var DEPOT_ITEMS = [
     { id: 'onigiri', n: 'Onigiri', jp: 'おにぎり', icon: 'onigiri', hp: 10, base: 6, cost: 5, eat: 'onigiri', prov: 1,
       eff: '+10 HP  ·  eat now', flavor: 'From the break-room rice cooker. Still a little warm.' },
@@ -102,7 +123,7 @@
         balanced: 'I am still here. Parts, tape, a cheap patch.'
       },
       nails: function () { try { return !!(root.FFF_S2P2 && FFF_S2P2.nailsOn && FFF_S2P2.nailsOn()); } catch (e) { return false; } },
-      items: function () { return HASE_ITEMS; }
+      items: function () { return HASE_ITEMS = haseItems(); }
     },
     /* Data + art only. Phase 5 must open this after Masa’s seal; do not call open() from here. */
     s2_depot: {
@@ -114,7 +135,7 @@
         strategic: 'Manifest window’s open. Nails’ price is on the sheet.',
         balanced: 'You ended the gray schedule. Sit a minute. The kettle’s on in the back.'
       },
-      nails: function () { try { var e = typeof c2S === 'function' && c2S().e; return !!(e && (e.seal_depot || e.down_dep)); } catch (e) { return false; } },
+      nails: function () { try { if (root.FFF_S2P5 && typeof FFF_S2P5.afterSeal === 'function' && FFF_S2P5.afterSeal()) return true; var e = typeof c2S === 'function' && c2S().e; return !!(e && (e.seal_depot || e.down_dep)); } catch (e) { return false; } },
       items: function () { return DEPOT_ITEMS; }
     }
   };
@@ -433,6 +454,7 @@
 
   /* Register / refresh SHOPS entries so existing talk hooks can call c2Shop. */
   function syncShops() {
+    try { HASE_ITEMS = haseItems(); M.HASE_ITEMS = HASE_ITEMS; } catch (eH) {}
     if (typeof SHOPS === 'undefined') return;
     var ch = SHOPS_M.s2_chiyo;
     SHOPS.s2_chiyo = { n: ch.n, who: ch.who, hi: lineOf(ch), nq: 1, s2menu: 1, items: CHIYO_ITEMS.slice() };
@@ -483,7 +505,7 @@
     nails: 'Nails’ price once e.seal_depot or e.down_dep is set. Compassionate uses the warmer hi.balanced line.',
     items: DEPOT_ITEMS,
     food: 'onigiri uses EATG onigiri (already in ITEMS). Canned coffee drinks with actPlay("drink"), or FFF_EATG_SP(blend) if that game can open. Handoff plays first; the player is not moved.',
-    room: 'Time-clock office (depClock) is the natural counter: 台帳 desk + 当番表. Break room vending can stay flavor, not a second shop.'
+    room: 'Time-clock office (c2Room dclock / depClock). Clerk behind the 台帳 desk. Open after FFF_S2P5.afterSeal() / e.seal_depot. Break room vending stays flavor, not a second shop.'
   };
 
   ev('world:s2m:ready');
