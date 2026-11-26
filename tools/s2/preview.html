@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>FFF Seal 2 Phase 1 — preview</title>
+<style>
+  html,body{margin:0;background:#1a1220;color:#f4ead2;font:14px/1.4 "Noto Sans CJK JP",Georgia,sans-serif}
+  h1{font-size:18px;margin:16px 24px 8px;letter-spacing:.04em}
+  p.note{margin:0 24px 16px;opacity:.8;max-width:900px}
+  canvas{background:#0d0a10;display:block}
+  .row{display:flex;flex-wrap:wrap;gap:16px;padding:12px 24px 24px}
+  figure{margin:0;background:#241c28;padding:8px;border-radius:8px}
+  figcaption{font-size:12px;padding:6px 4px 0;letter-spacing:.03em}
+</style>
+</head>
+<body>
+<h1>Phase 1 preview — Wagashi Row</h1>
+<p class="note">Handmade in-engine art, not wired into the game yet. Shopkeeper is Ms. Chiyo (千代). Path cards use the proposed Flip briefing and win lines. Battle backdrop is the X3 clash on Wagashi row.</p>
+<div class="row" id="row"></div>
+<script src="c2bt_lib.js"></script>
+<script src="paint.js"></script>
+<script>
+(async function(){
+  var P = window.FFF_S2P, row = document.getElementById('row');
+  function loadSheet(name, src) {
+    return new Promise(function (res) {
+      var im = new Image(); im.onload = function () { P.sheets[name] = im; res(im); };
+      im.onerror = function () { console.warn('missing', src); res(null); };
+      im.src = src;
+    });
+  }
+  window.__s2ready = Promise.all([
+    loadSheet('walk', 'sprites/chiyo_walk.webp'),
+    loadSheet('idle', 'sprites/chiyo_idle.webp'),
+    loadSheet('map', 'sprites/chiyo_map.webp'),
+    loadSheet('fig', 'sprites/chiyo_fig.webp')
+  ]);
+
+  await window.__s2ready;
+  function add(name, w, h, paint, cap) {
+    var c = document.createElement('canvas'); c.width = w; c.height = h; c.id = name;
+    var g = c.getContext('2d'); paint(g);
+    var f = document.createElement('figure'); f.appendChild(c);
+    var fc = document.createElement('figcaption'); fc.textContent = cap || name; f.appendChild(fc);
+    row.appendChild(f); return c;
+  }
+  add('facadeDoor', 400, 160, function(g){ P.facadeDoor(g,400,160); }, 'Door overlay for the existing Wagashi north façade');
+  add('interior', 1280, 900, P.interior, 'Shop interior — display case, steamer, register, tea, wall menu; lanterns clear of noren');
+  add('battle', 720, 1280, P.battle, 'X3 Wagashi row at night — storefronts, lanterns, shutters, vending, wet street');
+  add('sweetRoll', 160, 140, function(g){ g.fillStyle='#1a1220'; g.fillRect(0,0,160,140); P.sweetRoll(g); }, 'Sweet roll');
+  add('dango', 100, 160, function(g){ g.fillStyle='#1a1220'; g.fillRect(0,0,100,160); P.dango(g); }, 'Dango (cheaper)');
+  add('rollSplit', 160, 140, function(g){ g.fillStyle='#1a1220'; g.fillRect(0,0,160,140); P.rollSplit(g); }, 'Sweet roll — tap to pull apart');
+  add('chiyoIdle', 160, 200, P.chiyoIdle, 'Chiyo idle (yk / Hina rig, breathing sheet)');
+  add('chiyoWalk', 560, 200, P.chiyoWalk, 'Chiyo walk, front, 4 frames');
+  add('chiyoFacings', 720, 220, P.chiyoFacings, 'Chiyo facings: front, left, right, back');
+  add('chiyoTalk', 200, 240, P.chiyoTalk, 'Chiyo talk / overworld (map sheet)');
+
+  /* path-line cards */
+  var PATHS = [
+    { id:'fierce', t:'FIERCE', c:'#c0392b',
+      brief:[['Flip','Masa’s Riders have Wagashi row. Two waves, then they hold the middle.'],['Ryo','We take the row tonight.'],['Aoi','Then we start it.'],['Flip','I’ll bring two when you hit the middle. Don’t wait.']],
+      win:[['Flip','Row’s red. Masa will feel that.'],['Ryo','Good. Next.'],['Aoi','The shop’s still standing. Barely.']] },
+    { id:'strategic', t:'STRATEGIC', c:'#2b7a82',
+      brief:[['Flip','Masa’s Riders have Wagashi row. Two waves, then they hold the middle.'],['Ryo','We let the waves spend themselves. Then we hit the middle with your crew.'],['Aoi','So the backup is the plan, not the cleanup.'],['Flip','That’s it. Time it. I’ll be there for the last one.']],
+      win:[['Flip','That was the schedule. Masa’s runs go through this row.'],['Ryo','Then we just cut his first street.'],['Aoi','The shop can open honest now.']] },
+    { id:'balanced', t:'COMPASSIONATE', c:'#8e3b52',
+      brief:[['Flip','Masa’s Riders have Wagashi row. Two waves, then they hold the middle.'],['Ryo','The sweet shop first. I want to know who’s behind that door.'],['Aoi','The Riders have been on it all week.'],['Flip','Then get them off it. I’ll still back the clash.']],
+      win:[['Chiyo','They’re gone? They stood on my door every night.'],['Ryo','They won’t come back. This street’s ours, and it’s yours too.'],['Aoi','We’ll keep it that way.'],['Flip','Nails hears it from me. The row’s red.']] }
+  ];
+  function card(path, kind) {
+    var w = 520, h = 420, c = document.createElement('canvas'); c.width = w; c.height = h; c.id = 'card_'+path.id+'_'+kind;
+    var g = c.getContext('2d');
+    g.fillStyle = '#161018'; g.fillRect(0,0,w,h);
+    g.strokeStyle = path.c; g.lineWidth = 6; g.strokeRect(8,8,w-16,h-16);
+    g.fillStyle = path.c; g.fillRect(8,8,w-16,48);
+    g.font = '900 18px "Noto Sans CJK JP",system-ui,sans-serif'; g.fillStyle = '#f4ead2'; g.textAlign='left'; g.textBaseline='middle';
+    g.fillText(path.t + '  ·  ' + (kind==='brief' ? 'Flip’s briefing' : 'After the win'), 24, 32);
+    var lines = path[kind], y = 80;
+    lines.forEach(function(L){
+      g.font = '700 13px "Noto Sans CJK JP",system-ui,sans-serif'; g.fillStyle = path.c; g.fillText(L[0], 24, y);
+      y += 22;
+      g.font = '16px "Noto Sans CJK JP",Georgia,serif'; g.fillStyle = '#f4ead2';
+      var words = L[1].split(' '), line = '', x = 24, max = 470;
+      words.forEach(function(wd){
+        var t = line ? line+' '+wd : wd;
+        if (g.measureText(t).width > max) { g.fillText(line, x, y); y += 22; line = wd; }
+        else line = t;
+      });
+      if (line) { g.fillText(line, x, y); y += 28; }
+    });
+    var f = document.createElement('figure'); f.appendChild(c);
+    var fc = document.createElement('figcaption'); fc.textContent = path.t + ' — ' + (kind==='brief'?'briefing':'win'); f.appendChild(fc);
+    row.appendChild(f);
+  }
+  PATHS.forEach(function(p){ card(p,'brief'); card(p,'win'); });
+
+  /* eat-game storyboard */
+  (function(){
+    var w=900,h=320,c=document.createElement('canvas'); c.width=w;c.height=h;c.id='eatboard';
+    var g=c.getContext('2d'); g.fillStyle='#1a1220'; g.fillRect(0,0,w,h);
+    g.fillStyle='#f4ead2'; g.font='900 16px system-ui'; g.fillText('Sweet-roll eat game  ·  onigiri bite poses, roll swapped in, final tap-to-pull-apart', 16, 28);
+    ['MASH  ·  もぐ','MASH  ·  ぱくっ','TAP TO PULL APART'].forEach(function(lab,i){
+      var x=30+i*290; g.fillStyle='#2a2030'; g.fillRect(x,50,270,240); g.strokeStyle='#c45a6a'; g.lineWidth=3; g.strokeRect(x,50,270,240);
+      g.save(); g.translate(x+55, 80);
+      if (i<2) P.sweetRoll(g, 1.2); else P.rollSplit(g, 1.2);
+      g.restore();
+      g.fillStyle='#f4ead2'; g.font='700 14px system-ui'; g.textAlign='center'; g.fillText(lab, x+135, 260);
+      g.textAlign='left';
+    });
+    var f=document.createElement('figure'); f.appendChild(c);
+    var fc=document.createElement('figcaption'); fc.textContent='Eat-game beats (preview storyboard, not a live clip)'; f.appendChild(fc);
+    row.appendChild(f);
+  })();
+
+  /* menu card */
+  (function(){
+    var w=520,h=280,c=document.createElement('canvas'); c.width=w;c.height=h;c.id='menu';
+    var g=c.getContext('2d'); g.fillStyle='#f4ead2'; g.fillRect(0,0,w,h);
+    g.strokeStyle='#8e3b52'; g.lineWidth=6; g.strokeRect(8,8,w-16,h-16);
+    g.fillStyle='#8e3b52'; g.font='900 20px "Noto Sans CJK JP",serif'; g.textAlign='center';
+    g.fillText('千代  ·  COUNTER', 260, 44);
+    g.font='14px "Noto Sans CJK JP",serif'; g.fillStyle='#5a2c28';
+    g.fillText('Proposed prices  ·  Nails’ price is 20% off after the row is taken', 260, 70);
+    g.textAlign='left'; g.font='16px "Noto Sans CJK JP",serif';
+    var rows=[['あんロール  Sweet roll','+14 HP','¥8','¥6'],['団子  Dango','+8 HP','¥5','¥4']];
+    rows.forEach(function(r,i){
+      var y=110+i*60;
+      g.fillStyle='#5a2c28'; g.fillText(r[0], 40, y);
+      g.fillStyle='#8e3b52'; g.fillText(r[1], 40, y+22);
+      g.fillStyle='#5a2c28'; g.fillText(r[2]+'  →  Nails '+r[3], 280, y+8);
+    });
+    g.font='12px system-ui'; g.fillStyle='#7a4a3a'; g.textAlign='center';
+    g.fillText('Weaker than Gekko’s An-toast (+20 HP / ¥12) and Kake udon (+20 HP / ¥10). Open for Erik.', 260, 250);
+    var f=document.createElement('figure'); f.appendChild(c);
+    var fc=document.createElement('figcaption'); fc.textContent='Counter menu (proposed economy — still open)'; f.appendChild(fc);
+    row.appendChild(f);
+  })();
+})();
+</script>
+</body></html>

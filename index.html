@@ -40507,6 +40507,1034 @@ function camPan(to, o, done) {
   } catch (eNQ) { try { ev('world:nq:err:init:' + (eNQ && eNQ.message) + ' @' + String(eNQ && eNQ.stack || '').slice(0, 160)); console.warn('NQ init', eNQ); } catch (e2) {} }
 })();
 /* NQ_END */
+/* S2P_BEGIN v6563-seal2 */
+/* C2BT paint helpers, extracted for Seal 2 preview battle backdrops. Not wired. */
+(function (root) {
+var WD = 720, HT = 1280, INK = '#1a1220';
+function rr(x, a, b) { return a + Math.random() * (b - a); }
+function seed(s) { var v = s; return function () { v = (v * 16807) % 2147483647; return (v - 1) / 2147483646; }; }
+function R(x, X, Y, w, h, f, ink, lw) { x.fillStyle = f; x.fillRect(X, Y, w, h); if (ink !== 0) { x.strokeStyle = ink || INK; x.lineWidth = lw || 3; x.strokeRect(X, Y, w, h); } }
+function poly(x, P, f, ink, lw) { x.beginPath(); x.moveTo(P[0][0], P[0][1]); for (var i = 1; i < P.length; i++) x.lineTo(P[i][0], P[i][1]); x.closePath(); if (f) { x.fillStyle = f; x.fill(); } if (ink !== 0) { x.strokeStyle = ink || INK; x.lineWidth = lw || 3; x.stroke(); } }
+function lg(x, y0, y1, a, b) { var g = x.createLinearGradient(0, y0, 0, y1); g.addColorStop(0, a); g.addColorStop(1, b); return g; }
+function pool(x, X, Y, rx, ry, col, a) { x.save(); x.globalCompositeOperation = 'lighter'; x.translate(X, Y); x.scale(1, ry / rx); var g = x.createRadialGradient(0, 0, 0, 0, 0, rx); g.addColorStop(0, 'rgba(' + col + ',' + a + ')'); g.addColorStop(0.5, 'rgba(' + col + ',' + a * 0.35 + ')'); g.addColorStop(1, 'rgba(' + col + ',0)'); x.fillStyle = g; x.beginPath(); x.arc(0, 0, rx, 0, 6.2832); x.fill(); x.restore(); }
+function streak(x, X, Y, w, h, col, a) { x.save(); x.globalCompositeOperation = 'lighter'; var g = x.createLinearGradient(0, Y, 0, Y + h); g.addColorStop(0, 'rgba(' + col + ',' + a + ')'); g.addColorStop(1, 'rgba(' + col + ',0)'); x.fillStyle = g; x.beginPath(); x.ellipse(X, Y + h / 2, w / 2, h / 2, 0, 0, 6.2832); x.fill(); x.restore(); }
+function txt(x, s, X, Y, px, col, font, al) { x.font = (font || '900 ') + px + 'px "Noto Sans CJK JP","Noto Serif CJK JP",system-ui,sans-serif'; x.textAlign = al || 'center'; x.textBaseline = 'middle'; x.fillStyle = col; x.fillText(s, X, Y); }
+/* the floor: perspective lanes converging on a vanishing point above the wall, like the Ch1 rooms */
+var H0 = 330, VP = [360, -260];
+function fx0(u, y) { var k = (y - VP[1]) / (HT - VP[1]); return VP[0] + (u - VP[0]) * k; }
+function floor(x, o) { var r = seed(o.seed || 7);
+  x.fillStyle = lg(x, H0, HT, o.far, o.near); x.fillRect(0, H0, WD, HT - H0);
+  var n = o.cols || 9, i, j, u;
+  if (o.kind === 'board' || o.kind === 'tile' || o.kind === 'stone') {
+    for (i = -n; i <= n * 2; i++) { u = -360 + i * (1440 / n) ; x.beginPath(); x.moveTo(fx0(u, H0), H0); x.lineTo(fx0(u, HT), HT); x.strokeStyle = o.line; x.lineWidth = o.kind === 'tile' ? 3 : 2; x.stroke(); }
+    var rows = o.rows || 14; for (j = 0; j < rows; j++) { var q = j / rows, y = H0 + (HT - H0) * Math.pow(q, 1.55); if (o.kind === 'board') { for (i = -n; i <= n * 2; i++) { if (r() < 0.55) continue; u = -360 + (i + 0.5) * (1440 / n); var ya = y, yb = H0 + (HT - H0) * Math.pow((j + 1) / rows, 1.55); x.beginPath(); x.moveTo(fx0(u - 1440 / n / 2, ya), ya); x.lineTo(fx0(u + 1440 / n / 2, ya), ya); x.strokeStyle = o.line; x.lineWidth = 1.5; x.stroke(); } }
+      else { x.beginPath(); x.moveTo(0, y); x.lineTo(WD, y); x.strokeStyle = o.line; x.lineWidth = o.kind === 'tile' ? 3 : 2; x.stroke(); } }
+    if (o.kind === 'stone') for (i = 0; i < 160; i++) { var yy = H0 + (HT - H0) * Math.pow(r(), 1.3), xx = r() * WD, s = 6 + (yy - H0) / 40; x.fillStyle = 'rgba(0,0,0,' + (0.05 + r() * 0.08) + ')'; x.beginPath(); x.ellipse(xx, yy, s * 1.6, s * 0.5, 0, 0, 6.28); x.fill(); } }
+  if (o.kind === 'asphalt') { for (i = 0; i < 900; i++) { var ay = H0 + r() * (HT - H0); x.fillStyle = 'rgba(255,255,255,' + r() * 0.035 + ')'; x.fillRect(r() * WD, ay, 2, 2); }
+    (o.lanes || []).forEach(function (L) { for (j = 0; j < 10; j++) { var y1 = H0 + (HT - H0) * Math.pow(j / 10, 1.5), y2 = H0 + (HT - H0) * Math.pow((j + 0.55) / 10, 1.5); poly(x, [[fx0(L - 8, y1), y1], [fx0(L + 8, y1), y1], [fx0(L + 8, y2), y2], [fx0(L - 8, y2), y2]], o.paint || 'rgba(230,220,180,.55)', 0); } });
+    (o.zebra || []).forEach(function (Z) { for (i = 0; i < 9; i++) { var u1 = -100 + i * 110, ya = Z[0], yb = Z[1]; poly(x, [[fx0(u1, ya), ya], [fx0(u1 + 55, ya), ya], [fx0(u1 + 55, yb), yb], [fx0(u1, yb), yb]], 'rgba(220,222,230,.42)', 0); } }); }
+  if (o.kind === 'clay') { x.fillStyle = 'rgba(0,0,0,.06)'; for (i = 0; i < 400; i++) x.fillRect(r() * WD, H0 + r() * (HT - H0), 3, 2); }
+  /* a soft dark at the wall foot (contact shadow) */
+  x.fillStyle = lg(x, H0, H0 + 70, 'rgba(10,6,16,.45)', 'rgba(10,6,16,0)'); x.fillRect(0, H0, WD, 70); }
+function wet(x, srcs, k) { /* light reflections on a wet floor: long vertical streaks under each light */ srcs.forEach(function (s) { streak(x, s[0], H0 + 6, s[2] || 46, (HT - H0) * (k || 0.55), s[3] || '255,190,120', s[4] || 0.32); }); }
+function vign(x, a) { var g = x.createRadialGradient(360, 760, 300, 360, 760, 900); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(8,4,14,' + (a || 0.6) + ')'); x.fillStyle = g; x.fillRect(0, 0, WD, HT); }
+function grade(x, top, bot) { x.save(); x.globalCompositeOperation = 'soft-light'; x.fillStyle = lg(x, 0, HT, top, bot); x.fillRect(0, 0, WD, HT); x.restore(); }
+/* props */
+function lantern(x, X, Y, s, col, ch) { x.save(); x.translate(X, Y); x.beginPath(); x.moveTo(0, -s * 1.15); x.lineTo(0, -s * 0.7); x.strokeStyle = INK; x.lineWidth = 2; x.stroke();
+  R(x, -s * 0.36, -s * 0.72, s * 0.72, s * 0.14, '#2a1c20'); R(x, -s * 0.36, s * 0.58, s * 0.72, s * 0.14, '#2a1c20');
+  x.beginPath(); x.ellipse(0, 0, s * 0.5, s * 0.64, 0, 0, 6.2832); x.fillStyle = col; x.fill(); x.lineWidth = 3; x.strokeStyle = INK; x.stroke();
+  x.fillStyle = 'rgba(255,255,220,.35)'; x.beginPath(); x.ellipse(-s * 0.12, -s * 0.06, s * 0.16, s * 0.42, 0, 0, 6.2832); x.fill();
+  for (var i = -2; i <= 2; i++) { x.beginPath(); x.ellipse(0, i * s * 0.22, s * 0.5 * Math.cos(i * 0.4), s * 0.03, 0, 0, 6.28); x.strokeStyle = 'rgba(60,20,20,.35)'; x.lineWidth = 1.5; x.stroke(); }
+  if (ch) txt(x, ch, 0, 2, s * 0.42, '#2a0a0a'); x.restore(); }
+function win(x, X, Y, w, h, lit, cols) { R(x, X, Y, w, h, lit ? lg(x, Y, Y + h, '#ffd98c', '#e79a4a') : '#2a3048'); if (cols) for (var i = 1; i < cols; i++) { x.beginPath(); x.moveTo(X + w * i / cols, Y); x.lineTo(X + w * i / cols, Y + h); x.strokeStyle = INK; x.lineWidth = 2; x.stroke(); } }
+function neon(x, X, Y, w, h, s, col, px) { R(x, X, Y, w, h, '#14101c'); x.save(); x.shadowColor = 'rgb(' + col + ')'; x.shadowBlur = 18; txt(x, s, X + w / 2, Y + h / 2, px || h * 0.6, 'rgb(' + col + ')'); x.restore(); txt(x, s, X + w / 2, Y + h / 2, px || h * 0.6, 'rgba(255,255,255,.75)'); }
+function noren(x, X, Y, w, h, col, s) { var n = 3; for (var i = 0; i < n; i++) poly(x, [[X + i * w / n + 2, Y], [X + (i + 1) * w / n - 2, Y], [X + (i + 1) * w / n - 2, Y + h], [X + i * w / n + 2, Y + h]], col); if (s) txt(x, s, X + w / 2, Y + h * 0.45, h * 0.42, '#fff6e6'); R(x, X - 6, Y - 8, w + 12, 10, '#3a2618'); }
+function shutter(x, X, Y, w, h, c) { R(x, X, Y, w, h, c || '#7d8290'); for (var y = Y + 10; y < Y + h; y += 12) { x.beginPath(); x.moveTo(X, y); x.lineTo(X + w, y); x.strokeStyle = 'rgba(20,20,30,.4)'; x.lineWidth = 2; x.stroke(); } }
+function pipe(x, P, w, c) { x.beginPath(); x.moveTo(P[0][0], P[0][1]); for (var i = 1; i < P.length; i++) x.lineTo(P[i][0], P[i][1]); x.lineCap = 'round'; x.lineJoin = 'round'; x.strokeStyle = INK; x.lineWidth = w + 6; x.stroke(); x.strokeStyle = c; x.lineWidth = w; x.stroke(); x.strokeStyle = 'rgba(255,255,255,.18)'; x.lineWidth = w * 0.3; x.stroke(); }
+function bricks(x, X, Y, w, h, c, l) { R(x, X, Y, w, h, c, 0); x.strokeStyle = l; x.lineWidth = 2; for (var j = 0, y = Y; y < Y + h; y += 26, j++) { x.beginPath(); x.moveTo(X, y); x.lineTo(X + w, y); x.stroke(); for (var xx = X + (j % 2) * 30; xx < X + w; xx += 60) { x.beginPath(); x.moveTo(xx, y); x.lineTo(xx, y + 26); x.stroke(); } } }
+function sky(x, a, b, stars) { x.fillStyle = lg(x, 0, H0, a, b); x.fillRect(0, 0, WD, H0); if (stars) { var r = seed(3); for (var i = 0; i < stars; i++) { x.fillStyle = 'rgba(255,255,255,' + r() * 0.6 + ')'; x.fillRect(r() * WD, r() * H0 * 0.5, 2, 2); } } }
+function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X < WD) { var w = 60 + r() * 90, h = (top || 140) + r() * 120; R(x, X, H0 - h, w, h, c, INK, 2); for (var yy = H0 - h + 14; yy < H0 - 20; yy += 22) for (var xx = X + 8; xx < X + w - 12; xx += 18) if (r() < 0.35) R(x, xx, yy, 9, 12, r() < 0.7 ? '#f6c983' : '#8fd6ff', 0); X += w; } }
+  root.FFF_C2H = { WD: WD, HT: HT, INK: INK, H0: H0, VP: VP, rr: rr, seed: seed, R: R, poly: poly, lg: lg, pool: pool, streak: streak, txt: txt, fx0: fx0, floor: floor, wet: wet, vign: vign, grade: grade, lantern: lantern, win: win, neon: neon, noren: noren, shutter: shutter, pipe: pipe, bricks: bricks, sky: sky, skyline: skyline };
+})(typeof window !== 'undefined' ? window : this);
+/* v6.5.63 FFF_S2 paint: Wagashi interior, storefront, battle backdrop, sweets, Chiyo sprite.
+ * Canvas2D, ink outlines, two-tone cel shading. Preview-only until Erik approves. */
+(function (root) {
+  var S2P = root.FFF_S2P = root.FFF_S2P || {};
+  var INK = '#1a1220';
+  function R(g, x, y, w, h, f, ink, lw) {
+    g.fillStyle = f; g.fillRect(x, y, w, h);
+    if (ink !== 0) { g.strokeStyle = ink || INK; g.lineWidth = lw || 3; g.strokeRect(x, y, w, h); }
+  }
+  function rr(g) { g.lineJoin = 'round'; g.lineCap = 'round'; }
+  function ellipse(g, x, y, rx, ry, f, ink, lw) {
+    g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    if (f) { g.fillStyle = f; g.fill(); }
+    if (ink !== 0) { g.strokeStyle = ink || INK; g.lineWidth = lw || 2.5; g.stroke(); }
+  }
+  function txt(g, s, x, y, px, col, wt, al) {
+    g.font = (wt || '900 ') + px + 'px "Noto Sans CJK JP","Noto Serif CJK JP",Georgia,serif';
+    g.textAlign = al || 'center'; g.textBaseline = 'middle'; g.fillStyle = col; g.fillText(s, x, y);
+  }
+  function glow(g, x, y, r, col) {
+    var gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, col); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+  function plank(g, x, y, w, h, c1, c2, step) {
+    g.fillStyle = c1; g.fillRect(x, y, w, h);
+    for (var i = x, n = 0; i < x + w; i += step, n++) {
+      g.fillStyle = n % 2 ? c2 : c1; g.fillRect(i, y, step - 2, h);
+      g.fillStyle = 'rgba(0,0,0,.16)'; g.fillRect(i + step - 2, y, 2, h);
+    }
+  }
+  function boards(g, x, y, w, h, c1, c2, bh) {
+    for (var j = y, n = 0; j < y + h; j += bh, n++) {
+      g.fillStyle = n % 2 ? c1 : c2; g.fillRect(x, j, w, bh);
+      g.fillStyle = 'rgba(0,0,0,.14)'; g.fillRect(x, j + bh - 2, w, 2);
+    }
+  }
+
+
+  /* ---------- interior 1280x900, Kitsune Udon / Machi Motors density ---------- */
+  S2P.interior = function (g) {
+    var RW = 1280, RH = 900; rr(g);
+    boards(g, 90, 230, RW - 180, 620, '#f3e4cf', '#ebd6bc', 48);
+    plank(g, 90, 0, RW - 180, 230, '#8a4a3a', '#965244', 36);
+    R(g, 90, 0, RW - 180, 20, '#5a2c28', INK, 0);
+    R(g, 90, 212, RW - 180, 18, '#3b2a22', INK, 0);
+    /* noren: hang under the beam, lanterns sit OUTSIDE the curtains so the kanji stay clear */
+    R(g, 280, 36, 720, 14, '#3b2a22', INK, 3);
+    var i, x;
+    var glyphs = ['\u548c', '\u83d3', '\u5b50', '\u5343', '\u4ee3', '\u548c', '\u83d3', '\u5b50'];
+    for (var i = 0; i < 8; i++) {
+      x = 286 + i * 88;
+      R(g, x, 50, 80, 128, i % 2 ? '#c45a6a' : '#e8c9c4', INK, 3);
+      txt(g, glyphs[i], x + 40, 114, 34, i % 2 ? '#f8ece8' : '#8e3b52', '900 ', 'center');
+    }
+    /* paper lanterns on the far left and right of the beam, clear of the noren */
+    function lan(lx, ly, ch) {
+      glow(g, lx, ly + 24, 80, 'rgba(255,180,120,.32)');
+      R(g, lx - 4, ly - 40, 8, 12, '#3b2a22', INK, 2);
+      ellipse(g, lx, ly, 22, 28, '#f3c9a0', INK, 2.5);
+      g.fillStyle = 'rgba(255,255,220,.35)';
+      g.beginPath(); g.ellipse(lx - 6, ly - 4, 7, 14, 0, 0, 7); g.fill();
+      if (ch) txt(g, ch, lx, ly + 2, 14, '#6a2018', '900 ');
+    }
+    lan(160, 96, '\u548c'); lan(1120, 96, '\u4ee3');
+    /* wall menu, left of the shelves */
+    R(g, 130, 248, 150, 210, '#3b2a22', INK, 3);
+    R(g, 138, 256, 134, 194, '#f4ead2', INK, 2);
+    txt(g, 'MENU', 205, 276, 13, '#8e3b52', '900 ');
+    txt(g, '\u3042\u3093\u30ed\u30fc\u30eb', 205, 310, 15, '#5a2c28', '800 ');
+    txt(g, '\u00a58', 205, 332, 16, '#8e3b52', '900 ');
+    txt(g, '\u56e3\u5b50', 205, 368, 15, '#5a2c28', '800 ');
+    txt(g, '\u00a55', 205, 390, 16, '#8e3b52', '900 ');
+    txt(g, 'Nails  20% off', 205, 428, 11, '#6a4a38', '700 ');
+    /* glass display case (front, with sweets) */
+    R(g, 300, 300, 280, 150, '#6b3e2e', INK, 3);
+    R(g, 308, 308, 264, 86, '#d8ecf0', INK, 2);
+    g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(312, 312, 80, 78);
+    /* trays inside the case */
+    function roll(rx, ry, c) { ellipse(g, rx, ry, 16, 10, c, INK, 1.8); ellipse(g, rx, ry - 2, 7, 5, '#7a3a22', 0); }
+    function dang(dx, dy) {
+      R(g, dx - 2, dy - 22, 4, 44, '#6b4a33', INK, 1.4);
+      ellipse(g, dx, dy - 14, 7, 6, '#f2c4cf', INK, 1.4);
+      ellipse(g, dx, dy, 7, 6, '#9ec27a', INK, 1.4);
+      ellipse(g, dx, dy + 14, 7, 6, '#f4ead2', INK, 1.4);
+    }
+    roll(340, 350, '#e8b060'); roll(380, 350, '#d4783a'); roll(420, 350, '#e8b060');
+    dang(470, 350); dang(510, 350);
+    R(g, 308, 394, 264, 48, '#5c3424', INK, 2);
+    g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(318, 316, 40, 70);
+    /* steamer, right side, with a wisp of steam */
+    function steamer(sx, sy) {
+      R(g, sx, sy + 70, 90, 18, '#3b2a22', INK, 2);
+      for (var k = 0; k < 3; k++) {
+        ellipse(g, sx + 45, sy + 62 - k * 22, 42, 10, '#d8c4a0', INK, 2);
+        R(g, sx + 8, sy + 42 - k * 22, 74, 20, k % 2 ? '#c4a882' : '#d8c4a0', INK, 2);
+      }
+      g.strokeStyle = 'rgba(235,235,240,.55)'; g.lineWidth = 3; g.lineCap = 'round';
+      [[sx + 24, sy], [sx + 45, sy - 8], [sx + 68, sy]].forEach(function (p) {
+        g.beginPath(); g.moveTo(p[0], p[1] + 16); g.bezierCurveTo(p[0] - 8, p[1] + 4, p[0] + 8, p[1] - 4, p[0], p[1] - 14); g.stroke();
+      });
+    }
+    steamer(980, 280);
+    /* jar shelf behind the steamer */
+    R(g, 820, 250, 150, 130, '#6b3e2e', INK, 3);
+    function jar(jx, jy, c, lid) {
+      ellipse(g, jx, jy + 8, 22, 12, c, INK, 2);
+      R(g, jx - 22, jy - 28, 44, 36, c, INK, 2);
+      ellipse(g, jx, jy - 28, 22, 9, lid || '#efe6d2', INK, 2);
+    }
+    jar(860, 340, '#f2c4cf'); jar(920, 340, '#9ec27a');
+    /* back-wall shop sign, BETWEEN the noren and the shelves, not over the curtains */
+    R(g, 500, 248, 280, 64, '#f4ead2', INK, 4);
+    txt(g, '\u548c\u83d3\u5b50  \u5343\u4ee3', 640, 272, 22, '#8e3b52', '900 ');
+    txt(g, 'CHIYO WAGASHI', 640, 296, 12, '#5a2c28', '700 ');
+    /* counter */
+    R(g, 300, 470, 680, 100, '#7a4a32', INK, 4);
+    R(g, 300, 550, 680, 80, '#5c3424', INK, 3);
+    /* register */
+    R(g, 330, 490, 90, 50, '#2a2430', INK, 2.5);
+    R(g, 338, 498, 74, 20, '#8fd6a0', INK, 1.5);
+    txt(g, '\u00a50', 375, 509, 11, '#1a3a22', '900 ');
+    R(g, 348, 524, 54, 10, '#3a3448', INK, 1.5);
+    ellipse(g, 410, 528, 5, 5, '#e0b23a', INK, 1.5);
+    /* tea set */
+    ellipse(g, 470, 520, 18, 12, '#f4ead2', INK, 2);
+    R(g, 458, 500, 24, 20, '#f4ead2', INK, 2);
+    ellipse(g, 470, 500, 16, 7, '#efe6d2', INK, 2);
+    R(g, 478, 506, 16, 5, '#f4ead2', INK, 1.5); /* spout */
+    ellipse(g, 510, 524, 10, 7, '#f4ead2', INK, 2);
+    ellipse(g, 534, 524, 10, 7, '#f4ead2', INK, 2);
+    g.fillStyle = '#6b8a4a'; g.beginPath(); g.ellipse(510, 522, 6, 3, 0, 0, 7); g.fill();
+    g.beginPath(); g.ellipse(534, 522, 6, 3, 0, 0, 7); g.fill();
+    /* tray of rolls + dango on the counter */
+    R(g, 580, 498, 200, 44, '#efe6d2', INK, 2);
+    roll(610, 520, '#e8b060'); roll(646, 520, '#d4783a'); roll(682, 520, '#e8b060');
+    dang(730, 518);
+    /* clock */
+    ellipse(g, 200, 200, 22, 22, '#f4ead2', INK, 2.5);
+    g.strokeStyle = INK; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(200, 200); g.lineTo(200, 188); g.moveTo(200, 200); g.lineTo(210, 204); g.stroke();
+    /* side walls + door band (same shell as Udon) */
+    g.fillStyle = '#1b1820'; g.fillRect(0, 0, 90, RH); g.fillRect(RW - 90, 0, 90, RH);
+    g.fillRect(0, 850, 580, 50); g.fillRect(700, 850, 580, 50);
+    g.strokeStyle = INK; g.lineWidth = 4; g.strokeRect(90, 2, RW - 180, 848);
+    g.fillStyle = 'rgba(255,220,160,.10)'; g.fillRect(580, 850, 120, 50);
+    var vg = g.createRadialGradient(640, 520, 260, 640, 520, 820);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(10,6,14,.38)');
+    g.fillStyle = vg; g.fillRect(0, 0, RW, RH);
+    glow(g, 160, 200, 200, 'rgba(255,190,140,.10)');
+    glow(g, 1120, 200, 200, 'rgba(255,190,140,.10)');
+    glow(g, 640, 520, 280, 'rgba(255,190,140,.08)');
+  };
+
+  /* ---------- door overlay for the existing Wagashi north facade (facSento scale) ---------- */
+  S2P.facadeDoor = function (g, W0, H0) {
+    W0 = W0 || 400; H0 = H0 || 160; rr(g);
+    /* dark timber frame, tiled eave, plaster, a proper shop door under noren — sits on the town block's cream placeholder */
+    g.fillStyle = '#3b2a22'; g.fillRect(0, 0, W0, H0);
+    g.fillStyle = '#2b3240'; g.fillRect(0, 0, W0, 16);
+    for (var i = 0; i < W0; i += 16) {
+      g.fillStyle = i % 32 ? '#39445a' : '#323b4f';
+      g.beginPath(); g.arc(i + 8, 16, 8, Math.PI, 0); g.fill();
+    }
+    g.strokeStyle = INK; g.lineWidth = 3; g.beginPath(); g.moveTo(0, 17); g.lineTo(W0, 17); g.stroke();
+    R(g, 60, 22, 280, 34, '#e9dfc8', INK, 3);
+    txt(g, '\u548c\u83d3\u5b50', 130, 39, 20, '#8e3b52', '900 ');
+    txt(g, 'CHIYO WAGASHI', 250, 40, 13, '#2a211c', '900 ');
+    /* side windows, warm */
+    function wlit(x, y, w, h) {
+      R(g, x, y, w, h, '#f3d7a0', INK, 3);
+      g.beginPath(); g.moveTo(x + w / 2, y); g.lineTo(x + w / 2, y + h); g.moveTo(x, y + h / 2); g.lineTo(x + w, y + h / 2);
+      g.strokeStyle = INK; g.lineWidth = 2; g.stroke();
+      glow(g, x + w / 2, y + h / 2, 40, 'rgba(255,200,120,.22)');
+    }
+    wlit(16, 64, 86, 88); wlit(W0 - 102, 64, 86, 88);
+    /* lanterns either side of the door */
+    function lan2(lx, ly) {
+      glow(g, lx, ly + 10, 36, 'rgba(255,170,100,.4)');
+      ellipse(g, lx, ly, 12, 16, '#f3c9a0', INK, 2);
+      R(g, lx - 3, ly - 20, 6, 8, '#2a1c20', INK, 1.5);
+    }
+    lan2(118, 78); lan2(282, 78);
+    /* door + noren */
+    R(g, 148, 62, 104, 98, '#4a2c22', INK, 3);
+    R(g, 154, 100, 42, 54, '#d8c4a0', INK, 2);
+    R(g, 204, 100, 42, 54, '#d8c4a0', INK, 2);
+    ellipse(g, 238, 130, 4, 4, '#e0b23a', INK, 1.5);
+    var k, nx;
+    for (k = 0; k < 3; k++) {
+      nx = 150 + k * 33;
+      g.fillStyle = k % 2 ? '#c45a6a' : '#e8c9c4';
+      g.beginPath(); g.moveTo(nx, 60); g.lineTo(nx + 30, 60); g.lineTo(nx + 30, 118); g.quadraticCurveTo(nx + 15, 126, nx, 118); g.closePath();
+      g.fill(); g.strokeStyle = INK; g.lineWidth = 2; g.stroke();
+    }
+    R(g, 148, 56, 104, 6, '#3b2a22', INK, 2);
+    /* 千 / 代 centered on the left and right flaps (not on the seams) */
+    txt(g, '\u5343', 165, 86, 20, '#f8ece8', '900 ');
+    txt(g, '\u4ee3', 231, 86, 20, '#8e3b52', '900 ');
+  };
+
+  /* standalone storefront kept only as a leftover; the preview uses facadeDoor on the town block */
+  S2P.exterior = function (g) {
+    S2P.facadeDoor(g, 400, 160);
+  };
+
+  /* ---------- battle backdrop: Wagashi row at night, C2BT helpers ---------- */
+  function vend(H, x, X, Y) {
+    H.R(x, X, Y, 70, 128, '#c0282e', H.INK, 3);
+    H.R(x, X + 6, Y + 10, 58, 72, '#1a1520', H.INK, 2);
+    var r, c;
+    for (r = 0; r < 3; r++) for (c = 0; c < 3; c++) {
+      H.R(x, X + 10 + c * 18, Y + 16 + r * 22, 14, 16, (r + c) % 2 ? '#f3d7a0' : '#8fd6ff', 0);
+    }
+    H.R(x, X + 10, Y + 86, 50, 18, '#2a2430', H.INK, 2);
+    for (c = 0; c < 4; c++) H.R(x, X + 14 + c * 12, Y + 90, 8, 6, '#e0b23a', 0);
+    H.R(x, X + 14, Y + 108, 42, 14, '#1a1520', H.INK, 2);
+    x.fillStyle = 'rgba(255,80,60,.25)'; x.fillRect(X - 6, Y + 20, 82, 40);
+  }
+  S2P.battle = function (g) {
+    var H = (typeof window !== 'undefined' && window.FFF_C2H) || (typeof root !== 'undefined' && root.FFF_C2H);
+    var WD = 720, HT = 1280, H0 = 330, x = g;
+    rr(g);
+    if (!H) { g.fillStyle = '#141830'; g.fillRect(0, 0, WD, HT); return; }
+    H.sky(x, '#141830', '#2c2a48', 48);
+    H.skyline(x, '#262840', 21, 150);
+    /* -- shop row along the horizon line -- */
+    /* left: shuttered neighbour */
+    H.R(x, -8, 148, 168, 182, '#3a3448', H.INK, 3);
+    H.R(x, 8, 156, 140, 28, '#2a2434', H.INK, 2);
+    H.txt(x, '\u5840', 78, 171, 16, '#c8c0b0', '900 ');
+    H.shutter(x, 16, 196, 124, 134, '#6a7080');
+    /* centre: Chiyo Wagashi, timber + plaster, lit */
+    H.R(x, 156, 118, 360, 212, '#c4a07a', H.INK, 3);
+    /* tiled eave */
+    x.fillStyle = '#2b3240'; x.fillRect(148, 108, 376, 18);
+    for (var ti = 148; ti < 524; ti += 16) { x.fillStyle = ti % 32 ? '#39445a' : '#323b4f'; x.beginPath(); x.arc(ti + 8, 126, 8, Math.PI, 0); x.fill(); }
+    x.strokeStyle = H.INK; x.lineWidth = 3; x.beginPath(); x.moveTo(148, 128); x.lineTo(524, 128); x.stroke();
+    H.R(x, 200, 136, 272, 36, '#f4ead2', H.INK, 3);
+    H.txt(x, '\u548c\u83d3\u5b50  \u5343\u4ee3', 336, 154, 18, '#8e3b52', '900 ');
+    /* display window */
+    H.win(x, 168, 184, 100, 70, 1, 2);
+    /* door + noren */
+    H.R(x, 284, 184, 110, 146, '#4a2c22', H.INK, 3);
+    H.noren(x, 286, 186, 106, 70, '#c45a6a', '\u5343\u4ee3');
+    H.R(x, 296, 258, 40, 64, '#d8c4a0', H.INK, 2);
+    H.R(x, 342, 258, 40, 64, '#d8c4a0', H.INK, 2);
+    /* right window */
+    H.win(x, 408, 184, 92, 70, 1, 2);
+    /* vertical sign */
+    H.R(x, 508, 140, 22, 120, '#8e3b52', H.INK, 2);
+    H.txt(x, '\u548c', 519, 170, 14, '#f4ead2', '900 ');
+    H.txt(x, '\u83d3', 519, 200, 14, '#f4ead2', '900 ');
+    H.txt(x, '\u5b50', 519, 230, 14, '#f4ead2', '900 ');
+    /* lanterns lit */
+    H.lantern(x, 250, 168, 26, '#f3c9a0', '');
+    H.lantern(x, 430, 168, 26, '#f3c9a0', '');
+    /* neighbour tea/noodle shop, half-shutter */
+    H.R(x, 530, 150, 130, 180, '#4a3a40', H.INK, 3);
+    H.noren(x, 544, 188, 102, 56, '#3a5080', '\u8336');
+    H.shutter(x, 544, 250, 102, 80, '#7d8290');
+    H.R(x, 544, 158, 102, 24, '#1a1520', H.INK, 2);
+    H.neon(x, 548, 160, 94, 20, 'TEA', '255,180,90', 12);
+    /* vending + pole on the far right */
+    vend(H, x, 648, 200);
+    H.pipe(x, [[710, 80], [710, 328]], 6, '#4a4658');
+    x.fillStyle = '#2a2430'; x.fillRect(702, 70, 16, 14);
+    /* curb */
+    H.R(x, 0, H0, WD, 20, '#4a4658', 0);
+    /* wet asphalt street, a little stone sidewalk under the shops */
+    H.floor(x, { kind: 'asphalt', far: '#3a3a50', near: '#1c1c2a', lanes: [360], seed: 13 });
+    /* stone paving on the sidewalk band */
+    var r = H.seed(9), yy, xx, s;
+    for (var i = 0; i < 80; i++) {
+      yy = H0 + 8 + r() * 70; xx = r() * WD; s = 10 + (yy - H0) / 8;
+      x.fillStyle = 'rgba(0,0,0,' + (0.06 + r() * 0.1) + ')';
+      x.beginPath(); x.ellipse(xx, yy, s * 1.8, s * 0.45, 0, 0, 6.28); x.fill();
+    }
+    /* puddles / wet reflections of lanterns, neon, vending */
+    H.wet(x, [
+      [250, 0, 54, '255,190,120', 0.34],
+      [430, 0, 54, '255,190,120', 0.34],
+      [595, 0, 40, '255,180,90', 0.26],
+      [683, 0, 36, '255,80,70', 0.22]
+    ], 0.62);
+    /* a manhole and a few stone slabs in the foreground */
+    x.save(); x.strokeStyle = 'rgba(200,200,220,.28)'; x.lineWidth = 2;
+    x.beginPath(); x.ellipse(200, 980, 36, 14, 0, 0, 7); x.stroke();
+    x.beginPath(); x.ellipse(200, 980, 20, 7, 0, 0, 7); x.stroke();
+    x.restore();
+    /* light rain streaks (still) */
+    x.strokeStyle = 'rgba(200,210,230,.22)'; x.lineWidth = 1.2;
+    var rr2 = H.seed(3);
+    for (var i = 0; i < 50; i++) {
+      var rx = rr2() * WD, ry = rr2() * HT, rl = 10 + rr2() * 16;
+      x.beginPath(); x.moveTo(rx, ry); x.lineTo(rx - 2, ry + rl); x.stroke();
+    }
+    H.vign(x, 0.55);
+  };
+
+  /* ---------- sweets ---------- */
+  S2P.sweetRoll = function (g, s) {
+    s = s || 1; g.save(); g.scale(s, s); rr(g);
+    ellipse(g, 80, 92, 62, 28, 'rgba(40,20,10,.25)', 0);
+    ellipse(g, 80, 70, 58, 36, '#e8b060', INK, 3);
+    ellipse(g, 80, 58, 50, 24, '#f3c97a', INK, 0);
+    g.beginPath(); g.ellipse(80, 58, 18, 12, 0, 0, Math.PI * 2);
+    g.fillStyle = '#7a3a22'; g.fill(); g.strokeStyle = INK; g.lineWidth = 2; g.stroke();
+    g.beginPath(); g.moveTo(40, 70); g.quadraticCurveTo(80, 40, 120, 70);
+    g.strokeStyle = 'rgba(90,40,20,.45)'; g.lineWidth = 3; g.stroke();
+    g.restore();
+  };
+  S2P.dango = function (g, s) {
+    s = s || 1; g.save(); g.scale(s, s); rr(g);
+    g.strokeStyle = INK; g.lineWidth = 4;
+    g.beginPath(); g.moveTo(40, 20); g.lineTo(40, 130); g.stroke();
+    ellipse(g, 40, 42, 22, 20, '#f2c4cf', INK, 3);
+    ellipse(g, 40, 78, 22, 20, '#9ec27a', INK, 3);
+    ellipse(g, 40, 114, 22, 20, '#f4ead2', INK, 3);
+    ellipse(g, 32, 38, 6, 5, 'rgba(255,255,255,.5)', 0);
+    g.restore();
+  };
+  S2P.rollSplit = function (g, s) {
+    s = s || 1; g.save(); g.scale(s, s); rr(g);
+    ellipse(g, 50, 70, 32, 26, '#e8b060', INK, 3);
+    ellipse(g, 110, 70, 32, 26, '#e8b060', INK, 3);
+    g.beginPath(); g.moveTo(70, 62); g.quadraticCurveTo(80, 90, 90, 62);
+    g.quadraticCurveTo(80, 50, 70, 62);
+    g.fillStyle = '#7a3a22'; g.fill(); g.strokeStyle = INK; g.lineWidth = 2; g.stroke();
+    g.restore();
+  };
+
+  /* ---------- Chiyo: blit the yk-baked Hina-rig sheets (club-staff proportions) ---------- */
+  S2P.sheets = {};
+  function blit(g, im, sx, sy, sw, sh, dx, dy, dw, dh) {
+    if (!im) return false;
+    g.drawImage(im, sx, sy, sw, sh, dx, dy, dw || sw, dh || sh);
+    return true;
+  }
+  S2P.chiyoIdle = function (g) {
+    var im = S2P.sheets.idle || S2P.sheets.walk;
+    g.fillStyle = '#2a2030'; g.fillRect(0, 0, 160, 200);
+    if (!blit(g, im, 0, 0, 208, 272, -10, -16, 180, 236)) {
+      g.fillStyle = '#f4ead2'; g.font = '12px sans-serif'; g.fillText('chiyo sheet missing', 10, 100);
+    }
+  };
+  S2P.chiyoWalk = function (g) {
+    var im = S2P.sheets.walk;
+    g.fillStyle = '#2a2030'; g.fillRect(0, 0, 560, 200);
+    if (!im) { g.fillStyle = '#f4ead2'; g.font = '12px sans-serif'; g.fillText('chiyo walk missing', 10, 100); return; }
+    for (var c = 0; c < 4; c++) blit(g, im, c * 208, 0, 208, 272, c * 140 - 8, -16, 150, 196);
+  };
+  S2P.chiyoFacings = function (g) {
+    var im = S2P.sheets.idle || S2P.sheets.walk;
+    g.fillStyle = '#2a2030'; g.fillRect(0, 0, 720, 220);
+    if (!im) return;
+    for (var r = 0; r < 4; r++) blit(g, im, 0, r * 272, 208, 272, 20 + r * 175, -8, 160, 210);
+  };
+  S2P.chiyoTalk = function (g) {
+    var im = S2P.sheets.map || S2P.sheets.idle || S2P.sheets.walk;
+    g.fillStyle = '#2a2030'; g.fillRect(0, 0, 200, 240);
+    if (!im) return;
+    if (S2P.sheets.map) blit(g, im, 0, 0, im.naturalWidth || im.width, im.naturalHeight || im.height, 10, 10, 180, 220);
+    else blit(g, im, 0, 0, 208, 272, -4, -8, 200, 250);
+  };
+})(typeof window !== 'undefined' ? window : this);
+/* S2P_END */
+/* S2_BEGIN v6563-seal2 */
+/* v6.5.63 FFF_S2 (Punk-route seal 2, phase 1): Wagashi Row. Journal / Four Corners
+ * points at Masa after Gōda's seal, not Jin. Club Kitsune / Tetsu stays optional.
+ * Quest cq2_s2_waga: Flip briefing (three path voices), Rider waves, then a 3v3
+ * clash with Punk backup at X3; on win the row flips to Punk ownership (recolor
+ * sting) and the clash loop stops. Wagashi door + cel interior + Chiyo's counter
+ * (sweet rolls, dango, Nails' price after takeover). New art is behind S2.ART
+ * Art is wired (S2.ART): Chiyo, the north Wagashi door, the interior, the X3 battle backdrop, and the eat game.
+ * Wraps only; no new always-running loops (frame work rides c2Frame).
+ * Does not edit existing Fierce/Strategic Nails copy. */
+(function () {
+  try {
+  if (typeof c2S !== 'function' || typeof C2W === 'undefined' || !C2W || typeof INT === 'undefined' || !INT.c2_town) {
+    try { ev('world:s2:skip'); } catch (e0) {} return;
+  }
+  var S2 = root.FFF_S2 = { v: 1, ART: true };
+  function on() { return (typeof c2On !== 'function' || c2On()) && (typeof chN !== 'function' || chN() === 2); }
+  function S() { return c2S(); }
+  function E() { return c2S().e; }
+  function room() { try { return c2Room(); } catch (e) { return null; } }
+  function inTown() { return room() === 'town'; }
+  function nailsRun() { return on() && E().run_fac === 'arc'; }
+  function busy() { return !!(W.dgFight || W.dlg || W.busy || W.cut || W.fading || W.paused); }
+  function later(ms, fn) { setTimeout(function () { try { fn(); } catch (e) { ev('world:s2:err:later:' + (e && e.message)); } }, ms); }
+  function talk(lines, done) { W.dlg = true; scene(null, lines, function () { W.dlg = false; if (done) done(); }); }
+  function lockIn(on1) { if (on1) { W.cut = true; W.path = []; if (W.ryo) W.ryo.v = 0; try { stickEnd(); } catch (e) {} } else W.cut = false; }
+  function sv() { try { if (typeof c2QSync === 'function') c2QSync(); } catch (e) {} save(); }
+  function path() { var p = 'balanced'; try { p = c2Path(); } catch (e) {} return p === 'fierce' || p === 'strategic' ? p : 'balanced'; }
+  function npc(id, x, y, fa) { var s = c2Npc(id, x, y, fa == null ? Math.PI / 2 : fa); s.el.classList.add('s2'); s.s2id = id; s.el.dataset.npc = id; return s; }
+  function face(s, x, y) { if (!s) return; if (s.walker) c2Face(s, x, y); else waddle(s, 0, Math.atan2(y - s.y, x - s.x)); }
+  function kill(s) { if (s && s.el && s.el.parentNode) s.el.remove(); if (s) s.gone = 1; }
+  function inR(r, x, y) { return x >= r[0] && x < r[2] && y >= r[1] && y < r[3]; }
+  function say(lines) { var tries = 0; (function go() { try { comment(lines); } catch (e) {} var b = document.getElementById('wcomment'); if ((!b || !b.innerText) && ++tries < 10) setTimeout(go, 400); })(); }
+  function move(s, pts, sp, done) {
+    if (!s || !s.el) { if (done) done(); return; }
+    var i = 0, last = performance.now(), tok = s.s2tok = (s.s2tok | 0) + 1; s.runK = 0;
+    (function step() { if (s.s2tok !== tok || !s.el || !s.el.parentNode) return; var now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
+      var p = pts[i]; if (!p) { waddle(s, 0, s.fa); place(s, 0); if (done) done(); return; }
+      var dx = p[0] - s.x, dy = p[1] - s.y, d = Math.hypot(dx, dy), mv = Math.min(d, sp * dt);
+      if (d < 1.5) { i++; requestAnimationFrame(step); return; }
+      s.x += dx / d * mv; s.y += dy / d * mv; s.fa = Math.atan2(dy, dx); place(s, 0); waddle(s, mv, s.fa); requestAnimationFrame(step); })();
+  }
+  function esc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+  function whenFree(fn, tries) { tries = tries || 0; if (!busy() && !document.getElementById('nqsting') && !(typeof W.c2busy !== 'undefined' && W.c2busy)) { try { fn(); } catch (e) { ev('world:s2:err:free:' + (e && e.message)); } return; } later(tries < 120 ? 250 : 1000, function () { whenFree(fn, tries + 1); }); }
+  function V3(pre, mid, post) { var o = {}, PP = ['fierce', 'strategic', 'balanced']; PP.forEach(function (p) { o[p] = (pre || []).concat(mid[p] || [], post || []); }); return o; }
+  function pv(x) { try { return typeof pathLines === 'function' ? pathLines(x) : (x[path()] || x.balanced || x); } catch (e) { return x.balanced || []; } }
+
+  /* ---------------- state ---------------- */
+  function NS() { var e = E(); if (!e.nq || typeof e.nq !== 'object') e.nq = {}; return e.nq; }
+  function stg() { return NS().waga || ''; }
+  function setStg(v) { NS().waga = v; sv(); ev('world:s2:st:' + v); }
+  var QID = 'cq2_s2_waga';
+  var Q = { id: QID, n: 'Wagashi Row', giver: 'Flip, for Nails',
+    quote: 'Masa\u2019s Riders have the sweet-shop row. Take it.',
+    loc: 'Kitsune-Ch\u016b\u014d \u00b7 Wagashi row' };
+  if (typeof C2Q !== 'undefined') C2Q[QID] = { n: Q.n, steps: [Q.quote] };
+  if (typeof C2QLOC !== 'undefined') C2QLOC[QID] = ['town', Q.loc];
+  function qOpen() { var s = S(); if (s.q[QID] == null) s.q[QID] = 0; SAVE.qs = SAVE.qs || {}; SAVE.qs[QID] = s.q[QID] | 0; s.qa = QID; SAVE.qa = QID; SAVE.qTrack = ''; SAVE.qTrackPick = 0; sv(); ev('world:s2:quest:open'); }
+  function qStep(n) { var s = S(); if (s.q[QID] == null || s.q[QID] === 9) return; s.q[QID] = Math.max(s.q[QID] | 0, n); SAVE.qs = SAVE.qs || {}; SAVE.qs[QID] = s.q[QID]; sv(); }
+  function qClose() { var s = S(); if (s.q[QID] == null || s.q[QID] === 9) return; s.q[QID] = 9; SAVE.qs = SAVE.qs || {}; SAVE.qs[QID] = 9;
+    SAVE.journalLog = SAVE.journalLog || []; if (SAVE.journalLog.indexOf(Q.n) < 0) SAVE.journalLog.push(Q.n);
+    if (s.qa === QID) { s.qa = (typeof CQ !== 'undefined' && CQ.locks) || ''; SAVE.qa = s.qa; } sv(); ev('world:s2:quest:done');
+    if (typeof window.c2QuestYen === 'function') window.c2QuestYen(QID, Q.n); }
+  function qOn() { var q = S().q[QID]; return q != null && q !== 9; }
+  function qDone() { return S().q[QID] === 9; }
+  S2.Q = Q; S2.stg = stg; S2.setStg = setStg; S2.qOpen = qOpen; S2.qClose = qClose; S2.qOn = qOn; S2.qDone = qDone;
+
+  /* ---------------- voices (new tables only) ---------------- */
+  var VO = S2.VO = {};
+  VO.brief = V3(
+    [['n13flip', 'Masa\u2019s Riders have Wagashi row. Two waves, then they hold the middle.']],
+    {
+      fierce: [['ryo', 'We take the row tonight.'], ['aoi', 'Then we start it.'], ['n13flip', 'I\u2019ll bring two when you hit the middle. Don\u2019t wait.']],
+      strategic: [['ryo', 'We let the waves spend themselves. Then we hit the middle with your crew.'], ['aoi', 'So the backup is the plan, not the cleanup.'], ['n13flip', 'That\u2019s it. Time it. I\u2019ll be there for the last one.']],
+      balanced: [['ryo', 'The sweet shop first. I want to know who\u2019s behind that door.'], ['aoi', 'The Riders have been on it all week.'], ['n13flip', 'Then get them off it. I\u2019ll still back the clash.']]
+    },
+    [['n13flip', 'Punk side of the row. I\u2019ll hear it from the street.']]
+  );
+  VO.shopFirst = V3(
+    [['nq_chiyo', 'You\u2026 you\u2019re not with them? They stand on my door every night. The glass goes first. Then the customers.']],
+    {
+      fierce: [['ryo', 'They won\u2019t be there after tonight.'], ['nq_chiyo', 'Then go. Please.']],
+      strategic: [['ryo', 'If we take the row, the runs stop coming through your door.'], ['nq_chiyo', 'I just bake. I don\u2019t want a war on the step.']],
+      balanced: [['ryo', 'We\u2019re here to get them off your door. Stay inside until it\u2019s quiet.'], ['aoi', 'We\u2019ll knock when it\u2019s safe.'], ['nq_chiyo', 'Thank you. I\u2019m Chiyo. The shop is\u2026 was\u2026 Chiyo Wagashi.']]
+    },
+    []
+  );
+  VO.clash = V3(
+    [['n13flip', 'Told you. The middle, when it counts.'], ['c2_boso', 'Punks on Masa\u2019s row?']],
+    {
+      fierce: [['ryo', 'It\u2019s ours tonight.']],
+      strategic: [['ryo', 'Your schedule just ran out.']],
+      balanced: [['ryo', 'Get off her door.']]
+    },
+    []
+  );
+  VO.won = V3(
+    [],
+    {
+      fierce: [['n13flip', 'Row\u2019s red. Masa will feel that.'], ['ryo', 'Good. Next.'], ['aoi', 'The shop\u2019s still standing. Barely.']],
+      strategic: [['n13flip', 'That was the schedule. Masa\u2019s runs go through this row.'], ['ryo', 'Then we just cut his first street.'], ['aoi', 'The shop can open honest now.']],
+      balanced: [['nq_chiyo', 'They\u2019re gone? They stood on my door every night.'], ['ryo', 'They won\u2019t come back. This street\u2019s ours, and it\u2019s yours too.'], ['aoi', 'We\u2019ll keep it that way.'], ['n13flip', 'Nails hears it from me. The row\u2019s red.']]
+    },
+    []
+  );
+  VO.shopOpen = V3(
+    [['nq_chiyo', 'Come in, come in. The kettle\u2019s on. Nails said the row is yours now, so the prices are too.']],
+    {
+      fierce: [['ryo', 'Just the food. We\u2019re moving on.']],
+      strategic: [['ryo', 'We\u2019ll be back. Masa still has the yards.']],
+      balanced: [['ryo', 'Thank you, Chiyo-san. We\u2019ll keep the door clear.']]
+    },
+    []
+  );
+  VO.shopCold = V3(
+    [['nq_chiyo', 'I\u2019m sorry. I can\u2019t open with them on the step.']],
+    {
+      fierce: [['ryo', 'Then we take the step.']],
+      strategic: [['aoi', 'We clear the row first. Then you open.']],
+      balanced: [['ryo', 'We\u2019ll get them off it. Stay inside.']]
+    },
+    []
+  );
+
+  /* ---------------- Four Corners / journal: Masa next, not Jin ---------------- */
+  function punkAfterSeal() { return on() && nailsRun() && !!E().seal_sento; }
+  function nextRival() {
+    /* After Gōda, Punk route goes Masa (depot) then Jin (game). Skip already-sealed and own landmark. */
+    var e = E(), own = 'arcade', order = ['depot', 'game', 'sento'];
+    if (!punkAfterSeal()) return null;
+    for (var i = 0; i < order.length; i++) if (order[i] !== own && !e['seal_' + order[i]]) return order[i];
+    return null;
+  }
+  S2.nextRival = nextRival;
+  function cornersQuote() {
+    if (!punkAfterSeal()) return '';
+    var e = E(), nR = 0, riv = ['depot', 'game', 'sento'];
+    riv.forEach(function (k) { if (e['seal_' + k]) nR++; });
+    var nx = nextRival(), T = { depot: 'freight yards', game: 'Neon Game Center', sento: 'Lantern Alley' };
+    if (nR && nR < 3 && nx) return (nR === 1 ? 'One seal from rival ground.' : nR + ' seals from rival ground.') + ' Next door: ' + T[nx] + '.';
+    if (nR === 0) return 'We shook on it with Nails. First door: Masa\u2019s freight yards.';
+    return '';
+  }
+  function fixCornerSteps(steps) {
+    if (!punkAfterSeal() || !steps || !steps.length) return steps;
+    var e = E(), nx = nextRival(), curSet = false;
+    steps.forEach(function (r) {
+      if (!r || r.state === 'ok' || r.state === 'closed' || r.state === 'locked') return;
+      var isMasa = /freight yards|Riders/.test(r.lab || '');
+      var isJin = /Neon Game|Syndicate/.test(r.lab || '');
+      var isGoda = /Lantern Alley|Hustlers/.test(r.lab || '');
+      if (isGoda && e.seal_sento) { r.state = 'ok'; r.hint = null; return; }
+      if (!curSet && nx === 'depot' && isMasa) {
+        r.state = 'cur';
+        r.hint = qOn() ? (stg() === 'clash' ? 'The middle of Wagashi row. Flip brings two.' : 'Wagashi row. Flip is on the Punk side.') : 'Flip, on the Punk side of Wagashi row.';
+        curSet = true;
+      } else if (!curSet && nx === 'game' && isJin) { r.state = 'cur'; curSet = true; }
+      else if (r.state === 'cur' && !((nx === 'depot' && isMasa) || (nx === 'game' && isJin))) r.state = 'pend';
+    });
+    return steps;
+  }
+  S2.cornersQuote = cornersQuote;
+  if (typeof c2LocksT === 'function') {
+    var lt0 = c2LocksT;
+    c2LocksT = function () {
+      try {
+        var t = s2Tgt(); if (t) return { room: 'town', x: t.x, y: t.y, lab: t.lab, loc: t.loc };
+        if (punkAfterSeal() && !qDone() && nextRival() === 'depot') {
+          return { room: 'town', x: 2560, y: 3120, lab: 'Wagashi', loc: 'Wagashi row \u00b7 Masa\u2019s Riders' };
+        }
+      } catch (eL) {}
+      return lt0.apply(this, arguments);
+    };
+  }
+
+  /* ---------------- journal card for Wagashi Row ---------------- */
+  var X3C = [2560, 3190], FLIP_AT = [2360, 3190], SHOP_AT = [3080, 2680];
+  function rich() {
+    var s = stg(), done = qDone(), out = [];
+    var brief = s !== '' && s !== 'open';
+    out.push({ lab: 'Hear Flip\u2019s job on Wagashi row', state: done || brief ? 'ok' : 'cur', sec: 'Wagashi row', hint: 'Punk side of the row. Flip is waiting.' });
+    if (path() === 'balanced') out.push({ lab: 'Check on the sweet shop', state: done || s === 'sawshop' || s === 'w1' || s === 'w2' || s === 'clash' || s === 'done' ? 'ok' : (brief ? 'cur' : 'pend'), hint: 'Chiyo is behind the door.' });
+    var w = { w1: 0, w2: 1, clash: 2, done: 3, sawshop: -1, open: -1 }[s]; if (w == null) w = -1; if (done) w = 3;
+    out.push({ lab: 'Break the first Rider push', state: w > 0 ? 'ok' : w === 0 ? 'cur' : 'pend', hint: 'West end of the row. Walk up behind them.' });
+    out.push({ lab: 'Break the second push', state: w > 1 ? 'ok' : w === 1 ? 'cur' : 'pend' });
+    out.push({ lab: 'Clash with Flip\u2019s crew at your back', state: w > 2 ? 'ok' : w === 2 ? 'cur' : 'pend', hint: w === 2 ? 'The middle of the row. Flip brings two.' : '' });
+    return out;
+  }
+  function detail(id, o) { o = o || {}; o.id = QID; o.kind = 'main'; o.n = Q.n; o.giver = Q.giver; o.quote = Q.quote;
+    o.rich = rich(); o.steps = o.rich.map(function (x) { return [x.lab, x.state === 'ok']; }); var q = S().q[QID]; o.status = q === 9 ? 'done' : q != null ? 'on' : 'lock'; o.prog = o.quote; o.canTrack = q != null && q !== 9; o.loc = Q.loc; return o; }
+  function stepsHtml(steps) { var h = '<ul class="chk">', last = ''; steps.forEach(function (x) { if (x.sec && x.sec !== last) { h += '</ul><p class="jsec">' + esc(x.sec) + '</p><ul class="chk">'; last = x.sec; }
+      var cls = x.state === 'ok' ? 'ok' : x.state === 'cur' ? 'cur now' : 'now'; h += '<li class="' + cls + '">' + esc(x.lab) + '</li>'; if (x.hint && x.state !== 'ok') h += '</ul><p class="jhint">' + esc(x.hint) + '</p><ul class="chk">'; });
+    return (h + '</ul>').replace(/<ul class="chk"><\/ul>/g, ''); }
+  function cardHtml(cls) { var o = detail(), s = S(), q = s.q[QID], done = q === 9, mine = s.qa === QID;
+    var h = '<div class="badges"><span class="badge">Main</span>' + (done ? '<span class="badge turn">Completed</span>' : '<span class="badge turn">In progress</span>') + (mine ? '<span class="badge track">Tracked</span>' : '') + '</div><h2>' + esc(o.n) + '</h2><p class="jquote">\u201c' + esc(o.quote) + '\u201d</p>' + stepsHtml(o.rich);
+    if (!done) { if (!mine) h += '<button type="button" class="ph-cta" data-a="track" data-q="' + QID + '">Track</button>'; h += '<button type="button" class="ph-cta" data-a="showmap" data-q="' + QID + '">Show on map</button>'; }
+    return '<article class="jcard' + (cls || '') + '" data-q="' + QID + '">' + h + '</article>'; }
+  if (typeof c2QDetail === 'function') { var qd0 = c2QDetail; c2QDetail = function (id, o) {
+    if (id === QID) return detail(id, o);
+    var r = qd0.apply(this, arguments);
+    try {
+      if (on() && r && typeof CQ !== 'undefined' && id === CQ.locks && punkAfterSeal()) {
+        var q2 = cornersQuote();
+        if (q2) { r.quote = q2; r.prog = q2; }
+        if (r.rich) { fixCornerSteps(r.rich); r.steps = r.rich.map(function (x) { return [x.lab, x.state === 'ok']; }); }
+      }
+    } catch (eD) {}
+    return r;
+  }; }
+  if (typeof v640Rows === 'function') { var rows0 = v640Rows; v640Rows = function (done) { var rows = rows0.apply(this, arguments) || [], s = S(); try { if (on()) { var q = s.q[QID]; if (q != null && !rows.some(function (r) { return r.id === QID; }) && (done ? q === 9 : q !== 9)) rows.unshift({ id: QID, kind: 'main', n: Q.n }); } } catch (e) {} return rows; }; }
+  if (typeof mainQuestRows === 'function') { var mq0 = mainQuestRows; mainQuestRows = function (mode) { var rows = mq0.apply(this, arguments) || [], s = S(); try { if (on() && mode !== 'done') { var q = s.q[QID]; if (q != null && q !== 9 && !rows.some(function (r) { return r.id === QID; })) rows.unshift({ id: QID, kind: 'main', n: Q.n, st: 'on' }); } } catch (e) {} return rows; }; }
+  if (typeof v640From === 'function') { var from0 = v640From; v640From = function (id) { if (id === QID) return Q.giver; return from0.apply(this, arguments); }; }
+  if (typeof phJournal === 'function') { var ph0 = phJournal; phJournal = function () { var h = ph0.apply(this, arguments); try { if (!on()) return h;
+      h = h.replace(/<article class="jcard([^"]*)"[^>]*>[\s\S]*?<\/article>/g, function (m, cls) { if (m.indexOf('data-q="' + QID + '"') >= 0 || m.indexOf('<h2>' + Q.n + '</h2>') >= 0) return cardHtml(cls); return m; });
+    } catch (e) { ev('world:s2:err:ph:' + (e && e.message)); } return h; }; }
+  if (typeof questDetailHtml === 'function') { var qdh0 = questDetailHtml; questDetailHtml = function (id) { if (!on() || id !== QID) return qdh0.apply(this, arguments); var o = detail(id), Sst = (typeof JST !== 'undefined' && JST[o.status]) || ['', ''];
+      return '<div class="jdet main" data-q="' + QID + '"><div class="jdh"><button class="jback" data-a="jqback" aria-label="Back to quests">\u2039 Back</button><span class="jbadge story">Main Quest</span><i class="jst ' + Sst[1] + '">' + Sst[0] + '</i></div><h3>' + esc(o.n) + '</h3><p class="jquote">\u201c' + esc(o.quote) + '\u201d</p><dl class="jdl"><dt>Quest giver</dt><dd class="jd-giver">' + esc(o.giver) + '</dd><dt>Progress</dt><dd class="jd-prog">' + esc(o.prog) + '</dd></dl>' + stepsHtml(o.rich) + '</div>'; }; }
+  function s2Tgt() {
+    if (!on() || !qOn()) return null;
+    var t = stg(), p = FLIP_AT, lab = 'Flip';
+    if (t === 'sawshop' || (path() === 'balanced' && t === 'open')) { p = SHOP_AT; lab = 'Sweet shop'; }
+    if (t === 'w1') { p = [2460, 3190]; lab = 'Wagashi row'; }
+    if (t === 'w2') { p = [2520, 3190]; lab = 'Wagashi row'; }
+    if (t === 'clash') { p = X3C; lab = 'Wagashi row'; }
+    return { qid: QID, kind: 'main', lab: lab, x: p[0], y: p[1] - 70, dg: 'c2', c2: 'town', rooms: [], loc: Q.loc, n: Q.n };
+  }
+  if (typeof c2QT === 'function') { var qt0 = c2QT; c2QT = function () { try { var t = s2Tgt(); if (t) return t; } catch (e) {} return qt0.apply(this, arguments); }; }
+  S2.tgt = s2Tgt;
+
+  /* ---------------- names / Chiyo sprite + portrait ---------------- */
+  NM.nq_chiyo = 'Chiyo';
+  (function wireChiyo() {
+    if (typeof wUrl !== 'function' || typeof IMG === 'undefined') return;
+    IMG.nq_chiyo_walk = wUrl('nq_chiyo_walk');
+    IMG.nq_chiyo_idle = wUrl('nq_chiyo_idle');
+    IMG.nq_chiyo_map = wUrl('nq_chiyo_map');
+    IMG.nq_chiyo_fig = wUrl('nq_chiyo_fig');
+    /* kinds we do not paint: keep the engine off the old clerk alias */
+    IMG.nq_chiyo_run = IMG.nq_chiyo_walk;
+    ['hurt', 'kn', 'lie', 'fig_hurt', 'fig_down'].forEach(function (sh) { IMG['nq_chiyo_' + sh] = IMG.nq_chiyo_fig; });
+    if (typeof SHC !== 'undefined') { SHC.nq_chiyo_walk = 8; SHC.nq_chiyo_idle = 4; }
+    if (typeof SHR !== 'undefined') { SHR.nq_chiyo_idle = 4; if (SHR.c2_punk_walk != null) SHR.nq_chiyo_walk = SHR.c2_punk_walk; }
+    if (typeof BW_IDS !== 'undefined') BW_IDS.nq_chiyo = 1;
+    if (typeof C2K !== 'undefined') C2K.nq_chiyo = 1.04;
+    PT.nq_chiyo = 'nq_chiyo_fig';
+    if (typeof PT_PAINT !== 'undefined') PT_PAINT.nq_chiyo = 'chiyo';
+    if (typeof PT_HAS !== 'undefined') PT_HAS.chiyo_neutral = 1;
+  })();
+
+  /* ---------------- door + room (north facade, x≈3080) ---------------- */
+  var WAGA_DOOR = { r: [3030, 2688, 3130, 2764], at: SHOP_AT, to: 'waga', out: [SHOP_AT[0], SHOP_AT[1] - 24] };
+  var RW = 1280, RH = 900;
+  function roomDef() {
+    var id = 'c2_nq_waga'; C2R.waga = id;
+    INT[id] = { id: id, n: 'Chiyo Wagashi', w: RW, h: RH, src: 'world/nq_waga.paint', tiles: 1, cell: 15, dg: 'c2', c2: 'waga', deep: 1, safe: 1, mus: 'c2night', nq: 1, s2: 1,
+      open: [[90, 250, 1190, 850], [580, 850, 700, 900]], 'in': [640, 820, 3], back: [640, 820, 3],
+      block: [[190, 230, 1090, 415], [360, 430, 920, 500]],
+      spots: [{ id: 'exit', r: [575, 850, 705, 900], at: [640, 870], face: 0 }, { id: 's2_waga_order', r: [560, 300, 720, 430], at: [640, 500], face: 0, lab: 'Order' }] };
+    INT[id].base = INT[id].block; TAGS_IN[id] = {}; C2W.doors.nq_waga = WAGA_DOOR;
+    return INT[id];
+  }
+  roomDef();
+  if (typeof c2DoorOf === 'function') { var door0 = c2DoorOf; c2DoorOf = function (k) { if (k === 'waga') return WAGA_DOOR; return door0.apply(this, arguments); }; }
+  if (typeof c2Surf === 'function') { var surf0 = c2Surf; c2Surf = function (x, y) { if (c2Room() === 'waga') return 'wood'; return surf0.apply(this, arguments); }; }
+  INT.c2_town.spots.push({ id: 's2_e_waga', r: WAGA_DOOR.r, at: WAGA_DOOR.at, face: 0, lab: 'Enter' });
+  if (typeof TRANS !== 'undefined') TRANS.s2_e_waga = 1;
+  delete INT.c2_town.G;
+  /* painted door overlay, flush on the existing Wagashi north band (400×160, center 3080, bottom on y=2760).
+     NQ's FAC / propEl / facades live inside the NQ IIFE, so we append the canvas ourselves and hook c2Pop. */
+  var WAGA_FAC = null;
+  function placeDoor() {
+    if (!S2.ART || !on() || !inTown()) return;
+    if (document.getElementById('s2WagaDoor')) return;
+    if (!WAGA_FAC) {
+      WAGA_FAC = document.createElement('canvas'); WAGA_FAC.width = 400; WAGA_FAC.height = 160;
+      try { if (root.FFF_S2P && root.FFF_S2P.facadeDoor) root.FFF_S2P.facadeDoor(WAGA_FAC.getContext('2d')); } catch (eF) { ev('world:s2:err:facade:' + (eF && eF.message)); }
+    }
+    WAGA_FAC.className = 'nqprop'; WAGA_FAC.id = 's2WagaDoor';
+    WAGA_FAC.style.cssText = 'position:absolute;left:2880px;top:2600px;width:400px;height:160px;z-index:' + (100 + 2760) + ';pointer-events:none';
+    var host = null, sample = document.querySelector('#world .nqprop, #wimap .nqprop, .nqprop');
+    if (sample && sample.parentNode) host = sample.parentNode;
+    if (!host) host = document.getElementById('world') || document.getElementById('wimap') || (W && W.el);
+    if (!host) return;
+    host.appendChild(WAGA_FAC);
+    try { if (W && W.ints) W.ints.push({ el: WAGA_FAC }); } catch (eI) {}
+  }
+  S2.placeDoor = placeDoor;
+  if (typeof facades === 'function') {
+    var fac0 = facades;
+    facades = function () { fac0.apply(this, arguments); try { placeDoor(); } catch (eD) {} };
+  }
+  function hookBattle() {
+    if (S2._bt) return true;
+    if (!root.FFF_C2BT || !root.FFF_S2P || !root.FFF_S2P.battle) return false;
+    S2._bt = 1;
+    var BT = root.FFF_C2BT;
+    BT.ROOMS.waga = { name: 'Wagashi row', paint: function (x) { root.FFF_S2P.battle(x); },
+      lights: [[200, 200, '255,170,100', 70, 0.32, 'lamp'], [520, 200, '255,170,100', 70, 0.32, 'lamp']], rain: 48, mood: 'rain' };
+    BT.KEY.c2_waga = 'waga';
+    var roomB0 = BT.room;
+    BT.room = function (story) {
+      var ctx = (story && story.ctx) || {}, dgk = String(ctx.dgk || '');
+      if (S2.ART && (ctx.s2waga || ctx.s2k === 's2_x' || ctx.s2k === 's2_waga' || /^s2_x/.test(dgk))) return 'c2_waga';
+      return roomB0.apply(this, arguments);
+    };
+    return true;
+  }
+  hookBattle();
+  try { later(0, hookBattle); } catch (eB) { try { setTimeout(hookBattle, 0); } catch (eB2) {} }
+  function roomOpen() { return on() && qDone(); }
+  S2.roomOpen = roomOpen; S2.DOOR = WAGA_DOOR;
+
+  function paintPlaceholder(g) {
+    g.fillStyle = '#2a1c1c'; g.fillRect(0, 0, RW, RH);
+    g.fillStyle = '#f3e4cf'; g.fillRect(90, 230, RW - 180, 620);
+    g.fillStyle = '#8a4a3a'; g.fillRect(90, 0, RW - 180, 230);
+    g.fillStyle = '#1b1820'; g.fillRect(0, 0, 90, RH); g.fillRect(RW - 90, 0, 90, RH);
+    g.fillRect(0, 850, 580, 50); g.fillRect(700, 850, 580, 50);
+    g.fillStyle = '#f4ead2'; g.font = '900 36px "Noto Sans CJK JP",serif'; g.textAlign = 'center';
+    g.fillText('WAGASHI  \u00b7  placeholder', 640, 360);
+    g.font = '18px "Noto Sans CJK JP",serif'; g.fillText('Interior art waits on preview approval', 640, 400);
+    g.fillStyle = '#7a4a32'; g.fillRect(360, 430, 560, 90);
+  }
+  var RCV = null;
+  function paintRoom() {
+    var m = document.getElementById('wimap') || document.getElementById('world');
+    if (!m || room() !== 'waga') return;
+    if (!RCV) {
+      RCV = document.createElement('canvas'); RCV.width = RW; RCV.height = RH;
+      var g = RCV.getContext('2d');
+      try { if (S2.ART && root.FFF_S2P && root.FFF_S2P.interior) root.FFF_S2P.interior(g); else paintPlaceholder(g); } catch (e) { paintPlaceholder(g); }
+      RCV.complete = true; RCV.naturalWidth = RW; RCV.naturalHeight = RH;
+    }
+    RCV.id = 's2Room'; RCV.style.cssText = 'position:absolute;left:0;top:0;width:' + RW + 'px;height:' + RH + 'px;pointer-events:none;z-index:0';
+    if (RCV.parentNode !== m) m.insertBefore(RCV, m.firstChild); m.style.backgroundImage = 'none';
+  }
+
+  /* ---------------- menu (prices proposed; Nails 20% off after takeover) ---------------- */
+  function disc(c) { return Math.max(1, Math.round(c * 0.8)); }
+  HITEM.sroll = HITEM.sroll || { n: 'Sweet roll', pct: 0.18, ic: '\ud83e\udd50', rank: 2 };
+  HITEM.dango = HITEM.dango || { n: 'Dango', pct: 0.10, ic: '\ud83c\udf61', rank: 1 };
+  var WAGA_MENU = S2.MENU = [
+    { id: 'roll', n: 'Sweet roll', jp: '\u3042\u3093\u30ed\u30fc\u30eb', hp: 14, base: 8, cost: 6, eat: 'sweetroll' },
+    { id: 'dango', n: 'Dango', jp: '\u3060\u3093\u3054', hp: 8, base: 5, cost: 4, eat: 'dango' },
+    { id: 'togo_roll', n: 'Sweet roll to-go', jp: '\u6301\u5e30', bag: 'sroll', base: 8, cost: 6 },
+    { id: 'togo_dango', n: 'Dango to-go', jp: '\u6301\u5e30', bag: 'dango', base: 5, cost: 4 }
+  ];
+  function yen() { return SAVE.items | 0; }
+  function payYen(c) { SAVE.items = Math.max(0, yen() - c); sv(); try { hud(); bumpItems(); } catch (e) {} }
+  function spM() { return (typeof SPMAX === 'number' && SPMAX > 0) ? SPMAX : 40; }
+  function applyVit(it) { var h0 = SAVE.hp | 0; if (it.hp) SAVE.hp = Math.min(MAXHP, h0 + it.hp); sv(); try { hud(); if (SAVE.hp > h0 && typeof vitFlo === 'function') vitFlo('hp', SAVE.hp - h0); } catch (e) {} }
+  function counterMenu() {
+    var nails = qDone(), y = yen(), hpFull = SAVE.hp >= MAXHP, NP = '<i class="nqnp">Nails\u2019 price</i>';
+    var line = nails ? (path() === 'balanced' ? 'Sit. The kettle\u2019s on. Eat something warm.' : 'Nails said the row is yours. The prices are too.') : 'I can\u2019t sell with them on the step.';
+    if (!nails) { talk(pv(VO.shopCold)); return; }
+    var NQd = root.FFF_NQ;
+    /* reuse NQ counter if present; otherwise a simple dialog list */
+    var rows = WAGA_MENU.map(function (it) {
+      var c = nails ? it.cost : it.base, poor = y < c, bagFull = it.bag && SAVE.heal.length >= (typeof hSlots === 'function' ? hSlots() : 6), full = it.bag ? bagFull : hpFull;
+      var eff = it.bag ? ((HITEM[it.bag] && HITEM[it.bag].ic) || '') + ' into your bag' : '+' + it.hp + ' HP';
+      var price = nails && it.base > it.cost ? '¥' + it.base + ' → ¥' + it.cost : '¥' + (nails ? it.cost : it.base);
+      var why = full ? ' (full)' : poor ? ' (need ¥' + c + ')' : '';
+      return [(it.jp ? it.jp + ' ' : '') + it.n + ' · ' + eff + ' · ' + price + why, function () { buy(it, c); }, '', poor || full];
+    });
+    rows.push(['Later', null]);
+    var head = '<div class="sh"><b class="snm">Chiyo</b></div><div class="tw"><p class="q">\u201c' + esc(line) + '\u201d</p>' + (nails ? '<p class="nqnpl">' + NP + ' · 20% off on Nails\u2019 turf</p>' : '') +
+      '<p class="vst"><span>HP <b>' + (SAVE.hp | 0) + '/' + MAXHP + '</b></span><span>\u00a5' + y + '</span></p></div>';
+    dialog(head, rows);
+  }
+  function buy(it, c) {
+    payYen(c); ev('world:s2:waga:buy:' + it.id + ':' + c);
+    if (it.bag) { SAVE.heal.push(it.bag); sv(); try { AU.play('place'); } catch (e) {} try { toast(HITEM[it.bag].n + ' in your bag.'); } catch (e2) {} later(200, counterMenu); return; }
+    var h0 = SAVE.hp | 0, add = it.hp | 0, half = Math.ceil(add / 2), winAdd = Math.round(add * 1.5);
+    applyVit(it);
+    var h1 = SAVE.hp | 0, id = it.eat, opened = false;
+    var tg = { win: Math.min(MAXHP, h0 + winAdd), close: h1, bad: Math.min(MAXHP, h0 + half) };
+    function afterEat() {
+      try { AU.play('pl_heal', { gain: 0.5 }); } catch (e3) {}
+      try { actPlay('eat', W.ryo); } catch (e4) {}
+      later(700, counterMenu);
+    }
+    try {
+      if (id && typeof eatgOn === 'function' && eatgOn(id) && root.EATG && typeof eatgHold === 'function') {
+        var b0 = W.busy;
+        try { eatgCloseBag(); } catch (eC) {}
+        W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + id);
+        opened = !!root.EATG.open({ item: id, who: typeof eatgWho === 'function' ? eatgWho() : 'ryo',
+          hp0: h0, sp0: SAVE.sp | 0, maxhp: MAXHP, spmax: typeof SPMAX === 'number' ? SPMAX : 40,
+          rows: { win: ['WIN', '+' + winAdd + ' HP', 'a generous plate'], close: ['CLOSE MISS', '+' + add + ' HP', 'the normal heal'], bad: ['BAD RUN', '+' + half + ' HP', 'half of normal'] },
+          bot: root.FFF_EATG_BOT,
+          target: function (r) { return { hp: tg[r] != null ? tg[r] : h1, sp: SAVE.sp | 0 }; },
+          onEnd: function (res) {
+            try { eatgHold(false); } catch (eH) {}
+            SAVE.hp = Math.min(MAXHP, tg[res] != null ? tg[res] : h1); sv();
+            try { hud(); if (typeof vitFlo === 'function') vitFlo('hp', SAVE.hp - h0); } catch (eV) {}
+            W.busy = b0; W.path = []; ev('world:eatg:' + id + ':' + res); afterEat();
+          } });
+        if (!opened) { try { eatgHold(false); } catch (eH2) {} W.busy = b0; }
+      }
+    } catch (eE) { opened = false; }
+    if (!opened) afterEat();
+  }
+  S2.menu = counterMenu;
+
+  /* ---------------- Flip, waves, clash ---------------- */
+  var H = 'c2_hustler', Pnk = 'c2_punk', R = 'c2_boso';
+  var FL = null, CL = null, CHI = null;
+  function crewDown(k) { var s = S(), c = C2CREW.find(function (x) { return x.k === k; }), n = c ? c.ids.length : (k === 's2_w2' ? 3 : 2); for (var i = 0; i < n; i++) if (!s.f[k + '_' + i]) return false; return true; }
+  function CRW() {
+    var L = [], t = stg();
+    if (qOn() && t === 'w1') L.push({ k: 's2_w1', ids: [R, R], at: [2480, 3190], route: [[2440, 3175], [2520, 3175], [2520, 3210], [2440, 3210]], tr: 30, z: 'Wagashi row', n: 'the Rider push' });
+    if (qOn() && t === 'w2') L.push({ k: 's2_w2', ids: [R, R, R], at: [2520, 3190], route: [[2480, 3175], [2580, 3175], [2580, 3210], [2480, 3210]], tr: 30, z: 'Wagashi row', n: 'the second push' });
+    return L;
+  }
+  function crewSync() {
+    if (!on() || !inTown()) return; var s = S(), want = CRW(), keys = want.map(function (c) { return c.k; });
+    for (var j = C2CREW.length - 1; j >= 0; j--) if (/^s2_/.test(C2CREW[j].k) && keys.indexOf(C2CREW[j].k) < 0) C2CREW.splice(j, 1);
+    want.forEach(function (c) { if (!C2CREW.some(function (x) { return x.k === c.k; })) C2CREW.push(c);
+      c.ids.forEach(function (id, i) { var key = c.k + '_' + i; if (s.f[key] || (W.dgF || []).some(function (o) { return o.key === key; })) return;
+        try { var f = g38tSpawn(c, id, i, key); f.c2v2 = 1; f.s2 = 1; try { c2v2Street(c, f, i, 0); } catch (eS) {} } catch (e2) { ev('world:s2:err:spawn:' + (e2 && e2.message)); } }); });
+  }
+  function suppressX3Loop() {
+    if (!(qOn() || qDone())) return;
+    for (var b = C2CREW.length - 1; b >= 0; b--) {
+      var ck = C2CREW[b].k;
+      if (ck === 'p_x3_pnk' || ck === 'p_x3_rid') {
+        C2CREW.splice(b, 1);
+        (W.dgF || []).forEach(function (o) { if (o.crew === ck && o.s && o.s.el) { o.s.el.remove(); o.gone = 1; } });
+        W.dgF = (W.dgF || []).filter(function (o) { return o.crew !== ck; });
+      }
+    }
+  }
+  function takeX3Turf() {
+    var n = NS(); n.won = n.won || {}; n.won.x3 = 1; E().vend_x3st = 1;
+    /* stop the live border */
+    var s = S(); s.f = s.f || {}; s.f.p_x3_pnk = 1; s.f.p_x3_rid = 1; s.f.p_x3_pnk_0 = 1; s.f.p_x3_rid_0 = 1;
+    try {
+      var T = root.FFF_C2TURF;
+      if (T && T.Q && T.Q.P && !T.Q.P.some(function (r) { return r[0] === 2420 && r[1] === 2760 && r[2] === 3460; })) T.Q.P.push([2420, 2760, 3460, 3300]);
+      if (T && T.B && T.B.X3) T.B.X3.g = 'P';
+    } catch (eT) {}
+    if (root.FFF_NQ && root.FFF_NQ.BLK && !root.FFF_NQ.BLK.x3) root.FFF_NQ.BLK.x3 = { n: 'WAGASHI ROW', r: [2420, 2760, 3460, 3300] };
+    sv();
+  }
+  function chiyoPop() {
+    if (room() !== 'waga') { if (CHI) { try { kill(CHI); } catch (eK) {} CHI = null; } return; }
+    if (CHI && CHI.el && CHI.el.parentNode) return;
+    CHI = npc('nq_chiyo', 640, 360, Math.PI / 2);
+    try { if (W.c2n) W.c2n.s2 = CHI; } catch (eN) {}
+  }
+  function flipPop() {
+    if (!on() || !inTown() || !qOn() || stg() !== 'open') return;
+    if (FL && FL.el && FL.el.parentNode) return;
+    FL = npc('n13flip', FLIP_AT[0], FLIP_AT[1], 0);
+    face(FL, FLIP_AT[0] + 80, FLIP_AT[1]);
+  }
+  function flipTalk() {
+    if (stg() !== 'open' && stg() !== '') return false;
+    lockIn(true); if (FL) face(FL, W.ryo.x, W.ryo.y); if (W.ryo) c2Face(W.ryo, FL ? FL.x : FLIP_AT[0], FL ? FL.y : FLIP_AT[1]);
+    talk(pv(VO.brief), function () {
+      if (path() === 'balanced') { setStg('sawshop'); qStep(1); }
+      else { setStg('w1'); qStep(1); crewSync(); }
+      if (FL) { move(FL, [[2200, 3300]], 140, function () { kill(FL); FL = null; }); }
+      lockIn(false); try { qBanner('WAGASHI ROW', Q.n, Q.giver); } catch (e) {}
+    });
+    return true;
+  }
+  function doorTalk() {
+    if (qDone()) { c2Enter('waga'); return; }
+    if (qOn() && (stg() === 'open' || stg() === 'sawshop' || stg() === '')) {
+      talk(pv(stg() === 'sawshop' || path() === 'balanced' ? VO.shopFirst : VO.shopCold), function () {
+        if (path() === 'balanced' && stg() === 'sawshop') { setStg('w1'); qStep(1); crewSync(); }
+      });
+      return;
+    }
+    talk(pv(VO.shopCold));
+  }
+  function clashBeat() {
+    if (CL && CL.f) return; if (CL) { kill(CL.flip); (CL.pk || []).forEach(kill); }
+    var r = W.ryo; lockIn(true); ev('world:s2:clash');
+    CL = { f: 0 }; var fx = r.x, fy = r.y - 200;
+    CL.flip = npc('n13flip', fx - 40, fy, Math.PI / 2); CL.pk = [npc(Pnk, fx - 80, fy - 16, Math.PI / 2), npc(Pnk, fx + 40, fy - 16, Math.PI / 2)];
+    var n = 0, fin = function () { if (++n < 3) return; [CL.flip].concat(CL.pk).forEach(function (q) { face(q, X3C[0] + 80, X3C[1]); }); lockIn(false);
+      talk(pv(VO.clash), function () {
+        CL.f = 1; fight([R, R, R], false, { dg: 'c2', dgk: 's2_x_0', dgks: ['s2_x_0', 's2_x_1', 's2_x_2'], s2k: 's2_x', s2waga: 1, s2: 1, toughHp: typeof C2HP3 === 'number' ? C2HP3 : undefined }); }); };
+    move(CL.flip, [[r.x - 70, r.y + 10]], 210, fin); move(CL.pk[0], [[r.x - 110, r.y - 4]], 210, fin); move(CL.pk[1], [[r.x + 80, r.y + 4]], 210, fin);
+  }
+  function clashWon() {
+    if (CL) { [CL.flip].concat(CL.pk || []).forEach(function (q, i) { if (q) move(q, [[2200 + i * 20, 3300]], 120, function () { kill(q); }); }); CL = null; }
+    takeX3Turf(); setStg('done'); qClose(); suppressX3Loop();
+    var sting = root.FFF_NQ && root.FFF_NQ.sting;
+    var after = function () { talk(pv(VO.won), function () { try { qBanner('WAGASHI ROW', 'The sweet shop is open.', 'Chiyo Wagashi'); } catch (e) {} }); };
+    if (typeof sting === 'function') sting('x3', after); else after();
+  }
+  function s2Back(win, c) {
+    var s = S(); if (!win) { if (c.s2k === 's2_x') whenFree(function () { beatReset(true); setStg('clash'); }); return; }
+    (c.dgks || []).forEach(function (k) { if (/^s2_/.test(k)) s.f[k] = 1; }); sv();
+    var k = c.s2k; ev('world:s2:won:' + k);
+    if (k === 's2_w1' && crewDown(k)) whenFree(function () { setStg('w2'); crewSync(); say([['aoi', path() === 'strategic' ? 'Second wave, on schedule. Three this time.' : 'Second push coming up the row.']]); });
+    if (k === 's2_w2' && crewDown(k)) whenFree(function () { setStg('clash'); crewSync(); say([['aoi', 'The middle. Flip said he\u2019d bring two.']]); });
+    if (k === 's2_x') whenFree(clashWon);
+  }
+  if (typeof fight === 'function') {
+    var fightS = fight;
+    fight = function (grp, boss, ctx) {
+      try {
+        if (ctx && on()) {
+          var ks = ctx.dgks || [ctx.dgk];
+          ks.forEach(function (k) { var m = /^(s2_[a-z]\d?)_\d+$/.exec(String(k || '')); if (m) ctx.s2k = ctx.s2k || m[1]; });
+          if (ctx.s2k) ev('world:s2:fight:' + ctx.s2k);
+        }
+      } catch (eF) {}
+      return fightS.apply(this, arguments);
+    };
+  }
+  if (typeof c2Back === 'function') {
+    var back0 = c2Back;
+    c2Back = function (win, st0) {
+      var r = back0.apply(this, arguments);
+      try { var c = st0 && st0.ctx; if (on() && c && c.s2k) s2Back(win && !st0.escaped, c); } catch (eB) { ev('world:s2:err:back:' + (eB && eB.message)); }
+      return r;
+    };
+  }
+
+  function beatReset(force) {
+    if (CL && (force || !CL.f)) { kill(CL.flip); (CL.pk || []).forEach(kill); CL = null; }
+    try { lockIn(false); } catch (e2) {}
+  }
+  function chainRepair() {
+    if (!punkAfterSeal()) return;
+    var ch = 0;
+    if (!qOn() && !qDone()) { qOpen(); if (!stg()) setStg('open'); ch = 1; }
+    if (qDone()) { takeX3Turf(); suppressX3Loop(); }
+    if (qOn() && stg() === 'w1' && crewDown('s2_w1')) { setStg('w2'); ch = 1; }
+    if (qOn() && stg() === 'w2' && crewDown('s2_w2')) { setStg('clash'); ch = 1; }
+    if (ch) { crewSync(); sv(); ev('world:s2:repair'); }
+  }
+  S2.chainRepair = chainRepair; S2.crewSync = crewSync; S2.takeX3Turf = takeX3Turf;
+
+  /* approach the clash marker */
+  function flowTick() {
+    if (!on() || !inTown()) return;
+    chainRepair(); flipPop(); crewSync(); suppressX3Loop();
+    if (qOn() && stg() === 'clash' && !busy() && !CL && W.ryo && Math.hypot(W.ryo.x - X3C[0], W.ryo.y - X3C[1]) < 90) clashBeat();
+    if (room() === 'waga') paintRoom();
+    /* Flip talk if walking up */
+    if (qOn() && stg() === 'open' && FL && W.ryo && !busy() && Math.hypot(W.ryo.x - FL.x, W.ryo.y - FL.y) < 70) { /* tag handles talk */ }
+  }
+
+  /* ---------------- actions ---------------- */
+  if (typeof c2ActC === 'function') {
+    var act0 = c2ActC;
+    c2ActC = function (k, a) {
+      try {
+        if (on()) {
+          if (a === 's2_e_waga') { doorTalk(); return true; }
+          if (a === 's2_waga_order') { counterMenu(); return true; }
+          if (a === 's2_flip' || (FL && a && /n13flip/.test(a) && qOn() && stg() === 'open')) { flipTalk(); return true; }
+        }
+      } catch (e) { ev('world:s2:err:act:' + (e && e.message)); }
+      return act0.apply(this, arguments);
+    };
+  }
+  /* talking to Flip's sprite (world NPC) */
+  if (typeof c2Talk === 'function') {
+    var tk0 = c2Talk;
+    c2Talk = function (s) {
+      try { if (on() && qOn() && stg() === 'open' && s && (s.s2id === 'n13flip' || (s.el && s.el.dataset && s.el.dataset.npc === 'n13flip') || (s.id === 'n13flip'))) { flipTalk(); return true; } } catch (eT) {}
+      return tk0.apply(this, arguments);
+    };
+  } else if (typeof talkNpc === 'function') {
+    var tn0 = talkNpc;
+    talkNpc = function (s) {
+      try { if (on() && qOn() && stg() === 'open' && s && (s.s2id === 'n13flip' || s.id === 'n13flip')) { flipTalk(); return true; } } catch (eT) {}
+      return tn0.apply(this, arguments);
+    };
+  }
+  /* also a talk spot on Flip */
+  INT.c2_town.spots.push({ id: 's2_flip', r: [FLIP_AT[0] - 40, FLIP_AT[1] - 80, FLIP_AT[0] + 40, FLIP_AT[1] + 20], at: FLIP_AT, face: 1, lab: 'Talk' });
+  delete INT.c2_town.G;
+  if (typeof c2Tags === 'function') {
+    var tags0 = c2Tags;
+    c2Tags = function (id, D) {
+      var out = tags0.apply(this, arguments);
+      try {
+        if (out && on()) out = out.filter(function (t) {
+          if (!t || !t.key) return true;
+          if (t.key.indexOf(':s2_flip') >= 0) return qOn() && stg() === 'open';
+          if (t.key.indexOf(':s2_e_waga') >= 0) return punkAfterSeal();
+          if (t.key.indexOf(':s2_waga_order') >= 0) return room() === 'waga';
+          return true;
+        });
+      } catch (e) {}
+      return out;
+    };
+  }
+
+  /* ride c2Frame, no new loop */
+  if (typeof c2Frame === 'function') {
+    var fr0 = c2Frame;
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { hookBattle(); if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!S2.ferr) { S2.ferr = 1; ev('world:s2:err:frame:' + (e && e.message)); } } };
+  }
+  if (typeof c2Pop === 'function') {
+    var pop0 = c2Pop;
+    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); crewSync(); flipPop(); suppressX3Loop(); placeDoor(); chiyoPop(); if (room() === 'waga') paintRoom(); } } catch (eP) {} };
+  }
+  try { chainRepair(); } catch (eC) {}
+  ev('world:s2:ready');
+  } catch (eS2) { try { ev('world:s2:err:init:' + (eS2 && eS2.message)); console.warn('S2 init', eS2); } catch (e2) {} }
+})();
+/* S2_END */
+
 /* C2BG_BEGIN v6561-cam */
 /* v6.5.61 FFF_C2BT: Ch2 living battle backdrops, painted in-engine with Canvas2D in the flat cel style
  * (ink outlines, two-tone shading, soft light pools). 720x1280 image space like the Ch1 rooms. still(k) paints once
@@ -45561,6 +46589,12 @@ var ITEMS = {
   omurice: { game: 'bite', kind: 'omurice', jp: 'オムライス', en: 'OMURICE', tag: 'MASH · SOFT EGG, KETCHUP RICE', bg: '#f7e8b0', ray1: 'rgba(230,180,50,.34)', ray2: 'rgba(180,40,30,.16)',
     tapP: 0.10, tapsNeed: 10, stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+42 HP', 'the cafe plate'], close: ['CLOSE MISS', '+28 HP', 'a smaller bite'], bad: ['BAD RUN', '+14 HP', 'half of the plate'] } },
+  sweetroll: { game: 'bite', kind: 'sweetroll', jp: '\u3042\u3093\u30ed\u30fc\u30eb', en: 'SWEET ROLL', tag: 'MASH, THEN TAP TO PULL APART', bg: '#f3e0c8', ray1: 'rgba(200,80,40,.28)', ray2: 'rgba(230,180,80,.14)',
+    tapP: 0.14, tapsNeed: 6, pull: 1, stat: 'hp', startHp: 4,
+    rows: { win: ['WIN', '+21 HP', '1.5x the shop heal'], close: ['CLOSE MISS', '+14 HP', 'the shop heal'], bad: ['BAD RUN', '+7 HP', 'half of the shop heal'] } },
+  dango: { game: 'bite', kind: 'dango', jp: '\u56e3\u5b50', en: 'DANGO', tag: 'MASH BEFORE TIME RUNS OUT', bg: '#f0e4d0', ray1: 'rgba(200,120,140,.22)', ray2: 'rgba(140,180,80,.14)',
+    tapP: 0.16, tapsNeed: 5, stat: 'hp', startHp: 4,
+    rows: { win: ['WIN', '+12 HP', '1.5x the shop heal'], close: ['CLOSE MISS', '+8 HP', 'the shop heal'], bad: ['BAD RUN', '+4 HP', 'half of the shop heal'] } },
   lait: { game: 'coffee', variant: 'lait', jp: 'カフェオレ', en: 'CAFÉ AU LAIT', tag: 'MILKY AND MILD. SIP, DON\'T GULP', bg: '#f3e1c9', ray1: 'rgba(205,150,100,.34)', ray2: 'rgba(150,95,60,.16)',
     sip: 0.27, base: 0.07, bit0: 0.09, bitK: 1.05, rec: 1.6, hotA: 0.17, hotB: 0.55, cool: 0.07, stat: 'sp', startSp: 6,
     rows: { win: ['WIN', 'FULL SP', 'back to 40 / 40'], close: ['CLOSE MISS', '+25 SP', 'the normal boost'], bad: ['BAD RUN', '+13 SP', 'half of normal'] } },
@@ -45634,7 +46668,7 @@ function newRun(cfgName, who, seed, script) {
   var C = ITEMS[cfgName]; rnd = mulberry(seed || 7);
   S = { name: cfgName, C: C, who: who || 'ryo', ch: CH[who || 'ryo'], t: 0, ph: 'intro', it: 0, pt: 0, rt: 0, down: false, res: null, cause: '', particles: [], letters: [], ripples: [], shake: 0, flash: 0, flashCol: '#fff',
     mood: 'neutral', moodPrev: 'neutral', moodT: 1, failA: 0, bob: 0, tapPulse: 0, tapU: -1, idle: 9, lift: 0, taps: 0, strandSeed: 0, script: script || null,
-    p: 0, heat: 0, tofu: { st: 0, t: 0, hit: 0 }, stains: [],
+    p: 0, pullT: 0, pullGo: 0, heat: 0, tofu: { st: 0, t: 0, hit: 0 }, stains: [],
     L: 1, tol: 0, sipT: 0, sips: 0, cup: 0, hotR: 0, bitR: 0, baseR: 0, temp: 1, warned: false, clinkT: -9, sipN: 0, lastSip: 0,
     hp0: C.startHp != null ? C.startHp : 0, sp0: C.startSp != null ? C.startSp : 6, hpShown: 0, spShown: 0, thumb: null, blowT: 0,
     fizz: 0, canK: 0, pose: '', poseT: -9, downT: 0, foodK: 0, burpOk: 0, biteT: -9 };
@@ -45669,14 +46703,14 @@ function mouthKeys() {
 }
 function mouthXY() { var r = poseRect(), c = MOUTH[S.who], ks = mouthKeys(), a = S.failA || 0, A = c[ks[0]] || c.happy, B = c[ks[1]] || c.fail; return [r.px + lerp(A[0], B[0], a) * r.pw / 360, r.py + lerp(A[1], B[1], a) * r.ph / 480]; }
 var EAT_IDLE = 1.5;
-function isEating() { if (!S || S.ph !== 'play') return false; if ((S.C.game === 'coffee' || S.C.game === 'soda') && S.hold) return true; if (S.C.game === 'soda' && S.pose === 'burp' && (S.t - S.poseT) < 0.62) return true; return S.idle < EAT_IDLE; }
-function showEatPose() { return S && S.ph === 'play' && (isEating() || S.lift > 0.45 || S.cup > 0.45); }
+function isEating() { if (!S || (S.ph !== 'play' && S.ph !== 'pull')) return false; if ((S.C.game === 'coffee' || S.C.game === 'soda') && S.hold) return true; if (S.C.game === 'soda' && S.pose === 'burp' && (S.t - S.poseT) < 0.62) return true; return S.idle < EAT_IDLE; }
+function showEatPose() { return S && (S.ph === 'play' || S.ph === 'pull') && (isEating() || S.ph === 'pull' || S.lift > 0.45 || S.cup > 0.45); }
 
 /* ----- inputs (human or bot call the same two functions) ----- */
 function inDown(x, y) {
   if (!S) return; var px = x == null ? 195 : x, py = y == null ? 752 : y;
   S.down = true; S.ripples.push({ x: px, y: py, t0: S.t }); S.thumb = { x: px, y: py };
-  if (S.ph !== 'play') return;
+  if (S.ph !== 'play' && S.ph !== 'pull') return;
   S.downT = S.t;
   if (S.C.game === 'noodles') noodleTap();
   else if (S.C.game === 'coffee') coffeeHold(true);
@@ -45687,7 +46721,7 @@ function inUp() {
   if (!S) return;
   var wasDown = S.down, heldFor = S.t - (S.downT || S.t);
   S.down = false; S.thumb = null;
-  if (S.ph !== 'play') return;
+  if (S.ph !== 'play' && S.ph !== 'pull') return;
   if (S.C.game === 'coffee') coffeeHold(false);
   else if (S.C.game === 'soda') {
     sodaHold(false);
@@ -45809,6 +46843,12 @@ function sodaUpdate(dt) {
 
 /* ----- QUICK BITES: mash taps before the timer runs out ----- */
 function biteTap() {
+  if (S.ph === 'pull') {
+    if (S.pullGo) return;
+    S.pullGo = 1; S.pullT = 0; S.idle = 0; S.biteT = S.t;
+    sfx('slurp'); addLetter('\u3071\u304d\u3063', 200, 190, 44, '#fff6ec', 0, 0.45);
+    return;
+  }
   if (S.ph !== 'play') return;
   var C = S.C, m = mouthXY();
   S.idle = 0; S.tapU = 0; S.taps++; S.biteT = S.t;
@@ -45816,6 +46856,8 @@ function biteTap() {
   var kind = biteKind(), n = S.taps, odd = n % 2, i;
   function crumbs(cnt, cols, sMin, sVar, spread, up) { if (loq()) cnt = Math.max(3, cnt >> 1); for (i = 0; i < cnt; i++) addP({ k: 'crumb', x: m[0], y: m[1], vx: (rnd() - 0.5) * spread, vy: -up * 0.45 - rnd() * up, life: 0.55, s: sMin + rnd() * sVar, col: cols[i % cols.length] }); }
   if (kind === 'onigiri') { sfx(n === 1 ? 'slurp' : 'crunch', n); addLetter(n === 1 ? 'ぺりっ' : (odd ? 'もぐ！' : 'ぱくっ'), odd ? 80 : 300, 190, 42, '#fff6ec', odd ? -0.15 : 0.15, 0.4); crumbs(8, ['#f8f3e8', '#f8f3e8', '#1a1f1c', '#e8dcc4'], 2, 2.4, 240, 140); }
+  else if (kind === 'sweetroll') { sfx(n === 1 ? 'slurp' : 'crunch', n); addLetter(odd ? 'もぐ！' : 'ふわっ', odd ? 80 : 300, 190, 42, '#f6d49a', odd ? -0.12 : 0.15, 0.4); crumbs(8, ['#f6e2a8', '#e8b060', '#5c1a20', '#fff4d0'], 2.2, 2.6, 220, 140); }
+  else if (kind === 'dango') { sfx('jiggle'); addLetter(odd ? 'もぐ！' : 'ぷるっ', odd ? 80 : 300, 200, 42, '#f2c4cf', 0.15, 0.4); crumbs(6, ['#f2c4cf', '#9ec27a', '#f4ead2'], 2.4, 2.4, 180, 120); }
   else if (kind === 'melon') { sfx('crunch'); addLetter(odd ? 'びりっ' : 'さくっ', odd ? 78 : 304, 188, 42, '#c6e86a', odd ? -0.15 : 0.2, 0.4); crumbs(10, ['#c8dc66', '#e8f08c', '#fff3c4', '#8aac34'], 2.4, 3.4, 280, 150); }
   else if (kind === 'yakisoba') { sfx(n % 3 === 0 ? 'slurp' : 'crunch', n); addLetter(n % 3 === 0 ? 'ずるっ' : 'もぐ！', odd ? 80 : 300, 200, 42, '#e0892a', 0.12, 0.4); crumbs(7, ['#c47228', '#e2223e', '#8a3a10', '#e8b868'], 2.4, 2.6, 210, 120); }
   else if (kind === 'pudding') { sfx('jiggle'); addLetter(odd ? 'ぷるっ' : 'とろっ', 300, 210, 42, '#f2c24a', 0.2, 0.4); crumbs(6, ['#f6c850', '#a8501a', '#fde08c'], 3, 3, 150, 100); }
@@ -45823,12 +46865,17 @@ function biteTap() {
   else if (kind === 'antoast') { sfx('crunch'); addLetter(odd ? 'サクッ' : 'とろっ', odd ? 80 : 300, 190, 42, '#f0d4a0', odd ? -0.12 : 0.15, 0.4); crumbs(8, ['#e8c070', '#5c1a20', '#f6e07c', '#9a5a1c'], 2.4, 2.8, 220, 140); }
   else if (kind === 'candy') { sfx('crunch'); addLetter(odd ? 'パキッ！' : 'ガリッ', odd ? 80 : 300, 190, 42, '#ffb070', odd ? -0.14 : 0.16, 0.4); crumbs(9, ['#5a301a', '#8a4e2a', '#e8c98a', '#d83a34'], 2.2, 2.8, 250, 150); }
   else { sfx('jiggle'); addLetter(odd ? 'ふわっ' : 'とろっ', 300, 210, 42, '#f2c24a', 0.2, 0.4); crumbs(7, ['#f6cc40', '#e8742e', '#dc2a1a', '#fff6ac'], 3, 2.8, 170, 110); }
-  if (S.p >= 1) endRun('win');
+  if (S.p >= 1) { if (S.C.pull) { S.ph = 'pull'; S.p = 1; S.pullT = 0; S.pullGo = 0; return; } endRun('win'); }
 }
 function biteUpdate(dt) {
   S.idle += dt;
   setMood(S.idle < 0.4 ? 'happy' : ((RUN_T - S.pt) < 2.2 && S.p < 0.7 ? 'angry' : 'neutral'));
   if (S.pt >= RUN_T && S.ph === 'play') endRun(S.p >= 0.7 ? 'close' : 'bad', S.p >= 0.7 ? '' : 'choke');
+}
+function pullUpdate(dt) {
+  S.pullT = (S.pullT || 0) + dt;
+  setMood('happy');
+  if (S.pullGo && S.pullT >= 0.7) endRun('win');
 }
 
 /* ----- end of run ----- */
@@ -45848,7 +46895,7 @@ function stepLogic(dt) {
   S.t += dt;
   if (S.moodT < 1) S.moodT = Math.min(1, S.moodT + dt / 0.12);
   if (S.ph === 'intro') { if (!S.wait) S.it += dt; if (S.it >= INTRO_T) { S.ph = 'play'; sfx('go'); } }
-  else if (S.ph === 'play') { S.pt += dt; if (S.script) S.script(S, dt); if (S.ph === 'play') { var g0 = S.C.game; if (g0 === 'noodles') noodleUpdate(dt); else if (g0 === 'coffee') coffeeUpdate(dt); else if (g0 === 'soda') sodaUpdate(dt); else if (g0 === 'bite') biteUpdate(dt); } }
+  else if (S.ph === 'play') { S.pt += dt; if (S.script) S.script(S, dt); if (S.ph === 'play') { var g0 = S.C.game; if (g0 === 'noodles') noodleUpdate(dt); else if (g0 === 'coffee') coffeeUpdate(dt); else if (g0 === 'soda') sodaUpdate(dt); else if (g0 === 'bite') biteUpdate(dt); } } else if (S.ph === 'pull') { if (S.script) S.script(S, dt); pullUpdate(dt); }
   else if (S.ph === 'result') {
     S.rt += dt; if (S.tofu.st === 2) S.tofu.tt += dt;
     if (S.rt > 0.9 && !S.bannerSfx) { S.bannerSfx = 1; sfx('banner'); }
@@ -45968,6 +47015,7 @@ function botBite(mode) {
     if (mode === 'fail') { if (st.n < 3 && S.pt > 0.5 && S.pt - st.last >= 1.5) { st.last = S.pt; st.n++; inDown(); inUp(); } return; }
     if (st.rest) { if (S.idle > 1.7) st.rest = false; return; }
     if (st.n === 3 && !st.didRest) { st.rest = true; st.didRest = true; return; }
+    if (S.ph === 'pull') { if (!S.pullGo && S.pullT >= 0.28 && S.t - (st.last||0) >= 0.2) { st.last = S.t; inDown(); inUp(); } return; }
     if (S.pt > 0.3 && S.pt - st.last >= 0.20) { st.last = S.pt; st.n++; inDown(); inUp(); }
   };
 }
@@ -46061,7 +47109,7 @@ function drawPanel() {
   if (S.ph === 'play' && S.C.game === 'noodles') bob = Math.sin(S.t * 22) * (S.idle < 0.25 ? 2.2 : 0.6) + (S.blowT > 0 ? 4 : 0);
   if (S.ph === 'play' && S.C.game === 'coffee') { bob = S.lift > 0.4 ? -4 + Math.sin(S.t * 12) * 1.2 : 0; }
   if (S.ph === 'play' && S.C.game === 'soda') { bob = S.canK > 0.4 ? -3 + Math.sin(S.t * 14) * 1.4 : 0; if (S.name === 'energy' && S.fizz > 0.55) { bob += Math.sin(S.t * 40) * 1.6; } }
-  if (S.ph === 'play' && S.C.game === 'bite') bob = Math.sin(S.t * 20) * (S.idle < 0.25 ? 2.0 : 0.5);
+  if ((S.ph === 'play' || S.ph === 'pull') && S.C.game === 'bite') bob = Math.sin(S.t * 20) * (S.idle < 0.25 ? 2.0 : 0.5);
   if (S.ph === 'result' && S.res === 'win') bob = -Math.abs(Math.sin(S.rt * 7)) * 9 * Math.max(0, 1 - S.rt / 1.4);
   if (S.ph === 'result' && S.cause === 'bitter') bob = Math.sin(S.rt * 40) * 3 * Math.max(0, 1 - S.rt / 1.6);
   var rc = poseRect(), pw = rc.pw * squash, ph = rc.ph * squash, px = rc.px - (pw - rc.pw) / 2, py = rc.py - (ph - rc.ph) * 0.5 + bob;
@@ -46733,6 +47781,52 @@ function pcCandy(p, A) {
   ctx.restore();
 }
 
+
+/* an-roll: a sponge swiss roll; the last beat tears it in two with a stretch of anko */
+function pcSweetroll(p, A) {
+  var split = S.pullGo ? Math.min(1, (S.pullT || 0) / 0.55) : 0;
+  var gap = 38 * (split * split * (3 - 2 * split));
+  ctx.save(); ctx.translate(0, 8); ctx.scale(1 + 0.05 * A.pop, 1 - 0.06 * A.pop); ctx.rotate(A.wob * 0.04);
+  function half(side, face) {
+    ctx.save(); ctx.translate(side * gap * 0.5, 0); ctx.rotate(side * split * 0.18);
+    ctx.beginPath(); ctx.ellipse(side * 6, 8, 34, 28, 0, 0, 7);
+    var rg = ctx.createLinearGradient(-20, -16, 20, 24); rg.addColorStop(0, '#f6e2a8'); rg.addColorStop(0.55, '#e8b060'); rg.addColorStop(1, '#c48438');
+    ctx.fillStyle = rg; ctx.fill(); inkFood(3.2);
+    /* cut face */
+    ctx.beginPath(); ctx.ellipse(side * -22, 6, 10, 22, 0, 0, 7);
+    var ag = ctx.createRadialGradient(side * -22, 4, 2, side * -22, 6, 20);
+    ag.addColorStop(0, '#8a3036'); ag.addColorStop(0.55, '#5c1a20'); ag.addColorStop(1, '#e8b060');
+    ctx.fillStyle = face ? ag : '#e2a850'; ctx.fill(); inkFood(2.2);
+    ctx.restore();
+  }
+  if (split < 0.08) {
+    ctx.beginPath(); ctx.ellipse(0, 8, 40, 30, 0, 0, 7);
+    var rg = ctx.createLinearGradient(-24, -16, 24, 26); rg.addColorStop(0, '#f6e2a8'); rg.addColorStop(0.55, '#e8b060'); rg.addColorStop(1, '#c48438');
+    ctx.fillStyle = rg; ctx.fill(); inkFood(3.2);
+    ctx.beginPath(); ctx.ellipse(-8, 0, 14, 12, -0.4, 0, 7);
+    var ag = ctx.createRadialGradient(-8, 0, 2, -4, 4, 16); ag.addColorStop(0, '#8a3036'); ag.addColorStop(1, '#5c1a20');
+    ctx.fillStyle = ag; ctx.fill(); inkFood(2);
+    ctx.beginPath(); ctx.moveTo(-28, 6); ctx.quadraticCurveTo(0, -16, 28, 4); ctx.strokeStyle = 'rgba(90,40,20,.4)'; ctx.lineWidth = 3; ctx.stroke();
+  } else {
+    half(-1, 1); half(1, 1);
+    /* anko threads */
+    ctx.strokeStyle = '#5c1a20'; ctx.lineWidth = 3; ctx.lineCap = 'round';
+    [[-4, 4], [0, 10], [4, -2]].forEach(function (t, i) {
+      ctx.globalAlpha = 1 - split * 0.7; ctx.beginPath(); ctx.moveTo(-10 - gap * 0.2, t[1]); ctx.quadraticCurveTo(t[0], t[1] + 10 + i * 3, 10 + gap * 0.2, t[1]); ctx.stroke();
+    });
+    ctx.globalAlpha = 1;
+  }
+  ctx.restore();
+}
+function pcDango(p, A) {
+  ctx.save(); ctx.translate(0, 10); ctx.scale(1 + 0.05 * A.pop, 1 - 0.06 * A.pop); ctx.rotate(A.wob * 0.05);
+  ctx.lineCap = 'round'; ctx.strokeStyle = INK; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(0, -46); ctx.lineTo(0, 44); ctx.stroke();
+  [['#f2c4cf', -22], ['#9ec27a', 2], ['#f4ead2', 26]].forEach(function (b) {
+    ctx.beginPath(); ctx.ellipse(0, b[1], 20, 16, 0, 0, 7); ctx.fillStyle = b[0]; ctx.fill(); inkFood(2.6);
+  });
+  ctx.restore();
+}
+
 var BITE_SPEC = {
   onigiri: { draw: pcOnigiri, cut: '#fffaf0', bites: [[-16, -36, 11], [-32, -10, 11], [-6, -18, 10], [-24, 14, 9]], up: 26 },
   melon: { draw: pcMelon, cut: '#fff8dc', bites: [[-34, -20, 11], [-40, 4, 10], [-14, -34, 10], [-22, 12, 9]], up: 13, steam: 0 },
@@ -46741,7 +47835,9 @@ var BITE_SPEC = {
   lunch: { draw: pcKaraage, cut: '#fff4d8', bites: [[-26, -18, 11], [-34, 6, 10], [-8, -30, 10], [-18, 24, 9]], up: 11, steam: 1 },
   antoast: { draw: pcAnToast, cut: '#fff0c4', bites: [[-30, 12, 10], [-14, -6, 10], [6, -26, 10], [-38, 24, 9]], up: 13 },
   candy: { draw: pcCandy, cut: '#f2d8a0', bites: [[-44, 12, 11], [-36, 25, 10], [-27, 3, 10], [-24, 21, 9]], up: 11 },
-  omurice: { draw: pcOmurice, cut: '#fff2b0', bites: [[-34, -16, 12], [-40, 10, 11], [-14, -34, 10], [-26, 22, 9]], up: 13, steam: 1 }
+  omurice: { draw: pcOmurice, cut: '#fff2b0', bites: [[-34, -16, 12], [-40, 10, 11], [-14, -34, 10], [-26, 22, 9]], up: 13, steam: 1 },
+  sweetroll: { draw: pcSweetroll, cut: '#fff0c4', bites: [[-24, -10, 11], [-30, 12, 10], [10, -16, 10], [-8, 16, 9]], up: 16 },
+  dango: { draw: pcDango, cut: '#fff6e8', bites: [[-6, -28, 10], [8, 0, 10], [-8, 24, 9], [10, -8, 8]], up: 18 }
 };
 
 function drawBitePiece(kind) {
@@ -46750,7 +47846,7 @@ function drawBitePiece(kind) {
   if (!BITE_OC || BITE_OC.width !== bz) { BITE_OC = document.createElement('canvas'); BITE_OC.width = bz; BITE_OC.height = bz; BITE_OC._k = ''; }
   var g = BITE_OC.getContext('2d'), main = ctx, tt = S.t - (S.biteT == null ? -9 : S.biteT), A = { tt: tt, pop: tt < 0.6 ? Math.exp(-tt * 8) : 0 };
   A.wob = A.pop * Math.sin(tt * 34);
-  var bk = kind + '|' + Math.floor(clamp(S.p, 0, 1) * 40) + '|' + (A.pop > 0 ? 'p' + S.t : Math.floor(S.t * 30));
+  var bk = kind + '|' + Math.floor(clamp(S.p, 0, 1) * 40) + '|' + (S.ph || '') + (S.pullGo||0) + Math.floor((S.pullT||0)*20) + '|' + (A.pop > 0 ? 'p' + S.t : Math.floor(S.t * 30));
   if (BITE_OC._k === bk) { ctx.drawImage(BITE_OC, -100, -100, 200, 200); return; }
   BITE_OC._k = bk;
   g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, bz, bz); g.setTransform(bs, 0, 0, bs, 100 * bs, 100 * bs);
@@ -46913,7 +48009,7 @@ function drawIntro() {
   ctx.translate(195, 650); ctx.rotate(-0.06); ctx.scale(clamp(k, 0, 1.1), clamp(k, 0, 1.1));
   ctx.fillStyle = INK; ctx.fillRect(-260, -52, 520, 104); ctx.fillStyle = '#d9411c'; ctx.fillRect(-260, -42, 520, 84);
   jtext(C.jp, 0, -8, C.jp.length > 6 ? 36 : 44, '#fff6ec', INK, 9, 0);
-  ltext(C.tag, 0, 30, 14, '#ffe9b8', null, 0, 'center', LAT, 900);
+  ltext(S.ph === 'pull' ? 'TAP TO PULL APART' : C.tag, 0, 30, 14, '#ffe9b8', null, 0, 'center', LAT, 900);
   ctx.restore();
   ctx.save(); ctx.globalAlpha = clamp(a, 0, 1); var k2 = eb((u - 0.05) / 0.25);
   jtext('いただきます！', 195, 150 + 0, 40 * clamp(k2, 0, 1.1), '#fff', INK, 10, 0.03); ctx.restore();
