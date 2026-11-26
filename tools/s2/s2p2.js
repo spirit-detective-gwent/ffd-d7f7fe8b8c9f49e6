@@ -309,9 +309,9 @@
     P2._bt = 1;
     var BT = root.FFF_C2BT;
     BT.ROOMS.br = { name: 'East canal bridge', paint: function (x) { root.FFF_S2P.battleBridge(x); },
-      lights: [[130, 200, '255,190,100', 70, 0.32, 'lamp'], [590, 200, '255,190,100', 70, 0.32, 'lamp']], rain: 50, mood: 'rain' };
+      lights: [[130, 200, '255,190,100', 70, 0.32, 'lamp'], [590, 200, '255,190,100', 70, 0.32, 'lamp']], rain: 50, mood: 'rain', feet: 52 };
     BT.ROOMS.se = { name: 'Minato-s\u014d street', paint: function (x) { root.FFF_S2P.battleSE(x); },
-      lights: [[120, 200, '255,190,100', 70, 0.36, 'lamp'], [270, 200, '255,180,90', 60, 0.22, 'lamp']], rain: 50, mood: 'rain' };
+      lights: [[120, 200, '255,190,100', 70, 0.36, 'lamp'], [270, 200, '255,180,90', 60, 0.22, 'lamp']], rain: 50, mood: 'rain', feet: 52 };
     BT.KEY.c2_br = 'br'; BT.KEY.c2_se = 'se';
     var roomB0 = BT.room;
     BT.room = function (story) {

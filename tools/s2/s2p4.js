@@ -199,9 +199,9 @@
     P4._bt = 1;
     var BT = root.FFF_C2BT;
     BT.ROOMS.gg = { name: 'Quay garage \u00b7 Dispatch', paint: function (x) { root.FFF_S2P.battleGarage(x); },
-      lights: [[140, 110, '255,200,110', 70, 0.3, 'lamp'], [580, 110, '255,200,110', 70, 0.3, 'lamp']], rain: 0, mood: 'room' };
+      lights: [[140, 110, '255,200,110', 70, 0.3, 'lamp'], [580, 110, '255,200,110', 70, 0.3, 'lamp']], rain: 0, mood: 'room', feet: 52 };
     BT.ROOMS.ap = { name: 'Depot approach', paint: function (x) { root.FFF_S2P.battleApproach(x); },
-      lights: [[80, 120, '255,190,100', 70, 0.3, 'lamp'], [640, 120, '255,190,100', 70, 0.3, 'lamp']], rain: 50, mood: 'rain' };
+      lights: [[80, 120, '255,190,100', 70, 0.3, 'lamp'], [640, 120, '255,190,100', 70, 0.3, 'lamp']], rain: 50, mood: 'rain', feet: 52 };
     BT.KEY.c2_gg = 'gg'; BT.KEY.c2_ap = 'ap';
     var roomB0 = BT.room;
     BT.room = function (story) {

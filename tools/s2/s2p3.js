@@ -218,9 +218,9 @@
     P3._bt = 1;
     var BT = root.FFF_C2BT;
     BT.ROOMS.lk = { name: 'Funayado \u00b7 Lookout', paint: function (x) { root.FFF_S2P.battleLookout(x); },
-      lights: [[180, 90, '255,200,110', 70, 0.3, 'lamp'], [540, 90, '255,200,110', 70, 0.3, 'lamp']], rain: 0, mood: 'room' };
+      lights: [[180, 90, '255,200,110', 70, 0.3, 'lamp'], [540, 90, '255,200,110', 70, 0.3, 'lamp']], rain: 0, mood: 'room', feet: 52 };
     BT.ROOMS.qy = { name: 'South quay', paint: function (x) { root.FFF_S2P.battleQuay(x); },
-      lights: [[120, 200, '255,190,100', 70, 0.32, 'lamp'], [600, 200, '255,190,100', 70, 0.32, 'lamp']], rain: 50, mood: 'rain' };
+      lights: [[120, 200, '255,190,100', 70, 0.32, 'lamp'], [600, 200, '255,190,100', 70, 0.32, 'lamp']], rain: 50, mood: 'rain', feet: 52 };
     BT.KEY.c2_lk = 'lk'; BT.KEY.c2_qy = 'qy';
     var roomB0 = BT.room;
     BT.room = function (story) {
