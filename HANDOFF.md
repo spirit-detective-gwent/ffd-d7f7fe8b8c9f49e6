@@ -11,9 +11,9 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
-### 2026-11-26 — executor (Grok Bot) — v6.5.63 (commit TBD) — LIVE after Erik's OK
+### 2026-11-26 — executor (Grok Bot) — v6.5.63 (commit c7efb9f) — LIVE after Erik's OK
 Versions: `window.FFF_BUILD="v6563"`, title `.vtag` "v6.5.63", `#ver` text "v6.5.63" (bumped in cdcc7f8).
-Approved by Erik ("Yes, publish v6.5.63."). Fast-forward onto b15775f (v6.5.62). Published SHA recorded after the live check.
+Approved by Erik ("Yes, publish v6.5.63."). Fast-forward onto b15775f (v6.5.62). Published commit `c7efb9f`; live serves v6.5.63 with no console errors. Ch1/Ch2 smoke against the published tree passed; a live boot check also saw v6563 / v6.5.63 and no console errors.
 
 What shipped (v6563-mai at b649f38, plus the version bump):
 
