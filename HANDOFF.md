@@ -11,6 +11,33 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
+### 2026-11-26 — executor (Grok Bot) — v6.5.63 (commit TBD) — LIVE after Erik's OK
+Versions: `window.FFF_BUILD="v6563"`, title `.vtag` "v6.5.63", `#ver` text "v6.5.63" (bumped in cdcc7f8).
+Approved by Erik ("Yes, publish v6.5.63."). Fast-forward onto b15775f (v6.5.62). Published SHA recorded after the live check.
+
+What shipped (v6563-mai at b649f38, plus the version bump):
+
+- **Boss entrance hold (GGD-22, `7be2184`):** the world stays still through a boss entrance, so the hold no longer lets the map keep ticking under the intro.
+- **GGD-49 shop and healing rules (`3ded809`):** no bag-heal from Hase's old patch kit / spare tube or yard gauze (defs kept, disabled). Hase sells only tape and gauze at ¥3 (Nails 20% off applies); mugwort stays ¥1; world-found mats stay the cheap path. Depot is onigiri and canned coffee only; Machi Motors: tape, gauze, soda; Ono: tape and gauze. Ch2 supply shops and herb cycles (`c2RefreshCycle`) restock after a quest or side-quest turn-in, never on a KO / gym wake. Restaurants are eat-in only. Chiyo stands at the counter (no walk). The clinic Brass Kettle craft UI is retired; bag crafting is the only bench. Ch1 First Aid no longer sells ready-made bandages. Nurse cabinet 60s cooldown kept by design.
+- **S2 frame gating (GGD-37, `25d54f3`):** unused S2 frame work is gated so 4x heat stays fair vs live.
+- **Herbalist garden and seeds (GGD-50):** 9 pots in the clinic nook; Dr. Tsukikage sells seed packets (3 seeds for ¥1, up to 3 packets per quest). Plant, tend (she waters between quests), bloom after a quest refresh, then pick. New plant / pick animations for Ryo and Aoi. The yellow window-light pool on the clinic floor is kept (Erik, 2026-11-26).
+- **Rare finds:** chance rolls on pick (~6% twice, ~1% three times) can yield yen or a length of tape / gauze, with a toast.
+- **Yard map:** the depot Yard map marks the current herb cycle only.
+- **Meal edge:** a Clean-plate (or sip) restaurant win grants a next-fight edge; it is a counter, never bag candy. `mealEdge` is kept on load (`5229623`); no migrate-save on the title screen.
+- **Pot-tap fix (`77add26`):** tapping a pot walks to that stand and plants it, instead of resolving to the generic Garden spot ("Nothing useful.").
+- **Garden toasts (`7cb2f61`):** '¥5 in the dirt.', 'A length of tape in the mud.' / gauze, and 'Need mugwort seeds.' are on the Ch1/Ch2 toast allowlist so they actually show.
+- **Seed and mugwort shop icon (`7cb2f61`):** d2 dialog icons (Seeds and Mugwort Bundles, including live's bundle shops) are restored to 40px.
+- **Garden tag box removal (`b649f38`):** the pale rounded `.wtag.obj` box around the 3x3 pots is hidden; the Garden spot stays tappable. Sun wash unchanged.
+
+Also in this publish (already merged into v6563-mai, previously unpublished): Seal 2 (Wagashi / Night Runs / Above the Boat / Off Schedule / Masa depot), hand-drawn shop boards, Ch2 bond M1 (`c2_goda`) and M2 at Masa's shutter, Sync Break skipping the rest of the enemy line, Genji "Evolve moves" / "Learn a basic", eating-games bag-use close, NG+ carry whitelist, Ch2 portraits / gang looks / idle sheets, Gray Coats at the shrine, silent Four Corners beacon, and the mid-street ellipsis drop.
+
+Open issues / next:
+- Seal 3 (Jin's turf) waits until after this release so Erik can weigh in on the building designs first.
+- Ch2 bond M3–M5 are reserved (ids / Journal / PAY) but the scenes are not written yet.
+- In tight garden frames Aoi can stand just in front of pot gp8 (draw order, not a gameplay bug).
+
+New rules (Erik, 2026-11-26): shops and herbs restock only after a quest or side quest, never after a knockout; no new bag-heal items (healing is restaurants + crafting); material shops price tape/gauze like food of equal healing value; mugwort stays ¥1; keep the clinic's yellow sunlight pool; remove only the garden tag box.
+
 ### 2026-11-26 — executor (Grok Bot) — v6.5.63 GGD-49 shop and healing rules (not published)
 Erik’s shop / healing rules. FFF_BUILD was not bumped.
 
