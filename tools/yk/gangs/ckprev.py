@@ -1,7 +1,9 @@
 from PIL import Image, ImageDraw
 ROWS=[('Club Hostess (ck_hostess) + coat check','ckHostess','/workspace/ffd-ports/portraits/ckhostess_neutral.webp'),
-      ('Club Dealer (ck_dealer) = bartender too','ckDealer','/workspace/ffd-ports/portraits/ckdealer_neutral.webp'),
-      ('Chip-cage cashier: PREVIEW, no portrait yet','ckCashier',None)]
+      ('Club Dealer (ck_dealer) + Bartender (ck_bartender, own figure behind the bar): same portrait ckdealer_neutral, armband + fox pin','ckDealer','/workspace/ffd-ports/portraits/ckdealer_neutral.webp'),
+      ('Chip-cage cashier (ck_cashier): black bob + gold hairpin, white shirt, black waistcoat, fox pin, dark red tie','ckCashier','/workspace/v6560-review/portraits/ckcashier_neutral.webp')]
+import sys
+OUT=sys.argv[1] if len(sys.argv)>1 else '/workspace/v6560-review/gangs/club_staff_preview.png'
 BG=(52,48,58,255); rows=[]
 for title,s,port in ROWS:
   parts=[]
@@ -18,4 +20,4 @@ for title,s,port in ROWS:
   ImageDraw.Draw(o).text((12,8),title,fill=(240,230,210,255)); rows.append(o)
 W=max(r.width for r in rows); O=Image.new('RGBA',(W,sum(r.height for r in rows)),BG); y=0
 for r in rows: O.alpha_composite(r,(0,y)); y+=r.height
-O.convert('RGB').save('/workspace/v6560-review/gangs/club_staff_preview.png'); print(O.size)
+O.convert('RGB').save(OUT); print(O.size)
