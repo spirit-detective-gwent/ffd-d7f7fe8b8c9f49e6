@@ -45408,6 +45408,71 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     shellWalls(g, 200, W2, H2);
   };
 
+  /* ---------------- 3. Hotel Chuo (lobby, 7F hall) ---------------- */
+  function marble(g, x, y, w, h, c1, c2, vein) { g.fillStyle = c1; g.fillRect(x, y, w, h); for (var j = y, b = 0; j < y + h; j += 80, b++) for (var i = x, a = 0; i < x + w; i += 80, a++) { g.fillStyle = (a + b) % 2 ? c2 : c1; g.fillRect(i, j, 80, 80); }
+    g.strokeStyle = vein; g.lineWidth = 1.5; for (var k = 0; k < 40; k++) { var sx = x + (k * 131) % w, sy = y + (k * 71) % h; g.beginPath(); g.moveTo(sx, sy); g.bezierCurveTo(sx + 20, sy + 10, sx + 30, sy - 12, sx + 60, sy + 6); g.stroke(); }
+    g.strokeStyle = 'rgba(216,176,96,.45)'; g.lineWidth = 2; for (var q = x; q <= x + w; q += 160) { g.beginPath(); g.moveTo(q, y); g.lineTo(q, y + h); g.stroke(); } }
+  function spotCone(g, x, y, len, col, spread) { var gr = g.createLinearGradient(x, y, x, y + len); gr.addColorStop(0, 'rgba(' + col + ',.38)'); gr.addColorStop(1, 'rgba(' + col + ',0)'); g.fillStyle = gr; g.beginPath(); g.moveTo(x - 8, y); g.lineTo(x + 8, y); g.lineTo(x + spread, y + len); g.lineTo(x - spread, y + len); g.closePath(); g.fill(); }
+  function roomTile(g, x, y, w, h, theme, lit, num) { var T = { rose: ['#f2a0c0', '#7a2a4a'], sea: ['#7fd8f0', '#1a4a6a'], gold: ['#f0d080', '#6a4a1a'], violet: ['#c8a0f0', '#3a2a6a'], mint: ['#a0f0c8', '#1a5a4a'], night: ['#8090f0', '#1a1a4a'] }[theme] || ['#ddd', '#444'];
+    box(g, x, y, w, h, '#0c0a10', 3, 4); var lg = g.createLinearGradient(x, y, x, y + h); lg.addColorStop(0, T[0]); lg.addColorStop(1, T[1]); g.globalAlpha = lit ? 1 : 0.28; box(g, x + 4, y + 4, w - 8, h - 22, lg, 0, 2);
+    box(g, x + w * 0.2, y + h * 0.42, w * 0.6, h * 0.26, '#f6f0f8', 1.5, 3); box(g, x + w * 0.2, y + h * 0.38, w * 0.6, h * 0.08, shade(T[0], -0.2), 1.2, 2); ell(g, x + w * 0.32, y + h * 0.46, w * 0.08, h * 0.04, '#fff', 0); ell(g, x + w * 0.68, y + h * 0.46, w * 0.08, h * 0.04, '#fff', 0);
+    g.globalAlpha = 1; tx(g, num, x + w / 2, y + h - 9, 10, lit ? '#ffe9a0' : '#6a6070', 900);
+    if (lit) glowAt(g, x + w / 2, y + h / 2, w, 'rgba(' + (theme === 'sea' ? '127,216,240' : theme === 'gold' ? '240,208,128' : '242,160,192') + ',.16)'); }
+  P6.hchuo = function (g, st) {
+    marble(g, 90, 230, RW - 180, 620, '#1e1a24', '#24202c', 'rgba(255,255,255,.07)');
+    box(g, 520, 380, 240, 470, '#4a1a3a', 0); for (var r = 400; r < 850; r += 40) { g.fillStyle = 'rgba(255,160,210,.12)'; g.fillRect(526, r, 228, 3); } g.strokeStyle = '#d8b060'; g.lineWidth = 3; g.strokeRect(520, 380, 240, 470);
+    /* back wall: violet slats, nightclub light */
+    var wg = g.createLinearGradient(0, 0, 0, 230); wg.addColorStop(0, '#120a1c'); wg.addColorStop(1, '#2a1438'); g.fillStyle = wg; g.fillRect(90, 0, RW - 180, 230);
+    for (var i = 96; i < RW - 90; i += 22) { g.fillStyle = 'rgba(255,255,255,.035)'; g.fillRect(i, 0, 10, 220); }
+    g.fillStyle = '#d8b060'; g.fillRect(90, 220, RW - 180, 6);
+    neonTx(g, 'Hotel Chuo', 640, 50, 34, '#ffd0f0', '#ff4ab0', '"Brush Script MT","Segoe Script",cursive'); tx(g, '\u30db\u30c6\u30eb \u4e2d\u592e', 640, 92, 15, '#f0d080', 900);
+    /* the glowing room-photo panel (left) */
+    box(g, 110, 26, 330, 196, '#08060c', 4, 8); tx(g, 'ROOMS \u00b7 \u304a\u90e8\u5c4b', 275, 42, 11, '#f0d080', 900);
+    var TH = ['rose', 'sea', 'gold', 'violet', 'mint', 'night', 'rose', 'gold'], LIT = [1, 1, 0, 1, 0, 1, 1, 0];
+    for (var t = 0; t < 8; t++) roomTile(g, 122 + (t % 4) * 78, 54 + ((t / 4) | 0) * 82, 72, 76, TH[t], LIT[t], ['301', '302', '303', '305', '501', '502', '503', '505'][t]);
+    glowAt(g, 275, 130, 220, 'rgba(255,170,220,.16)');
+    box(g, 168, 236, 214, 26, '#2a1a32', 3, 8); tx(g, 'REST 2h \u00a540  \u00b7  STAY \u00a5120', 275, 249, 12, '#ffe9a0', 900);
+    /* the frosted-glass desk (centre) */
+    box(g, 556, 238, 244, 92, '#2a1a24', 4, 6); g.fillStyle = '#d8b060'; g.fillRect(556, 238, 244, 6);
+    frosted(g, 566, 120, 224, 114, 'rgba(230,200,240,.55)'); box(g, 640, 210, 76, 24, '#1a0e14', 2, 12); /* the half-moon slot */
+    ell(g, 742, 262, 12, 7, '#d8b060', 2); box(g, 739, 252, 6, 6, '#d8b060', 1.5); /* bell */
+    box(g, 580, 252, 40, 26, '#f2ecd8', 2, 2); g.fillStyle = INK; g.fillRect(586, 260, 28, 2); g.fillRect(586, 266, 20, 2);
+    tx(g, 'FRONT', 678, 290, 13, '#f0d080', 900);
+    /* the elevator (right): brass doors, floor dial */
+    box(g, 996, 40, 168, 190, '#3a2a14', 4, 4); box(g, 1006, 70, 72, 158, '#c8a050', 3, 2); box(g, 1082, 70, 72, 158, '#c8a050', 3, 2);
+    g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(1012, 76, 8, 140); g.fillRect(1088, 76, 8, 140); g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(1080, 70); g.lineTo(1080, 228); g.stroke();
+    box(g, 1040, 44, 80, 22, '#0c0a08', 2, 10); tx(g, '\u25b2 7F', 1080, 55, 12, '#ffb040', 900); ell(g, 1176, 150, 7, 7, '#ffd860', 2); glowAt(g, 1176, 150, 20, 'rgba(255,216,96,.5)');
+    /* lounge: velvet sofa + low table + tall plants */
+    box(g, 160, 600, 220, 30, '#5a1a40', 3, 10); box(g, 160, 626, 220, 54, '#7a2a5a', 3, 10); box(g, 200, 700, 140, 40, '#1a1418', 3, 6); ell(g, 270, 718, 14, 8, 'rgba(240,220,140,.7)', 1.5);
+    box(g, 900, 600, 220, 30, '#5a1a40', 3, 10); box(g, 900, 626, 220, 54, '#7a2a5a', 3, 10);
+    plant(g, 470, 300, 1.0); plant(g, 860, 300, 1.0); plant(g, 140, 800, 0.9); plant(g, 1140, 800, 0.9);
+    /* nightclub lighting: coloured cones from the ceiling */
+    spotCone(g, 300, 0, 520, '255,74,176', 90); spotCone(g, 640, 0, 560, '160,120,255', 110); spotCone(g, 980, 0, 520, '74,200,255', 90);
+    glowAt(g, 640, 420, 380, 'rgba(255,140,210,.10)');
+    shellWalls(g, 230);
+  };
+  P6.hhall = function (g, st) {
+    var cleared = st && st.j && ['hotel', 'club', 'izak', 'met', 'won', 'done'].indexOf(st.j.st) >= 0;
+    g.fillStyle = '#0e0a14'; g.fillRect(90, 230, RW - 180, 620);
+    /* the corridor runner, neon edged */
+    box(g, 90, 330, RW - 180, 300, '#3a1430', 0); for (var i = 100; i < RW - 90; i += 60) { g.fillStyle = 'rgba(255,90,200,.10)'; g.beginPath(); g.moveTo(i, 340); g.lineTo(i + 30, 480); g.lineTo(i, 620); g.lineTo(i - 30, 480); g.closePath(); g.fill(); }
+    neonLine(g, [[90, 330], [RW - 90, 330]], '#ff4ab0', 4); neonLine(g, [[90, 630], [RW - 90, 630]], '#4ac8ff', 4);
+    var wg = g.createLinearGradient(0, 0, 0, 230); wg.addColorStop(0, '#0a0610'); wg.addColorStop(1, '#22102e'); g.fillStyle = wg; g.fillRect(90, 0, RW - 180, 230); g.fillStyle = '#d8b060'; g.fillRect(90, 222, RW - 180, 5);
+    [[200, '701'], [400, '702'], [600, '703'], [800, '705'], [1050, '707']].forEach(function (d, k) { var x = d[0], last = d[1] === '707';
+      box(g, x - 56, 40, 112, 186, last ? '#3a1a10' : '#2a1a2a', 4, 4); box(g, x - 48, 48, 96, 178, last ? '#5a2a18' : '#3a2238', 3, 2); ell(g, x + 34, 140, 6, 6, '#d8b060', 2);
+      box(g, x - 30, 14, 60, 24, '#0c0a0e', 2, 6); neonTx(g, d[1], x, 26, 16, '#fff', last ? '#ffb040' : '#c87aff');
+      if (last && !cleared) { g.fillStyle = 'rgba(255,200,120,.35)'; g.beginPath(); g.moveTo(x - 48, 226); g.lineTo(x + 20, 226); g.lineTo(x + 110, 420); g.lineTo(x - 90, 420); g.closePath(); g.fill(); box(g, x - 48, 48, 30, 178, '#1a0a06', 2, 2); }
+      glowAt(g, x, 26, 60, last ? 'rgba(255,176,64,.4)' : 'rgba(200,122,255,.3)'); });
+    tx(g, '7F', 1180, 120, 40, '#f0d080', 900); tx(g, '\u2192 701-707', 1180, 160, 11, '#f0d080', 900);
+    /* room-service cart and a mirror bench */
+    box(g, 300, 660, 120, 60, '#c8ccd4', 3, 4); box(g, 312, 646, 40, 16, '#f2ecd8', 2, 3); ell(g, 380, 652, 16, 9, '#c8ccd4', 2); [[310, 724], [410, 724]].forEach(function (w) { ell(g, w[0], w[1], 8, 8, '#2a2a30', 2); });
+    box(g, 820, 680, 200, 40, '#5a1a40', 3, 10); frosted(g, 840, 236, 160, 70, 'rgba(255,200,240,.4)');
+    /* the elevator (bottom left of the corridor = the room exit) */
+    box(g, 560, 780, 160, 70, '#3a2a14', 3, 4); tx(g, 'ELEVATOR', 640, 815, 12, '#f0d080', 900);
+    for (var c = 0; c < 6; c++) spotCone(g, 160 + c * 200, 0, 400, c % 2 ? '74,200,255' : '255,74,176', 60);
+    shellWalls(g, 230);
+  };
+
   S2P.p6Paint = function (k, g, st) { var fn = P6[k]; if (!fn) return false; g.save(); try { fn(g, st || {}); } finally { g.restore(); } return true; };
   S2P.p6Size = function (k) { var D = P6[k + '_size']; return D || [RW, RH]; };
   S2P.p6H = { INK: INK, RW: RW, RH: RH, box: box, ell: ell, tx: tx, jp: jp, vjp: vjp, glowAt: glowAt, neonTx: neonTx, neonLine: neonLine, plankWall: plankWall, boards: boards, tiles: tiles, carpet: carpet, shellWalls: shellWalls, stool: stool, bowlS: bowlS, plant: plant, shade: shade, lantern: lantern, steamW: steamW, chair: chair, sofaU: sofaU, frosted: frosted, arcadeCab: arcadeCab, crane: crane, medalPusher: medalPusher };
@@ -45514,6 +45579,20 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     glowAt(x, 360, 120, 300, 'rgba(255,200,90,.22)');
     C.floor(x, { far: '#3a2a10', near: '#140e06', kind: 'tile', line: 'rgba(216,176,96,.25)', n: 8, rows: 10 });
     C.vign(x, 0.5); };
+  B.hhall = function (x) { var C = hb(), WD = 720, H0 = C.H0;
+    var wg = x.createLinearGradient(0, 0, 0, H0); wg.addColorStop(0, '#0a0610'); wg.addColorStop(1, '#2a1238'); x.fillStyle = wg; x.fillRect(0, 0, WD, H0);
+    /* a corridor running away: doors converge toward a lit 707 at the end */
+    x.fillStyle = '#140a1a'; x.beginPath(); x.moveTo(0, 0); x.lineTo(290, 90); x.lineTo(290, H0 - 120); x.lineTo(0, H0); x.closePath(); x.fill();
+    x.beginPath(); x.moveTo(WD, 0); x.lineTo(430, 90); x.lineTo(430, H0 - 120); x.lineTo(WD, H0); x.closePath(); x.fill();
+    box(x, 290, 90, 140, H0 - 210, '#3a1a10', 3, 0); x.fillStyle = 'rgba(255,200,120,.55)'; x.fillRect(300, 100, 50, H0 - 230); glowAt(x, 330, 200, 160, 'rgba(255,190,110,.35)');
+    neonTx(x, '707', 360, 70, 22, '#fff', '#ffb040');
+    [[0.15, '701'], [0.45, '703'], [0.72, '705']].forEach(function (d) { var t = d[0], lx = 290 * t, ty = 90 * t, h = (H0 - 120 - 90) * t + (H0) * (1 - t);
+      var w = 60 * (1 - t) + 18; box(x, lx + 6, ty + 40, w, h * 0.5, '#3a2238', 2.5, 2); box(x, WD - lx - 6 - w, ty + 40, w, h * 0.5, '#3a2238', 2.5, 2);
+      tx(x, d[1], lx + 6 + w / 2, ty + 30, 12 * (1 - t) + 8, '#c87aff', 900); });
+    neonLine(x, [[0, H0 - 10], [290, H0 - 120]], '#ff4ab0', 5); neonLine(x, [[WD, H0 - 10], [430, H0 - 120]], '#4ac8ff', 5);
+    neonLine(x, [[0, 6], [290, 92]], '#c87aff', 3); neonLine(x, [[WD, 6], [430, 92]], '#c87aff', 3);
+    C.floor(x, { far: '#4a1838', near: '#1a0814', kind: 'tile', line: 'rgba(255,90,200,.22)', n: 8, rows: 10 });
+    C.vign(x, 0.55); };
   S2P.p6Battle = function (k, x) { var fn = B[k]; var C = hb(); if (!fn || !C) { x.fillStyle = '#1a1410'; x.fillRect(0, 0, 720, 1280); return; } x.save(); try { fn(x); } finally { x.restore(); } };
   S2P.p6B = B;
 })(typeof window !== 'undefined' ? window : this);
@@ -49506,8 +49585,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
         if (!met()) return menu0.apply(this, arguments);
         var S = cyc(), full = SAVE.hp >= (typeof MAXHP !== 'undefined' ? MAXHP : 55), tea = typeof C2_TEA !== 'undefined' ? C2_TEA : 26;
         var poor = (SAVE.items | 0) < tea, m = S.mugLeft | 0;
-        var b = [[full ? 'Full Heal Tea · ¥' + tea + ' (HP full)' : 'Full Heal Tea · ¥' + tea + (poor ? ' (need ¥' + tea + ')' : ''), function () { c2Heal(tea); }, 'hot', full || poor],
-          ['Seeds · ' + m + '/' + (typeof C2_MUG !== 'undefined' ? C2_MUG : 3) + ' packets', function () { setTimeout(c2MugShop, 0); }],
+        /* GGD-51: the Full Heal Tea is gone (full rests moved to the hotels: Hotel Chuo / Kitsune Hotel, ¥40 once per job). Seeds and herbs stay. */
+        var b = [['Seeds · ' + m + '/' + (typeof C2_MUG !== 'undefined' ? C2_MUG : 3) + ' packets', function () { setTimeout(c2MugShop, 0); }],
           ['Later', null]];
         var say = (typeof C2_TEA_SAY !== 'undefined' ? C2_TEA_SAY[(S.tsi = ((S.tsi | 0) + 1)) % C2_TEA_SAY.length] : 'Sit. Drink.');
         dialog(ptFace('tsukikage', 'Dr. Tsukikage', IMG.tsukikage_fig) +
@@ -50391,6 +50470,146 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   ARRIVE.kara = karaArrive; ARRIVE.karaV = vipArrive;
   POP.push(popKara);
   PIN.ramen = function () { return { room: 'town', x: TOWN_DOORS.kara.at[0], y: TOWN_DOORS.kara.at[1] - 60, lab: 'Karaoke', loc: 'High Score \u00b7 Karaoke Kitsune, booth 4' }; };
+
+  /* ---------------- 3. Hotel Chuo (lobby, 7F) + the ¥40 hotel rest ---------------- */
+  try {
+    alias('j6_dealer', 'c2_suit', ((C2K && C2K.c2_suit) || 1.15) * 1.1, 'Ogata', 'c2suit');
+    alias('j6_hsuit', 'c2_suit', (C2K && C2K.c2_suit) || 1.15, 'Syndicate Suit', 'c2suit');
+    if (typeof CHAR_INTRO !== 'undefined' && !CHAR_INTRO.j6_dealer) CHAR_INTRO.j6_dealer = { kind: 'mgs', name: 'Ogata', sub: 'Syndicate Closer', tag: 'He signs the strip over to Jin.', who: 'c2suit', mood: 'calm' };
+  } catch (eH) { ev('world:s2p6:err:alias3:' + (eH && eH.message)); }
+  var REST_PRICE = P6.REST_PRICE = 40;
+  roomDef('hchuo', 'Hotel Chuo \u00b7 \u30db\u30c6\u30eb\u4e2d\u592e', 'ck_surf', {
+    block: [[556, 238, 800, 330], [160, 600, 380, 680], [900, 600, 1120, 680], [200, 700, 340, 740], [452, 270, 488, 304], [842, 270, 878, 304], [122, 770, 158, 804], [1122, 770, 1158, 804]],
+    spots: [{ id: 'j6_h_panel', r: [110, 26, 440, 262], at: [275, 320], face: 3, lab: 'Rooms' },
+      { id: 'j6_h_desk', r: [556, 238, 800, 330], at: [678, 380], face: 3, lab: 'Front' },
+      { id: 'j6_h_lift', r: [996, 40, 1164, 236], at: [1080, 300], face: 3, lab: 'Lift' }] });
+  roomDef('hhall', 'Hotel Chuo \u00b7 7F', 'ck_backroom', {
+    block: [[300, 646, 420, 732], [820, 680, 1020, 720]],
+    spots: [{ id: 'j6_h_707', r: [994, 40, 1106, 226], at: [1050, 290], face: 3, lab: '707' },
+      { id: 'j6_h_door', r: [544, 40, 656, 226], at: [600, 290], face: 3, lab: '703' }] });
+  P6.SURF.hchuo = 'stone'; P6.SURF.hhall = 'wood';
+  AMB.hchuo = { top: 'rgba(255,120,210,.22)', bot: 'rgba(40,20,80,.30)', rain: 0, motes: 10, lamps: [[100, 120, '255,74,176', 70, 0.28, 'neon'], [290, 120, '74,200,255', 70, 0.24, 'neon']] };
+  AMB.hhall = { top: 'rgba(200,120,255,.24)', bot: 'rgba(20,10,40,.34)', rain: 0, motes: 6, lamps: [[195, 120, '255,176,64', 60, 0.26, 'lamp']] };
+  P6.PKEY.hhall = function () { return at('hotel') ? 'clear' : 'deal'; };
+  P6.OPEN.hchuo = function () { return true; };
+  P6.BT.hhall = { name: 'Hotel Chuo \u00b7 7F', lights: [[180, 100, '255,74,176', 90, 0.3, 'neon'], [540, 100, '74,200,255', 90, 0.3, 'neon']] };
+  P6.innerBack.hhall = function () { lift('hchuo', [1080, 300, 0], '\u25bc 1F'); };
+
+  VO.hIn = V3([['', '<p class="dim">Velvet, brass and slow purple light. A wall of glowing room photos. Nobody at the desk but a pair of hands behind frosted glass.</p>']], {
+    fierce: [['ryo', 'Seventh floor. Let\u2019s go.']],
+    strategic: [['aoi', 'A love hotel. No faces, no names. Good place to sign something.']],
+    balanced: [['aoi', 'It\u2019s\u2026 nicer than I expected.'], ['ryo', 'Don\u2019t look at me like that.']]
+  }, []);
+  VO.hDesk = [['', '<p class="dim">A voice behind the glass: \u201cRest is \u00a5' + REST_PRICE + ', two hours. Stay is by the night. Key comes through the slot.\u201d</p>']];
+  VO.hPanel = [['', '<p class="dim">Lit photos are free rooms. 301 is all sea blue. 503 has a pink bathtub shaped like a shell. 7F isn\u2019t on the board at all.</p>']];
+  VO.hLift0 = [['', '<p class="dim">The lift needs a room key to go up. You have no reason to be upstairs.</p>']];
+  VO.hDoor = [['', '<p class="dim">Do Not Disturb signs on every handle. Somebody is laughing behind 703.</p>']];
+  VO.hHall = V3([['', '<p class="dim">Seventh floor. Neon strips along the carpet. Two Suits outside 707, the door open on a table of paper.</p>'],
+    ['j6_hsuit', 'Wrong floor, kids. Take the stairs. All of them.']], {
+    fierce: [['ryo', 'We came for the man inside.']],
+    strategic: [['aoi', 'Two at the door, one at the table. Door first.']],
+    balanced: [['ryo', 'Sorry. We\u2019re with room service.']]
+  }, []);
+  VO.hMid = V3([['j6_dealer', 'All that noise in my hallway. The strip owners are crying in there, you know. Crying and signing.']], {
+    fierce: [['ryo', 'Not tonight.']],
+    strategic: [['aoi', 'Ogata. The closer. Nobody signs without you watching.']],
+    balanced: [['ryo', 'Let them go home.']]
+  }, [['j6_dealer', 'Jin\u2019s rates are very fair. Let me explain them to your teeth.']]);
+  VO.hWon = V3([['j6_dealer', '\u2026Fine. Fine! Take the paper.'], ['', '<p class="dim">The strip owners run past you for the lift. The deal sheets are still on the table, every one stamped with a red fox: Club Kitsune.</p>']], {
+    fierce: [['ryo', 'Club Kitsune. Tetsu\u2019s place.']],
+    strategic: [['aoi', 'The club pays the Suits, the Suits squeeze the strip. Someone above the club gets the cut.']],
+    balanced: [['aoi', 'The club\u2019s stamp. So the money goes through the back office.']]
+  }, [['j6_dealer', 'Go ask the club where the money goes. See who answers.']]);
+  VO.hDone = [['', '<p class="dim">707 is empty. Somebody already changed the sheets.</p>']];
+
+  var H_CAST = { a: null, b: null, o: null };
+  function hallLive() { return qOn() && stg() === 'kara'; }
+  function popHotel() {
+    var k = room();
+    if (k !== 'hhall') { ['a', 'b', 'o'].forEach(function (q) { if (H_CAST[q]) { kill(H_CAST[q]); H_CAST[q] = null; } }); return; }
+    if (!hallLive()) return;
+    function alive(s) { return s && s.el && s.el.parentNode; }
+    if (!J().h1) { if (!alive(H_CAST.a)) H_CAST.a = npc('j6_hsuit', 960, 330, Math.PI); if (!alive(H_CAST.b)) H_CAST.b = npc('j6_hsuit', 1140, 340, 0); }
+    if (!alive(H_CAST.o)) { H_CAST.o = npc('j6_dealer', 1050, 250, Math.PI / 2); try { waddle(H_CAST.o, 0, Math.PI / 2); } catch (e) {} }
+  }
+  P6.H_CAST = H_CAST; P6.popHotel = popHotel;
+  function ding(up) { try { var X = root.FFF_S2ARC; var c = X && X.actx && X.actx(); if (c && X.tone) { var t = c.currentTime + 0.02; X.tone(up ? 784 : 659, t, 0.35, 'sine', 0.12); X.tone(up ? 1047 : 523, t + 0.18, 0.5, 'sine', 0.12); } } catch (e) {} }
+  function lift(k, pos, lab) { if (busy()) return; ding(lab.indexOf('\u25b2') === 0); toastS(lab); enterRoom(k, pos); }
+  P6.lift = lift;
+  function hotelArrive() { var j = J(); if (j.hIn) return; whenFree(function () { if (room() !== 'hchuo') return; lockIn(1); talk(pv(VO.hIn), function () { j.hIn = 1; sv(); lockIn(0); }); }); }
+  function hallArrive() {
+    if (!hallLive()) return;
+    whenFree(function () {
+      if (room() !== 'hhall' || !hallLive()) return;
+      if (!J().h1) { lockIn(1); talk(pv(VO.hHall), function () { startFight('hhall1', ['c2_suit', 'c2_suit'], { bt: 'hhall', ctx: { flv: 7 } }); }); return; }
+      dealer();
+    });
+  }
+  function dealer() {
+    lockIn(1);
+    var lines = pv(VO.hMid);
+    function go() { lockIn(0); startFight('hhall2', ['c2_suit'], { bt: 'hhall', ctx: { toughHp: 48, flv: 7, j6nm: 'Ogata' } }); }
+    try { if (typeof bossEnt === 'function' && H_CAST.o) { bossEnt('j6_dealer', lines, go, { spr: H_CAST.o }); return; } } catch (eB) { ev('world:s2p6:err:bent3:' + (eB && eB.message)); }
+    talk(lines, go);
+  }
+  FIGHT.hhall1 = {
+    win: function () { J().h1 = 1; sv(); ['a', 'b'].forEach(function (q) { if (H_CAST[q]) { kill(H_CAST[q]); H_CAST[q] = null; } }); if (room() === 'hhall' && hallLive()) dealer(); },
+    lose: function () { }
+  };
+  FIGHT.hhall2 = {
+    win: function () { lockIn(1); talk(pv(VO.hWon), function () { lockIn(0); if (H_CAST.o) { kill(H_CAST.o); H_CAST.o = null; } setStg('hotel'); qStep(3); sv(); P6.resetPaint('hhall'); paintRoom(); toastS('Journal: Club Kitsune, the back office.'); }); },
+    lose: function () { }
+  };
+
+  /* the hotel rest: full HP + SP for both, ¥40, once per stock cycle (restocks when a quest turns in) */
+  function restS() { return c2Cyc(); }
+  function restLeft() { var S0 = restS(); return S0.rest6 == null || (S0.rest6 | 0) !== (S0.cyc | 0); }
+  P6.restLeft = restLeft;
+  function restFull() { var o = (typeof other === 'function' && SAVE.act) ? other(SAVE.act) : null, pc = o && SAVE.chars ? SAVE.chars[o] : null;
+    return (SAVE.hp | 0) >= MAXHP && (SAVE.sp | 0) >= SPMAX && (!pc || ((pc.sp == null || (pc.sp | 0) >= SPMAX) && (pc.hp == null || (pc.hp | 0) >= MAXHP))); }
+  function hotelRest(where) {
+    if (busy()) return true;
+    var left = restLeft(), poor = (SAVE.items | 0) < REST_PRICE, full = restFull();
+    var why = !left ? ' (booked up \u00b7 after your next job)' : full ? ' (you\u2019re rested)' : poor ? ' (need \u00a5' + REST_PRICE + ')' : '';
+    var q = where === 'kh' ? 'Ms. Kanda slides a key across: \u201cA real bed, two hours. \u00a5' + REST_PRICE + '. Once a job, for you two.\u201d' : 'Through the slot: \u201cRest, two hours, \u00a5' + REST_PRICE + '. One room for the pair of you.\u201d';
+    try { W.path = []; if (W.ryo) W.ryo.v = 0; } catch (e) {}
+    dialog('<div class="tw"><p class="q">' + q + '</p><p class="dim">Full HP and SP for Ryo and Aoi.</p></div>',
+      [['Rest \u00b7 \u00a5' + REST_PRICE + why, function () { doRest(where); }, 'hot', !left || full || poor], ['Later', null]]);
+    return true;
+  }
+  function doRest(where) {
+    if (!restLeft() || (SAVE.items | 0) < REST_PRICE) return;
+    var S0 = restS(); S0.rest6 = S0.cyc | 0; SAVE.items = Math.max(0, (SAVE.items | 0) - REST_PRICE); try { save(); hud(); bumpItems(); } catch (e) {}
+    ev('world:s2p6:rest:' + where + ':' + REST_PRICE);
+    var h0 = SAVE.hp | 0;
+    W.busy = true; W.path = []; var o = $('#wrest'), rs = 2.8;
+    function fin() {
+      SAVE.hp = MAXHP; SAVE.sp = SPMAX; try { var oc = other(SAVE.act); SAVE.chars = SAVE.chars || {}; var pc = SAVE.chars[oc] || (SAVE.chars[oc] = {}); pc.sp = SPMAX; if (pc.hp != null) pc.hp = MAXHP; } catch (eO) {}
+      save(); try { hud(); } catch (e) {} W.busy = false; W.cool = Math.max(W.cool || 0, 2);
+      try { AU.play('pl_heal'); } catch (e1) {} try { if (typeof vitFlo === 'function') vitFlo('hp', MAXHP - h0); } catch (e2) {}
+      ev('world:s2p6:rest:done'); later(500, function () { toastS('Rested. HP and SP full for both.'); });
+    }
+    if (!o) { fin(); return; }
+    o.style.setProperty('--rt', rs + 's'); o.className = 'on act'; var b = o.querySelector('b'); var b0 = b ? b.innerHTML : '';
+    if (b) b.textContent = where === 'kh' ? 'Resting at the Kitsune Hotel\u2026' : 'Resting at Hotel Chuo\u2026';
+    if (!o.querySelector('.j6moon')) o.insertAdjacentHTML('afterbegin', '<div class="j6moon c2cup" aria-hidden="true"><svg viewBox="0 0 120 90"><path d="M70 10a34 34 0 1 0 30 50a28 28 0 1 1-30-50z" fill="#ffe9a0" stroke="#14110d" stroke-width="4"/><text x="18" y="30" font-size="18" font-weight="900" fill="#c8a0f0">z</text><text x="30" y="16" font-size="13" font-weight="900" fill="#c8a0f0">z</text></svg></div>');
+    try { AU.play('heal', { gain: 0.4 }); } catch (eA) {}
+    var done = function () { o.className = ''; var m = o.querySelector('.j6moon'); if (m) m.remove(); if (b) b.innerHTML = b0; fin(); };
+    if (typeof restFinishArm === 'function') restFinishArm(o, (root.FFF_REST_MS || rs * 1000), done); else later(root.FFF_REST_MS || rs * 1000, done);
+  }
+  P6.hotelRest = hotelRest; P6.doRest = doRest;
+  /* the Kitsune Hotel desk gets the same rest (all Chapter 2 runs; the herbalist's Full Heal Tea is gone) */
+  try { var KH = INT[C2R.hotel] || INT.c2_nq_hotel; if (KH && KH.spots && !KH.spots.some(function (q) { return q.id === 'j6_rest_kh'; })) KH.spots.push({ id: 'j6_rest_kh', r: [740, 250, 840, 362], at: [790, 400], face: 0, lab: 'Rest \u00a5' + REST_PRICE }); } catch (eKH) { ev('world:s2p6:err:kh:' + (eKH && eKH.message)); }
+
+  ACT.j6_rest_kh = function () { return hotelRest('kh'); };
+  ACT.j6_h_desk = function () { if (busy()) return true; lockIn(1); talk(VO.hDesk, function () { lockIn(0); later(100, function () { hotelRest('hc'); }); }); return true; };
+  ACT.j6_h_panel = function () { if (busy()) return true; lockIn(1); talk(VO.hPanel, function () { lockIn(0); }); return true; };
+  ACT.j6_h_lift = function () { if (busy()) return true; if (at('kara')) { lift('hhall', [640, 760, 0], '\u25b2 7F'); return true; } lockIn(1); talk(VO.hLift0, function () { lockIn(0); }); return true; };
+  ACT.j6_h_door = function () { if (busy()) return true; lockIn(1); talk(VO.hDoor, function () { lockIn(0); }); return true; };
+  ACT.j6_h_707 = function () { if (busy()) return true; if (hallLive()) { hallArrive(); return true; } lockIn(1); talk(VO.hDone, function () { lockIn(0); }); return true; };
+  ARRIVE.hchuo = hotelArrive; ARRIVE.hhall = hallArrive;
+  POP.push(popHotel);
+  PIN.kara = function () { if (room() === 'hchuo') return { room: 'hchuo', x: 1080, y: 250, lab: 'Lift', loc: 'High Score \u00b7 Hotel Chuo, 7F' }; return { room: 'town', x: TOWN_DOORS.hchuo.at[0], y: TOWN_DOORS.hchuo.at[1] - 60, lab: 'Hotel Chuo', loc: 'High Score \u00b7 Hotel Chuo, 7F' }; };
 
   if (typeof c2Tags === 'function') {
     var tags0 = c2Tags;

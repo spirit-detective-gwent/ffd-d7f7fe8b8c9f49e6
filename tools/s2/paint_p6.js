@@ -190,6 +190,71 @@
     shellWalls(g, 200, W2, H2);
   };
 
+  /* ---------------- 3. Hotel Chuo (lobby, 7F hall) ---------------- */
+  function marble(g, x, y, w, h, c1, c2, vein) { g.fillStyle = c1; g.fillRect(x, y, w, h); for (var j = y, b = 0; j < y + h; j += 80, b++) for (var i = x, a = 0; i < x + w; i += 80, a++) { g.fillStyle = (a + b) % 2 ? c2 : c1; g.fillRect(i, j, 80, 80); }
+    g.strokeStyle = vein; g.lineWidth = 1.5; for (var k = 0; k < 40; k++) { var sx = x + (k * 131) % w, sy = y + (k * 71) % h; g.beginPath(); g.moveTo(sx, sy); g.bezierCurveTo(sx + 20, sy + 10, sx + 30, sy - 12, sx + 60, sy + 6); g.stroke(); }
+    g.strokeStyle = 'rgba(216,176,96,.45)'; g.lineWidth = 2; for (var q = x; q <= x + w; q += 160) { g.beginPath(); g.moveTo(q, y); g.lineTo(q, y + h); g.stroke(); } }
+  function spotCone(g, x, y, len, col, spread) { var gr = g.createLinearGradient(x, y, x, y + len); gr.addColorStop(0, 'rgba(' + col + ',.38)'); gr.addColorStop(1, 'rgba(' + col + ',0)'); g.fillStyle = gr; g.beginPath(); g.moveTo(x - 8, y); g.lineTo(x + 8, y); g.lineTo(x + spread, y + len); g.lineTo(x - spread, y + len); g.closePath(); g.fill(); }
+  function roomTile(g, x, y, w, h, theme, lit, num) { var T = { rose: ['#f2a0c0', '#7a2a4a'], sea: ['#7fd8f0', '#1a4a6a'], gold: ['#f0d080', '#6a4a1a'], violet: ['#c8a0f0', '#3a2a6a'], mint: ['#a0f0c8', '#1a5a4a'], night: ['#8090f0', '#1a1a4a'] }[theme] || ['#ddd', '#444'];
+    box(g, x, y, w, h, '#0c0a10', 3, 4); var lg = g.createLinearGradient(x, y, x, y + h); lg.addColorStop(0, T[0]); lg.addColorStop(1, T[1]); g.globalAlpha = lit ? 1 : 0.28; box(g, x + 4, y + 4, w - 8, h - 22, lg, 0, 2);
+    box(g, x + w * 0.2, y + h * 0.42, w * 0.6, h * 0.26, '#f6f0f8', 1.5, 3); box(g, x + w * 0.2, y + h * 0.38, w * 0.6, h * 0.08, shade(T[0], -0.2), 1.2, 2); ell(g, x + w * 0.32, y + h * 0.46, w * 0.08, h * 0.04, '#fff', 0); ell(g, x + w * 0.68, y + h * 0.46, w * 0.08, h * 0.04, '#fff', 0);
+    g.globalAlpha = 1; tx(g, num, x + w / 2, y + h - 9, 10, lit ? '#ffe9a0' : '#6a6070', 900);
+    if (lit) glowAt(g, x + w / 2, y + h / 2, w, 'rgba(' + (theme === 'sea' ? '127,216,240' : theme === 'gold' ? '240,208,128' : '242,160,192') + ',.16)'); }
+  P6.hchuo = function (g, st) {
+    marble(g, 90, 230, RW - 180, 620, '#1e1a24', '#24202c', 'rgba(255,255,255,.07)');
+    box(g, 520, 380, 240, 470, '#4a1a3a', 0); for (var r = 400; r < 850; r += 40) { g.fillStyle = 'rgba(255,160,210,.12)'; g.fillRect(526, r, 228, 3); } g.strokeStyle = '#d8b060'; g.lineWidth = 3; g.strokeRect(520, 380, 240, 470);
+    /* back wall: violet slats, nightclub light */
+    var wg = g.createLinearGradient(0, 0, 0, 230); wg.addColorStop(0, '#120a1c'); wg.addColorStop(1, '#2a1438'); g.fillStyle = wg; g.fillRect(90, 0, RW - 180, 230);
+    for (var i = 96; i < RW - 90; i += 22) { g.fillStyle = 'rgba(255,255,255,.035)'; g.fillRect(i, 0, 10, 220); }
+    g.fillStyle = '#d8b060'; g.fillRect(90, 220, RW - 180, 6);
+    neonTx(g, 'Hotel Chuo', 640, 50, 34, '#ffd0f0', '#ff4ab0', '"Brush Script MT","Segoe Script",cursive'); tx(g, '\u30db\u30c6\u30eb \u4e2d\u592e', 640, 92, 15, '#f0d080', 900);
+    /* the glowing room-photo panel (left) */
+    box(g, 110, 26, 330, 196, '#08060c', 4, 8); tx(g, 'ROOMS \u00b7 \u304a\u90e8\u5c4b', 275, 42, 11, '#f0d080', 900);
+    var TH = ['rose', 'sea', 'gold', 'violet', 'mint', 'night', 'rose', 'gold'], LIT = [1, 1, 0, 1, 0, 1, 1, 0];
+    for (var t = 0; t < 8; t++) roomTile(g, 122 + (t % 4) * 78, 54 + ((t / 4) | 0) * 82, 72, 76, TH[t], LIT[t], ['301', '302', '303', '305', '501', '502', '503', '505'][t]);
+    glowAt(g, 275, 130, 220, 'rgba(255,170,220,.16)');
+    box(g, 168, 236, 214, 26, '#2a1a32', 3, 8); tx(g, 'REST 2h \u00a540  \u00b7  STAY \u00a5120', 275, 249, 12, '#ffe9a0', 900);
+    /* the frosted-glass desk (centre) */
+    box(g, 556, 238, 244, 92, '#2a1a24', 4, 6); g.fillStyle = '#d8b060'; g.fillRect(556, 238, 244, 6);
+    frosted(g, 566, 120, 224, 114, 'rgba(230,200,240,.55)'); box(g, 640, 210, 76, 24, '#1a0e14', 2, 12); /* the half-moon slot */
+    ell(g, 742, 262, 12, 7, '#d8b060', 2); box(g, 739, 252, 6, 6, '#d8b060', 1.5); /* bell */
+    box(g, 580, 252, 40, 26, '#f2ecd8', 2, 2); g.fillStyle = INK; g.fillRect(586, 260, 28, 2); g.fillRect(586, 266, 20, 2);
+    tx(g, 'FRONT', 678, 290, 13, '#f0d080', 900);
+    /* the elevator (right): brass doors, floor dial */
+    box(g, 996, 40, 168, 190, '#3a2a14', 4, 4); box(g, 1006, 70, 72, 158, '#c8a050', 3, 2); box(g, 1082, 70, 72, 158, '#c8a050', 3, 2);
+    g.fillStyle = 'rgba(255,255,255,.35)'; g.fillRect(1012, 76, 8, 140); g.fillRect(1088, 76, 8, 140); g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(1080, 70); g.lineTo(1080, 228); g.stroke();
+    box(g, 1040, 44, 80, 22, '#0c0a08', 2, 10); tx(g, '\u25b2 7F', 1080, 55, 12, '#ffb040', 900); ell(g, 1176, 150, 7, 7, '#ffd860', 2); glowAt(g, 1176, 150, 20, 'rgba(255,216,96,.5)');
+    /* lounge: velvet sofa + low table + tall plants */
+    box(g, 160, 600, 220, 30, '#5a1a40', 3, 10); box(g, 160, 626, 220, 54, '#7a2a5a', 3, 10); box(g, 200, 700, 140, 40, '#1a1418', 3, 6); ell(g, 270, 718, 14, 8, 'rgba(240,220,140,.7)', 1.5);
+    box(g, 900, 600, 220, 30, '#5a1a40', 3, 10); box(g, 900, 626, 220, 54, '#7a2a5a', 3, 10);
+    plant(g, 470, 300, 1.0); plant(g, 860, 300, 1.0); plant(g, 140, 800, 0.9); plant(g, 1140, 800, 0.9);
+    /* nightclub lighting: coloured cones from the ceiling */
+    spotCone(g, 300, 0, 520, '255,74,176', 90); spotCone(g, 640, 0, 560, '160,120,255', 110); spotCone(g, 980, 0, 520, '74,200,255', 90);
+    glowAt(g, 640, 420, 380, 'rgba(255,140,210,.10)');
+    shellWalls(g, 230);
+  };
+  P6.hhall = function (g, st) {
+    var cleared = st && st.j && ['hotel', 'club', 'izak', 'met', 'won', 'done'].indexOf(st.j.st) >= 0;
+    g.fillStyle = '#0e0a14'; g.fillRect(90, 230, RW - 180, 620);
+    /* the corridor runner, neon edged */
+    box(g, 90, 330, RW - 180, 300, '#3a1430', 0); for (var i = 100; i < RW - 90; i += 60) { g.fillStyle = 'rgba(255,90,200,.10)'; g.beginPath(); g.moveTo(i, 340); g.lineTo(i + 30, 480); g.lineTo(i, 620); g.lineTo(i - 30, 480); g.closePath(); g.fill(); }
+    neonLine(g, [[90, 330], [RW - 90, 330]], '#ff4ab0', 4); neonLine(g, [[90, 630], [RW - 90, 630]], '#4ac8ff', 4);
+    var wg = g.createLinearGradient(0, 0, 0, 230); wg.addColorStop(0, '#0a0610'); wg.addColorStop(1, '#22102e'); g.fillStyle = wg; g.fillRect(90, 0, RW - 180, 230); g.fillStyle = '#d8b060'; g.fillRect(90, 222, RW - 180, 5);
+    [[200, '701'], [400, '702'], [600, '703'], [800, '705'], [1050, '707']].forEach(function (d, k) { var x = d[0], last = d[1] === '707';
+      box(g, x - 56, 40, 112, 186, last ? '#3a1a10' : '#2a1a2a', 4, 4); box(g, x - 48, 48, 96, 178, last ? '#5a2a18' : '#3a2238', 3, 2); ell(g, x + 34, 140, 6, 6, '#d8b060', 2);
+      box(g, x - 30, 14, 60, 24, '#0c0a0e', 2, 6); neonTx(g, d[1], x, 26, 16, '#fff', last ? '#ffb040' : '#c87aff');
+      if (last && !cleared) { g.fillStyle = 'rgba(255,200,120,.35)'; g.beginPath(); g.moveTo(x - 48, 226); g.lineTo(x + 20, 226); g.lineTo(x + 110, 420); g.lineTo(x - 90, 420); g.closePath(); g.fill(); box(g, x - 48, 48, 30, 178, '#1a0a06', 2, 2); }
+      glowAt(g, x, 26, 60, last ? 'rgba(255,176,64,.4)' : 'rgba(200,122,255,.3)'); });
+    tx(g, '7F', 1180, 120, 40, '#f0d080', 900); tx(g, '\u2192 701-707', 1180, 160, 11, '#f0d080', 900);
+    /* room-service cart and a mirror bench */
+    box(g, 300, 660, 120, 60, '#c8ccd4', 3, 4); box(g, 312, 646, 40, 16, '#f2ecd8', 2, 3); ell(g, 380, 652, 16, 9, '#c8ccd4', 2); [[310, 724], [410, 724]].forEach(function (w) { ell(g, w[0], w[1], 8, 8, '#2a2a30', 2); });
+    box(g, 820, 680, 200, 40, '#5a1a40', 3, 10); frosted(g, 840, 236, 160, 70, 'rgba(255,200,240,.4)');
+    /* the elevator (bottom left of the corridor = the room exit) */
+    box(g, 560, 780, 160, 70, '#3a2a14', 3, 4); tx(g, 'ELEVATOR', 640, 815, 12, '#f0d080', 900);
+    for (var c = 0; c < 6; c++) spotCone(g, 160 + c * 200, 0, 400, c % 2 ? '74,200,255' : '255,74,176', 60);
+    shellWalls(g, 230);
+  };
+
   S2P.p6Paint = function (k, g, st) { var fn = P6[k]; if (!fn) return false; g.save(); try { fn(g, st || {}); } finally { g.restore(); } return true; };
   S2P.p6Size = function (k) { var D = P6[k + '_size']; return D || [RW, RH]; };
   S2P.p6H = { INK: INK, RW: RW, RH: RH, box: box, ell: ell, tx: tx, jp: jp, vjp: vjp, glowAt: glowAt, neonTx: neonTx, neonLine: neonLine, plankWall: plankWall, boards: boards, tiles: tiles, carpet: carpet, shellWalls: shellWalls, stool: stool, bowlS: bowlS, plant: plant, shade: shade, lantern: lantern, steamW: steamW, chair: chair, sofaU: sofaU, frosted: frosted, arcadeCab: arcadeCab, crane: crane, medalPusher: medalPusher };

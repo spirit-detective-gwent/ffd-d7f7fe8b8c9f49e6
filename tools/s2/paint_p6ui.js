@@ -100,6 +100,20 @@
     glowAt(x, 360, 120, 300, 'rgba(255,200,90,.22)');
     C.floor(x, { far: '#3a2a10', near: '#140e06', kind: 'tile', line: 'rgba(216,176,96,.25)', n: 8, rows: 10 });
     C.vign(x, 0.5); };
+  B.hhall = function (x) { var C = hb(), WD = 720, H0 = C.H0;
+    var wg = x.createLinearGradient(0, 0, 0, H0); wg.addColorStop(0, '#0a0610'); wg.addColorStop(1, '#2a1238'); x.fillStyle = wg; x.fillRect(0, 0, WD, H0);
+    /* a corridor running away: doors converge toward a lit 707 at the end */
+    x.fillStyle = '#140a1a'; x.beginPath(); x.moveTo(0, 0); x.lineTo(290, 90); x.lineTo(290, H0 - 120); x.lineTo(0, H0); x.closePath(); x.fill();
+    x.beginPath(); x.moveTo(WD, 0); x.lineTo(430, 90); x.lineTo(430, H0 - 120); x.lineTo(WD, H0); x.closePath(); x.fill();
+    box(x, 290, 90, 140, H0 - 210, '#3a1a10', 3, 0); x.fillStyle = 'rgba(255,200,120,.55)'; x.fillRect(300, 100, 50, H0 - 230); glowAt(x, 330, 200, 160, 'rgba(255,190,110,.35)');
+    neonTx(x, '707', 360, 70, 22, '#fff', '#ffb040');
+    [[0.15, '701'], [0.45, '703'], [0.72, '705']].forEach(function (d) { var t = d[0], lx = 290 * t, ty = 90 * t, h = (H0 - 120 - 90) * t + (H0) * (1 - t);
+      var w = 60 * (1 - t) + 18; box(x, lx + 6, ty + 40, w, h * 0.5, '#3a2238', 2.5, 2); box(x, WD - lx - 6 - w, ty + 40, w, h * 0.5, '#3a2238', 2.5, 2);
+      tx(x, d[1], lx + 6 + w / 2, ty + 30, 12 * (1 - t) + 8, '#c87aff', 900); });
+    neonLine(x, [[0, H0 - 10], [290, H0 - 120]], '#ff4ab0', 5); neonLine(x, [[WD, H0 - 10], [430, H0 - 120]], '#4ac8ff', 5);
+    neonLine(x, [[0, 6], [290, 92]], '#c87aff', 3); neonLine(x, [[WD, 6], [430, 92]], '#c87aff', 3);
+    C.floor(x, { far: '#4a1838', near: '#1a0814', kind: 'tile', line: 'rgba(255,90,200,.22)', n: 8, rows: 10 });
+    C.vign(x, 0.55); };
   S2P.p6Battle = function (k, x) { var fn = B[k]; var C = hb(); if (!fn || !C) { x.fillStyle = '#1a1410'; x.fillRect(0, 0, 720, 1280); return; } x.save(); try { fn(x); } finally { x.restore(); } };
   S2P.p6B = B;
 })(typeof window !== 'undefined' ? window : this);

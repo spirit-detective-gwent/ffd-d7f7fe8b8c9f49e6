@@ -521,6 +521,146 @@
   POP.push(popKara);
   PIN.ramen = function () { return { room: 'town', x: TOWN_DOORS.kara.at[0], y: TOWN_DOORS.kara.at[1] - 60, lab: 'Karaoke', loc: 'High Score \u00b7 Karaoke Kitsune, booth 4' }; };
 
+  /* ---------------- 3. Hotel Chuo (lobby, 7F) + the ¥40 hotel rest ---------------- */
+  try {
+    alias('j6_dealer', 'c2_suit', ((C2K && C2K.c2_suit) || 1.15) * 1.1, 'Ogata', 'c2suit');
+    alias('j6_hsuit', 'c2_suit', (C2K && C2K.c2_suit) || 1.15, 'Syndicate Suit', 'c2suit');
+    if (typeof CHAR_INTRO !== 'undefined' && !CHAR_INTRO.j6_dealer) CHAR_INTRO.j6_dealer = { kind: 'mgs', name: 'Ogata', sub: 'Syndicate Closer', tag: 'He signs the strip over to Jin.', who: 'c2suit', mood: 'calm' };
+  } catch (eH) { ev('world:s2p6:err:alias3:' + (eH && eH.message)); }
+  var REST_PRICE = P6.REST_PRICE = 40;
+  roomDef('hchuo', 'Hotel Chuo \u00b7 \u30db\u30c6\u30eb\u4e2d\u592e', 'ck_surf', {
+    block: [[556, 238, 800, 330], [160, 600, 380, 680], [900, 600, 1120, 680], [200, 700, 340, 740], [452, 270, 488, 304], [842, 270, 878, 304], [122, 770, 158, 804], [1122, 770, 1158, 804]],
+    spots: [{ id: 'j6_h_panel', r: [110, 26, 440, 262], at: [275, 320], face: 3, lab: 'Rooms' },
+      { id: 'j6_h_desk', r: [556, 238, 800, 330], at: [678, 380], face: 3, lab: 'Front' },
+      { id: 'j6_h_lift', r: [996, 40, 1164, 236], at: [1080, 300], face: 3, lab: 'Lift' }] });
+  roomDef('hhall', 'Hotel Chuo \u00b7 7F', 'ck_backroom', {
+    block: [[300, 646, 420, 732], [820, 680, 1020, 720]],
+    spots: [{ id: 'j6_h_707', r: [994, 40, 1106, 226], at: [1050, 290], face: 3, lab: '707' },
+      { id: 'j6_h_door', r: [544, 40, 656, 226], at: [600, 290], face: 3, lab: '703' }] });
+  P6.SURF.hchuo = 'stone'; P6.SURF.hhall = 'wood';
+  AMB.hchuo = { top: 'rgba(255,120,210,.22)', bot: 'rgba(40,20,80,.30)', rain: 0, motes: 10, lamps: [[100, 120, '255,74,176', 70, 0.28, 'neon'], [290, 120, '74,200,255', 70, 0.24, 'neon']] };
+  AMB.hhall = { top: 'rgba(200,120,255,.24)', bot: 'rgba(20,10,40,.34)', rain: 0, motes: 6, lamps: [[195, 120, '255,176,64', 60, 0.26, 'lamp']] };
+  P6.PKEY.hhall = function () { return at('hotel') ? 'clear' : 'deal'; };
+  P6.OPEN.hchuo = function () { return true; };
+  P6.BT.hhall = { name: 'Hotel Chuo \u00b7 7F', lights: [[180, 100, '255,74,176', 90, 0.3, 'neon'], [540, 100, '74,200,255', 90, 0.3, 'neon']] };
+  P6.innerBack.hhall = function () { lift('hchuo', [1080, 300, 0], '\u25bc 1F'); };
+
+  VO.hIn = V3([['', '<p class="dim">Velvet, brass and slow purple light. A wall of glowing room photos. Nobody at the desk but a pair of hands behind frosted glass.</p>']], {
+    fierce: [['ryo', 'Seventh floor. Let\u2019s go.']],
+    strategic: [['aoi', 'A love hotel. No faces, no names. Good place to sign something.']],
+    balanced: [['aoi', 'It\u2019s\u2026 nicer than I expected.'], ['ryo', 'Don\u2019t look at me like that.']]
+  }, []);
+  VO.hDesk = [['', '<p class="dim">A voice behind the glass: \u201cRest is \u00a5' + REST_PRICE + ', two hours. Stay is by the night. Key comes through the slot.\u201d</p>']];
+  VO.hPanel = [['', '<p class="dim">Lit photos are free rooms. 301 is all sea blue. 503 has a pink bathtub shaped like a shell. 7F isn\u2019t on the board at all.</p>']];
+  VO.hLift0 = [['', '<p class="dim">The lift needs a room key to go up. You have no reason to be upstairs.</p>']];
+  VO.hDoor = [['', '<p class="dim">Do Not Disturb signs on every handle. Somebody is laughing behind 703.</p>']];
+  VO.hHall = V3([['', '<p class="dim">Seventh floor. Neon strips along the carpet. Two Suits outside 707, the door open on a table of paper.</p>'],
+    ['j6_hsuit', 'Wrong floor, kids. Take the stairs. All of them.']], {
+    fierce: [['ryo', 'We came for the man inside.']],
+    strategic: [['aoi', 'Two at the door, one at the table. Door first.']],
+    balanced: [['ryo', 'Sorry. We\u2019re with room service.']]
+  }, []);
+  VO.hMid = V3([['j6_dealer', 'All that noise in my hallway. The strip owners are crying in there, you know. Crying and signing.']], {
+    fierce: [['ryo', 'Not tonight.']],
+    strategic: [['aoi', 'Ogata. The closer. Nobody signs without you watching.']],
+    balanced: [['ryo', 'Let them go home.']]
+  }, [['j6_dealer', 'Jin\u2019s rates are very fair. Let me explain them to your teeth.']]);
+  VO.hWon = V3([['j6_dealer', '\u2026Fine. Fine! Take the paper.'], ['', '<p class="dim">The strip owners run past you for the lift. The deal sheets are still on the table, every one stamped with a red fox: Club Kitsune.</p>']], {
+    fierce: [['ryo', 'Club Kitsune. Tetsu\u2019s place.']],
+    strategic: [['aoi', 'The club pays the Suits, the Suits squeeze the strip. Someone above the club gets the cut.']],
+    balanced: [['aoi', 'The club\u2019s stamp. So the money goes through the back office.']]
+  }, [['j6_dealer', 'Go ask the club where the money goes. See who answers.']]);
+  VO.hDone = [['', '<p class="dim">707 is empty. Somebody already changed the sheets.</p>']];
+
+  var H_CAST = { a: null, b: null, o: null };
+  function hallLive() { return qOn() && stg() === 'kara'; }
+  function popHotel() {
+    var k = room();
+    if (k !== 'hhall') { ['a', 'b', 'o'].forEach(function (q) { if (H_CAST[q]) { kill(H_CAST[q]); H_CAST[q] = null; } }); return; }
+    if (!hallLive()) return;
+    function alive(s) { return s && s.el && s.el.parentNode; }
+    if (!J().h1) { if (!alive(H_CAST.a)) H_CAST.a = npc('j6_hsuit', 960, 330, Math.PI); if (!alive(H_CAST.b)) H_CAST.b = npc('j6_hsuit', 1140, 340, 0); }
+    if (!alive(H_CAST.o)) { H_CAST.o = npc('j6_dealer', 1050, 250, Math.PI / 2); try { waddle(H_CAST.o, 0, Math.PI / 2); } catch (e) {} }
+  }
+  P6.H_CAST = H_CAST; P6.popHotel = popHotel;
+  function ding(up) { try { var X = root.FFF_S2ARC; var c = X && X.actx && X.actx(); if (c && X.tone) { var t = c.currentTime + 0.02; X.tone(up ? 784 : 659, t, 0.35, 'sine', 0.12); X.tone(up ? 1047 : 523, t + 0.18, 0.5, 'sine', 0.12); } } catch (e) {} }
+  function lift(k, pos, lab) { if (busy()) return; ding(lab.indexOf('\u25b2') === 0); toastS(lab); enterRoom(k, pos); }
+  P6.lift = lift;
+  function hotelArrive() { var j = J(); if (j.hIn) return; whenFree(function () { if (room() !== 'hchuo') return; lockIn(1); talk(pv(VO.hIn), function () { j.hIn = 1; sv(); lockIn(0); }); }); }
+  function hallArrive() {
+    if (!hallLive()) return;
+    whenFree(function () {
+      if (room() !== 'hhall' || !hallLive()) return;
+      if (!J().h1) { lockIn(1); talk(pv(VO.hHall), function () { startFight('hhall1', ['c2_suit', 'c2_suit'], { bt: 'hhall', ctx: { flv: 7 } }); }); return; }
+      dealer();
+    });
+  }
+  function dealer() {
+    lockIn(1);
+    var lines = pv(VO.hMid);
+    function go() { lockIn(0); startFight('hhall2', ['c2_suit'], { bt: 'hhall', ctx: { toughHp: 48, flv: 7, j6nm: 'Ogata' } }); }
+    try { if (typeof bossEnt === 'function' && H_CAST.o) { bossEnt('j6_dealer', lines, go, { spr: H_CAST.o }); return; } } catch (eB) { ev('world:s2p6:err:bent3:' + (eB && eB.message)); }
+    talk(lines, go);
+  }
+  FIGHT.hhall1 = {
+    win: function () { J().h1 = 1; sv(); ['a', 'b'].forEach(function (q) { if (H_CAST[q]) { kill(H_CAST[q]); H_CAST[q] = null; } }); if (room() === 'hhall' && hallLive()) dealer(); },
+    lose: function () { }
+  };
+  FIGHT.hhall2 = {
+    win: function () { lockIn(1); talk(pv(VO.hWon), function () { lockIn(0); if (H_CAST.o) { kill(H_CAST.o); H_CAST.o = null; } setStg('hotel'); qStep(3); sv(); P6.resetPaint('hhall'); paintRoom(); toastS('Journal: Club Kitsune, the back office.'); }); },
+    lose: function () { }
+  };
+
+  /* the hotel rest: full HP + SP for both, ¥40, once per stock cycle (restocks when a quest turns in) */
+  function restS() { return c2Cyc(); }
+  function restLeft() { var S0 = restS(); return S0.rest6 == null || (S0.rest6 | 0) !== (S0.cyc | 0); }
+  P6.restLeft = restLeft;
+  function restFull() { var o = (typeof other === 'function' && SAVE.act) ? other(SAVE.act) : null, pc = o && SAVE.chars ? SAVE.chars[o] : null;
+    return (SAVE.hp | 0) >= MAXHP && (SAVE.sp | 0) >= SPMAX && (!pc || ((pc.sp == null || (pc.sp | 0) >= SPMAX) && (pc.hp == null || (pc.hp | 0) >= MAXHP))); }
+  function hotelRest(where) {
+    if (busy()) return true;
+    var left = restLeft(), poor = (SAVE.items | 0) < REST_PRICE, full = restFull();
+    var why = !left ? ' (booked up \u00b7 after your next job)' : full ? ' (you\u2019re rested)' : poor ? ' (need \u00a5' + REST_PRICE + ')' : '';
+    var q = where === 'kh' ? 'Ms. Kanda slides a key across: \u201cA real bed, two hours. \u00a5' + REST_PRICE + '. Once a job, for you two.\u201d' : 'Through the slot: \u201cRest, two hours, \u00a5' + REST_PRICE + '. One room for the pair of you.\u201d';
+    try { W.path = []; if (W.ryo) W.ryo.v = 0; } catch (e) {}
+    dialog('<div class="tw"><p class="q">' + q + '</p><p class="dim">Full HP and SP for Ryo and Aoi.</p></div>',
+      [['Rest \u00b7 \u00a5' + REST_PRICE + why, function () { doRest(where); }, 'hot', !left || full || poor], ['Later', null]]);
+    return true;
+  }
+  function doRest(where) {
+    if (!restLeft() || (SAVE.items | 0) < REST_PRICE) return;
+    var S0 = restS(); S0.rest6 = S0.cyc | 0; SAVE.items = Math.max(0, (SAVE.items | 0) - REST_PRICE); try { save(); hud(); bumpItems(); } catch (e) {}
+    ev('world:s2p6:rest:' + where + ':' + REST_PRICE);
+    var h0 = SAVE.hp | 0;
+    W.busy = true; W.path = []; var o = $('#wrest'), rs = 2.8;
+    function fin() {
+      SAVE.hp = MAXHP; SAVE.sp = SPMAX; try { var oc = other(SAVE.act); SAVE.chars = SAVE.chars || {}; var pc = SAVE.chars[oc] || (SAVE.chars[oc] = {}); pc.sp = SPMAX; if (pc.hp != null) pc.hp = MAXHP; } catch (eO) {}
+      save(); try { hud(); } catch (e) {} W.busy = false; W.cool = Math.max(W.cool || 0, 2);
+      try { AU.play('pl_heal'); } catch (e1) {} try { if (typeof vitFlo === 'function') vitFlo('hp', MAXHP - h0); } catch (e2) {}
+      ev('world:s2p6:rest:done'); later(500, function () { toastS('Rested. HP and SP full for both.'); });
+    }
+    if (!o) { fin(); return; }
+    o.style.setProperty('--rt', rs + 's'); o.className = 'on act'; var b = o.querySelector('b'); var b0 = b ? b.innerHTML : '';
+    if (b) b.textContent = where === 'kh' ? 'Resting at the Kitsune Hotel\u2026' : 'Resting at Hotel Chuo\u2026';
+    if (!o.querySelector('.j6moon')) o.insertAdjacentHTML('afterbegin', '<div class="j6moon c2cup" aria-hidden="true"><svg viewBox="0 0 120 90"><path d="M70 10a34 34 0 1 0 30 50a28 28 0 1 1-30-50z" fill="#ffe9a0" stroke="#14110d" stroke-width="4"/><text x="18" y="30" font-size="18" font-weight="900" fill="#c8a0f0">z</text><text x="30" y="16" font-size="13" font-weight="900" fill="#c8a0f0">z</text></svg></div>');
+    try { AU.play('heal', { gain: 0.4 }); } catch (eA) {}
+    var done = function () { o.className = ''; var m = o.querySelector('.j6moon'); if (m) m.remove(); if (b) b.innerHTML = b0; fin(); };
+    if (typeof restFinishArm === 'function') restFinishArm(o, (root.FFF_REST_MS || rs * 1000), done); else later(root.FFF_REST_MS || rs * 1000, done);
+  }
+  P6.hotelRest = hotelRest; P6.doRest = doRest;
+  /* the Kitsune Hotel desk gets the same rest (all Chapter 2 runs; the herbalist's Full Heal Tea is gone) */
+  try { var KH = INT[C2R.hotel] || INT.c2_nq_hotel; if (KH && KH.spots && !KH.spots.some(function (q) { return q.id === 'j6_rest_kh'; })) KH.spots.push({ id: 'j6_rest_kh', r: [740, 250, 840, 362], at: [790, 400], face: 0, lab: 'Rest \u00a5' + REST_PRICE }); } catch (eKH) { ev('world:s2p6:err:kh:' + (eKH && eKH.message)); }
+
+  ACT.j6_rest_kh = function () { return hotelRest('kh'); };
+  ACT.j6_h_desk = function () { if (busy()) return true; lockIn(1); talk(VO.hDesk, function () { lockIn(0); later(100, function () { hotelRest('hc'); }); }); return true; };
+  ACT.j6_h_panel = function () { if (busy()) return true; lockIn(1); talk(VO.hPanel, function () { lockIn(0); }); return true; };
+  ACT.j6_h_lift = function () { if (busy()) return true; if (at('kara')) { lift('hhall', [640, 760, 0], '\u25b2 7F'); return true; } lockIn(1); talk(VO.hLift0, function () { lockIn(0); }); return true; };
+  ACT.j6_h_door = function () { if (busy()) return true; lockIn(1); talk(VO.hDoor, function () { lockIn(0); }); return true; };
+  ACT.j6_h_707 = function () { if (busy()) return true; if (hallLive()) { hallArrive(); return true; } lockIn(1); talk(VO.hDone, function () { lockIn(0); }); return true; };
+  ARRIVE.hchuo = hotelArrive; ARRIVE.hhall = hallArrive;
+  POP.push(popHotel);
+  PIN.kara = function () { if (room() === 'hchuo') return { room: 'hchuo', x: 1080, y: 250, lab: 'Lift', loc: 'High Score \u00b7 Hotel Chuo, 7F' }; return { room: 'town', x: TOWN_DOORS.hchuo.at[0], y: TOWN_DOORS.hchuo.at[1] - 60, lab: 'Hotel Chuo', loc: 'High Score \u00b7 Hotel Chuo, 7F' }; };
+
   if (typeof c2Tags === 'function') {
     var tags0 = c2Tags;
     c2Tags = function (id, D) {
