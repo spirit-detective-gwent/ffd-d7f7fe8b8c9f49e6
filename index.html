@@ -10606,6 +10606,8 @@ function frame(ts) {
   if (typeof ckBarEl === 'function') ckBarEl(typeof ckRoom === 'function' && !!ckRoom());
   if (!W.on) { try { if (WFX) { WFX.g.style.display = WFX.s.style.display = 'none'; } var _wd = document.getElementById('world'); if (_wd) _wd.classList.remove('wfx1'); } catch (eW) {} return; } var dt = Math.min(0.05, (ts - (last || ts)) / 1000); last = ts;
   if (W.paused) { setTimeout(function () { root.requestAnimationFrame(frame); }, 100); return; } W.t += dt;
+  if (root.FFF_SCAM && FFF_SCAM.st && FFF_SCAM.st.boss) { /* v6.5.63 GGD-22: hold the world still through a boss arrival; the CSS push-in keeps the look, and roamers / indoor ticks would only add heat. No zoom-out. */
+    if (W.pan) W.pan.run(dt); dlgGuard(dt); padUse(); root.requestAnimationFrame(frame); return; }
   var r = W.ryo, moved = moveRyo(dt);
   if (!r.actMove) animWalk(r, moved); /* v5.2 (t1188u): a scripted walk (c2Walk) animates the walker itself */
   if (r.moving && W.run) { W.dust += moved; if (W.dust > 46) { W.dust = 0; dust(r.x, r.y); } }
