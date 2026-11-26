@@ -12292,9 +12292,10 @@ function koGrantMat(k, n) { var h = koHerb(); h[k] = Math.max(0, (h[k] | 0) + (n
 /* v6.5.64 defeat screen: ONE data-driven screen for every loss. The winner's current painted bust (portraits/, the same busts the dialogue uses),
  * a K.O. title, where you wake, the real cost (koPlan: the same function the knockout itself runs), and after a mini-boss / boss the partner's
  * hint plus where he waits. Every number comes from the live rules (HEAL / WAKE_HP / MAXHP / koYenLoss / the card data). No retry button. */
-function koPlan(st) { var c = (st && st.ctx) || {}, script = !!(c.ckDoom || c.enfDoom), h = koHerb(), mats = {};
-  if (!script) KO_DRESS.forEach(function (k) { var q = h[k] | 0; if (q > 0) mats[k] = q; });
-  return { script: script, yen: script ? 0 : koYenLoss(SAVE.items), mats: mats, exempt: koYenExempt() }; }
+function koIsSpar(st) { var c = (st && st.ctx) || {}; return !!(c.matspar || c.c2spar); } /* training-mat and Kurogane ring spars: no yen, no materials, no rewards */
+function koPlan(st) { var c = (st && st.ctx) || {}, script = !!(c.ckDoom || c.enfDoom), spar = koIsSpar(st), h = koHerb(), mats = {};
+  if (!script && !spar) KO_DRESS.forEach(function (k) { var q = h[k] | 0; if (q > 0) mats[k] = q; });
+  return { script: script, spar: spar, yen: (script || spar) ? 0 : koYenLoss(SAVE.items), mats: mats, exempt: koYenExempt() }; }
 function koChar(id) { var C = root.ENGINE && root.ENGINE.chars ? root.ENGINE.chars() : null; return (C && C[id]) || {}; }
 function koBust(id, tier) { /* the winner's current painted bust: the id, its group / spar twin, then its fig / art name. '' = none */
   var c = koChar(id), base = String(id || '').replace(/(_spar|_j|g)$/, ''), cs = [id, base, String(c.fig || '').replace(/_fig$/, ''), String(c.art || '').replace(/_fig$/, '')], mood = tier ? 'calm' : 'neutral', u = '';
@@ -12333,6 +12334,7 @@ function koWake(st, plan) { var c = st.ctx || {}, ch2 = typeof c2On === 'functio
   if (c.nurse) return 'You come to in the nurse\u2019s office with ' + WAKE_HP + ' HP.';
   return who + ' gets you to the nurse\u2019s office. She patches you up to full (' + MAXHP + ' HP).'; }
 function koCost(st, plan) { var parts = [];
+  if (plan.spar) return 'Just a spar. Nothing lost.';
   if (plan.script) return 'No yen or materials lost. This fight\u2019s rewards are gone.';
   if (plan.yen > 0) parts.push('\u00a5' + plan.yen);
   KO_DRESS.forEach(function (k) { if (plan.mats[k]) parts.push(plan.mats[k] + ' ' + k); });
@@ -12345,9 +12347,9 @@ function koLoseHtml(st) { var plan = koPlan(st), id = st.koLead || '', tier = ko
   if (tier && !(st.ctx && (st.ctx.ckDoom || st.ctx.matspar))) { var hint = koHint(bid), wait = KO_WAIT[bid] || (koChar(id).name ? String(koChar(id).name).split(' ')[0] + ' is still waiting.' : '');
     if (hint) h += '<span class="koaoi"><b>' + who + '</b>\u201c' + hint + '\u201d</span>';
     if (wait) h += '<span class="kowait">' + wait + '</span>'; }
-  h += '<span class="kodim">Your cards, upgrades and crafted kits are safe.</span>';
+  if (!plan.spar) h += '<span class="kodim">Your cards, upgrades and crafted kits are safe.</span>';
   return h; }
-root.FFF_KO = { loss: koYenLoss, exempt: koYenExempt, lessons: koLessonsDone, strip: koStripMats, grant: koGrantMat, html: koLoseHtml, plan: koPlan, bust: koBust, art: koArt, hint: koHint, wake: koWake };
+root.FFF_KO = { loss: koYenLoss, exempt: koYenExempt, lessons: koLessonsDone, strip: koStripMats, grant: koGrantMat, html: koLoseHtml, plan: koPlan, spar: koIsSpar, bust: koBust, art: koArt, hint: koHint, wake: koWake };
 /* v5.1 (Ernest): the locked drop tables. Each row is [rarity, weight], rolled with Math.random() (or FFF_DROPR in tests).
  *   c1bully 10% Common (chance('bully')) | c1mini 90% Common / 10% Uncommon | c1boss (Gouki, every win) 95% Uncommon / 5% Rare
  *   c2street 10% = 7% Common / 3% Uncommon (C2DROP) | c2mini 50% Common / 50% Uncommon | c2boss 100% Rare (a one-time story fight, no rematch) */
@@ -12385,7 +12387,7 @@ function xpWin(st, res) { var c = st.ctx || {}, gr = xpGrind(), pl = playerLv(),
   return { n: n, kind: kind }; }
 function settle(win, st) {
   if (st.res) return st.res; var res = st.res = { win: !!win, cards: [], lines: [], sig2: null, first: false };
-  if (st.ctx && st.ctx.c2spar) { res.spar = 1; if (!win) { var kaS = koArt(st, st.koLead || ''); res.ko = { url: kaS.url, fit: kaS.fit, plate: kaS.plate, title: 'DEFEAT', btn: '' }; } res.html = win ? 'Round to you. Sparring only: no yen, no cards, and your HP and items come back.' : 'Genji calls the round. Sparring only: no wake-up trip, and your HP and items come back.'; ev('world:settle:spar:' + (win ? 'win' : 'lose')); return res; } /* v5.3 Kurogane ring: no stakes, no farming */
+  if (st.ctx && st.ctx.c2spar) { res.spar = 1; if (!win) { var kaS = koArt(st, st.koLead || ''); res.ko = { url: kaS.url, fit: kaS.fit, plate: kaS.plate, title: 'DEFEAT', btn: '' }; } res.html = win ? 'Round to you. Just a spar. Nothing lost. Your HP and items come back.' : 'Genji calls the round. Just a spar. Nothing lost. Your HP and items come back.'; ev('world:settle:spar:' + (win ? 'win' : 'lose')); return res; } /* v5.3 Kurogane ring: no stakes, no farming */
   if (win && st.boss && st.ctx && st.ctx.gkPhase === 1) { res.gkPhase = 1; res.html = 'Gouki falls… then rises.'; W.dropCh = {}; save(); ev('world:settle:gkphase1'); return res; }
   if (win && st.boss && st.ctx && st.ctx.gkLoop) { res.gkLoop = 1; res.html = 'Gouki falls… the seal flares again.'; W.dropCh = {}; save(); ev('world:settle:gkloop:' + (st.ctx.gkRevives | 0)); return res; } /* v4.64: no rewards until Bond Double finishes him */
   if (!win) { res.html = koLoseHtml(st); var kaL = koArt(st, st.koLead || ''); res.ko = { url: kaL.url, fit: kaL.fit, plate: kaL.plate, title: 'K.O.', btn: 'Wake up' }; ev('world:settle:lose' + (koYenExempt() ? ':exempt' : '')); return res; }
@@ -12451,7 +12453,7 @@ function back(win, st) { rdyOff(W.ryo); rdyOff(W.aoi); var bb = $('#wbub'); if (
   SAVE.fights = (SAVE.fights | 0) + 1; var res = settle(win, st || {}); var cxu = cxFight(win, st || {}); // v4.10.1 encyclopedia
   if (win) { SAVE.wins++; SAVE.hp = Math.max(1, SAVE.hp); var gi = yenRoll(gearFx('it')); if (gi && st) { SAVE.items += gi; st.drop = (st.drop | 0) + gi; ev('world:gear:items:' + gi); } var gw = gearFx('hw'); if (gw && SAVE.hp < MAXHP) { SAVE.hp = Math.min(MAXHP, SAVE.hp + Math.ceil(MAXHP * gw)); ev('world:gear:heal'); } if (W.dgRelay && st && st.mini && beaten(W.dgRelay.el.dataset.mb)) { var rr = W.dgRelay; W.dgRelay = null; rr.el.classList.add('out'); setTimeout(function () { rr.el.remove(); }, 600); } } // v4.3: rewards were applied in settle()
   if (!win) { var scriptLoss = st.ctx && (st.ctx.ckDoom || st.ctx.enfDoom); if (!(st.ctx && st.ctx.ckDoom)) SAVE.losses++; // v4.3 fix: this branch used to hang off the restock check, so a win without a restock was booked as a loss. A scripted club dump does not add a loss.
-    var ch2Wake = typeof c2On === 'function' && c2On() && C2W, matSpar = !!(st.ctx && st.ctx.matspar); SAVE.hp = WAKE_HP; var pc = koPlan(st).yen, lostMats = scriptLoss ? {} : koStripMats(); if (!scriptLoss) SAVE.items -= pc; var nurseMats = !matSpar && !ch2Wake; if (nurseMats) { koGrantMat('gauze', 1); koGrantMat('tape', 1); } W.pen = { coins: pc, heal: 0, mats: lostMats, exempt: koYenExempt(), nurse: nurseMats ? { gauze: 1, tape: 1 } : null }; ev('world:penalty:' + pc + ':' + (lostMats.gauze | 0) + ':' + (lostMats.tape | 0) + (W.pen.exempt ? ':exempt' : '')); W.safe = 6; clearRoam(); W.roamT = 4; if (!(st.ctx && st.ctx.matspar)) { var nu = W.inside && INT[W.inside.id].c2 ? [W.ryo.x, W.ryo.y] : (ch2Wake ? [W.ryo.x, W.ryo.y] : nurseAt()); if (!ch2Wake || !(W.inside && INT[W.inside.id].c2)) { W.ryo.x = nu[0]; W.ryo.y = nu[1]; W.ryo.dir = 0; W.aoi.x = W.ryo.x; W.aoi.y = W.ryo.y + 50; resetTrail(W.ryo.x, W.ryo.y, 3); } ev('world:respawn:' + (ch2Wake ? 'gym' : 'nurse') + ':' + Math.round(W.ryo.x) + ',' + Math.round(W.ryo.y) + ':' + SAVE.hp); } } // Both chapters wake on low HP. Chapter 1: the nurse then stands and fills it. Chapter 2: Genji's gym, no full heal. A mat spar stays on the mat.
+    var ch2Wake = typeof c2On === 'function' && c2On() && C2W, matSpar = !!(st.ctx && st.ctx.matspar), plan = koPlan(st); SAVE.hp = WAKE_HP; var pc = plan.yen, lostMats = (scriptLoss || plan.spar) ? {} : koStripMats(); if (!scriptLoss && !plan.spar) SAVE.items -= pc; W.pen = { coins: pc, heal: 0, mats: lostMats, exempt: koYenExempt() }; /* v6.5.64: spars are free; the nurse no longer hands out 1 gauze + 1 tape after a knockout */ ev('world:penalty:' + pc + ':' + (lostMats.gauze | 0) + ':' + (lostMats.tape | 0) + (W.pen.exempt ? ':exempt' : '')); W.safe = 6; clearRoam(); W.roamT = 4; if (!(st.ctx && st.ctx.matspar)) { var nu = W.inside && INT[W.inside.id].c2 ? [W.ryo.x, W.ryo.y] : (ch2Wake ? [W.ryo.x, W.ryo.y] : nurseAt()); if (!ch2Wake || !(W.inside && INT[W.inside.id].c2)) { W.ryo.x = nu[0]; W.ryo.y = nu[1]; W.ryo.dir = 0; W.aoi.x = W.ryo.x; W.aoi.y = W.ryo.y + 50; resetTrail(W.ryo.x, W.ryo.y, 3); } ev('world:respawn:' + (ch2Wake ? 'gym' : 'nurse') + ':' + Math.round(W.ryo.x) + ',' + Math.round(W.ryo.y) + ':' + SAVE.hp); } } // Both chapters wake on low HP. Chapter 1: the nurse then stands and fills it. Chapter 2: Genji's gym, no full heal. A mat spar stays on the mat.
   save(); enter(true);
   syncVend();
   var CARDS = root.ENGINE.cards(), newC = res.cards || []; if (typeof waveBack === 'function') { var _wv = waveBack(win, st, newC, cxu); if (_wv === 1) return; if (_wv && _wv.cards) { newC = _wv.cards; cxu = _wv.cx; } } /* v6.5.30 chain battles */
