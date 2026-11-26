@@ -178,11 +178,11 @@
     if (!P3.ART || !on() || !inTown() || !roomOpen()) return;
     if (document.getElementById('s2BoatSouth')) return;
     if (!FAC) {
-      FAC = document.createElement('canvas'); FAC.width = 360; FAC.height = 220;
+      FAC = document.createElement('canvas'); FAC.width = 360; FAC.height = 440;
       try { if (root.FFF_S2P && root.FFF_S2P.boatSouth) root.FFF_S2P.boatSouth(FAC.getContext('2d')); } catch (eF) { ev('world:s2p3:err:facade:' + (eF && eF.message)); }
     }
     FAC.className = 'nqprop'; FAC.id = 's2BoatSouth';
-    FAC.style.cssText = 'position:absolute;left:4540px;top:3420px;width:360px;height:220px;z-index:' + (100 + 3550) + ';pointer-events:none';
+    FAC.style.cssText = 'position:absolute;left:4540px;top:3420px;width:360px;height:440px;z-index:' + (100 + 3550) + ';pointer-events:none';
     var host = null, sample = document.querySelector('#world .nqprop, #wimap .nqprop, .nqprop');
     if (sample && sample.parentNode) host = sample.parentNode;
     else host = document.getElementById('wisp') || document.getElementById('world') || document.getElementById('wimap');
