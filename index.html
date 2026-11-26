@@ -40838,56 +40838,69 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   S2P.battle = function (g) {
     var H = (typeof window !== 'undefined' && window.FFF_C2H) || (typeof root !== 'undefined' && root.FFF_C2H);
     var WD = 720, HT = 1280, H0 = 330, x = g;
+    /* Lift the shop row 56px so the sidewalk sits under the foe (who stands near H0).
+       Unchanged H0 keeps the shared C2BT floor/lane math. */
+    var LIFT = 56, FOOT = H0 - LIFT;
     rr(g);
     if (!H) { g.fillStyle = '#141830'; g.fillRect(0, 0, WD, HT); return; }
     H.sky(x, '#141830', '#2c2a48', 48);
     H.skyline(x, '#262840', 21, 150);
-    /* -- shop row along the horizon line -- */
+    /* -- shop row, sitting on a sidewalk above the horizon -- */
     /* left: shuttered neighbour */
-    H.R(x, -8, 148, 168, 182, '#3a3448', H.INK, 3);
-    H.R(x, 8, 156, 140, 28, '#2a2434', H.INK, 2);
-    H.txt(x, '\u5840', 78, 171, 16, '#c8c0b0', '900 ');
-    H.shutter(x, 16, 196, 124, 134, '#6a7080');
+    H.R(x, -8, 148 - LIFT, 168, 182, '#3a3448', H.INK, 3);
+    H.R(x, 8, 156 - LIFT, 140, 28, '#2a2434', H.INK, 2);
+    H.txt(x, '\u5840', 78, 171 - LIFT, 16, '#c8c0b0', '900 ');
+    H.shutter(x, 16, 196 - LIFT, 124, 134, '#6a7080');
     /* centre: Chiyo Wagashi, timber + plaster, lit */
-    H.R(x, 156, 118, 360, 212, '#c4a07a', H.INK, 3);
+    H.R(x, 156, 118 - LIFT, 360, 212, '#c4a07a', H.INK, 3);
     /* tiled eave */
-    x.fillStyle = '#2b3240'; x.fillRect(148, 108, 376, 18);
-    for (var ti = 148; ti < 524; ti += 16) { x.fillStyle = ti % 32 ? '#39445a' : '#323b4f'; x.beginPath(); x.arc(ti + 8, 126, 8, Math.PI, 0); x.fill(); }
-    x.strokeStyle = H.INK; x.lineWidth = 3; x.beginPath(); x.moveTo(148, 128); x.lineTo(524, 128); x.stroke();
-    H.R(x, 200, 136, 272, 36, '#f4ead2', H.INK, 3);
-    H.txt(x, '\u548c\u83d3\u5b50  \u5343\u4ee3', 336, 154, 18, '#8e3b52', '900 ');
+    x.fillStyle = '#2b3240'; x.fillRect(148, 108 - LIFT, 376, 18);
+    for (var ti = 148; ti < 524; ti += 16) { x.fillStyle = ti % 32 ? '#39445a' : '#323b4f'; x.beginPath(); x.arc(ti + 8, 126 - LIFT, 8, Math.PI, 0); x.fill(); }
+    x.strokeStyle = H.INK; x.lineWidth = 3; x.beginPath(); x.moveTo(148, 128 - LIFT); x.lineTo(524, 128 - LIFT); x.stroke();
+    H.R(x, 200, 136 - LIFT, 272, 36, '#f4ead2', H.INK, 3);
+    H.txt(x, '\u548c\u83d3\u5b50  \u5343\u4ee3', 336, 154 - LIFT, 18, '#8e3b52', '900 ');
     /* display window */
-    H.win(x, 168, 184, 100, 70, 1, 2);
+    H.win(x, 168, 184 - LIFT, 100, 70, 1, 2);
     /* door + noren */
-    H.R(x, 284, 184, 110, 146, '#4a2c22', H.INK, 3);
-    H.noren(x, 286, 186, 106, 70, '#c45a6a', '\u5343\u4ee3');
-    H.R(x, 296, 258, 40, 64, '#d8c4a0', H.INK, 2);
-    H.R(x, 342, 258, 40, 64, '#d8c4a0', H.INK, 2);
+    H.R(x, 284, 184 - LIFT, 110, 146, '#4a2c22', H.INK, 3);
+    H.noren(x, 286, 186 - LIFT, 106, 70, '#c45a6a', '\u5343\u4ee3');
+    H.R(x, 296, 258 - LIFT, 40, 64, '#d8c4a0', H.INK, 2);
+    H.R(x, 342, 258 - LIFT, 40, 64, '#d8c4a0', H.INK, 2);
     /* right window */
-    H.win(x, 408, 184, 92, 70, 1, 2);
+    H.win(x, 408, 184 - LIFT, 92, 70, 1, 2);
     /* vertical sign */
-    H.R(x, 508, 140, 22, 120, '#8e3b52', H.INK, 2);
-    H.txt(x, '\u548c', 519, 170, 14, '#f4ead2', '900 ');
-    H.txt(x, '\u83d3', 519, 200, 14, '#f4ead2', '900 ');
-    H.txt(x, '\u5b50', 519, 230, 14, '#f4ead2', '900 ');
+    H.R(x, 508, 140 - LIFT, 22, 120, '#8e3b52', H.INK, 2);
+    H.txt(x, '\u548c', 519, 170 - LIFT, 14, '#f4ead2', '900 ');
+    H.txt(x, '\u83d3', 519, 200 - LIFT, 14, '#f4ead2', '900 ');
+    H.txt(x, '\u5b50', 519, 230 - LIFT, 14, '#f4ead2', '900 ');
     /* lanterns lit */
-    H.lantern(x, 250, 168, 26, '#f3c9a0', '');
-    H.lantern(x, 430, 168, 26, '#f3c9a0', '');
+    H.lantern(x, 250, 168 - LIFT, 26, '#f3c9a0', '');
+    H.lantern(x, 430, 168 - LIFT, 26, '#f3c9a0', '');
     /* neighbour tea/noodle shop, half-shutter */
-    H.R(x, 530, 150, 130, 180, '#4a3a40', H.INK, 3);
-    H.noren(x, 544, 188, 102, 56, '#3a5080', '\u8336');
-    H.shutter(x, 544, 250, 102, 80, '#7d8290');
-    H.R(x, 544, 158, 102, 24, '#1a1520', H.INK, 2);
-    H.neon(x, 548, 160, 94, 20, 'TEA', '255,180,90', 12);
+    H.R(x, 530, 150 - LIFT, 130, 180, '#4a3a40', H.INK, 3);
+    H.noren(x, 544, 188 - LIFT, 102, 56, '#3a5080', '\u8336');
+    H.shutter(x, 544, 250 - LIFT, 102, 80, '#7d8290');
+    H.R(x, 544, 158 - LIFT, 102, 24, '#1a1520', H.INK, 2);
+    H.neon(x, 548, 160 - LIFT, 94, 20, 'TEA', '255,180,90', 12);
     /* vending + pole on the far right */
-    vend(H, x, 648, 200);
-    H.pipe(x, [[710, 80], [710, 328]], 6, '#4a4658');
-    x.fillStyle = '#2a2430'; x.fillRect(702, 70, 16, 14);
-    /* curb */
-    H.R(x, 0, H0, WD, 20, '#4a4658', 0);
-    /* wet asphalt street, a little stone sidewalk under the shops */
+    vend(H, x, 648, 200 - LIFT);
+    H.pipe(x, [[710, 80 - LIFT], [710, 328 - LIFT]], 6, '#4a4658');
+    x.fillStyle = '#2a2430'; x.fillRect(702, 70 - LIFT, 16, 14);
+    /* stone sidewalk the shops sit on, so the rider's feet land on ground in front of the door, not in the wall */
+    H.R(x, 0, FOOT, WD, H0 - FOOT, '#5c5868', 0);
+    x.fillStyle = '#6a6578'; x.fillRect(0, FOOT, WD, 10);
+    x.fillStyle = 'rgba(20,16,28,.35)'; x.fillRect(0, H0 - 8, WD, 8);
+    var r0 = H.seed(11), i0, xx0, yy0, s0;
+    for (i0 = 0; i0 < 70; i0++) {
+      yy0 = FOOT + 8 + r0() * (H0 - FOOT - 6); xx0 = r0() * WD; s0 = 8 + (yy0 - FOOT) / 6;
+      x.fillStyle = 'rgba(0,0,0,' + (0.08 + r0() * 0.12) + ')';
+      x.beginPath(); x.ellipse(xx0, yy0, s0 * 1.8, s0 * 0.4, 0, 0, 6.28); x.fill();
+    }
+    /* wet asphalt street */
     H.floor(x, { kind: 'asphalt', far: '#3a3a50', near: '#1c1c2a', lanes: [360], seed: 13 });
-    /* stone paving on the sidewalk band */
+    /* curb, same 26px band as the default street room */
+    H.R(x, 0, H0, WD, 26, '#4a4658', 0);
+    /* stone paving continuing a little onto the street edge */
     var r = H.seed(9), yy, xx, s;
     for (var i = 0; i < 80; i++) {
       yy = H0 + 8 + r() * 70; xx = r() * WD; s = 10 + (yy - H0) / 8;
@@ -44655,11 +44668,42 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   function move(s, pts, sp, done) {
     if (!s || !s.el) { if (done) done(); return; }
     var i = 0, last = performance.now(), tok = s.s2tok = (s.s2tok | 0) + 1; s.runK = 0;
-    (function step() { if (s.s2tok !== tok || !s.el || !s.el.parentNode) return; var now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
-      var p = pts[i]; if (!p) { waddle(s, 0, s.fa); place(s, 0); if (done) done(); return; }
+    (function step() {
+      if (s.s2tok !== tok || !s.el || !s.el.parentNode) return;
+      var now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
+      var p = pts[i];
+      if (!p) {
+        if (s.walker) { s.actMove = 0; s.run = false; if (typeof animWalk === 'function') animWalk(s, 0); }
+        else waddle(s, 0, s.fa);
+        place(s, 0); if (done) done(); return;
+      }
       var dx = p[0] - s.x, dy = p[1] - s.y, d = Math.hypot(dx, dy), mv = Math.min(d, sp * dt);
       if (d < 1.5) { i++; requestAnimationFrame(step); return; }
-      s.x += dx / d * mv; s.y += dy / d * mv; s.fa = Math.atan2(dy, dx); place(s, 0); waddle(s, mv, s.fa); requestAnimationFrame(step); })();
+      s.x += dx / d * mv; s.y += dy / d * mv;
+      if (s.walker) {
+        s.actMove = 1; s.run = false;
+        s.dir = typeof faceDir === 'function' ? faceDir(s.dir, dx, dy) : (Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 1 : 2) : (dy < 0 ? 3 : 0));
+        if (typeof animWalk === 'function') animWalk(s, mv); else place(s, 0);
+      } else { s.fa = Math.atan2(dy, dx); place(s, 0); waddle(s, mv, s.fa); }
+      requestAnimationFrame(step);
+    })();
+  }
+  /* Turn a c2Npc (map sheet + waddle) into a walker so existing walk-sheet frames play.
+     c2Npc's waddle starts a cel idle loop; that loop sizes frames as the 4-col idle sheet.
+     If it keeps ticking after we switch to the 8-col walk sheet, two Chiyos appear in one box. */
+  function asWalker(s, who) {
+    if (!s || !s.el) return s;
+    try { if (typeof celLoopOff === 'function') celLoopOff(s); } catch (eL) {}
+    s.walker = true; s.el.classList.add('walker');
+    s.el.dataset.who = who; s.el.dataset.gait = 'walk';
+    if (s.el.dataset.loop) delete s.el.dataset.loop;
+    if (s.el.dataset.bw) s.el.dataset.bw = '';
+    if (s.dir == null) s.dir = 0; if (s.fr == null) s.fr = 1; if (s.ph == null) s.ph = 1;
+    s.sheet = null; s.loop = null;
+    try { if (typeof SHC === 'object' && SHC) { SHC[who + '_walk'] = 8; SHC[who + '_idle'] = 4; } } catch (eS) {}
+    try { if (typeof SHR === 'object' && SHR) { SHR[who + '_walk'] = 4; SHR[who + '_idle'] = 4; } } catch (eR) {}
+    if (typeof animWalk === 'function') animWalk(s, 0); else place(s, 0);
+    return s;
   }
   function esc(x) { return String(x == null ? '' : x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function whenFree(fn, tries) { tries = tries || 0; if (!busy() && !document.getElementById('nqsting') && !(typeof W.c2busy !== 'undefined' && W.c2busy)) { try { fn(); } catch (e) { ev('world:s2:err:free:' + (e && e.message)); } return; } later(tries < 120 ? 250 : 1000, function () { whenFree(fn, tries + 1); }); }
@@ -44875,8 +44919,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     var id = 'c2_nq_waga'; C2R.waga = id;
     INT[id] = { id: id, n: 'Chiyo Wagashi', w: RW, h: RH, src: 'world/nq_waga.paint', tiles: 1, cell: 15, dg: 'c2', c2: 'waga', deep: 1, safe: 1, mus: 'c2night', nq: 1, s2: 1,
       open: [[90, 250, 1190, 850], [580, 850, 700, 900]], 'in': [640, 820, 3], back: [640, 820, 3],
-      block: [[190, 230, 1090, 415], [360, 430, 920, 500]],
-      spots: [{ id: 'exit', r: [575, 850, 705, 900], at: [640, 870], face: 0 }, { id: 's2_waga_order', r: [560, 300, 720, 430], at: [640, 500], face: 0, lab: 'Order' }] };
+      /* Staff side + visual counter front (paint: top 470, face 550-630). Wall-to-wall so the player cannot walk around or behind the counter. */
+      block: [[90, 230, 1190, 630]],
+      spots: [{ id: 'exit', r: [575, 850, 705, 900], at: [640, 870], face: 0 }, { id: 's2_waga_order', r: [400, 630, 880, 760], at: [640, 670], face: 3, lab: 'Order' }] };
     INT[id].base = INT[id].block; TAGS_IN[id] = {}; C2W.doors.nq_waga = WAGA_DOOR;
     return INT[id];
   }
@@ -44916,7 +44961,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     S2._bt = 1;
     var BT = root.FFF_C2BT;
     BT.ROOMS.waga = { name: 'Wagashi row', paint: function (x) { root.FFF_S2P.battle(x); },
-      lights: [[200, 200, '255,170,100', 70, 0.32, 'lamp'], [520, 200, '255,170,100', 70, 0.32, 'lamp']], rain: 48, mood: 'rain' };
+      lights: [[200, 144, '255,170,100', 70, 0.32, 'lamp'], [520, 144, '255,170,100', 70, 0.32, 'lamp']], rain: 48, mood: 'rain' };
     BT.KEY.c2_waga = 'waga';
     var roomB0 = BT.room;
     BT.room = function (story) {
@@ -45063,12 +45108,37 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (root.FFF_NQ && root.FFF_NQ.BLK && !root.FFF_NQ.BLK.x3) root.FFF_NQ.BLK.x3 = { n: 'WAGASHI ROW', r: [2420, 2760, 3460, 3300] };
     sv();
   }
+  /* Back-right work area (jars / steamer). Serving stand is just behind the counter top (y=470), facing the customer. */
+  var CHI_BACK = [780, 380], CHI_FRONT = [640, 455], chiReady = 0;
+  S2.CHI_BACK = CHI_BACK; S2.CHI_FRONT = CHI_FRONT;
   function chiyoPop() {
-    if (room() !== 'waga') { if (CHI) { try { kill(CHI); } catch (eK) {} CHI = null; } return; }
+    if (room() !== 'waga') { if (CHI) { try { kill(CHI); } catch (eK) {} CHI = null; } chiReady = 0; return; }
     if (CHI && CHI.el && CHI.el.parentNode) return;
-    CHI = npc('nq_chiyo', 640, 360, Math.PI / 2);
+    CHI = npc('nq_chiyo', CHI_BACK[0], CHI_BACK[1], Math.PI);
+    asWalker(CHI, 'nq_chiyo');
+    CHI.dir = 1;
+    if (typeof animWalk === 'function') animWalk(CHI, 0);
+    place(CHI, 0);
+    chiReady = 0;
     try { if (W.c2n) W.c2n.s2 = CHI; } catch (eN) {}
   }
+  function chiyoFaceCustomer() {
+    if (!CHI) return;
+    if (typeof c2Face === 'function') c2Face(CHI, CHI.x, CHI.y + 80);
+    else { CHI.dir = 0; if (typeof animWalk === 'function') animWalk(CHI, 0); place(CHI, 0); }
+  }
+  function chiyoToCounter(done) {
+    if (!CHI || !CHI.el || !CHI.el.parentNode) { if (done) done(); return; }
+    if (chiReady || Math.hypot(CHI.x - CHI_FRONT[0], CHI.y - CHI_FRONT[1]) < 8) {
+      chiReady = 1; chiyoFaceCustomer(); if (done) done(); return;
+    }
+    lockIn(true);
+    /* Step down to the counter, then walk sideways along it (existing side frames) to the serving gap. */
+    move(CHI, [[CHI_BACK[0], CHI_FRONT[1]], [CHI_FRONT[0], CHI_FRONT[1]]], 120, function () {
+      chiReady = 1; chiyoFaceCustomer(); lockIn(false); if (done) done();
+    });
+  }
+  S2.chiyoToCounter = chiyoToCounter;
   function flipPop() {
     if (!on() || !inTown() || !qOn() || stg() !== 'open') return;
     if (FL && FL.el && FL.el.parentNode) return;
@@ -45175,7 +45245,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       try {
         if (on()) {
           if (a === 's2_e_waga') { doorTalk(); return true; }
-          if (a === 's2_waga_order') { counterMenu(); return true; }
+          if (a === 's2_waga_order') { chiyoToCounter(function () { counterMenu(); }); return true; }
           if (a === 's2_flip' || (FL && a && /n13flip/.test(a) && qOn() && stg() === 'open')) { flipTalk(); return true; }
         }
       } catch (e) { ev('world:s2:err:act:' + (e && e.message)); }
