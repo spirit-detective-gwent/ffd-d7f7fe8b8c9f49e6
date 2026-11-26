@@ -420,8 +420,8 @@
   /* Kitsune "Suit" (floor enforcers): crimson double-breasted suit, black shirt, gold tie, gold fox pin, tinted shades, black punch perm (the yakuza cut), black slacks */
   SPEC.ksSuit = { base: 'punk', glove: 1, pal: { 3: tri('#141217'), 4: tri('#9e1b2f'), 5: tri('#1b1920'), 6: tri('#1b1920'), 7: tri('#141217') }, suit: { tie: '#d9a520', lapel: '#7a1323', db: 1, btn: '#d9a520' }, foxPin: '#e2b33a',
     bag: 2, hair: 'perm', hairCol: '#141217', shades: 1, nozig: 1 };
-  /* Kitsune "Runner" (game-floor runners / hostesses' muscle): black satin bomber with crimson collar band and ribbed hem, gold fox mask on the back, crimson tee, black slacks, black punch perm */
-  SPEC.ksRun = { base: 'punk', glove: 1, pal: { 3: tri('#141217'), 4: tri('#1d1b22'), 5: tri('#9e1b2f'), 6: tri('#1b1920'), 7: tri('#9e1b2f') }, happi: { eri: '#2a2730', hemCol: '#9e1b2f' }, crest: { k: 'fox', col: '#e2b33a', mark: '#c0242f' },
+  /* Kitsune "Runner" (game-floor runners): crimson satin bomber with a black collar band and ribbed hem, gold fox mask on the back, black tee, white sneakers, black slacks, black punch perm */
+  SPEC.ksRun = { base: 'punk', glove: 1, pal: { 3: tri('#141217'), 4: tri('#9e1b2f'), 5: tri('#1b1920'), 6: tri('#1b1920'), 7: tri('#efece6') }, happi: { eri: '#1d1b22', hemCol: '#1d1b22' }, crest: { k: 'fox', col: '#e2b33a', mark: '#c0242f' },
     bag: 2, hair: 'slick', hairCol: '#3a1720', nozig: 1 };
   /* the Black-Suit Bouncer, Kitsune's lieutenant: a wall in a black double-breasted suit, crimson shirt and tie, gold fox pin, shaved head, shades */
   SPEC.ksBouncer = { base: 'punk', glove: 1, bulk: 0.75, bagSide: 0.5, pal: { 4: tri('#25232b'), 5: tri('#9e1b2f'), 6: tri('#25232b'), 7: tri('#0f0e12') }, suit: { tie: '#6e0f1e', lapel: '#36333d', db: 1, btn: '#d9a520' }, foxPin: '#e2b33a',
