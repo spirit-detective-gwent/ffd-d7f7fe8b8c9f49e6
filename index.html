@@ -25529,7 +25529,8 @@ function ckChar(id, name, base) {
   CH[id + 'g'] = Object.assign({}, g, { name: name, title: 'Club Kitsune', story: 1 });
   NM[id] = name; PT[id] = PT[base] || (base + '_fig');
 }
-function ckFoes() { ckChar('ck_hostess', 'Club Hostess', 'c2_hustler'); ckChar('ck_dealer', 'Club Dealer', 'c2_hustler'); ckChar('ck_brute', 'Back-room Bouncer', 'bouncer'); NM.ck_bartender = 'Club Bartender'; }
+function ckFoes() { ckChar('ck_hostess', 'Club Hostess', 'c2_hustler'); ckChar('ck_dealer', 'Club Dealer', 'c2_hustler'); ckChar('ck_brute', 'Back-room Bouncer', 'bouncer'); }
+NM.ck_hostess = 'Club Hostess'; NM.ck_dealer = 'Club Dealer'; NM.ck_bartender = 'Club Bartender'; NM.ck_brute = 'Back-room Bouncer';
 function ckBit(box, cls, x, y, w, h) { var e = document.createElement('i'); e.className = 'ckbit ' + cls; e.style.left = x + 'px'; e.style.top = y + 'px'; e.style.width = w + 'px'; e.style.height = h + 'px'; box.appendChild(e); return e; }
 function ckSeats() {
   var ys = [1080, 1260, 1440, 1620], out = [], i;
