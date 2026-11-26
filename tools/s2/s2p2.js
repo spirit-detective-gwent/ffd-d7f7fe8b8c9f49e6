@@ -23,6 +23,40 @@
     st.textContent = '#world.c2:not(.c2town) #wrain{display:none}#world.c2:not(.c2town) #wrain .rn{animation-play-state:paused}';
     (document.head || document.documentElement).appendChild(st);
   })();
+  function syncIndoorRain() {
+    var wr = document.getElementById('wrain'), k = null;
+    try { k = c2Room(); } catch (eR) {}
+    var hide = !!(k && k !== 'town');
+    if (wr) wr.style.display = hide ? 'none' : '';
+    var ws = document.getElementById('wfxs');
+    if (ws && hide) ws.style.display = 'none';
+    var amb = document.getElementById('c2amb');
+    if (amb && hide) { amb.style.display = 'none'; try { var ag = amb.getContext('2d'); if (ag) ag.clearRect(0, 0, amb.width, amb.height); } catch (eC) {} }
+  }
+  P2.syncIndoorRain = syncIndoorRain;
+  /* C2AMB falls back to the town grade (rain: 32) for unknown rooms like
+   * mina / mshop / waga. Wrap the existing c2Frame tick — no new loop. */
+  function hookAmb() {
+    if (typeof c2Frame !== 'function' || c2Frame._s2p2rain) return;
+    var fr0 = c2Frame;
+    var known = { gym: 1, clinic: 1, sento: 1, sentoU: 1, sentoK: 1, arcade: 1, game: 1, depot: 1, hotel: 1, udon: 1, club: 1, ckback: 1, gekko: 1, motors: 1, town: 1, roof: 1 };
+    c2Frame = function (dt) {
+      fr0.apply(this, arguments);
+      try {
+        var k = typeof c2Room === 'function' ? c2Room() : null;
+        if (k && !known[k]) {
+          var cv = document.getElementById('c2amb');
+          if (cv) {
+            cv.style.display = 'none';
+            var g = cv.getContext('2d');
+            if (g) g.clearRect(0, 0, cv.width, cv.height);
+          }
+        }
+      } catch (eH) {}
+    };
+    c2Frame._s2p2rain = 1;
+  }
+  later(0, hookAmb);
   function on() { return (typeof c2On !== 'function' || c2On()) && (typeof chN !== 'function' || chN() === 2); }
   function S() { return c2S(); }
   function E() { return c2S().e; }
@@ -547,7 +581,7 @@
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
-    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); placeDoor(); hookBattle(); popShop(); popLobby(); if (room() === 'mina' || room() === 'mshop') paintRoom(); } } catch (eP) {} };
+    c2Pop = function () { pop0.apply(this, arguments); try { hookAmb(); if (on()) { chainRepair(); placeDoor(); hookBattle(); popShop(); popLobby(); if (room() === 'mina' || room() === 'mshop') paintRoom(); } syncIndoorRain(); } catch (eP) {} };
   }
   try { chainRepair(); } catch (eC) {}
   ev('world:s2p2:ready');
