@@ -37,7 +37,7 @@ def serve():
     return h
 
 SK = """()=>{var b=[...document.querySelectorAll('button')].filter(e=>/^Skip/.test((e.textContent||'').trim())&&e.offsetParent!==null);if(!b.length)return null;var r=b[0].getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]}"""
-HUSH = """(function(){try{if(typeof phClose==='function')phClose()}catch(e){}try{close()}catch(e2){}W.scGen=(W.scGen|0)+1;W.paused=false;W.dlg=false;W.cut=false;W.busy=false;W.path=[];try{while((W.scr|0)>0)sLock(0)}catch(e5){}var d=document.getElementById('wdlg');if(d){d.className='';d.innerHTML=''}try{if(typeof commentHide==='function')commentHide()}catch(e3){}var w=document.getElementById('wintro');if(w)w.remove();try{if(typeof FFF_SCAM!=='undefined'&&FFF_SCAM.clear)FFF_SCAM.clear()}catch(e7){}return 1})()"""
+HUSH = """(function(){try{if(typeof phClose==='function')phClose()}catch(e){}try{if(typeof autoSet==='function')autoSet(false)}catch(eA){}try{clearTimeout(W.autoT)}catch(eT){}W.autoTok=(W.autoTok|0)+1;try{close()}catch(e2){}W.scGen=(W.scGen|0)+1;W.paused=false;W.dlg=false;W.cut=false;W.busy=false;W.path=[];try{while((W.scr|0)>0)sLock(0)}catch(e5){}var d=document.getElementById('wdlg');if(d){d.className='';d.innerHTML='';d.style.opacity='';d.style.transform=''}try{if(typeof commentHide==='function')commentHide()}catch(e3){}var w=document.getElementById('wintro');if(w)w.remove();try{if(typeof FFF_SCAM!=='undefined'&&FFF_SCAM.clear)FFF_SCAM.clear()}catch(e7){}return 1})()"""
 READ = """(function(){
   var d=document.getElementById('wdlg');
   var intro=document.getElementById('wintro');
@@ -117,15 +117,25 @@ async def next_line(pg, times=1):
     return await st(pg)
 
 async def skip_intro_card(pg):
-    for i in range(20):
-        s = await ev(pg, "(function(){var e=document.getElementById('wintro'); if(!e)return 0; var b=e.querySelector('.iskip'); if(b){b.click(); return 2} return 1})()")
+    for i in range(30):
+        s = await ev(pg, """(function(){
+          var e=document.getElementById('wintro');
+          if(!e) return 0;
+          var b=e.querySelector('.iskip');
+          if(b){ b.click(); return 2; }
+          try{ e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true})); }catch(err){ e.click(); }
+          return 1;
+        })()""")
         if s == 0:
+            await pg.wait_for_timeout(400)  # fade out
             break
-        if s == 2:
-            await pg.wait_for_timeout(200)
-            break
-        await pg.wait_for_timeout(80)
-    await pg.wait_for_timeout(200)
+        await pg.wait_for_timeout(120)
+    # wait until the card is actually gone
+    for i in range(20):
+        s = await st(pg)
+        if not s.get("intro"):
+            return s
+        await pg.wait_for_timeout(100)
     return await st(pg)
 
 async def boot(p):
@@ -171,24 +181,27 @@ async def open_post(pg):
       return 1;
     })()""")
 
-async def wait_dlg(pg, timeout=8000):
+async def wait_dlg(pg, timeout=8000, settle=400):
     t0 = asyncio.get_event_loop().time()
+    s = None
     while (asyncio.get_event_loop().time() - t0) * 1000 < timeout:
         s = await st(pg)
         if s and (s.get("dlg") or s.get("intro")):
+            if settle:
+                await pg.wait_for_timeout(settle)
+                s = await st(pg)
             return s
         await pg.wait_for_timeout(80)
-    return await st(pg)
+    return s or await st(pg)
 
-async def step_until(pg, pred, cap=40, shots=None):
+async def step_until(pg, pred, cap=40):
     s = await st(pg)
     for i in range(cap):
-        if s.get("intro"):
-            if shots:
-                await shot(pg, shots)
-            return s
         if pred(s):
             return s
+        if s.get("intro"):
+            s = await skip_intro_card(pg)
+            continue
         s = await next_line(pg)
     return s
 
@@ -204,8 +217,9 @@ def static_checks():
     ok("n9Cabinet passes painted nursePtUrl", "n9Cabinet" in src and "nursePtUrl()" in src and "White cabinet" in src)
     ok("dress tutorial offer passes painted nursePtUrl", "You keep coming back scraped" in src and "nursePtUrl()" in src)
     # leftover third-arg nurse_fig is only the chalk board, which goes through dlgPtUrl
-    leftover = re.findall(r"dialog\([^;]{0,500}'nurse_fig'", src)
-    ok("no unscoped dialog(..., 'nurse_fig') besides board (dlgPtUrl)",
+    leftover = [x for x in re.findall(r"dialog\([^;]{0,500}'nurse_fig'", src)
+                if "nursePtUrl" not in x and "dlgPtUrl" not in x]
+    ok("dialog nurse_fig calls go through nursePtUrl or the board (dlgPtUrl)",
        len(leftover) <= 1, leftover)
 
 
@@ -244,10 +258,12 @@ async def run_path(pg, path, ngp=False, do_shots=False):
     ok(f"{tag} reveal card plays after the name line",
        s.get("intro") and "Shiraishi" in (s.get("introName") or ""), s)
     if do_shots:
+        await pg.wait_for_timeout(900)  # let the name slam in
         await shot(pg, "03_reveal_card")
     s = await skip_intro_card(pg)
+    ok(f"{tag} card dismissed after the reveal", not s.get("intro"), s)
     # next talk: Aoi, then later nurse should be named. Step until a nurse line.
-    s = await step_until(pg, lambda x: x.get("name") in ("Shiraishi-sensei", "Nurse") and "Hayase" not in (x.get("line") or "") and x.get("name") != "Aoi Hayase" and "Aoi" not in (x.get("name") or ""))
+    s = await step_until(pg, lambda x: x.get("name") == "Shiraishi-sensei")
     # more reliably: look at label() and a later nurse speaker
     found = None
     cur = s
@@ -270,8 +286,11 @@ async def portraits(pg, errs):
     await ev(pg, HUSH)
     # known, so labels are Shiraishi-sensei
     await ev(pg, """(function(){
-      SAVE.intro=1; SAVE.sc=SAVE.sc||{}; SAVE.sc.nurse=1; SAVE.sc.nurseName=1; SAVE.craft=SAVE.craft||{}; delete SAVE.craft.dress;
+      SAVE.intro=1; SAVE.sc=SAVE.sc||{}; SAVE.sc.nurse=1; SAVE.sc.nurseName=1;
+      if(SAVE.sc) delete SAVE.sc.dress;
+      SAVE.craft=SAVE.craft||{}; delete SAVE.craft.dress;
       SAVE.cabT=0; if(typeof nurseSyncName==='function') nurseSyncName();
+      try{ if(typeof autoSet==='function') autoSet(false); }catch(e){}
       return nurseLabel();
     })()""")
     # --- before: hide painted bust so the old fig shows ---
@@ -290,6 +309,7 @@ async def portraits(pg, errs):
     # --- after: restore painted ---
     await ev(pg, "PT_HAS.nurse_neutral = window._ptNurse || 1")
     await ev(pg, HUSH)
+    await ev(pg, """(function(){ if(SAVE.sc) delete SAVE.sc.dress; SAVE.craft=SAVE.craft||{}; delete SAVE.craft.dress; SAVE.cabT=0; return 1; })()""")
     await ev(pg, "(function(){ try{ close(); }catch(e){} try{ v630DressTalk(); }catch(e){ return String(e&&e.message||e);} return 1; })()")
     s = await wait_dlg(pg)
     await shot(pg, "06_bandage_tutorial_after")
