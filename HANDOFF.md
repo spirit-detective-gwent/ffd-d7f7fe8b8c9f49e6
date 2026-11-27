@@ -11,9 +11,9 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
-### 2026-11-27 — executor (Grok Bot) — v6.5.64 (commit TBD) — LIVE after Erik's OK
+### 2026-11-27 — executor (Grok Bot) — v6.5.64 (commit 2ee7cbf) — LIVE after Erik's OK
 Versions: `window.FFF_BUILD="v6564"`, title `.vtag` "v6.5.64", `#ver` text "v6.5.64" (bumped in aab258d).
-Approved by Erik (t475u). Fast-forward onto e1ba0d4 (v6.5.63). Published SHA recorded after the push.
+Approved by Erik (t475u). Fast-forward onto e1ba0d4 (v6.5.63). Published commit `2ee7cbf`; origin/main is `2ee7cbf` and the build strings read v6564 / v6.5.64.
 
 What shipped (merged into `v6564-rc` in this order; each merge is its own commit):
 
