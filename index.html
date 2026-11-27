@@ -21181,29 +21181,26 @@ function c2Trans(mid, done) { var k = cinK(), T = Math.max(400, 6200 * k), t0 = 
   el.querySelector('.c2tskip').onclick = function (e) { e.stopPropagation(); ev('world:c2:trans:skip'); W._c2SkipCine = 1; finish(); };
   (function frame(now) { if (end) return; var u = Math.min(1, (now - t0) / T); c2TransDraw(cx, cv.width, cv.height, u, (now - t0) / 1000, sh); el.dataset.beat = u < 0.38 ? 1 : u < 0.8 ? 2 : 3;
     if (u >= 0.8) goMid(); if (u >= 1) { finish(); return; } requestAnimationFrame(frame); })(t0); }
-function c2TransDraw(c, w, h, u, t, sh) { var e = function (x) { return x < 0 ? 0 : x > 1 ? 1 : x * x * (3 - 2 * x); }, crane = e((u - 0.32) / 0.46), H = h * 1.9, oy = -crane * (H - h); /* the camera rises: the world slides down */
+/* v6.5.64 (Erik t406u): the anime-ending shot. They run UP the road toward the town, seen from behind (row 3 of their real jog sheets),
+ * framed medium-wide at first (both full figures, road around them). The camera lets them pull away up the road, then tilts up to the
+ * skyline. Same 6.2 s, beats, caption, whoosh and Skip as before; one rAF for the length of the shot (the old loop), nothing new running after.
+ * Road space: x across (m), z up the road (m). Screen: sx = w/2 + f*x/d, sy = hz + f*(C2T_CH - y)/d, d = z - camera z. */
+var C2T_F = 0.9, C2T_CH = 3, C2T_D0 = 7, C2T_V = 30, C2T_U = 0.7, C2T_GATE = 9, C2T_HZ0 = 0.3, C2T_HZ1 = 0.72;
+/* they run at a steady C2T_V (m per shot); the camera starts at their pace and eases to a stop by u = C2T_U, so the gap opens smoothly from 0 (no jump) */
+function c2TransCam(u) { var e = function (x) { return x < 0 ? 0 : x > 1 ? 1 : x * x * (3 - 2 * x); }, uc = Math.min(u, C2T_U), zc = C2T_V * (uc - uc * uc / (2 * C2T_U)), zr = C2T_D0 + C2T_V * u; return { d: zr - zc, zr: zr, zc: zc, crane: e((u - 0.32) / 0.46) }; }
+function c2TransDraw(c, w, h, u, t, sh) { var e = function (x) { return x < 0 ? 0 : x > 1 ? 1 : x * x * (3 - 2 * x); }, cam = c2TransCam(u), crane = cam.crane, zc = cam.zc, f = h * C2T_F, hz = h * (C2T_HZ0 + (C2T_HZ1 - C2T_HZ0) * crane), cx0 = w / 2;
+  var PX = function (x, d) { return cx0 + f * x / d; }, PY = function (y, d) { return hz + f * (C2T_CH - y) / d; }, ZN = 0.9;
   c.save(); var g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#0b0820'); g.addColorStop(0.55, crane > 0.3 ? '#2a1640' : '#1a1430'); g.addColorStop(1, '#3a1e3a'); c.fillStyle = g; c.fillRect(0, 0, w, h);
   for (var i = 0; i < 60; i++) { var sx = (i * 977) % w, sy = (i * 571) % (h * 0.5); c.fillStyle = 'rgba(255,240,220,' + (0.25 + 0.35 * Math.abs(Math.sin(t * 1.7 + i))) + ')'; c.fillRect(sx, sy, 2, 2); }
-  c.translate(0, -oy * 0); var base = h * 0.78 - oy; /* ground line of the run (scrolls down as the camera cranes up) */
-  /* far hills + the city glow (parallax 0.2) */
-  c.fillStyle = '#21183a'; c.beginPath(); c.moveTo(0, base - h * 0.12 - oy * -0.0); for (var x = 0; x <= w; x += w / 12) c.lineTo(x, base - h * 0.16 + Math.sin(x / w * 7 + 1) * h * 0.03 + oy * 0.6); c.lineTo(w, h); c.lineTo(0, h); c.fill();
-  /* beat 1: the Kitsune Ridge road, gate and lamps (parallax 1.0) */
-  var run = t * w * 0.42; c.fillStyle = '#2b2236'; c.fillRect(0, base, w, h); c.fillStyle = '#463a52'; c.fillRect(0, base, w, h * 0.012);
-  for (var L = 0; L < 6; L++) { var lx = ((L * w * 0.36 - run) % (w * 2.16) + w * 2.16) % (w * 2.16) - w * 0.2; c.fillStyle = '#14110d'; c.fillRect(lx, base - h * 0.24, w * 0.006, h * 0.24); c.fillStyle = 'rgba(255,214,140,.9)'; c.beginPath(); c.arc(lx + w * 0.003, base - h * 0.245, h * 0.012, 0, 7); c.fill(); c.fillStyle = 'rgba(255,214,140,.12)'; c.beginPath(); c.arc(lx, base - h * 0.2, h * 0.08, 0, 7); c.fill(); }
-  var gx = w * 0.62 - run * 0.9; if (gx > -w * 0.4) { c.fillStyle = '#7a1e22'; c.strokeStyle = '#14110d'; c.lineWidth = Math.max(2, h * 0.005); [0, 1].forEach(function (p) { c.fillRect(gx + p * w * 0.22, base - h * 0.32, w * 0.02, h * 0.32); c.strokeRect(gx + p * w * 0.22, base - h * 0.32, w * 0.02, h * 0.32); });
-    c.fillRect(gx - w * 0.03, base - h * 0.35, w * 0.3, h * 0.03); c.strokeRect(gx - w * 0.03, base - h * 0.35, w * 0.3, h * 0.03); c.fillStyle = '#f4ecd8'; c.font = '900 ' + Math.round(h * 0.022) + 'px system-ui'; c.textAlign = 'center'; c.fillText(C2TRANS_GATE, gx + w * 0.12, base - h * 0.385); }
-  /* the two of them jogging out (their real jog cycles, side view, row 2 = facing right) */
-  sh.forEach(function (q, i) { if (!q.im.complete || !q.im.naturalWidth) return; var cols = SHC[q.sh] || 8, fr = Math.floor(t * 11 + i * 3) % cols, ph = h * 0.26, pw = ph * 192 / 256, px = w * (0.3 - i * 0.11) + Math.sin(t * 2 + i) * w * 0.006;
-    c.globalAlpha = 1 - e((u - 0.5) / 0.2); c.drawImage(q.im, fr * 208 + 8, 2 * 272 + 8, 192, 256, px - pw / 2, base - ph + h * 0.004, pw, ph); c.globalAlpha = 1; });
-  /* beat 2: the skyline above (revealed as the camera cranes up): viaduct + train, signs, the shotengai roof, canal, Central Tower */
-  var sky = base - h * 0.95; if (crane > 0) { c.globalAlpha = Math.min(1, crane * 1.6);
+  /* the town at the end of the road: the old crane-pan skyline, sat on the horizon (dim while the camera looks down the road, full once it tilts up) */
+  var sky = hz - h * 0.3; { var sA = 0.35 + 0.65 * Math.min(1, crane * 1.6); c.globalAlpha = sA;
     var tw = w * 0.07, tx = w * 0.7; c.fillStyle = '#1e1a2c'; c.fillRect(tx, sky - h * 0.9, tw, h * 0.9 + h * 0.4); c.strokeStyle = '#14110d'; c.strokeRect(tx, sky - h * 0.9, tw, h * 1.3);
     for (var r = 0; r < 26; r++) for (var cc = 0; cc < 3; cc++) if ((r * 7 + cc * 3) % 5) { c.fillStyle = 'rgba(255,220,150,' + (0.35 + 0.3 * ((r + cc) % 2)) + ')'; c.fillRect(tx + tw * (0.15 + cc * 0.27), sky - h * 0.86 + r * h * 0.045, tw * 0.16, h * 0.018); }
     c.fillStyle = 'rgba(255,60,60,' + (0.5 + 0.5 * Math.sin(t * 5)) + ')'; c.beginPath(); c.arc(tx + tw / 2, sky - h * 0.93, h * 0.01, 0, 7); c.fill(); c.fillStyle = '#14110d'; c.fillRect(tx + tw / 2 - 1, sky - h * 0.93, 2, h * 0.03);
     [[0.04, 0.32, '#3b2e4e'], [0.36, 0.2, '#33284a'], [0.8, 0.18, '#3b2e4e'], [0.18, 0.24, '#2c2340']].forEach(function (b, j) { var bx = w * b[0], bh = h * b[1] + h * 0.2; c.fillStyle = b[2]; c.fillRect(bx, sky + h * 0.2 - bh, w * 0.16, bh + h * 0.4); for (var y2 = 0; y2 < 8; y2++) { c.fillStyle = 'rgba(255,214,140,.5)'; c.fillRect(bx + w * 0.02 + (y2 % 3) * w * 0.045, sky + h * 0.24 - bh + y2 * h * 0.04, w * 0.02, h * 0.014); } });
     var sg = C2TRANS_SG; c.textAlign = 'left'; /* v5.3: one sign per row, each fitted to ~42% of the width (no overlaps on narrow screens) */
     sg.forEach(function (q, j) { var fl = Math.sin(t * 9 + j * 2) > -0.85 ? 1 : 0.3, fs = Math.round(h * 0.03); c.font = '900 ' + fs + 'px system-ui'; var tw = c.measureText(q[0]).width; if (tw > w * 0.42) { fs = Math.max(8, Math.floor(fs * w * 0.42 / tw)); c.font = '900 ' + fs + 'px system-ui'; }
-      c.shadowColor = q[1]; c.shadowBlur = h * 0.03 * fl; c.fillStyle = q[1]; c.globalAlpha = Math.min(1, crane * 1.6) * fl; c.fillText(q[0], w * q[2], sky - h * (0.02 + q[3] * 0.05)); }); c.font = '900 ' + Math.round(h * 0.03) + 'px system-ui'; c.shadowBlur = 0; c.globalAlpha = Math.min(1, crane * 1.6);
+      c.shadowColor = q[1]; c.shadowBlur = h * 0.03 * fl; c.fillStyle = q[1]; c.globalAlpha = sA * fl; c.fillText(q[0], w * q[2], sky - h * (0.02 + q[3] * 0.05)); }); c.font = '900 ' + Math.round(h * 0.03) + 'px system-ui'; c.shadowBlur = 0; c.globalAlpha = sA;
     c.fillStyle = '#5a4a6a'; c.beginPath(); c.moveTo(w * 0.34, sky + h * 0.22); c.quadraticCurveTo(w * 0.47, sky + h * 0.08, w * 0.6, sky + h * 0.22); c.fill(); c.strokeStyle = '#14110d'; c.lineWidth = Math.max(2, h * 0.004); c.stroke();
     for (var a2 = 0; a2 < 9; a2++) { c.strokeStyle = 'rgba(255,214,140,.55)'; c.beginPath(); c.moveTo(w * (0.36 + a2 * 0.028), sky + h * 0.2); c.lineTo(w * (0.36 + a2 * 0.028), sky + h * 0.13 + Math.abs(a2 - 4) * h * 0.012); c.stroke(); }
     c.fillStyle = '#4a3a5a'; c.fillRect(0, sky + h * 0.24, w, h * 0.05); c.fillStyle = '#14110d'; for (var p2 = 0; p2 < 10; p2++) c.fillRect(p2 * w * 0.11, sky + h * 0.29, w * 0.012, h * 0.08);
@@ -21211,6 +21208,34 @@ function c2TransDraw(c, w, h, u, t, sh) { var e = function (x) { return x < 0 ? 
     var cg = c.createLinearGradient(0, sky + h * 0.42, 0, sky + h * 0.55); cg.addColorStop(0, '#1b2a4a'); cg.addColorStop(1, '#0e1628'); c.fillStyle = cg; c.fillRect(0, sky + h * 0.42, w, h * 0.13);
     for (var rf = 0; rf < 14; rf++) { c.fillStyle = ['rgba(255,79,160,.35)', 'rgba(70,224,255,.35)', 'rgba(255,210,90,.35)'][rf % 3]; c.fillRect(((rf * 0.073 + Math.sin(t * 2 + rf) * 0.004) % 1) * w, sky + h * (0.44 + (rf % 4) * 0.025), w * 0.03, h * 0.004); }
     c.globalAlpha = 1; }
+  /* the city glow on the horizon */
+  var hg = c.createLinearGradient(0, hz - h * 0.12, 0, hz + h * 0.04); hg.addColorStop(0, 'rgba(255,120,170,0)'); hg.addColorStop(0.75, 'rgba(255,140,170,.22)'); hg.addColorStop(1, 'rgba(255,170,150,0)'); c.fillStyle = hg; c.fillRect(0, hz - h * 0.12, w, h * 0.16);
+  /* the Kitsune Ridge road, running up the screen to the town (ground, sidewalks, road, centre dashes) */
+  var quad = function (x0, x1, z0, z1, y) { var d0 = Math.max(ZN, z0 - zc), d1 = Math.max(ZN, z1 - zc); y = y || 0; c.beginPath(); c.moveTo(PX(x0, d0), PY(y, d0)); c.lineTo(PX(x1, d0), PY(y, d0)); c.lineTo(PX(x1, d1), PY(y, d1)); c.lineTo(PX(x0, d1), PY(y, d1)); c.closePath(); c.fill(); }, FAR = zc + 420;
+  c.fillStyle = '#1c1628'; c.fillRect(0, hz, w, h - hz + 2);
+  c.fillStyle = '#3a3046'; quad(-6.4, 6.4, zc, FAR); c.fillStyle = '#2b2236'; quad(-4.2, 4.2, zc, FAR); c.fillStyle = '#463a52'; quad(-4.35, -4.2, zc, FAR); quad(4.2, 4.35, zc, FAR);
+  c.fillStyle = 'rgba(244,236,216,.55)'; for (var dz = Math.floor(zc / 6) * 6; dz < zc + 140; dz += 6) if (dz + 2.6 > zc + ZN) quad(-0.09, 0.09, dz, dz + 2.6);
+  /* far-to-near: lamps (both sides, every 12 m), the school gate, the two of them */
+  var items = [], k0 = Math.floor(zc / 12) * 12; for (var lz = k0 + 12; lz < zc + 150; lz += 12) { items.push([lz, 'L', -5.3]); items.push([lz + 6, 'L', 5.3]); }
+  items.push([C2T_GATE, 'G']); items.push([cam.zr, 'R', -0.62, 0]); items.push([cam.zr + 0.5, 'R', 0.62, 1]); items.sort(function (A, B) { return B[0] - A[0]; });
+  var fade = 1 - e((u - 0.9) / 0.1) * 0.25, lw = Math.max(1, h * 0.003);
+  items.forEach(function (it) { var d = it[0] - zc; if (d < ZN + 0.2) return; var fog = Math.max(0.25, Math.min(1, 1.25 - d / 110));
+    if (it[1] === 'L') { var x = PX(it[2], d), y0 = PY(0, d), y1 = PY(4.2, d), pw2 = Math.max(1, f * 0.13 / d);
+      c.globalAlpha = fog * Math.min(1, Math.max(0, (d - 3) / 4)); c.fillStyle = 'rgba(255,190,120,.09)'; c.beginPath(); c.ellipse(PX(it[2] * 0.7, d), y0, f * 1.9 / d, f * 0.45 / d, 0, 0, 7); c.fill();
+      c.globalAlpha = fog; c.fillStyle = '#14110d'; c.fillRect(x - pw2 / 2, y1, pw2, y0 - y1); c.fillRect(x - (it[2] < 0 ? 0 : f * 0.8 / d), y1, f * 0.8 / d, pw2);
+      var hx = PX(it[2] * 0.85, d); c.fillStyle = 'rgba(255,214,140,.95)'; c.beginPath(); c.arc(hx, y1 + pw2, Math.max(1.2, f * 0.22 / d), 0, 7); c.fill(); c.fillStyle = 'rgba(255,214,140,.12)'; c.beginPath(); c.arc(hx, y1 + f * 0.6 / d, f * 1.6 / d, 0, 7); c.fill(); c.globalAlpha = 1; return; }
+    if (it[1] === 'G') { var gy0 = PY(0, d), gy1 = PY(4.4, d), pw = f * 0.38 / d, xa = PX(-3.3, d), xb = PX(3.3, d), lh = f * 0.38 / d; c.globalAlpha = fog; c.fillStyle = '#7a1e22'; c.strokeStyle = '#14110d'; c.lineWidth = lw;
+      [xa, xb].forEach(function (gx) { c.fillRect(gx - pw / 2, gy1, pw, gy0 - gy1); c.strokeRect(gx - pw / 2, gy1, pw, gy0 - gy1); });
+      c.fillRect(PX(-3.9, d), gy1 - lh, PX(3.9, d) - PX(-3.9, d), lh); c.strokeRect(PX(-3.9, d), gy1 - lh, PX(3.9, d) - PX(-3.9, d), lh); c.fillRect(PX(-3.6, d), gy1 + lh * 0.9, PX(3.6, d) - PX(-3.6, d), lh * 0.55); c.strokeRect(PX(-3.6, d), gy1 + lh * 0.9, PX(3.6, d) - PX(-3.6, d), lh * 0.55);
+      var fs = Math.max(6, Math.round(f * 0.42 / d)); c.font = '900 ' + fs + 'px system-ui'; var tw2 = c.measureText(C2TRANS_GATE).width, mx = Math.min(xb - xa, w * 0.86); if (tw2 > mx) { fs = Math.max(5, Math.floor(fs * mx / tw2)); c.font = '900 ' + fs + 'px system-ui'; }
+      c.fillStyle = '#f4ecd8'; c.textAlign = 'center'; c.fillText(C2TRANS_GATE, cx0, gy1 - lh - fs * 0.35); c.globalAlpha = 1; return; }
+    /* Ryo (left) and Aoi (right) from behind: their real jog cycles, row 3 = facing away (up the screen) */
+    var q = sh[it[3]]; if (!q || !q.im.complete || !q.im.naturalWidth) return; var cols = SHC[q.sh] || 8, fr = Math.floor(t * 11 + it[3] * 3) % cols, ph = f * 1.9 / d, pw3 = ph * 192 / 256, bob = Math.abs(Math.sin(t * 11 * Math.PI / 2 + it[3])) * ph * 0.012,
+      px = PX(it[2] + Math.sin(t * 1.3 + it[3] * 2) * 0.12, d), fy = PY(0, d);
+    c.globalAlpha = 0.45 * fade; c.fillStyle = 'rgba(0,0,0,.5)'; c.beginPath(); c.ellipse(px, fy, pw3 * 0.26, ph * 0.035, 0, 0, 7); c.fill();
+    c.globalAlpha = fade; c.drawImage(q.im, fr * 208 + 8, 3 * 272 + 8, 192, 256, px - pw3 / 2, fy - ph - bob + ph * 0.02, pw3, ph); c.globalAlpha = 1; });
+  /* soft haze where the road meets the town */
+  var hb = c.createLinearGradient(0, hz, 0, hz + h * 0.03); hb.addColorStop(0, 'rgba(58,30,58,.7)'); hb.addColorStop(1, 'rgba(58,30,58,0)'); c.fillStyle = hb; c.fillRect(0, hz, w, h * 0.03);
   c.restore(); c.fillStyle = 'rgba(0,0,0,' + (0.6 * (1 - e(u / 0.08))) + ')'; c.fillRect(0, 0, w, h); }
 
 /* ---------- 8. guarded side-quest props (Ch1 rooms + Kitsune-Chuo): the guard spots you at ~115 px and you rush each other ---------- */
