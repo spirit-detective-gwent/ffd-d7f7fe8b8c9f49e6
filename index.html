@@ -53047,6 +53047,178 @@ if (root.WORLD_API) {
   root.WORLD_API.lootBox = (typeof lootBox === 'function' ? lootBox : root.WORLD_API.lootBox);
 }
 
+/* HEALSTYLE_BEGIN v6564-healstyle (preview): chapter healing style. ONE remedy slot whose item follows the chapter
+ * (Ch1 Healing Dressing, Ch2 Kampo Potion after Dr. Tsukikage's lesson). Carry cap 5. The lesson converts leftover
+ * Ch1 supplies. No new loops: everything here runs on hud() / taps / the scene. */
+var HS_CAP = 5;
+var HS_REM = {
+  dress: { id: 'dress', n: 'Healing Dressing', mats: [['gauze', 1], ['tape', 1]], who: 'Nurse Shiraishi', heal: function () { return '+10 HP'; }, perf: function () { return '+14 HP'; } },
+  potion: { id: 'potion', n: 'Kampo Potion', mats: [['leaf', 1], ['ginger', 1]], who: 'Dr. Tsukikage', heal: function () { return '+' + Math.ceil(MAXHP * 0.25) + ' HP'; }, perf: function () { return '+' + Math.ceil(MAXHP * 0.35) + ' HP'; }, pctTxt: '25% max HP \u00b7 perfect 35%' }
+};
+if (HITEM.potion) { HITEM.potion.pct = 0.25; HITEM.potion.n = 'Kampo Potion'; }
+if (HITEM.dress) HITEM.dress.n = 'Healing Dressing';
+function hsKey() { var c = SAVE.craft || {}; if ((SAVE.chapter | 0) >= 2 && c.potion) return 'potion'; return c.dress ? 'dress' : ''; }
+function hsSvg(k, cls) {
+  cls = cls || 'hsic';
+  if (k === 'potion') return '<svg class="' + cls + '" viewBox="0 0 40 40" aria-hidden="true"><path d="M15 5h10v4h-10z" fill="#b98a52" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/><path d="M16 9h8v5c5 2 8 6 8 11v7a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4v-7c0-5 3-9 8-11z" fill="#6b3f1f" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/><path d="M10.5 24c4 2.4 15 2.4 19 0v8a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2z" fill="#8c5a2b"/><rect x="12" y="21" width="16" height="10" rx="2" fill="#efe4c8" stroke="#14110d" stroke-width="1.6"/><path d="M20 30c-3-2-5-4-5-6.5 2 .4 3.4-.6 3.6-2 1 .9 1.8.9 2.8 0 .2 1.4 1.6 2.4 3.6 2-.1 2.5-2 4.5-5 6.5z" fill="#5f9e4a" stroke="#14110d" stroke-width="1.2" stroke-linejoin="round"/><path d="M20 29.5v-6" stroke="#cfe8a8" stroke-width="1"/><path d="M18 12.5h4" stroke="#f0c890" stroke-width="1.4"/><path d="M27 17c1.4 1.3 2.2 3 2.4 5" stroke="#d9a868" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>';
+  return '<svg class="' + cls + '" viewBox="0 0 40 40" aria-hidden="true"><path d="M7 15c0-4 3-6 7-6h12c4 0 7 2 7 6v10c0 4-3 6-7 6H14c-4 0-7-2-7-6z" fill="#f4f1ea" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/><path d="M7 20h26" stroke="#d8d1c0" stroke-width="1.4"/><path d="M12 9v22M17 9v22M23 9v22M28 9v22" stroke="#e2dccd" stroke-width="1"/><rect x="15" y="11" width="10" height="18" rx="2" fill="#7ecfc6" stroke="#14110d" stroke-width="1.8" transform="rotate(-18 20 20)"/><path d="M16.5 17l7-2.3M17.6 20.4l7-2.3M18.7 23.8l7-2.3" stroke="#2f7f78" stroke-width="1.1" transform="rotate(-18 20 20) rotate(18 20 20)"/><path d="M17 18.5h6M17 21.5h6" stroke="#e84a4a" stroke-width="2.2" stroke-linecap="round"/><path d="M20 15.5v9" stroke="#e84a4a" stroke-width="2.2" stroke-linecap="round"/></svg>';
+}
+function hsCss() {
+  if (document.getElementById('hscss')) return;
+  var s = document.createElement('style'); s.id = 'hscss';
+  s.textContent = '#wbag button.phq.hsrem{width:76px;height:32px;background:#1c3348;box-shadow:inset 0 0 0 1.5px #7ecfc6;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:4px;padding:0 6px 0 4px;opacity:1;filter:none;pointer-events:auto}' +
+    '#wbag button.phq.hsrem.k-potion{box-shadow:inset 0 0 0 1.5px #d9a868;background:#2b2118}' +
+    '#wbag button.phq.hsrem .hsic{width:28px!important;height:28px!important;min-width:28px;flex:0 0 28px;display:block;filter:drop-shadow(0 1px 0 rgba(0,0,0,.45))}' +
+    '#wbag button.phq.hsrem .hsct{position:static;font:900 14px/1 system-ui;color:#f4f7fb;font-style:normal;letter-spacing:.2px;white-space:nowrap}' +
+    '#wbag button.phq.hsrem .hsct small{font-size:9px;opacity:.7;margin-left:1px}' +
+    '#wbag button.phq.hsrem.zero .hsct{color:#9fb0c2}#wbag button.phq.hsrem.zero .hsic{opacity:.55}' +
+    '#wbag button.phq.hsrem.capf .hsct{color:#ffd25a}' +
+    '#hspanel{position:absolute;z-index:42;width:224px;background:#14202e;border-radius:12px;box-shadow:0 0 0 1.5px #7ecfc6,0 8px 20px rgba(0,0,0,.5);padding:10px 10px 10px;color:#f4f7fb;font:600 12px/1.3 system-ui;transform-origin:20px 0;animation:hspop .16s ease-out}' +
+    '#hspanel.k-potion{box-shadow:0 0 0 1.5px #d9a868,0 8px 20px rgba(0,0,0,.5);background:#1e1812}' +
+    '@keyframes hspop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}' +
+    '#hspanel .hsh{display:flex;align-items:center;gap:8px}#hspanel .hsh .hsbig{width:40px;height:40px;flex:0 0 40px}' +
+    '#hspanel .hsh b{display:block;font:900 14px/1.1 system-ui}#hspanel .hsh small{display:block;color:#b9c8d6;font-weight:600;font-size:11px;margin-top:2px}' +
+    '#hspanel .hsx{position:absolute;right:6px;top:4px;border:0;background:none;color:#9fb0c2;font:700 18px/1 system-ui;padding:2px 6px}' +
+    '#hspanel .hsrow{display:flex;justify-content:space-between;margin-top:8px;padding:6px 8px;border-radius:8px;background:rgba(255,255,255,.06);font-size:11px;color:#dfe8f0}' +
+    '#hspanel .hsrow em{font-style:normal;font-weight:900;color:#fff}' +
+    '#hspanel .hsbt{display:flex;gap:8px;margin-top:9px}#hspanel .hsbt button{flex:1;height:38px;border:0;border-radius:9px;font:900 14px system-ui;color:#fff;background:#1f7a72;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}' +
+    '#hspanel.k-potion .hsbt button.use{background:#9a5a22}#hspanel .hsbt button.cr{background:#2c4a6a}#hspanel .hsbt button:disabled{opacity:.45}' +
+    '#hspanel .hsbt button small{display:block;font:700 9px system-ui;opacity:.8;margin-top:1px}' +
+    '#hscmp{position:absolute;left:14px;right:14px;top:150px;z-index:44;display:flex;gap:10px;justify-content:center;pointer-events:none;animation:hspop .25s ease-out}' +
+    '#hscmp .c{flex:1;max-width:165px;background:#fbf6ea;border-radius:14px;box-shadow:0 0 0 2.5px #14110d,0 6px 0 rgba(20,17,13,.35);padding:10px 8px 10px;text-align:center;color:#14110d;font:700 12px/1.25 system-ui;position:relative;transition:transform .35s,opacity .35s,filter .35s}' +
+    '#hscmp .c svg{width:64px;height:64px;display:block;margin:0 auto 4px}#hscmp .c b{display:block;font:900 15px/1.1 system-ui}#hscmp .c .v{display:block;margin-top:5px;font:900 18px/1 system-ui;color:#1f7a72}' +
+    '#hscmp .c .t{display:block;margin-top:4px;font-size:11px;color:#6b5f4c}' +
+    '#hscmp .c.kp{background:#fff3dc;box-shadow:0 0 0 2.5px #14110d,0 0 0 6px #d9a868,0 6px 0 rgba(20,17,13,.35)}#hscmp .c.kp .v{color:#9a4a12}' +
+    '#hscmp .c.kp.hid{opacity:0;transform:translateY(16px) scale(.9)}' +
+    '#hscmp .c.old.dim{filter:grayscale(.85);opacity:.6;transform:scale(.92)}#hscmp .c.old.dim::after{content:"";position:absolute;left:12%;right:12%;top:50%;height:4px;background:#e84a4a;border-radius:2px;transform:rotate(-14deg);box-shadow:0 0 0 1.5px #14110d}' +
+    '#hscmp .vs{align-self:center;font:900 italic 20px "Arial Black",system-ui;color:#fff;text-shadow:0 2px 0 #14110d,0 0 6px #14110d}' +
+    '.hscard{text-align:center;color:#14110d}.hscard .hsbig{width:72px;height:72px;display:block;margin:4px auto 2px}.hscard h4{margin:2px 0 2px;font:900 12px system-ui;letter-spacing:2px;color:#9a4a12;text-transform:uppercase}' +
+    '.hscard b.nm{display:block;font:900 20px/1.1 system-ui}.hscard p{margin:6px 0 0;font:600 13px/1.35 system-ui}.hscard .hsl{margin:8px auto 0;max-width:290px;text-align:left}' +
+    '.hscard .hsl div{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 8px;margin-top:5px;border-radius:8px;background:rgba(20,17,13,.06);font:700 12px/1.2 system-ui}.hscard .hsl i{font-style:normal;color:#9a4a12;font-weight:900}' +
+    '.hscard .hsl div span:last-child{text-align:right;white-space:nowrap}';
+  document.head.appendChild(s);
+}
+phQuick = function () {
+  var bg = $('#wbag'); if (!bg) return; hsCss();
+  var k = hsKey(); bg.className = 'has phquick hs1';
+  if (!k) { bg.innerHTML = '<button type="button" class="phq blank" disabled aria-label="Remedy slot. No remedy learned yet"></button>'; return; }
+  var n = phCount(k), R = HS_REM[k];
+  bg.innerHTML = '<button type="button" class="phq hsrem k-' + k + (n ? '' : ' zero') + (n >= HS_CAP ? ' capf' : '') + '" data-k="rem" aria-label="' + R.n + ', ' + n + ' of ' + HS_CAP + '">' + hsSvg(k) + '<em class="hsct">' + n + '<small>/' + HS_CAP + '</small></em></button>';
+  if (W.hsPanel) hsPanel(true);
+};
+function hsPanelClose() { var p = document.getElementById('hspanel'); if (p) p.remove(); W.hsPanel = 0; }
+function hsPanel(repaint) {
+  var k = hsKey(); if (!k) return;
+  var R = HS_REM[k], n = phCount(k), host = document.getElementById('world') || document.body, slot = document.querySelector('#wbag .hsrem');
+  var p = document.getElementById('hspanel'); if (!p) { if (repaint) return; p = document.createElement('div'); p.id = 'hspanel'; host.appendChild(p); }
+  W.hsPanel = 1; p.className = 'k-' + k;
+  var cap = Math.min(HS_CAP - n, phCraftMax(R.mats)), full = SAVE.hp >= MAXHP;
+  p.innerHTML = '<button type="button" class="hsx" data-a="x" aria-label="Close">\u00d7</button><div class="hsh">' + hsSvg(k, 'hsbig') + '<div><b>' + R.n + '</b><small>' + R.heal() + ' \u00b7 perfect ' + R.perf() + '</small></div></div>' +
+    '<div class="hsrow"><span>Carrying</span><em>' + n + ' / ' + HS_CAP + '</em></div>' +
+    '<div class="hsrow"><span>' + R.mats.map(function (m) { return PH_MAT[m[0]]; }).join(' + ') + '</span><em>' + R.mats.map(function (m) { return phMatN(m[0]); }).join(' \u00b7 ') + '</em></div>' +
+    '<div class="hsbt"><button type="button" class="use" data-a="use"' + (n && !full ? '' : ' disabled') + '>' + (full ? 'HP full' : 'Use') + '<small>beat wrap</small></button><button type="button" class="cr" data-a="craft"' + (cap > 0 ? '' : ' disabled') + '>Craft<small>' + (n >= HS_CAP ? 'bag full' : cap > 0 ? 'up to ' + cap : 'need mats') + '</small></button></div>';
+  var hr = host.getBoundingClientRect();
+  if (slot) { var r = slot.getBoundingClientRect(); p.style.left = Math.round(r.left - hr.left) + 'px'; p.style.top = Math.round(r.bottom - hr.top + 8) + 'px'; }
+  p.onpointerdown = function (e) { e.stopPropagation(); };
+  p.onclick = function (e) { e.stopPropagation(); var b = e.target.closest('button'); if (!b) return; var a = b.dataset.a;
+    if (a === 'x') { AU.play('ui_back'); hsPanelClose(); return; }
+    if (a === 'use') { hsPanelClose(); phUseType(k); return; }
+    if (a === 'craft') { AU.play('ui_sel'); hsPanelClose(); W.phBagTab = 'craft'; W.phFrom = 'hud'; pause('bag'); } };
+  ev('world:hs:panel:' + k + ':' + n);
+}
+var hsUseType0 = phUseType;
+phUseType = function (k) {
+  if (k === 'rem') { AU.play('ui_sel'); if (W.hsPanel) hsPanelClose(); else hsPanel(); return false; }
+  return hsUseType0(k);
+};
+/* Bag > Crafting: only this chapter's remedy. Old recipes stay learned on the save, just not shown. */
+phCraft = function () {
+  var k = hsKey(); W.phQty = W.phQty || { dress: 1, potion: 1 };
+  if (!k) return '<div class="ph-sheet"><p class="dim">No remedy yet. Nurse Shiraishi teaches the first one.</p></div>';
+  var R = HS_REM[k], have = phCount(k), room = Math.max(0, HS_CAP - have), cap = Math.min(room, phCraftMax(R.mats)), q = Math.max(1, Math.min(Math.max(1, cap), W.phQty[k] | 0));
+  W.phQty[k] = q;
+  var h = '<div class="ph-sheet"><article class="rec"><b>' + R.n + '</b><p>' + R.heal() + ' \u00b7 ' + (k === 'potion' ? 'perfect brew ' : 'perfect wrap ') + R.perf() + '</p><p class="dim">' + R.who + ' taught this. ' + R.mats.map(function (m) { return '1 ' + PH_MAT[m[0]]; }).join(' + ') + '. Carry up to ' + HS_CAP + '.</p>';
+  R.mats.forEach(function (m) { h += '<p>' + phEsc(PH_MAT[m[0]]) + ' \u00b7 ' + phMatN(m[0]) + ' owned \u00b7 ' + q + ' needed</p>'; });
+  h += '<div class="qty"><button type="button" class="qend" data-a="qmin" data-r="' + k + '">Min</button><button type="button" data-a="q" data-r="' + k + '" data-d="-1">\u2212</button><b>' + q + '</b><button type="button" data-a="q" data-r="' + k + '" data-d="1">+</button><button type="button" class="qend qmax" data-a="qmax" data-r="' + k + '">Max</button></div>';
+  h += '<p class="dim">In bag ' + have + '/' + HS_CAP + (cap >= q ? ' \u2192 ' + (have + q) + '/' + HS_CAP : '') + '</p>';
+  var lab = room < 1 ? 'Bag full (' + HS_CAP + '/' + HS_CAP + ')' : cap < q ? 'Need ingredients' : 'Craft ' + q;
+  h += '<button type="button" class="ph-use" data-a="craft" data-r="' + k + '"' + (cap >= q && room > 0 ? '' : ' disabled') + '>' + lab + '</button></article></div>';
+  return h;
+};
+/* ---------- the switch: Dr. Tsukikage's Kampo lesson ---------- */
+function hsConvert() {
+  var out = { dress: 0, kampo: 0, extra: 0, pairs: 0, loose: 0, yen: 0 };
+  if (SAVE.sc && SAVE.sc.hsSwitch) return out;
+  var heal = SAVE.heal || [], keep = [];
+  heal.forEach(function (k) { if (k === 'dress' || k === 'bandage') out.dress++; else keep.push(k); });
+  var pot = keep.filter(function (k) { return k === 'potion'; }).length, room = Math.max(0, HS_CAP - pot);
+  out.kampo = Math.min(out.dress, room); out.extra = out.dress - out.kampo;
+  for (var i = 0; i < out.kampo; i++) keep.push('potion');
+  SAVE.heal = keep;
+  var g = phMatN('gauze'), t = phMatN('tape'); out.pairs = Math.min(g, t) + out.extra; out.loose = g + t - 2 * Math.min(g, t); out.yen = out.loose;
+  phMatAdd('gauze', -g); phMatAdd('tape', -t);
+  if (out.pairs) { phMatAdd('leaf', out.pairs); phMatAdd('ginger', out.pairs); }
+  if (out.yen) SAVE.items = (SAVE.items | 0) + out.yen;
+  SAVE.sc = SAVE.sc || {}; SAVE.sc.hsSwitch = { v: 1, dress: out.dress, kampo: out.kampo, pairs: out.pairs, yen: out.yen }; save(); hud();
+  ev('world:hs:convert:' + out.dress + ':' + out.kampo + ':' + out.pairs + ':' + out.yen);
+  return out;
+}
+function hsCmpCard(stage) {
+  var host = document.getElementById('world') || document.body, c = document.getElementById('hscmp');
+  if (stage === 'off') { if (c) c.remove(); return; }
+  if (!c) { c = document.createElement('div'); c.id = 'hscmp'; c.setAttribute('aria-hidden', 'true'); host.appendChild(c);
+    c.innerHTML = '<div class="c old">' + hsSvg('dress') + '<b>Healing Dressing</b><span class="v">+10 HP</span><span class="t">closes a cut</span></div><span class="vs">VS</span><div class="c kp hid">' + hsSvg('potion') + '<b>Kampo Potion</b><span class="v">+25% HP</span><span class="t">perfect brew 35%</span></div>'; }
+  var kp = c.querySelector('.kp'), old = c.querySelector('.old');
+  if (stage === 'kampo' || stage === 'win') kp.classList.remove('hid');
+  if (stage === 'win') old.classList.add('dim');
+}
+function hsStage(stage, ms) { return ['@fn', function (next) { hsCmpCard(stage); if (stage === 'kampo') { try { AU.play('pl_heal', { gain: 0.4 }); } catch (e) {} } if (stage === 'win') { try { AU.play('place', { gain: 0.7 }); } catch (e2) {} } setTimeout(next, ms || 380); }]; }
+var HS_LESSON = function () { return [
+  ['', '<p class="dim">She grinds the mugwort and the ginger in the Brass Kettle. Steam rolls off it. Ryo coughs.</p>'],
+  ['tsukikage', 'Bitter means it works.'],
+  ['tsukikage', 'Now. Show me what you two have been patching yourselves up with.', { mood: 'neutral' }],
+  hsStage('dress'),
+  ['ryo', 'School nurse taught us. Gauze, tape. Wrap it tight.'],
+  ['tsukikage', 'Neat. It closes a cut. It doesn\u2019t fix what\u2019s under it.', { mood: 'neutral' }],
+  hsStage('kampo', 520),
+  ['tsukikage', 'This works from the inside. Bruised ribs. The shaking after a fight. A dressing holds you together. This puts you back.', { mood: 'neutral' }],
+  ['aoi', 'And it heals more?'],
+  ['tsukikage', 'A lot more. And it grows stronger the stronger you get.', { mood: 'neutral' }],
+  hsStage('win', 520),
+  ['tsukikage', 'So stop using those. Hand me what\u2019s left. From now on, you drink this.', { mood: 'neutral' }],
+  ['ryo', 'It smells like a gym bag.'],
+  ['tsukikage', 'Then hold your nose. Come back a quarter dead.', { mood: 'neutral' }]
+]; };
+function hsLearnedCard(then) {
+  W.paused = false;
+  dialog('<div class="hscard"><h4>New remedy learned</h4>' + hsSvg('potion', 'hsbig') + '<b class="nm">Kampo Potion</b><p>Heals ' + HS_REM.potion.heal() + '.<br>A perfect brew heals ' + HS_REM.potion.perf() + '.</p><div class="hsl"><div><span>Recipe</span><span>1 Mugwort Leaf + 1 Ginger Root</span></div><div><span>Carry</span><span>up to ' + HS_CAP + '</span></div><div><span>Remedy slot</span><span>Dressing <i>\u2192</i> Kampo</span></div></div></div>', [['Next \u25b8', then, 'hot']]);
+  try { AU.play('pl_heal', { gain: 0.5 }); } catch (e) {}
+}
+function hsSwapCard(o, then) {
+  var rows = '';
+  rows += '<div><span>' + o.dress + ' Healing Dressing' + (o.dress === 1 ? '' : 's') + '</span><span><i>\u2192</i> ' + o.kampo + ' Kampo Potion' + (o.kampo === 1 ? '' : 's') + '</span></div>';
+  rows += '<div><span>' + o.pairs + ' Gauze + Tape set' + (o.pairs === 1 ? '' : 's') + '</span><span><i>\u2192</i> ' + o.pairs + ' Mugwort + ' + o.pairs + ' Ginger</span></div>';
+  if (o.yen) rows += '<div><span>' + o.yen + ' loose roll' + (o.yen === 1 ? '' : 's') + '</span><span><i>\u2192</i> \u00a5' + o.yen + '</span></div>';
+  dialog('<div class="hscard"><h4>Old supplies traded in</h4><p>Dr. Tsukikage takes your dressings and gauze for the clinic.</p><div class="hsl">' + rows + '</div><p class="dim" style="font-size:12px;color:#6b5f4c">Nothing was lost. Your remedy slot now holds Kampo.</p></div>', [['OK', then, 'hot']]);
+}
+function hsLesson(done) {
+  W.dlg = true; ev('world:hs:lesson:start');
+  scene(null, HS_LESSON(), function () {
+    hsCmpCard('off');
+    SAVE.craft = SAVE.craft || {}; SAVE.craft.potion = 1; SAVE.sc = SAVE.sc || {};
+    var o = hsConvert();
+    if (!SAVE.sc.potGranted) { if (phCount('potion') < HS_CAP) SAVE.heal.push('potion'); SAVE.sc.potGranted = 1; }
+    SAVE.sc.pot = 'learned'; W.v630Lesson = ''; save(); hud();
+    hsLearnedCard(function () { hsSwapCard(o, function () { W.dlg = false; ev('world:hs:lesson:done'); if (done) done(); }); });
+  });
+}
+if (typeof v630PotCine === 'function') v630PotCine = function () { hsLesson(); };
+/* an old save that already learned Kampo before this build: convert once, the next time the bag is opened in Ch2 */
+var hsPause0 = pause;
+pause = function (tab) { hsPanelClose(); try { if ((SAVE.chapter | 0) >= 2 && SAVE.craft && SAVE.craft.potion && !(SAVE.sc && SAVE.sc.hsSwitch)) hsConvert(); } catch (e) {} return hsPause0.apply(this, arguments); };
+root.FFF_HS = { key: hsKey, panel: hsPanel, close: hsPanelClose, lesson: hsLesson, convert: hsConvert, cmp: hsCmpCard, cap: HS_CAP };
+/* HEALSTYLE_END */
+
 root.FFF_WKIT = { table: function () { return WKIT_TABLE; }, stocked: wkitStockedSet, give: wkitGive, strip: wkitStripSearches };
 
 })(this);
