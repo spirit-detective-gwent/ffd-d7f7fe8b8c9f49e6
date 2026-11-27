@@ -53107,7 +53107,7 @@ function hsCss() {
     '.hscard{text-align:center;color:#f4f1ea}.hscard .hsbig{width:72px;height:72px;display:block;margin:4px auto 2px}.hscard h4{margin:2px 0 2px;font:900 12px system-ui;letter-spacing:2px;color:#ffd25a;text-transform:uppercase}' +
     '.hscard b.nm{display:block;font:900 20px/1.1 system-ui}.hscard p{margin:6px 0 0;font:600 13px/1.35 system-ui}.hscard .hsl{margin:8px auto 0;max-width:290px;text-align:left}' +
     '.hscard .hsl div{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 8px;margin-top:5px;border-radius:8px;background:rgba(255,255,255,.09);font:700 12px/1.2 system-ui;color:#f4f1ea}.hscard .hsl i{font-style:normal;color:#ffd25a;font-weight:900}' +
-    '.hscard .hsl div span:last-child{text-align:right;white-space:nowrap}';
+    '.hscard .hsl div span:last-child{text-align:right;white-space:nowrap}' +'.cxart.hscx{text-align:left;padding-bottom:8px}.cxart.hscx>.hsbig,.cxart.hscx>.hsf{width:52px;height:52px;display:block;margin:0 auto}.cxart.hscx>.hsf{position:relative;margin-left:auto;margin-right:auto}' +'.cxart.hscx>b.nm{display:block;text-align:center;font:800 18px/1.15 Georgia,serif;color:#f6f1e4;margin:2px 0 0}.cxart.hscx>p.lead{text-align:center;margin:0 0 4px;color:#d5e4f2}' +'.cxart.hscx h4{margin:6px 0 2px;color:#e7d7b0;font:800 11px/1 system-ui;letter-spacing:.08em}.cxart.hscx .cxbox{margin:3px 0;padding:6px 8px}.cxart.hscx .cxbox p{margin:0 0 4px}.cxart.hscx .cxbox p:last-child{margin:0}' +'.hscxtabs{margin-top:0!important}';
   document.head.appendChild(s);
 }
 /* ---------- v6564-healstyle t418/t419: crafting only at stations, count-only HUD slot, beat wrap on use ---------- */
@@ -53587,7 +53587,59 @@ herbSvg = function (k) {
   if (k === 'gseed') return '<svg class="hbsvg" viewBox="0 0 40 40" aria-hidden="true"><path d="M9 6h22l-1 28H10z" fill="#e8d6b0" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/><path d="M9 6l4 4h14l4-4" fill="#cdb98e" stroke="#14110d" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 26c1-4 6-5 8-2 2-3 7-2 8 1 2 0 3 3 1 4H13c-2 0-2-2-1-3z" fill="#d9a65a" stroke="#14110d" stroke-width="1.6"/><path d="M20 23c-1-5-3-8-6-10 4 1 6 4 6 10zM20 23c1-5 3-8 6-10-4 1-6 4-6 10z" fill="#6f9a4c" stroke="#14110d" stroke-width="1.2"/></svg>';
   return hsHerbSvg0.apply(this, arguments);
 };
-root.FFF_HS = { station: hsStation, stClose: hsStClose, mini: hsMini, result: hsResult, beat: hsBeat, use: hsUse, pick: hsPick, n: hsN, pct: HS_PCT, mg: HS_MG, cart: HS_CART, vendors: hsVendors, migrate: hsMigrate, learned: hsLearned, key: hsKey, panel: hsPanel, close: hsPanelClose, lesson: hsLesson, convert: hsConvert, cmp: hsCmpCard, cap: HS_CAP };
+
+/* Codex how-to pages for Healing Dressing and Kampo Potion (Erik: amounts, use, Fine-first, cap, station, ingredients). Numbers come from HS_PCT / HS_CAP / HS_BONUS so the page stays in sync. */
+function hsCxArt(k) {
+  hsCss();
+  var pot = k === 'potion', R = HS_REM[k], S = HS_ST[k];
+  var n = Math.round(HS_PCT[k] * 100), f = Math.round(HS_PCT[HS_FINE[k]] * 100), b = Math.round(HS_BONUS * 100);
+  var nh = hsHp(HS_PCT[k]), fh = hsHp(HS_PCT[HS_FINE[k]]), bh = hsHp(HS_BONUS);
+  var ring = pot ? 'bottle' : 'wrap', verb = S.verb, sta = pot ? 'the big bowl in Dr. Tsukikage\u2019s clinic' : 'the cart in the nurse\u2019s office';
+  var recipe = pot ? '1 Mugwort Leaf + 1 Ginger Root' : '1 Clean Gauze + 1 Medical Tape';
+  var ing = pot
+    ? '<p><b>Mugwort.</b> The clinic\u2019s top-row pots. Dr. Tsukikage sells the seed after the lesson.</p><p><b>Ginger.</b> The clinic\u2019s bottom-row pots, grown from ginger seed at Ono Drugstore. It also grows wild at the docks, and after the lesson it comes back when you take a turf. Street drops and quests pay herbs after the lesson, not gauze and tape.</p>'
+    : '<p><b>Gauze and tape.</b> Street drops, kits around the school, and the nurse\u2019s first lesson. After Dr. Tsukikage teaches Kampo, Chapter Two streets and quests pay herbs instead.</p>';
+  return '<div class="cxart hscx">' + hsSvg(k, 'hsbig') + '<b class="nm">' + R.n + '</b><p class="lead dim">' + R.who + ' taught this.</p>'
+    + '<h4>HEALS</h4><div class="cxbox"><p>A regular one restores <b>' + n + '% max HP</b> (+' + nh + '). A Fine one restores <b>' + f + '%</b> (+' + fh + ').</p></div>'
+    + '<h4>USE</h4><div class="cxbox"><p>Tap the remedy slot under your health. The ring closes on the ' + ring + '. Tap when they meet for a <b>+' + b + '% max HP</b> bonus (+' + bh + '). Miss or skip and you still get the full heal.</p><p>Fine ones are used first, unless a regular one already covers what you\u2019re missing, so a Fine isn\u2019t wasted.</p></div>'
+    + '<h4>CARRY</h4><div class="cxbox"><p>Up to <b>' + HS_CAP + '</b> in total, regular and Fine together.</p></div>'
+    + '<h4>MAKE</h4><div class="cxbox"><p>' + recipe + '. ' + verb + ' at ' + sta + '.</p><p>One tap per ' + (pot ? 'brew' : 'wrap') + '. Hit the gold on the gauge for a Fine one.</p></div>'
+    + '<h4>INGREDIENTS</h4><div class="cxbox">' + ing + '</div></div>';
+}
+var hsArt0 = v630Article;
+v630Article = function (cat, sel) {
+  if (sel && sel.ok && sel.id === 'heal_dress') return hsCxArt('dress');
+  if (sel && sel.ok && sel.id === 'heal_potion') return hsCxArt('potion');
+  return hsArt0.apply(this, arguments);
+};
+/* a tapped remedy opens a detail page (full how-to fits the 390 screen); All items returns to the list */
+var hsSec0 = v630Section;
+v630Section = function (cat) {
+  if (cat === 'food' && W.cxSel && (W.cxSel === 'heal_dress' || W.cxSel === 'heal_potion')) {
+    var list = v630List(cat), sel = list.filter(function (x) { return x.id === W.cxSel; })[0];
+    if (sel && sel.ok) {
+      var heals = list.filter(function (x) { return x.id === 'heal_dress' || x.id === 'heal_potion'; });
+      var tabs = heals.length > 1 ? ('<div class="cxtabs hscxtabs" role="tablist">' + heals.map(function (x) {
+        return '<button type="button" role="tab" data-a="cx" data-id="' + x.id + '"' + (x.id === sel.id ? ' class="on" aria-selected="true"' : '') + '>' + x.lab + '</button>';
+      }).join('') + '</div>') : '';
+      return '<button type="button" class="cxback" data-a="cxhome">All sections</button><button type="button" class="cxback" data-a="cxcat" data-s="food" style="margin-left:14px">All items</button>' + tabs + v630Article(cat, sel);
+    }
+  }
+  return hsSec0.apply(this, arguments);
+};
+var hsItems0 = v630Items;
+v630Items = function () {
+  var out = hsItems0.apply(this, arguments);
+  try {
+    out.forEach(function (x) {
+      if (x.id === 'heal_dress' && (SAVE.craft || {}).dress) x.sub = Math.round(HS_PCT.dress * 100) + '% HP, Fine ' + Math.round(HS_PCT.dressF * 100) + '%. Wrap at the nurse\u2019s cart.';
+      if (x.id === 'heal_potion') x.sub = Math.round(HS_PCT.potion * 100) + '% HP, Fine ' + Math.round(HS_PCT.potionF * 100) + '%. Brew at the clinic\u2019s bowl.';
+    });
+  } catch (e) {}
+  return out;
+};
+
+root.FFF_HS = { station: hsStation, stClose: hsStClose, mini: hsMini, result: hsResult, beat: hsBeat, use: hsUse, pick: hsPick, n: hsN, pct: HS_PCT, mg: HS_MG, cart: HS_CART, vendors: hsVendors, migrate: hsMigrate, learned: hsLearned, key: hsKey, panel: hsPanel, close: hsPanelClose, lesson: hsLesson, convert: hsConvert, cmp: hsCmpCard, cap: HS_CAP, cx: hsCxArt, bonus: HS_BONUS };
 /* HEALSTYLE_END */
 
 root.FFF_WKIT = { table: function () { return WKIT_TABLE; }, stocked: wkitStockedSet, give: wkitGive, strip: wkitStripSearches };

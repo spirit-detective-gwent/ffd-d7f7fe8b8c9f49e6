@@ -96,6 +96,22 @@ async def main():
         r = await ev(pg, "SAVE.craft={dress:1};FFF_HS.vendors();[SHOPS.nq_gk2.items.map(function(i){return i.id}),FFF_S2P2.MENU.length]")
         ok('vendor swap reverts when not learned', 'gauze' in r[0] and r[1] == 2, r)
         src = (root / 'index.html').read_text(encoding='utf-8')
+        r = await ev(pg, """(function(){
+          SAVE.chapter=2; SAVE.craft={dress:1,potion:1}; MAXHP=MAXHP||46;
+          var d=v630Article('food',{id:'heal_dress',ok:true}), p=v630Article('food',{id:'heal_potion',ok:true});
+          var n=Math.round(HS_PCT.dress*100), f=Math.round(HS_PCT.dressF*100), pn=Math.round(HS_PCT.potion*100), pf=Math.round(HS_PCT.potionF*100), b=Math.round(HS_BONUS*100);
+          var nh=hsHp(HS_PCT.dress), fh=hsHp(HS_PCT.dressF), pnh=hsHp(HS_PCT.potion), pfh=hsHp(HS_PCT.potionF), bh=hsHp(HS_BONUS);
+          function ok(h, pcts, hps){ return pcts.every(function(x){return h.indexOf(x)>=0}) && hps.every(function(x){return h.indexOf('+'+x)>=0}) && h.indexOf(String(HS_CAP))>=0 && h.indexOf('hsbig')>=0 && h.indexOf('Fine ones are used first')>=0 && h.indexOf('gold on the gauge')>=0; }
+          return {dress: ok(d, [n+'% max HP', f+'%', '+'+b+'% max HP'], [nh, fh, bh]) && d.indexOf('cart in the nurse')>=0,
+                  potion: ok(p, [pn+'% max HP', pf+'%', '+'+b+'% max HP'], [pnh, pfh, bh]) && p.indexOf('big bowl')>=0,
+                  n:n,f:f,pn:pn,pf:pf,b:b,cap:HS_CAP};
+        })()""")
+        ok('codex Dressing/Kampo how-to pages use live HS_PCT, HS_CAP, beat bonus + icons', r and r['dress'] and r['potion'], r)
+        r2 = await ev(pg, """(function(){ W.cxSel='heal_potion'; SAVE.chapter=2; SAVE.craft={dress:1,potion:1}; var h=v630Section('food'); return [h.indexOf('INGREDIENTS')>=0, h.indexOf('All items')>=0, h.indexOf('Kampo Potion')>=0, h.indexOf('Candy bar')<0, h.indexOf(String(HS_CAP))>=0]; })()""")
+        ok('codex remedy opens a detail page (not the full item list)', r2 == [True, True, True, True, True], r2)
+
+        src = (root / 'index.html').read_text(encoding='utf-8')
+        ok('hsCxArt reads HS_PCT / HS_CAP / HS_BONUS (not baked-in percents)', 'function hsCxArt' in src and 'Math.round(HS_PCT[k] * 100)' in src and 'Math.round(HS_BONUS * 100)' in src and 'HS_CAP' in src[src.index('function hsCxArt'):src.index('function hsCxArt')+1800], 'hsCxArt missing live constants')
         ok('lessons explain using a remedy (slot tap, ring bonus, Fine first) + Use row on both cards', src.count("tap that slot under your health") == 1 and src.count("tap the slot under your health") == 1 and src.count("<span>Use</span><span>Tap the slot \\u00b7 Fine first</span>") == 2 and 'The Fine ones go first' in src and 'Fine brews go first' in src)
         ok('no stale craft-from-Bag / kettle-for-tea text in Ch1/Ch2', 'The kettle is for tea' not in src and 'Craft potions from your Bag' not in src and 'dressings crafted from your Bag.</p>\' })' not in src and 'gauze and tape in your Bag' not in src)
         ok('garden rare find -> ginger after lesson (source)', "return { k: 'ginger', n: 1, t: 'A ginger root in the mud.' }" in (root / 'index.html').read_text(encoding='utf-8'))
