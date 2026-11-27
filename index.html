@@ -19626,7 +19626,7 @@ function gymRegrid(k) { var D = INT['gy_' + k], bl = gymBlocks(k), sig = JSON.st
   if (W.inside && W.inside.id === D.id && !D.G) { D.G = intGrid(D); GRID = D.G.g; GW = D.G.gw; GH = D.G.gh; } }
 function gymRet() { return entOf('gym_e') ? entOf('gym_e').out.slice() : gymSide(); }
 function gymGo(k, at) { gymRegrid(k); var out = !W.inside; intGo('gy_' + k, { at: at || INT['gy_' + k]['in'] }); if (out) W.inRet = gymRet();
-  var S = gymS(); S.v[k] = 1; S.room = k; W.cool = Math.max(W.cool, 1.4); W.libArm = {}; gymPop(); save(); ev('world:gym:room:' + k); gymArrive(k); }
+  var S = gymS(); S.v[k] = 1; S.room = k; W.cool = Math.max(W.cool, 1.4); W.libArm = {}; gymPop(); save(); ev('world:gym:room:' + k); if (W.gkCine && W.gkCineFin) { W.gymBossBusy = 0; W.gkCineFin(); } W.gkCineArm = k === 'arena' && gymOpen() && !SAVE.gouki && !!W.gymGouki ? 1 : 0; gymArrive(k); }
 function gkDoorBeaten() { return !!(SAVE.sc && SAVE.sc.gkDoor); }
 function gkDoorNeed() { return !!(W.gymFront && !SAVE.gouki && !SAVE.ch1 && typeof gymWalkIn === 'function' && gymWalkIn() && !gkDoorBeaten()); }
 function gkDoorGuards() { /* v6.5.42 b13j: same trio as Call him out, coming out the front door */
@@ -19697,9 +19697,9 @@ function gymDoor(d) { var k = gymRoom(), R = GYMG[k], D = R.doors[d]; if (!D) re
 function gymLeave() { var h = document.getElementById('lkeys'); if (h) h.classList.remove('on'); }
 function gymArrive(k) { var S = gymS(); if (S.e[k]) return; S.e[k] = 1; save(); var L = GYM_SC['in_' + k]; if (!L) return;
   libPend(function () { scene(null, L); }); }
-function gymFrame(dt) { if (!gymRoom()) return; if (!tagsLive() || W.cool > 0.6 && !W.libPend) return; if (W.libPend) { var p = W.libPend; W.libPend = null; p(); }
+function gymFrame(dt) { if (!gymRoom()) return; if (!tagsLive() || W.cool > 0.6 && !W.libPend && !W.gkCineArm) return; if (W.libPend) { var p = W.libPend; W.libPend = null; p(); return; }
   if (gymRoom() === 'arena' && gymOpen() && !SAVE.gouki && W.gymGouki && !W.gymBossBusy) {
-    var g = W.gymGouki, d = Math.hypot(W.ryo.x - g.x, W.ryo.y - g.y); if (d < 160 && W.ryo.moving) gymBoss(); } }
+    var g = W.gymGouki, d = Math.hypot(W.ryo.x - g.x, W.ryo.y - g.y); if (W.gkCineArm) { W.gkCineArm = 0; gymBoss(); } else if (d < 160 && W.ryo.moving) gymBoss(); } else W.gkCineArm = 0; }
 function gymTags(id, D) { var k = D.gym, S = gymS(), out = [], b = !!SAVE.gouki;
   /* v4.71 Hold #16: no overhead Challenge flag over Gouki: walk up (or tap him) and gymFrame starts gymBoss */
   D.spots.forEach(function (s) { if (TRANS[s.id] || s.id === 'exit') return;
@@ -19727,8 +19727,30 @@ function gymAct(a) { var k = gymRoom(); if (!k) return; if (GYMG[k].doors[a]) { 
 function gymBoss() { /* v4.64: finale only on Main Court after seals */
   if (SAVE.gouki || !gymOpen() || gymRoom() !== 'arena' || W.gymBossBusy) return;
   W.gymBossBusy = 1; W.path = []; W.ryo.v = 0; W.ryo.moving = false; ev('world:gym:boss');
-  var go = function () { W.gymBossBusy = 0; gkFight(); };
-  libPend(function () { bossEnt('gouki', GYM_SC.boss, go); }); }
+  gkCine(function (fin) { var go = function () { fin(); W.gymBossBusy = 0; gkFight(); };
+    bossEnt('gouki', GYM_SC.boss, go); }); }
+/* v6.5.66 (Erik t535): the Main Court entry is one cinematic, from the moment they step onto Gouki's court until the board opens.
+ * Input locks; Ryo and Aoi WALK in (c2Walk, one bounded rAF each, ends on arrival) and stop at a set distance in front of him, facing him;
+ * both settle on a standing frame (never a frozen stride: the boss-arrival hold stops frame() mid-step otherwise), the camera frames all three,
+ * the arrival / dialogue plays on the stopped poses (Aoi held in place: no trail-follow during the lines), then the run-up into the fight.
+ * No new always-running loop: c2Walk ends on arrival. */
+var GK_CINE = { d: 150, sp: 150, side: 58, back: 24 };
+function gkCineSettle(s) { if (!s || !s.el) return; s.v = 0; s.moving = false; s.run = false; s.actMove = 0; try { if (s.walker) { animWalk(s, 0); animWalk(s, 0); } } catch (eS) {} place(s, 0); }
+function gkCineSpots(g) { var r = W.ryo, a = W.aoi, dx = r.x - g.x, dy = r.y - g.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d, D = Math.min(d, GK_CINE.d);
+  var rs = [g.x + ux * D, g.y + uy * D]; if (!okAt(rs[0], rs[1])) rs = [r.x, r.y];
+  var px = -uy, py = ux, sd = a ? (((a.x - r.x) * px + (a.y - r.y) * py) >= 0 ? 1 : -1) : 1, as = null;
+  if (a) { as = [rs[0] + px * sd * GK_CINE.side + ux * GK_CINE.back, rs[1] + py * sd * GK_CINE.side + uy * GK_CINE.back]; if (!okAt(as[0], as[1])) as = [rs[0] - px * sd * GK_CINE.side + ux * GK_CINE.back, rs[1] - py * sd * GK_CINE.side + uy * GK_CINE.back]; if (!okAt(as[0], as[1])) as = [a.x, a.y]; }
+  return { r: rs, a: as }; }
+function gkCine(next) { var r = W.ryo, a = W.aoi && W.aoi.el && W.aoi.el.style.visibility !== 'hidden' ? W.aoi : null, g = W.gymGouki, cf0 = W.camFocus, done = 0;
+  sLock(1, 'gkcine'); W.gkCine = 1; if (typeof stickEnd === 'function') stickEnd(); KEYS = {}; ev('world:gkcine:start');
+  function free() { if (W.gkLock) { W.gkLock = 0; sLock(0, 'gkcine'); } } /* the arrival / dialogue holds input itself from here (bossEnt + scene) */
+  function fin() { if (done++) return; free(); if (a) a.actMove = 0; W.camFocus = cf0; W.gkCine = 0; ev('world:gkcine:end'); }
+  W.gkLock = 1; W.gkCineFin = fin; if (!g || !r) { free(); next(fin); return; }
+  if (a) a.actMove = 1; W.camFocus = [r, a, g].filter(Boolean);
+  var P = gkCineSpots(g), k = Math.max(0.25, cinK()), L = [[r, P.r[0], P.r[1], GK_CINE.sp / k]]; if (a && P.a) L.push([a, P.a[0], P.a[1], GK_CINE.sp / k]);
+  c2WalkAll(L, function () { c2Face(r, g.x, g.y); if (a) c2Face(a, g.x, g.y); gkCineSettle(r); if (a) gkCineSettle(a); c2Face(r, g.x, g.y); if (a) { c2Face(a, g.x, g.y); a.actMove = 1; }
+    if (typeof resetTrail === 'function') resetTrail(r.x, r.y, r.dir); W.gkCineAt = [Math.round(r.x), Math.round(r.y)]; ev('world:gkcine:stop');
+    setTimeout(function () { if (!W.gkCine) return; free(); next(fin); }, Math.round(260 * k)); }); }
 function gymPress() { var S = gymS(), n = gymDone(); if (n < 1) { if (typeof sayKey === 'function') sayKey('hint', 'seal_none'); else toast('No seals yet.'); return; }
   if (S.e.press && n >= 3) { if (typeof sayKey === 'function') sayKey('hint', 'seal_done'); else toast('All three seals are pressed. The arena gate is open.'); return; }
   AU.play('place', { gain: 0.7 }); ev('world:gym:press:' + n);
