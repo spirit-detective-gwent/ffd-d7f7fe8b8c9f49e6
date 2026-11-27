@@ -174,19 +174,19 @@
     BOND_Q.c2_masa_after = { q: '<b>Aoi asks</b><p>He is down. The seal and the manifest are on the shutter. What do we do with him?</p>',
       o: { fierce: ['Leave him. The yard is ours', 'Fierce'], strategic: ['Stay talking. I want the dock code', 'Strategic'], balanced: ['Help him up. Honest freight can still leave', 'Compassionate'] } };
     BOND_MID.c2_masa_after = 'strategic';
-    BOND_TXT.c2_masa_after = { _mx: 1,
+    BOND_TXT.c2_masa_after = { _mx: 1, _noReact: 1,
       fierce: {
         fierce: [['{LEAD}', '{shout}Leave him. The yard is ours.{/shout}', { hype: 1 }], ['{PARTNER}', 'The shutter is already ours.']],
         strategic: [['{LEAD}', '{brisk}Stay talking. I want the dock code.{/brisk}'], ['{PARTNER}', 'The time is on that sheet too.']],
         balanced: [['{LEAD}', 'Up. Honest freight can still leave this yard.'], ['{PARTNER}', '{quiet}Under our color.{/quiet}']] },
       strategic: {
-        fierce: [['{LEAD}', 'He is done.{p} Leave him.'], ['{PARTNER}', 'No more questions. Fine.']],
+        fierce: [['{LEAD}', 'He is done.{p} Leave him.'], ['{PARTNER}', 'He already lost the yard. I will not keep at him.']],
         strategic: [['{LEAD}', '{brisk}Stay talking. The code and the time.{/brisk}'], ['{PARTNER}', 'He wrote it on the sheet. Make him say it.']],
-        balanced: [['{LEAD}', 'Up. The yard can still run honest.'], ['{PARTNER}', 'Then we do it your way.']] },
+        balanced: [['{LEAD}', 'Up. The yard can still run honest.'], ['{PARTNER}', 'If the dock still runs, I want it written, not wished.']] },
       balanced: {
-        fierce: [['{LEAD}', 'Leave him.{p} The yard is ours now.'], ['{PARTNER}', '{quiet}Gently.{/quiet}']],
+        fierce: [['{LEAD}', 'Leave him.{p} The yard is ours now.'], ['{PARTNER}', '{quiet}Leave him.{/quiet} I will watch his breathing.']],
         strategic: [['{LEAD}', 'The sheet. The code. The time.'], ['{PARTNER}', 'He will talk, if we stay.']],
-        balanced: [['{LEAD}', '{slow}Up. Honest freight can still leave this yard under our color.{/slow}']] } };
+        balanced: [['{LEAD}', '{slow}Up. Honest freight can still leave this yard under our color.{/slow}'], ['{PARTNER}', 'Help him stand. I will walk him to the clock.']] } };
   }
 
   /* ---------------- rooms ---------------- */

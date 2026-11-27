@@ -13,6 +13,18 @@
     try { ev('world:s2:skip'); } catch (e0) {} return;
   }
   var S2 = root.FFF_S2 = { v: 1, ART: true };
+  /* GGD-51 fight-end bridge: the S2P2-P6 modules listen on onFightEnd(win, ctx), which the base never defines.
+   * Define it once on root and call it from c2Back (every Ch2 dungeon / interior fight result). Wraps only. */
+  if (typeof root.onFightEnd !== 'function') root.onFightEnd = function () {};
+  if (typeof c2Back === 'function' && !c2Back._ofe) {
+    var cbOfe = c2Back;
+    c2Back = function (win, st0) {
+      var r = cbOfe.apply(this, arguments);
+      try { if (typeof root.onFightEnd === 'function') root.onFightEnd(!!win && !(st0 && st0.escaped), (st0 && st0.ctx) || {}); } catch (eO) { ev('world:s2:err:ofe:' + (eO && eO.message)); }
+      return r;
+    };
+    c2Back._ofe = 1;
+  }
   function on() { return (typeof c2On !== 'function' || c2On()) && (typeof chN !== 'function' || chN() === 2); }
   function S() { return c2S(); }
   function E() { return c2S().e; }

@@ -1,11 +1,13 @@
 #!/workspace/pwenv/bin/python3
 """Ch2 bond-moment tests: pay table, Grinder, Journal fixes, c2_goda scene (3 answers), consequences, perk. Review-only."""
-import sys, asyncio, json
+import sys, asyncio, json, os
 from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
+os.environ.setdefault('FFD', str(ROOT))
 sys.path.insert(0, str(Path(__file__).parent))
 import bh
 from playwright.async_api import async_playwright
-PORT = 8986
+PORT = int(__import__("os").environ.get("BOND_PORT") or 8986)
 R = []
 def ok(name, cond, extra=''):
     R.append((name, bool(cond), extra)); print(('PASS ' if cond else 'FAIL ') + name + (' :: ' + str(extra) if (extra and not cond) else ''))
@@ -167,6 +169,64 @@ async def main():
         r = await bh.ev(pg, """(function(){var o={};['ko','none'].forEach(function(f){c2S().e.godaFate=f;c2S().e.ckTip=0;var fo=null,rows=null;var f0=fight,s0=scene;fight=function(a,b,x){fo=x};scene=function(i,r,d){rows=r;d&&d()};try{ckPunkIn()}finally{fight=f0;scene=s0}o[f]={join:!!(fo&&fo.joinIn),line:rows[0][1]}});return o})()""")
         ok('ko: Tetsu nods to the big man; dealer still joins', 'put the big man down' in r['ko']['line'] and r['ko']['join'] and 'big man' not in r['none']['line'] and r['none']['join'], r)
         ok('no page errors (ckPunkIn)', not errs, errs[:3]); await ctx.close()
+        # ---- M3 Jin at the prize safe (data, noReact, flags, both leads) ----
+        ctx, pg, errs = await newpage(b, body, 'fierce', run=False)
+        pay = json.loads(await bh.ev(pg, "JSON.stringify(STORY.BOND.PAY)"))
+        ok('PAY.c2_jin_after = (790, 395, 158)', (pay.get('c2_jin_after') or {}) == {'best': 790, 'mid': 395, 'clash': 158} or (pay.get('c2_jin_after') and (pay['c2_jin_after']['best'], pay['c2_jin_after']['mid'], pay['c2_jin_after']['clash']) == (790, 395, 158)), pay.get('c2_jin_after'))
+        ok('M1..M5 sum still 4095', sum(pay[k]['best'] for k in ['c2_goda', 'c2_masa_after', 'c2_offer', 'c2_ledger', 'c2_eve']) == 4095)
+        nm = await bh.ev(pg, "typeof bondCallName==='function'?bondCallName('c2_jin_after'):BCALL_NAME.c2_jin_after")
+        ok('bondCallName(c2_jin_after) is Jin at the prize safe', nm == 'Jin at the prize safe', nm)
+        g = await bh.ev(pg, """(function(){var o={};['fierce','strategic','balanced'].forEach(function(p){['fierce','strategic','balanced'].forEach(function(a){var S={bond:{path:p,picks:{},px:0,lock:1},chapter:2,xpMode:'normal'};o[p+'/'+a]=STORY.bondPick(S,'c2_jin_after',a,BOND_MID.c2_jin_after).n})});return o})()""")
+        exp = {'fierce/fierce': 790, 'fierce/strategic': 158, 'fierce/balanced': 395, 'strategic/fierce': 158, 'strategic/strategic': 790, 'strategic/balanced': 395, 'balanced/fierce': 158, 'balanced/strategic': 395, 'balanced/balanced': 790}
+        ok('c2_jin_after 3x3 grades (best/mid/clash)', g == exp, g)
+        gg = await bh.ev(pg, """(function(){var S={bond:{path:'fierce',picks:{},px:0,lock:1},chapter:2,xpMode:'grinder'};return STORY.bondPick(S,'c2_jin_after','fierce',BOND_MID.c2_jin_after).n})()""")
+        ok('Grinder halves c2_jin_after', gg == 395, gg)
+        # _noReact: generic BOND_REACT must not lead the L2
+        def has_react(blob):
+            b = norm(blob)
+            return "Okay. I'm with you" in b or "I heard you. I still don't like it" in b or "Then we do it your way" in b
+        for mid, path, ans in [('c2_goda', 'balanced', 'balanced'), ('c2_masa_after', 'balanced', 'balanced'), ('c2_jin_after', 'fierce', 'fierce')]:
+            blob = await bh.ev(pg, """(function(){STORY.bond(SAVE).path='%s';STORY.bond(SAVE).picks={};STORY.bond(SAVE).lock=1;SAVE.act='ryo';root.FFF_BOND='%s';var got=null;bondAsk('%s',function(L){got=L});root.FFF_BOND=null;return (got||[]).map(function(r){return r[1]}).join(' | ')})()""" % (path, ans, mid))
+            ok(f'{mid} {path}/{ans}: no recycled react/go-along line', not has_react(str(blob)), str(blob)[:240])
+        # BANTER length and path voices
+        bn = await bh.ev(pg, """(function(){var o={};['fierce','strategic','balanced'].forEach(function(p){o[p]=(BANTER.c2_jin_after&&BANTER.c2_jin_after[p]||[]).length});return o})()""")
+        ok('Jin BANTER is a real conversation (6 lines each path)', bn == {'fierce': 6, 'strategic': 6, 'balanced': 6}, bn)
+        # flags via askJinThenSeal with FFF_BOND (doTakeSeal stubbed)
+        r = await bh.ev(pg, """(function(){
+          var st=c2S(); st.e=st.e||{}; st.e.jinFate=null; st.e.jinBook=0; st.e.jinSlip=0; st.e.seal_game=0;
+          STORY.bond(SAVE).path='strategic'; STORY.bond(SAVE).picks={}; STORY.bond(SAVE).px=STORY.bond(SAVE).px||0; SAVE.act='ryo';
+          var talks=[], sealed=0, t0=FFF_S2P6.talk, d0=FFF_S2P6.doTakeSeal;
+          FFF_S2P6.talk=function(rows,cb){talks.push((rows||[]).map(function(r){return r[1]}).join(' // ')); if(cb)cb();};
+          FFF_S2P6.doTakeSeal=function(){sealed=1};
+          root.FFF_BOND='strategic'; FFF_S2P6.askJinThenSeal(); root.FFF_BOND=null;
+          FFF_S2P6.talk=t0; FFF_S2P6.doTakeSeal=d0;
+          return {fate:st.e.jinFate, book:st.e.jinBook|0, slip:st.e.jinSlip|0, sealed:sealed, pick:STORY.bond(SAVE).picks.c2_jin_after, talks:talks};
+        })()""")
+        ok('Jin strategic: fate deal, jinBook, seal pry, pick recorded', r and r.get('fate')=='deal' and r.get('book')==1 and not r.get('slip') and r.get('sealed')==1 and r.get('pick')=='strategic', r)
+        ok('Jin strategic: Thursday book in the fate talk', r and any('Thursday' in t or 'book' in t.lower() for t in (r.get('talks') or [])), r)
+        r2 = await bh.ev(pg, """(function(){
+          var st=c2S(); st.e.jinFate=null; st.e.jinBook=0; st.e.jinSlip=0; st.e.seal_game=0;
+          STORY.bond(SAVE).path='fierce'; STORY.bond(SAVE).picks={}; SAVE.act='aoi';
+          var talks=[], sealed=0, t0=FFF_S2P6.talk, d0=FFF_S2P6.doTakeSeal;
+          FFF_S2P6.talk=function(rows,cb){talks.push({who:(rows[0]||[])[0], n:(rows||[]).length, t:(rows||[]).map(function(r){return r[0]+':'+r[1]}).join(' // ')}); if(cb)cb();};
+          FFF_S2P6.doTakeSeal=function(){sealed=1};
+          root.FFF_BOND='fierce'; FFF_S2P6.askJinThenSeal(); root.FFF_BOND=null;
+          FFF_S2P6.talk=t0; FFF_S2P6.doTakeSeal=d0;
+          return {fate:st.e.jinFate, slip:st.e.jinSlip|0, book:st.e.jinBook|0, sealed:sealed, pick:STORY.bond(SAVE).picks.c2_jin_after, lead:(talks[0]&&talks[0].t)||'', act:SAVE.act};
+        })()""")
+        ok('Jin fierce as Aoi lead: fate wipe, jinSlip, pick, Aoi speaks first on the pick', r2 and r2.get('fate')=='wipe' and r2.get('slip')==1 and r2.get('pick')=='fierce' and r2.get('act')=='aoi' and str(r2.get('lead') or '').startswith('aoi:'), r2)
+        r3 = await bh.ev(pg, """(function(){
+          var st=c2S(); st.e.jinFate=null; st.e.jinBook=0; st.e.jinSlip=0; st.e.seal_game=0;
+          STORY.bond(SAVE).path='balanced'; STORY.bond(SAVE).picks={}; SAVE.act='ryo';
+          var t0=FFF_S2P6.talk, d0=FFF_S2P6.doTakeSeal; FFF_S2P6.talk=function(rows,cb){if(cb)cb()}; FFF_S2P6.doTakeSeal=function(){};
+          root.FFF_BOND='balanced'; FFF_S2P6.askJinThenSeal(); root.FFF_BOND=null;
+          FFF_S2P6.talk=t0; FFF_S2P6.doTakeSeal=d0;
+          return {fate:st.e.jinFate, book:st.e.jinBook|0, slip:st.e.jinSlip|0};
+        })()""")
+        ok('Jin compassionate: fate help, no book or slip', r3 and r3.get('fate')=='help' and not r3.get('book') and not r3.get('slip'), r3)
+        h = await bh.ev(pg, """(function(){var B=STORY.bond(SAVE);B.picks={first:'fierce',c2_jin_after:'strategic',c2_goda:'fierce',c2_masa_after:'balanced'};B.path='fierce';return statusBondBlock()})()""")
+        ok('Journal lists Jin at the prize safe, no raw c2_jin_after', 'Jin at the prize safe' in h and 'c2_jin_after' not in h, h[:300] if isinstance(h,str) else h)
+        ok('no page errors (jin bond data)', not errs, errs[:3]); await ctx.close()
         await b.close()
     bad = [n for n, c, e in R if not c]
     print(f'\n{len(R)-len(bad)}/{len(R)} passed'); 

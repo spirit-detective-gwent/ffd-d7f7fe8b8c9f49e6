@@ -20,6 +20,11 @@ if p5p.exists():
 pmp = HERE / 'paint_menus.js'
 if pmp.exists():
     paint = paint + '\n' + pmp.read_text(encoding='utf8').rstrip('\n')
+# GGD-51 seal 3 (Jin's turf): rooms, then menu boards / icons / battle backdrops / arcade art
+for _p6 in ('paint_p6.js', 'paint_p6ui.js', 'paint_p6arc.js'):
+    _pp = HERE / _p6
+    if _pp.exists():
+        paint = paint + '\n' + _pp.read_text(encoding='utf8').rstrip('\n')
 mod = (HERE / 's2.js').read_text(encoding='utf8').rstrip('\n')
 BP, EP = '/* S2P_BEGIN v6563-seal2 */\n', '\n/* S2P_END */\n'
 B, E = '/* S2_BEGIN v6563-seal2 */\n', '\n/* S2_END */\n'
@@ -138,6 +143,25 @@ if pg.exists():
     else:
         raise SystemExit('S2MENUS_END missing; cannot inject S2GARDEN')
     print('injected S2GARDEN', len(modg))
+
+# GGD-51 seal 3 (Jin's turf) chain + strip systems, after S2GARDEN.
+_prev_end = EG
+for _fn, _B, _E in (('s2p6.js', '/* S2P6_BEGIN v6564-jin */\n', '\n/* S2P6_END */\n'),
+                    ('s2arc.js', '/* S2ARC_BEGIN v6564-jin */\n', '\n/* S2ARC_END */\n')):
+    _f = HERE / _fn
+    if not _f.exists():
+        continue
+    _m = _f.read_text(encoding='utf8').rstrip('\n')
+    if _B in s:
+        i = s.index(_B); j = s.index(_E, i) + len(_E)
+        s = s[:i] + _B + _m + _E + s[j:]
+    elif _prev_end in s:
+        i = s.index(_prev_end) + len(_prev_end)
+        s = s[:i] + _B + _m + _E + s[i:]
+    else:
+        raise SystemExit('previous end marker missing; cannot inject ' + _fn)
+    _prev_end = _E
+    print('injected', _fn, len(_m))
 
 INDEX.write_text(s, encoding='utf8')
 print('injected S2P+S2 into', INDEX, 'paint', len(paint), 's2', len(mod))
