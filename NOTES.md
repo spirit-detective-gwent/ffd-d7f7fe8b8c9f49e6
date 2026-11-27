@@ -99,3 +99,11 @@ Heat at 4x is within +5 everywhere. Memory flat. 1x fps all ≥58; battle 1x 59.
 
 Sheets refreshed: /workspace/angry/angry_sheet.png, ingame_genji_scold.png, ingame_versus.png, ingame_battle.png, ingame_battle_boss.png. Func recheck: 82 angry files, none missing, expected faces, no page errors.
 
+### Opener 4x hitch (after fabcc88)
+Cause: `ptPreloadScene` and the first line's `background-image` ran in the same `scene()` turn. `new Image(); decoding=async` only starts the fetch — CSS paint still sync-decoded the cold 360×480 webp. Under 4× throttle that was the 133 ms / 200 ms spikes (opener 56.2 fps). The opener uses `c2boso_angry` then `masa_angry`, both first seen in that window.
+
+Fix (no always-running loop):
+- `ptPreload` keeps the Image and calls `decode()` so the bitmap is actually decoded, not just fetched.
+- `ptSetBust` assigns `background-image` only after `decode()` (decode off the frame). Scene and versus/choice faces use this when the bust is still cold. Already-warm busts still paint immediately. Slam waits for the attach when the face is cold.
+- One-shot idle chain `ptWarmOpeners` after `intGo` (and `ptWarmFoes` at `runUp` / `fight`) decodes the chapter's likely fight-opener angry busts, one URL per idle callback.
+
