@@ -1,5 +1,5 @@
 #!/workspace/pwenv/bin/python3
-"""Ch1 crafting-supply test (v6564-craft).
+"""Ch1 crafting-supply test (v6564-craft; v6565-supplyrooms: room-count layout, pairs per facility, per-save roll).
 usage: test_supply.py <worktree> [port] [--shot PATH] [--base <old worktree>]
 Runs the REAL game functions in a headless 390x844 page:
   - simulates a thorough Ch1 (lesson + safe kits + wall kits + 4 minis + N street foes) and reports total mats / dressings (target 15-18)
@@ -66,7 +66,8 @@ ONE = """(function(a){ var FOES=a.foes, o={}, T=window.__T; return T.quiet(funct
   T.reset(); var tot = {};
   function mark(k, f){ var b = T.mats(); f(); tot[k] = T.mats() - b; }
   mark('lesson', function(){ SAVE.sc = SAVE.sc || {}; SAVE.sc.dress = 'fetch'; v630DressFetch(); });
-  mark('safe_kits', function(){ (a.safe||[]).forEach(function(k){ phMatAdd(k, 1); }); });
+  SAVE.supLay = null; SAVE.wkit = {}; [libS(),artS(),cafS(),fldS(),gymS()].forEach(function(S){ S.kit = {}; });
+  mark('safe_kits', function(){ Object.keys(FFF_SUP.kitCab).forEach(function(kid){ (FFF_SUP.safeGive(kid)||[]).forEach(function(k){ phMatAdd(k, 1); }); }); });
   mark('wall_kits', function(){ (WKIT_TABLE.wall||[]).forEach(function(w){ (wkitGive(w.id)||[]).forEach(function(k){ phMatAdd(k,1); }); }); });
   mark('minis', function(){ ['mb_lib','mb_art','mb_cafe','mb_field'].forEach(function(m){ healDrops({mini:m, foes:[1]}, {firstMini:true}); }); });
   mark('quests', function(){ for (var i=0;i<(a.relays||4);i++) qReward(); });
@@ -111,6 +112,9 @@ async def main():
         # balanced kind: 1 foe at a time never lets one kind run away
         bal = await ev(pg, """(function(){ return __T.quiet(function(){ SAVE.chapter=1; __T.reset(); root.FFF_MAT_ROLL=0; for (var i=0;i<20;i++) healDrops({foes:[1]},{}); root.FFF_MAT_ROLL=null; return [phMatN('gauze'),phMatN('tape')]; }); })()""")
         ok('forced drops balance gauze/tape', bal and abs(bal[0] - bal[1]) <= 1, bal)
+        mb = await ev(pg, """(function(){ return __T.quiet(function(){ var o={}; SAVE.chapter=1; __T.reset(); SAVE.herbs.gauze=3; healDrops({mini:'mb_lib',foes:[1]},{firstMini:true}); o.mini=[phMatN('gauze'),phMatN('tape')];
+          __T.reset(); SAVE.herbs.tape=2; root.FFF_MAT_ROLL=0; healDrops({foes:[1]},{}); root.FFF_MAT_ROLL=null; o.street=[phMatN('gauze'),phMatN('tape')]; return o; }); })()""")
+        ok('mini / street drop gives the type you hold fewer of', mb['mini'] == [3, 1] and mb['street'] == [1, 2], mb)
         # ---------- quest rewards ----------
         q = await ev(pg, """(function(){ return __T.quiet(function(){ SAVE.chapter=1; __T.reset(); var s=qReward(); var a=__T.mats(); var rm=rewardMain('q_relay1')||''; SAVE.chapter=2; __T.reset(); var s2=qReward(); var b=__T.mats(); SAVE.chapter=1; return {ch1:a, s:s, rm:rm, ch2:b}; }); })()""")
         ok('Ch1 quest hand-in gives no gauze/tape/bandage; text matches', q['ch1'] == 0 and not re.search(r'gauze|tape|bandage', q['s'] + q['rm'], re.I), q)
@@ -121,16 +125,49 @@ async def main():
         ok('source: no post-KO nurse mats text / grant', 'She sets out 1 gauze' not in html and "koGrantMat('gauze', 1)" not in html)
         les = await ev(pg, """(function(){ return __T.quiet(function(){ SAVE.chapter=1; __T.reset(); SAVE.sc={dress:'fetch'}; n9Cabinet(); var m=[phMatN('gauze'),phMatN('tape')]; try{ if(typeof sceneEnd==='function') sceneEnd(); }catch(e){} W.dlg=false; W.paused=false; return m; }); })()""")
         ok('Dressing lesson still gives 1 gauze + 1 tape', les == [1, 1], les)
-        # ---------- kits ----------
-        safe = re.findall(r"kit: \{ id: 'kit[A-Z]', r: \[[^\]]*\], at: \[[^\]]*\], give: \[([^\]]*)\]", html)
-        sk = [re.findall(r"'(\w+)'", s)[0] for s in safe]
-        ok('six safe-room kits hold 1 piece each (3 gauze + 3 tape)', len(safe) == 6 and all(len(re.findall(r"'", s)) == 2 for s in safe) and sk.count('gauze') == 3 and sk.count('tape') == 3, sk)
-        wall = await ev(pg, "(WKIT_TABLE.wall||[]).map(function(w){return [w.id, wkitGive(w.id)]}).filter(function(x){return x[1].length})")
-        ntab = await ev(pg, "(WKIT_TABLE.wall||[]).length")
-        ok('wall kits: only %d of %d hold a piece (1 each)' % (len(wall), ntab), 1 <= len(wall) <= 3, wall)
+        # ---------- kits: room-count layout, pairs per facility (v6565-supplyrooms) ----------
+        FAC = """(function(){ var o={}; FFF_SUP.fac.forEach(function(f){ o[f[0]]={g:0,t:0,cabs:[]}; }); var L=FFF_SUP.lay();
+          Object.keys(L).forEach(function(c){ var w=wkitWallById(c), fac=w?w.go:null; FFF_SUP.fac.forEach(function(f){ if(f[2].indexOf(c)>=0) fac=f[0]; }); var e=o[fac]; if(!e) return; e.cabs.push(c); if(L[c]==='gauze') e.g++; else if(L[c]==='tape') e.t++; });
+          return o; })()"""
+        FRESH = "SAVE.supLay=null; SAVE.wkit={}; [libS(),artS(),cafS(),fldS(),gymS()].forEach(function(S){ S.kit={}; });"
+        info = await ev(pg, "({rooms:FFF_SUP.rooms(), pairs:FFF_SUP.pairs(), budget:SUP_PAIRS})")
+        print('ROOMS / PAIRS', json.dumps(info))
+        R, P = info['rooms'], info['pairs']
+        ok('room counts from code: Library 13, Art 7, Cafeteria 4, Storehouse 4, Gym 8', R == {'lib': 13, 'art': 7, 'caf': 4, 'fld': 4, 'gym': 8}, R)
+        ok('Library (most rooms) gets the most pairs; more rooms never means fewer pairs', all(P['lib'] > P[k] for k in P if k != 'lib') and all(P[a] >= P[b] for a in P for b in P if R[a] > R[b]), P)
+        ok('every facility gets at least one pair; pairs sum to SUP_PAIRS', all(v >= 1 for v in P.values()) and sum(P.values()) == info['budget'], P)
+        roll = await ev(pg, """(function(){ return __T.quiet(function(){ var N=400, bad=[], seen={}, safeMiss=0, tot=0;
+          for (var i=0;i<N;i++){ %s var F=%s, P=FFF_SUP.pairs(); var key=JSON.stringify(FFF_SUP.lay()); seen[key]=1;
+            for (var f in F){ tot+=F[f].g+F[f].t; if (F[f].g!==P[f] || F[f].t!==P[f]) bad.push([f,F[f].g,F[f].t]); }
+            Object.keys(FFF_SUP.kitCab).forEach(function(k){ if(!(FFF_SUP.safeGive(k)||[]).length) safeMiss++; }); }
+          return {bad:bad.slice(0,5), nbad:bad.length, distinct:Object.keys(seen).length, safeMiss:safeMiss, meanFound:tot/N}; }); })()""" % (FRESH, FAC))
+        print('ROLLS', json.dumps(roll))
+        ok('400 fresh rolls: every facility has gauze == tape == its pairs (whole dressings, never one type)', roll['nbad'] == 0, roll['bad'])
+        ok('every safe-room kit always holds one piece', roll['safeMiss'] == 0, roll['safeMiss'])
+        ok('which cabinet holds what is random across saves', roll['distinct'] >= 100, roll['distinct'])
+        ok('found pieces per thorough Ch1 = 2 x SUP_PAIRS', roll['meanFound'] == 2 * info['budget'], roll['meanFound'])
+        # real grant path: open every cabinet of every facility through the real functions
+        real = await ev(pg, """(function(){ return __T.quiet(function(){ %s __T.reset(); var o={};
+          var S={lib:libS(),art:artS(),caf:cafS(),fld:fldS(),gym:gymS()}, K={kitA:['lib',LIBG.safeA.kit],kitB:['lib',LIBG.safeB.kit],kitK:['art',ARTG.kiln.kit],kitC:['caf',CAFG.staff.kit],kitF:['fld',FLDG.coach.kit],kitG:['gym',GYMG.annex.kit]};
+          function cnt(f, fn){ var g0=phMatN('gauze'), t0=phMatN('tape'); fn(); o[f]=o[f]||{g:0,t:0}; o[f].g+=phMatN('gauze')-g0; o[f].t+=phMatN('tape')-t0; }
+          Object.keys(K).forEach(function(kid){ cnt(K[kid][0], function(){ phOpenKit(S[K[kid][0]], K[kid][1], kid, 'test:'); }); });
+          (WKIT_TABLE.wall||[]).forEach(function(w){ cnt(w.go, function(){ wkitGrantWall(w); }); });
+          var again=0; Object.keys(K).forEach(function(kid){ var b=__T.mats(); phOpenKit(S[K[kid][0]], K[kid][1], kid, 'test:'); again+=__T.mats()-b; }); (WKIT_TABLE.wall||[]).forEach(function(w){ again+=wkitGive(w.id).length; });
+          o.again=again; o.dress=Math.min(phMatN('gauze'),phMatN('tape')); o.mats=__T.mats(); return o; }); })()""" % FRESH)
+        print('REAL OPEN', json.dumps(real))
+        ok('real open of every kit: each facility pays gauze == tape == pairs', all(real[f]['g'] == P[f] and real[f]['t'] == P[f] for f in P), real)
+        ok('real open: all finds craft into dressings (%d) and kits do not refill' % real['dress'], real['dress'] * 2 == real['mats'] and real['again'] == 0, real)
         # an unstocked wall kit takes the existing empty path
-        e = await ev(pg, "(function(){var w=(WKIT_TABLE.wall||[]).filter(function(w){return !wkitGive(w.id).length})[0]; return w? {id:w.id, give:wkitGive(w.id), stocked:wkitIsStocked(w.id)}:null})()")
+        e = await ev(pg, "(function(){" + FRESH + "var w=(WKIT_TABLE.wall||[]).filter(function(w){return !wkitGive(w.id).length && !wkitLooted(w.id)})[0]; return w? {id:w.id, give:wkitGive(w.id), stocked:wkitIsStocked(w.id)}:null})()")
         ok('unstocked wall kit reads as empty (existing open_empty path)', e and e['give'] == [] and not e['stocked'], e)
+        # old v6.5.64 save part-way: Library safeA (gauze) + Reading Hall wall kit (gauze) already taken; Art kiln (gauze) taken
+        mig = await ev(pg, """(function(){ return __T.quiet(function(){ var N=200, bad=[]; for (var i=0;i<N;i++){ %s
+            libS().kit.kitA=[]; wkitMap().dl_hall=1; artS().kit.kitK=[];
+            var F=%s, P=FFF_SUP.pairs(); var lib={g:F.lib.g+2, t:F.lib.t}, art={g:F.art.g+1, t:F.art.t};
+            if (lib.g!==P.lib || lib.t!==P.lib) bad.push(['lib',lib]); if (art.g!==P.art || art.t!==P.art) bad.push(['art',art]);
+            if (FFF_SUP.lay().dl_safeA || FFF_SUP.lay().dl_hall || FFF_SUP.lay().am_kiln) bad.push('looted cabinet re-stocked'); }
+          return {nbad:bad.length, bad:bad.slice(0,4)}; }); })()""" % (FRESH, FAC))
+        ok('old v6.5.64 save part-way: pieces already taken count, facility still ends with equal pairs', mig['nbad'] == 0, mig)
         # ---------- cap ----------
         c = await ev(pg, """(function(){ return __T.quiet(function(){ SAVE.chapter=1; SAVE.craft={dress:1,potion:1}; var o={}; __T.reset(); SAVE.herbs={gauze:20,tape:20,leaf:3,ginger:3};
           var need=craftNeedOf('dress'); o.max0=phCraftMax(need);
@@ -143,14 +180,14 @@ async def main():
         ok('cap: craft blocked at 5, materials stay, message shown, potions unaffected', c['after'] == 5 and c['mats'] == [20, 20] and c['html'] and c['potion'] == 3, c)
         ok('cap: a save with 7 keeps all 7 but cannot craft', c['max7'] == 0 and c['keep7'] == 7, c)
         # ---------- thorough Ch1 sim ----------
-        safe_list = sk
+        safe_list = []
         tot = []; per = {}
         for k in range(RUNS):
             pass
         res = await ev(pg, "(function(){var a=%s; var N=%d, sum=0, mn=1e9, mx=0, ds=0, per={}, hist={}; for (var i=0;i<N;i++){ var r=(%s)(a); sum+=r.mats; ds+=r.dress; mn=Math.min(mn,r.mats); mx=Math.max(mx,r.mats); hist[r.mats]=(hist[r.mats]||0)+1; for (var k in r.tot) per[k]=(per[k]||0)+r.tot[k]; } for (var k in per) per[k]=+(per[k]/N).toFixed(2); return {mean:+(sum/N).toFixed(2), dress:+(ds/N).toFixed(2), min:mn, max:mx, per:per, hist:hist}; })()" % (json.dumps({'foes': FOES, 'safe': safe_list, 'relays': 4}), RUNS, ONE))
         print('THOROUGH CH1 (%d street foes, %d runs):' % (FOES, RUNS), json.dumps(res))
-        ok('thorough Ch1: mean total materials 15-18', 15 <= res['mean'] <= 18.5, res)
-        ok('thorough Ch1: mean dressings craftable 7-9 (= min(gauze,tape))', 6.5 <= res['dress'] <= 9.5, res['dress'])
+        ok('thorough Ch1: mean total materials ~18-22 (was 17.8; +4 from whole pairs per facility)', 17 <= res['mean'] <= 23, res)
+        ok('thorough Ch1: mean dressings craftable ~9-11 (= min(gauze,tape)); never fewer than half the mats rounded down', 8.5 <= res['dress'] <= 11.5 and res['dress'] * 2 >= res['mean'] - 0.6, res['dress'])
         # ---------- popup ----------
         await free_world(pg)
         pop = await ev(pg, """(function(){ SAVE.chapter=1; __T.reset(); var f=document.getElementById('wmatpop'); if(f) f.remove(); W.matPopQ=[]; W.on=false; root.FFF_MAT_ROLL=0; root.FFF_MAT_KIND='gauze'; healDrops({foes:[1]},{}); root.FFF_MAT_ROLL=null; root.FFF_MAT_KIND=null; return {queued:(W.matPopQ||[]).length, shown:!!document.getElementById('wmatpop')&&document.querySelectorAll('#wmatpop .mp').length}; })()""")
@@ -181,6 +218,13 @@ async def main():
         rr = await ev(pg, """(function(){ return __T.quiet(function(){ SAVE.chapter=1; var h=0; for (var i=0;i<4000;i++){ __T.reset(); healDrops({foes:[1]},{}); h+=__T.mats(); } return h/4000; }); })()""")
         ok('old scarce save: street drop is the normal 8%', 0.065 <= rr <= 0.095, rr)
         ok('old-save run: no page errors', not errs, errs[:3])
+        await b.close()
+        # ---------- per-save layout survives a reload (no reroll) ----------
+        b, ctx, pg, errs = await boot(p, PORT); await ev(pg, HELP)
+        l1 = await ev(pg, "(function(){ SAVE.supLay=null; var L=JSON.stringify(FFF_SUP.lay()); var w=(WKIT_TABLE.wall||[]).filter(function(w){return wkitGive(w.id).length})[0]; wkitGrantWall(w); save(); return {L:L, opened:w.id}; })()")
+        await pg.reload(); await pg.wait_for_timeout(3500); await pg.evaluate("WORLD_API.enter(true)"); await pg.wait_for_timeout(2500); await skipall(pg, 6); await ev(pg, HELP)
+        l2 = await ev(pg, "({L:JSON.stringify(FFF_SUP.lay()), looted:wkitLooted(%s)})" % json.dumps(l1['opened']))
+        ok('layout is kept in the save: reload does not reroll (opened kit stays opened)', l1['L'] == l2['L'] and l2['looted'], (l1, l2))
         await b.close()
         # ---------- before numbers from the old tree ----------
         if base:
