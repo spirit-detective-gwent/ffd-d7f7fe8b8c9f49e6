@@ -54,6 +54,7 @@ Build: `cd /workspace/ffd && python3 tools/s2/build.py` (base patches: tools/s2/
      yk_west stall locks those items with "At the Game Center prize counter now" while the strip is open.
    - Stage izak: Jin (mb2_game) at the Blaster cabinet -> 'met', q6. Staff door -> gcback -> bossEnt -> fight mb2_game (flv 8) -> 'won', q7. Prize-safe seal -> e.seal_game, down_neo, FFF_OPN grant, c2sLocksSync -> 'done', qClose, strip flip (n.won.strip, E().stripPunk, NQ.BLK.strip): Punk turf, no discount.
    - ecdbeec: seal waits for Jin's win talk; stale Jin sprite swept.
+   - GGD-71 final (eacefe0, 2026-11-27 03:46 AM ET): cabinets paint at design 1x (87b36dd); world stack hidden while a cabinet is open and Ember tiles bake once per level (eacefe0). dpr3 / 4x cab_fps: gun 59.9, fighter 59.9, street 59.8, shooter 60.0, ember 57.9 (all >=55). Room vs live e1ba0d4: 59.5 fps / 38.3% heat vs 59.0 / 43.9, delta -5.6; after close 59.8 fps. Heap flat (~50.7 to 51.8). Overlay and A._cab cleared on Done. s2 167, ngp 104, bond 109, ch_smoke 13, no_old_art, verify_wired all PASS. Sheets and clips in /workspace/arcade/.
 7. Song edge moved SAVE.j6edge -> J().edge (quest state; NG+ starts clean, ngp T1 passes) — ab7712b.
 ## Shots (one per building)
 - shots/ramen_02_interior.png (+ramen_01..06), shots/kara_lobby.png, shots/hotel_chuo_lobby.png, shots/club_back_office.png, shots/izak_tanuki.png, shots/gc_floor.png. More in explore/ (g00-g11 game center + cabinet + prize + Jin fight).
