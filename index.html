@@ -7104,7 +7104,7 @@ var BOSS_TRACK = { c3_boss: 'battle_hakuen', mb_lib: 'battle_mizuno', mb_art: 'b
 function bossOf(s) { return s ? (s.mini || (s.boss ? 'gouki' : null) || (s.foes && s.foes.length === 1 && BOSS_TRACK[s.foes[0]] ? s.foes[0] : null)) : null; }
 function battleTrack() { if (ST.story && ST.story.tut) return 'intro'; if (ST.story && ST.story.ctx && ST.story.ctx.ckOffice) return 'ck_backroom'; var b = bossOf(ST.story); if (!(b && BOSS_TRACK[b])) b = c2FoeBoss(ST.story); return b && BOSS_TRACK[b] ? BOSS_TRACK[b] : 'battle_' + ST.me; }
 var C2_FOE_BOSS = ['c2_boss', 'mb2_arcade', 'mb2_game', 'mb2_sento', 'mb2_depot', 'c2_doorman', 'enforcer']; /* v6.5.64: a Ch2 boss inside a group fight still brings his theme */
-function c2FoeBoss(s) { var f = s && s.foes, i; if (!f || f.length < 2) return null; for (i = 0; i < C2_FOE_BOSS.length; i++) if (f.indexOf(C2_FOE_BOSS[i]) >= 0) return C2_FOE_BOSS[i]; return null; } // v4.30: Ryo vs the librarian = Tension Theme; vs everyone else Darkling
+function c2FoeBoss(s) { var f = s && s.foes, i; if (!f || f.length < 2) return null; for (i = 0; i < C2_FOE_BOSS.length; i++) if (f.indexOf(C2_FOE_BOSS[i]) >= 0 || f.indexOf(C2_FOE_BOSS[i] + 'g') >= 0) return C2_FOE_BOSS[i]; return null; } /* group foes carry a trailing g */ // v4.30: Ryo vs the librarian = Tension Theme; vs everyone else Darkling
 document.addEventListener('touchend', unlock, { passive: true }); document.addEventListener('click', unlock);
 document.addEventListener('touchend', function () { CI.prime(); }, { passive: true }); document.addEventListener('click', function () { CI.prime(); });
 /* v5.3.1 (Edge): Space / Enter on the title clicks the button from input.js, which is not a trusted gesture for the AudioContext:
@@ -24661,7 +24661,7 @@ wTrack = function () {
 };
 /* v6.5.64: prying the seal ends the boss theme on the spot (both seal paths call c2sLocksSync right after setting it) */
 var c2sLocksSyncMus = c2sLocksSync;
-c2sLocksSync = function () { var r = c2sLocksSyncMus.apply(this, arguments); try { var D = W.inside && INT[W.inside.id]; if (D && D.dg === 'c2' && typeof wMus === 'function') wMus(); } catch (e) {} return r; };
+c2sLocksSync = function () { var r = c2sLocksSyncMus.apply(this, arguments); try { var D = W.inside && INT[W.inside.id]; if (D && D.dg === 'c2' && AU && AU.music) { var t = wTrack(); if (t === 'c2night') t = 'c2complex'; /* same as the c2Go force: c2night is not fetched */ if (t && AU.st.want !== t) { AU.music(t, { slow: 1 }); ev('world:music:' + t + ':seal'); } } } catch (e) {} return r; };
 var sceneV640 = scene;
 scene = function (id, pre, done, i) {
   if (!i && done) { var d0 = done; done = function () { W.v640SceneAt = performance.now(); return d0(); }; }
