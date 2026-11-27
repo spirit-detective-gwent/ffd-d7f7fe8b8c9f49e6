@@ -1110,6 +1110,7 @@ body.wshake #world{animation:wshk .3s steps(2) 2}
 /* v4.13.1 objects: no word tag; the object itself glows softly (the map tap under it walks up and uses it) */
 #wtags .wtag.obj{display:block;pointer-events:none;border-radius:10px;box-sizing:border-box;border:1.5px solid rgba(180,210,220,.38);background:radial-gradient(ellipse at 50% 50%,rgba(150,200,210,.10),rgba(150,200,210,0) 70%);box-shadow:0 0 10px 1px rgba(31,111,120,.30),inset 0 0 10px rgba(150,200,210,.18);animation:wobjb 2.6s ease-in-out infinite}
 #wtags .wtag.obj::before{display:none}
+#world.gkcine #wtags{display:none} /* v6.5.66: no interaction tags (or their pulse) over the Gouki entry cinematic */
 #wtags .wtag.obj.vm{border-color:rgba(150,235,255,.40);box-shadow:0 0 10px 1px rgba(90,220,255,.32),inset 0 0 10px rgba(120,230,255,.18)}
 #wtags .wtag.obj.near{border-color:rgba(159,216,210,.75);box-shadow:0 0 16px 3px rgba(31,111,120,.55),inset 0 0 14px rgba(170,214,216,.30);animation:wobjp 1.4s ease-in-out infinite}
 #wtags .wtag.obj.loot,#wtags .wtag.obj.loot.near{background:none;box-shadow:none;border-color:transparent;animation:none;opacity:0}
@@ -19749,9 +19750,9 @@ function gkCineWalk(s, to, k, done) { var d = Math.hypot(to[0] - s.x, to[1] - s.
   var t0 = performance.now(), lim = d / GK_CINE.run * 1000 / k + 1500;
   (function wait() { if (!W.gkCine) return; if ((!W.path || !W.path.length) || performance.now() - t0 > lim) { W.path = []; W.run = false; walk(); return; } setTimeout(wait, 50); })(); }
 function gkCine(next) { var r = W.ryo, a = W.aoi && W.aoi.el && W.aoi.el.style.visibility !== 'hidden' ? W.aoi : null, g = W.gymGouki, cf0 = W.camFocus, done = 0;
-  sLock(1, 'gkcine'); W.gkCine = 1; if (typeof stickEnd === 'function') stickEnd(); KEYS = {}; ev('world:gkcine:start');
+  sLock(1, 'gkcine'); W.gkCine = 1; if (typeof stickEnd === 'function') stickEnd(); KEYS = {}; ev('world:gkcine:start'); var wd = document.getElementById('world'); if (wd) wd.classList.add('gkcine');
   function free() { if (W.gkLock) { W.gkLock = 0; sLock(0, 'gkcine'); } } /* the arrival / dialogue holds input itself from here (bossEnt + scene) */
-  function fin() { if (done++) return; free(); if (a) a.actMove = 0; W.camFocus = cf0; W.gkCine = 0; ev('world:gkcine:end'); }
+  function fin() { if (done++) return; free(); if (a) a.actMove = 0; W.camFocus = cf0; W.gkCine = 0; if (wd) wd.classList.remove('gkcine'); ev('world:gkcine:end'); }
   W.gkLock = 1; W.gkCineFin = fin; if (!g || !r) { free(); next(fin); return; }
   if (a) a.actMove = 1; W.camFocus = [r, a, g].filter(Boolean);
   var P = gkCineSpots(g), k = Math.max(0.25, cinK()), n = a && P.a ? 2 : 1;
