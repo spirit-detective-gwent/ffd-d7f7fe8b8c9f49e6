@@ -1,0 +1,14 @@
+Fox Fire Fist: Delinquent Duel — Aoi back ambush
+
+Title: Eighties Action
+Artist: Kevin MacLeod (incompetech.com)
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1100243
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/amb_aoi.mp3 (plays when Aoi is ambushed from behind)
+
+Required in-game credit:
+"Eighties Action" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+Edit: 1:20 excerpt from 68.9 s of the original, cut on bar lines (132 bpm), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched. Stereo MP3 at 192 kbps, 44.1 kHz.

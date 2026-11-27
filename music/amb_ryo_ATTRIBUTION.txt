@@ -1,0 +1,14 @@
+Fox Fire Fist: Delinquent Duel — Ryo back ambush
+
+Title: Ready Aim Fire
+Artist: Kevin MacLeod (incompetech.com)
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1500002
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/amb_ryo.mp3 (plays when Ryo is ambushed from behind)
+
+Required in-game credit:
+"Ready Aim Fire" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+Edit: 1:07 excerpt from 113.6 s of the original, cut on bar lines (172 bpm), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched. Stereo MP3 at 192 kbps, 44.1 kHz.
