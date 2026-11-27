@@ -23475,7 +23475,13 @@ function cabTake() {
   SAVE.cabR = 0;
   var list = [];
   CAB_RESTOCK.forEach(function (r) { for (var i = 0; i < r[1]; i++) list.push(r[0]); });
-  if (typeof koQuietMats === 'function') koQuietMats(list, 'cabinet'); else list.forEach(function (k) { phMatAdd(k, 1); });
+  /* The quest hand-in is in this room, so the QUEST COMPLETE banner (3.4 s) may still be up: hold the '+1' pills until it is gone (one timeout, no loop). */
+  var PQ = root.FFF_POPQ, nq = 0;
+  try { if (PQ) { var on = PQ.on(); if (on && on.k === 'quest') nq++; PQ.list().forEach(function (it) { if (it.k === 'quest') nq++; }); } } catch (eQ) {}
+  if (nq || typeof koQuietMats !== 'function') {
+    list.forEach(function (k) { phMatAdd(k, 1); });
+    if (typeof matPopFlush === 'function') setTimeout(function () { W.matPopQ = (W.matPopQ || []).concat(list); matPopFlush(); }, nq ? nq * 3700 : 120);
+  } else koQuietMats(list, 'cabinet');
   list.forEach(function (k) { try { v630SeeMat(k); } catch (e) {} });
   save(); ev('world:cabinet:restock');
 }
