@@ -20605,6 +20605,14 @@ CXD.c2_hustler = { n: 'Alley Hustler', k: 'Street Crew', img: 'c2_hustler_fig', 
  * wardrobe); data-driven vendors / fences (SHOPS); a dynamic music credit. All art: procedural cel / the hand-built v426 rig. */
 var C2LMK = ['arcade', 'game', 'sento', 'depot'], C2V52 = ['mb2_arcade', 'mb2_game', 'mb2_sento', 'mb2_depot', 'c2_boss'], C2V52N = ['npc_fence', 'npc_fence2', 'npc_fence3', 'npc_stall'];
 function wUrl(k) { return 'world/' + k + '.webp?v=' + BUILD; }
+/* v6.5.64 sukajan: a shopkeeper who used to borrow someone's sprite gets their own cel look (handmade repaint of a base sheet,
+   world/<pre>_{walk,idle,map,fig}.webp, made by /workspace/sukajan/work/shop). Same grids as the base, so the base's frame counts carry over. */
+function nqOwnLook(id, pre, base) { if (typeof IMG === 'undefined') return;
+  ['walk', 'idle', 'map', 'fig'].forEach(function (sh) { IMG[id + '_' + sh] = wUrl(pre + '_' + sh); });
+  IMG[id + '_run'] = IMG[id + '_walk']; ['hurt', 'kn', 'lie', 'fig_hurt', 'fig_down'].forEach(function (sh) { IMG[id + '_' + sh] = IMG[id + '_fig']; });
+  if (typeof SHC !== 'undefined') { SHC[id + '_walk'] = SHC[base + '_walk'] || 8; SHC[id + '_idle'] = SHC[base + '_idle'] || 4; }
+  if (typeof SHR !== 'undefined') SHR[id + '_idle'] = (SHR[base + '_idle'] != null ? SHR[base + '_idle'] : 4);
+  if (typeof PT !== 'undefined') PT[id] = id + '_fig'; }
 /* the v5.2 sheets are lazy (assets/world): registered by URL, never inlined into index.html */
 C2V52.forEach(function (k) { ['walk', 'run', 'kn', 'hurt', 'lie', 'map', 'fig'].forEach(function (s) { if (!IMG[k + '_' + s]) IMG[k + '_' + s] = wUrl((k === 'mb2_sento' ? 'mb2_sentoY' : k) + '_' + s); }); PT[k] = k + '_fig'; BW_IDS[k] = 1; SHC[k + '_walk'] = 8; SHC[k + '_run'] = 8; SHC[k + '_kn'] = 4; SHC[k + '_hurt'] = 4; });
 C2V52N.forEach(function (k) { ['walk', 'idle', 'map', 'fig'].forEach(function (s) { if (!IMG[k + '_' + s]) IMG[k + '_' + s] = wUrl(k + '_' + s); }); PT[k] = k + '_fig'; BW_IDS[k] = 1; SHC[k + '_walk'] = 8; SHC[k + '_idle'] = 4; });
@@ -39744,6 +39752,8 @@ function camPan(to, o, done) {
   alias('nq_bandai', 'npc3_net', 1.06, 'Old Sato'); kaneda();
   alias('nq_guest0', 'npc_courier', 1.02, 'Hotel Guest'); alias('nq_guest1', 'npc_attendant', 1.1, 'Hotel Guest'); alias('nq_guest2', 'npc_clerk', 1.04, 'Hotel Guest');
   alias('nq_dagashi', 'npc_clerk', 1.04, 'Grandma Fumi'); alias('nq_drug', 'npc_attendant', 1.1, 'Pharmacist Ono'); alias('nq_books', 'npc3_net', 1.06, 'Mr. Hon'); alias('nq_gacha', 'npc3_kid', 1.0, 'Gacha Kid');
+  /* v6.5.64: their own looks, matching their painted portraits */
+  try { [['nq_udon', 'nq_udonY', 'npc_ramen'], ['nq_clerk', 'nq_clerkY', 'nq_haru'], ['nq_bandai', 'nq_bandaiY', 'npc_ramen'], ['nq_dagashi', 'nq_dagashiY', 'nami'], ['nq_drug', 'nq_drugY', 'kenta'], ['nq_books', 'nq_booksY', 'kenta'], ['nq_gacha', 'nq_gachaY', 'npc3_kid']].forEach(function (L) { nqOwnLook(L[0], L[1], L[2]); }); } catch (eOwn) {}
   /* ================= the new rooms, drawn in-engine once per entry ================= */
   var RW = 1280, RH = 900;
   function roomDef(k, n, mus, extra) { var id = 'c2_nq_' + k; C2R[k] = id;
@@ -40317,7 +40327,7 @@ function camPan(to, o, done) {
   /* the altar gives the hatch key; the deck lets you take the chute */
   var lore0 = loreLook; loreLook = function (k) { var w = E().nqW = E().nqW || {}; if (k === 'altar' && !w.kKey) { w.kKey = 1; sv(); later(400, function () { toast('Brass key: the deck door is open.'); }); } if (k === 'deck') { w.deck = 1; sv(); } return lore0.apply(this, arguments); };
   NQ.loreLook = loreLook;
-  alias('nq_tome', 'npc_clerk', 1.0, 'Tome-baa');
+  alias('nq_tome', 'npc_clerk', 1.0, 'Tome-baa'); try { nqOwnLook('nq_tome', 'nq_tomeY', 'nami'); } catch (eOwn) {}
   /* ---- the painters ---- */
   function wingShell(g, floorTop, floorBot) { g.fillStyle = '#17141b'; g.fillRect(0, 0, WW, WH);
     floorTop(g); floorBot(g);
