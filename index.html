@@ -18174,7 +18174,7 @@ function libLand(R, k) { var d = R.doors[k]; if (d.land) return [d.land[0] * R.s
 /* one interior per room: dl_<room> (dg 'lib' so patrols, fights and saves follow the dungeon rules; deep so patrols roam it all) */
 Object.keys(LIBG).forEach(function (k) { var R = LIBG[k], spots = [];
   Object.keys(R.doors).forEach(function (d) { var D = R.doors[d], sp = { id: d, r: lr(R, D.r), at: lw(R, D.at), face: LIB_FACE[d] }; if (D.tight) sp.tight = 1; spots.push(sp); });
-  (R.spots || []).forEach(function (s) { spots.push({ id: s.id, r: lr(R, s.r), at: lw(R, s.at), face: s.face }); });
+  (R.spots || []).forEach(function (s) { spots.push({ id: s.id, r: lr(R, s.r), at: lw(R, s.at), face: s.face, fl: s.fl ? 1 : 0 }); });
   (R.vend || []).forEach(function (v) { var X = v[2] * R.s, Y = v[3] * R.s; spots.push({ id: 'v_' + v[0], r: [X - 26, Y - 100, X + 26, Y + 6], at: [X, Y + 26], face: 3, vm: v[1] }); });
   if (R.kit) spots.push({ id: R.kit.id, r: lr(R, R.kit.r), at: lw(R, R.kit.at), face: 3 });
   var first = R.doors.exit ? 'exit' : Object.keys(R.doors)[0];
@@ -18663,7 +18663,7 @@ var ART_MUR = { m_clay: { who: 'kaede', room: 'clay', n: 'Glaze Mural', pads: [[
 var ART_FOES = ['drum', 'paint'];
 Object.keys(ARTG).forEach(function (k) { var R = ARTG[k], spots = [];
   Object.keys(R.doors).forEach(function (d) { var D = R.doors[d]; spots.push({ id: d, r: lr(R, D.r), at: lw(R, D.at), face: LIB_FACE[d] }); });
-  (R.spots || []).forEach(function (s) { spots.push({ id: s.id, r: lr(R, s.r), at: lw(R, s.at), face: s.face }); });
+  (R.spots || []).forEach(function (s) { spots.push({ id: s.id, r: lr(R, s.r), at: lw(R, s.at), face: s.face, fl: s.fl ? 1 : 0 }); });
   (R.vend || []).forEach(function (v) { var X = v[2] * R.s, Y = v[3] * R.s; spots.push({ id: 'v_' + v[0], r: [X - 26, Y - 100, X + 26, Y + 6], at: [X, Y + 26], face: 3, vm: v[1] }); });
   if (R.kit) spots.push({ id: R.kit.id, r: lr(R, R.kit.r), at: lw(R, R.kit.at), face: 3 });
   var first = R.doors.exit ? 'exit' : Object.keys(R.doors)[0];
@@ -19030,7 +19030,7 @@ var CAF_FOES = ['bully4', 'bully3'] /* v4.41 (Ernest): the red-haired boy + the 
 NM.cafe_stu = 'Taniguchi Haru'; PT.cafe_stu = 'cafe_stu_fig'; /* v4.72 #20: the Staff Room first-year (was a Yuto clone) */ NM.kurata = 'Kurata Tetsu'; PT.kurata = 'kurata_fig'; ARTK.mb_cafe = 'kurata';
 Object.keys(CAFG).forEach(function (k) { var R = CAFG[k], spots = [];
   Object.keys(R.doors).forEach(function (d) { var D = R.doors[d]; spots.push({ id: d, r: lr(R, D.r), at: lw(R, D.at), face: LIB_FACE[d] }); });
-  (R.spots || []).forEach(function (s) { spots.push({ id: s.id, r: lr(R, s.r), at: lw(R, s.at), face: s.face }); });
+  (R.spots || []).forEach(function (s) { spots.push({ id: s.id, r: lr(R, s.r), at: lw(R, s.at), face: s.face, fl: s.fl ? 1 : 0 }); });
   if (R.crate) { var c = R.crate; spots.push({ id: 'crate', r: lr(R, [c[0] - 36, c[1] - 60, c[0] + 36, c[1]]), at: lw(R, [c[0], c[1] + 40]), face: 3 }); }
   (R.vend || []).forEach(function (v) { var X = v[2] * R.s, Y = v[3] * R.s; spots.push({ id: 'v_' + v[0], r: [X - 26, Y - 100, X + 26, Y + 6], at: [X, Y + 26], face: 3, vm: v[1] }); });
   if (R.kit) spots.push({ id: R.kit.id, r: lr(R, R.kit.r), at: lw(R, R.kit.at), face: 3 });
@@ -19234,9 +19234,9 @@ var FLDG = {
       gE: { r: [1055, 330, 1125, 562], at: [1032, 450], to: 'coach:gW' } },
     spots: [{ id: 'board', r: [700, 30, 980, 110], at: [840, 180], face: 3 }], hurdle: [300, 640], foes: [[330, 470], [820, 560]] },
   lockers: { n: 'Storehouse \u00b7 Locker Corridor', pic: [1152, 864], s: 1.0, plan: [1, 0, 2, 1],
-    open: [[100, 155, 1050, 785]], block: [[140, 200, 500, 420], [650, 200, 1010, 420], [520, 480, 630, 560]],
+    open: [[100, 155, 1050, 785]], block: [[140, 200, 500, 420], [650, 200, 1010, 420]], /* v6.5.66 floorwalk: LANE 1 is chalk on the floor, walkable (spot fl:1) */
     doors: { gS: { r: [453, 800, 690, 850], at: [571, 828], land: [571, 700, 3], to: 'bay:gN' }, gN: { r: [506, 7, 640, 150], at: [573, 178], to: 'track:gS' } },
-    spots: [{ id: 'lane', r: [520, 480, 630, 560], at: [575, 600], face: 3 }], hurdle: [820, 560], foes: [[300, 650], [900, 650]] },
+    spots: [{ id: 'lane', r: [520, 480, 630, 560], at: [575, 600], face: 3, fl: 1 }], hurdle: [820, 560], foes: [[300, 650], [900, 650]] },
   coach: { n: 'Storehouse \u00b7 Coach\u2019s Office (safe room)', pic: [1152, 864], s: 1.0, plan: [2, 1, 3, 2], safe: 1,
     open: [[100, 155, 1050, 785]], block: [[746, 150, 852, 300], [420, 480, 720, 580], [800, 600, 1000, 720]],
     doors: { gW: { r: [28, 323, 91, 562], at: [110, 450], to: 'bay:gE' } },
@@ -19252,7 +19252,7 @@ var FLD_FOES = ['bully1', 'bully2'], FLD_HURDLES = ['bay', 'lockers', 'coach'], 
 NM.bando = 'Bando Rikiya'; PT.bando = 'mb_field_fig'; /* dialogue portrait stays the painted fig; overworld is cel */ ARTK.mb_field = 'bando'; BW_IDS.bando = 1;
 Object.keys(FLDG).forEach(function (k) { var R = FLDG[k], spots = [];
   Object.keys(R.doors).forEach(function (d) { var D = R.doors[d]; spots.push({ id: d, r: lr(R, D.r), at: lw(R, D.at), face: LIB_FACE[d] }); });
-  (R.spots || []).forEach(function (s) { spots.push({ id: s.id, r: lr(R, s.r), at: lw(R, s.at), face: s.face }); });
+  (R.spots || []).forEach(function (s) { spots.push({ id: s.id, r: lr(R, s.r), at: lw(R, s.at), face: s.face, fl: s.fl ? 1 : 0 }); });
   if (R.hurdle) { var c = R.hurdle; spots.push({ id: 'hurdle', r: lr(R, [c[0] - 36, c[1] - 48, c[0] + 36, c[1] + 8]), at: lw(R, [c[0], c[1] + 40]), face: 3 }); }
   (R.vend || []).forEach(function (v) { var X = v[2] * R.s, Y = v[3] * R.s; spots.push({ id: 'v_' + v[0], r: [X - 26, Y - 100, X + 26, Y + 6], at: [X, Y + 26], face: 3, vm: v[1] }); });
   if (R.kit) spots.push({ id: R.kit.id, r: lr(R, R.kit.r), at: lw(R, R.kit.at), face: 3 });
@@ -19512,7 +19512,7 @@ function fldTags(id, D) { var k = D.field, S = fldS(), out = [], b = beaten('mb_
     if (s.id === 'warm' && !b) return; if (/^kit/.test(s.id) && fldKitDone(s.id)) return;
     if (s.id === 'hurdle' && (S.hr[k] || b || W.carry)) return;
     if (/^slot/.test(s.id)) { if (b || S.sl[s.id] || !W.carry) return; out.push({ key: id + ':' + s.id, lab: 'Set', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: 70, cls: ' srch', obj: s.r, act: { int: s.id, face: s.face, id: 'int:' + s.id } }); return; }
-    out.push({ key: id + ':' + s.id, lab: s.vm ? (s.vm === 'soda' ? 'Get drink' : 'Get food') : s.id === 'hurdle' ? 'Lift' : s.id === 'warm' ? 'Warm-up' : 'Look', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: s.vm ? TAG_R.vm : LIB_OBJ_R, vm: !!s.vm, obj: s.r, act: { int: s.id, face: s.face, id: 'int:' + s.id } }); });
+    out.push({ key: id + ':' + s.id, lab: s.vm ? (s.vm === 'soda' ? 'Get drink' : 'Get food') : s.id === 'hurdle' ? 'Lift' : s.id === 'warm' ? 'Warm-up' : 'Look', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: s.vm ? TAG_R.vm : LIB_OBJ_R, vm: !!s.vm, obj: s.r, floor: s.fl ? 1 : 0, cls: s.fl ? ' mat' : '', act: { int: s.id, face: s.face, id: 'int:' + s.id } }); });
   if (k === 'track' && b && !(typeof dgRefilled === 'function' && dgRefilled('field'))) { var a = lw(FLDG.track, FLDP.track[0].at); out.push({ key: id + ':n:bando', lab: 'Talk', x: a[0], y: a[1] - SPH * 1.05 - 4, below: false, ax: a[0], ay: a[1] + 80, R: 110, cls: '', fn: function () { scene(null, FLD_SC.bando2); } }); }
   if (typeof sqFieldSpikesTag === 'function') sqFieldSpikesTag(out, k); return out; }
 function fldSig() { var k = fldRoom(); if (!k) return ''; var S = fldS();
@@ -19570,15 +19570,15 @@ var FLD_SC = {
  * Lore: he willingly allied with the gray-coat man — never possessed. Geometry in PICTURE px. */
 var GYMG = {
   foyer: { n: 'Gym \u00b7 Foyer', pic: [1152, 864], s: 1.0, plan: [1, 2, 2, 3],
-    open: [[100, 155, 1050, 785]], block: [[700, 40, 1000, 140], [160, 240, 220, 320], [920, 240, 980, 320], [200, 520, 380, 620], [128, 730, 172, 768]],
+    open: [[100, 155, 1050, 785]], block: [[700, 40, 1000, 140], [160, 240, 220, 320], [920, 240, 980, 320], [128, 730, 172, 768]], /* v6.5.66 floorwalk: ORDERS mat is floor (spot fl:1) */
     doors: { exit: { r: [447, 738, 696, 850], at: [571, 765], face: 0 }, gN: { r: [506, 7, 640, 150], at: [573, 178], to: 'concourse:gS' },
       gW: { r: [28, 323, 91, 562], at: [110, 450], to: 'lockers:gE' }, gE: { r: [1055, 330, 1125, 562], at: [1032, 450], to: 'annex:gW' } },
-    spots: [{ id: 'board', r: [700, 40, 1000, 140], at: [850, 200], face: 3 }, { id: 'orders', r: [200, 520, 380, 620], at: [290, 660], face: 3 }], foes: [[330, 470], [820, 560]] },
+    spots: [{ id: 'board', r: [700, 40, 1000, 140], at: [850, 200], face: 3 }, { id: 'orders', r: [200, 520, 380, 620], at: [290, 660], face: 3, fl: 1 }], foes: [[330, 470], [820, 560]] },
   concourse: { n: 'Gym \u00b7 Bleacher Concourse', pic: [1280, 720], s: 1.15, plan: [1, 1, 2, 2],
-    open: [[80, 140, 1200, 670]], block: [[100, 160, 420, 520], [860, 160, 1180, 520], [520, 200, 760, 280]],
+    open: [[80, 140, 1200, 670]], block: [[100, 160, 420, 520], [860, 160, 1180, 520]], /* v6.5.66 floorwalk: HOME COURT mat is floor (spot fl:1) */
     doors: { gS: { r: [581, 625, 694, 715], at: [637, 650], land: [637, 585, 3], to: 'foyer:gN' }, gN: { r: [560, 20, 720, 130], at: [640, 180], to: 'trophy:gS' },
       gW: { r: [20, 250, 70, 470], at: [110, 360], to: 'weight:gE' }, gE: { r: [1210, 250, 1260, 470], at: [1170, 360], to: 'side:gW' } },
-    spots: [{ id: 'banner', r: [520, 200, 760, 280], at: [640, 320], face: 3 }], foes: [[500, 450], [780, 480], [640, 560]] },
+    spots: [{ id: 'banner', r: [520, 200, 760, 280], at: [640, 320], face: 3, fl: 1 }], foes: [[500, 450], [780, 480], [640, 560]] },
   lockers: { n: 'Gym \u00b7 Athlete Lockers', pic: [1152, 864], s: 1.0, plan: [0, 2, 1, 3],
     open: [[100, 155, 1050, 785]], block: [[140, 200, 500, 420], [650, 200, 1010, 420], [300, 560, 520, 640], [640, 560, 860, 640]],
     doors: { gE: { r: [1055, 330, 1125, 562], at: [1032, 450], to: 'foyer:gW' }, gN: { r: [506, 7, 640, 150], at: [573, 178], to: 'weight:gS' } },
@@ -19597,9 +19597,9 @@ var GYMG = {
     doors: { gW: { r: [28, 323, 91, 562], at: [110, 450], to: 'concourse:gE' }, gN: { r: [506, 7, 640, 150], at: [573, 178], to: 'arena:gS', lock: 'seals' } },
     spots: [{ id: 'seal', r: [940, 380, 1020, 460], at: [980, 500], face: 3 }], foes: [[400, 500], [750, 520]] },
   trophy: { n: 'Gym \u00b7 Trophy Hall', pic: [1152, 864], s: 1.0, plan: [1, 0, 2, 1],
-    open: [[100, 155, 1050, 785]], block: [[160, 200, 240, 320], [320, 200, 400, 320], [480, 200, 560, 320], [640, 200, 720, 320], [800, 200, 880, 320], [300, 40, 850, 130], [180, 480, 420, 620]],
+    open: [[100, 155, 1050, 785]], block: [[160, 200, 240, 320], [320, 200, 400, 320], [480, 200, 560, 320], [640, 200, 720, 320], [800, 200, 880, 320], [300, 40, 850, 130]], /* v6.5.66 floorwalk: GRAY COAT FILE mat is floor (spot fl:1) */
     doors: { gS: { r: [447, 738, 696, 850], at: [571, 765], land: [571, 705, 3], to: 'concourse:gN' }, gE: { r: [1055, 330, 1125, 562], at: [1032, 450], to: 'arena:gW', lock: 'seals' } },
-    spots: [{ id: 'file', r: [180, 480, 420, 620], at: [300, 660], face: 3 }, { id: 'honors', r: [300, 40, 850, 130], at: [575, 200], face: 3 }], foes: [[600, 700]] },
+    spots: [{ id: 'file', r: [180, 480, 420, 620], at: [300, 660], face: 3, fl: 1 }, { id: 'honors', r: [300, 40, 850, 130], at: [575, 200], face: 3 }], foes: [[600, 700]] },
   arena: { n: 'Gym \u00b7 Main Court', pic: [1280, 720], s: 1.2, plan: [2, 0, 3, 1],
     open: [[80, 140, 1200, 670]], block: [[80, 140, 160, 520], [1120, 140, 1200, 520], [480, 40, 800, 100], [1045, 515, 1155, 645]],
     doors: { gS: { r: [200, 625, 360, 715], at: [280, 650], land: [280, 585, 3], to: 'side:gN' }, gW: { r: [20, 250, 70, 470], at: [110, 360], to: 'trophy:gE' } },
@@ -19608,7 +19608,7 @@ var GYMP = {};
 var GYM_FOES = ['bully1', 'bully2', 'bully3', 'bully4'], GYM_SEALS = ['lockers', 'weight', 'side'];
 Object.keys(GYMG).forEach(function (k) { var R = GYMG[k], spots = [];
   Object.keys(R.doors).forEach(function (d) { var D = R.doors[d]; spots.push({ id: d, r: lr(R, D.r), at: lw(R, D.at), face: LIB_FACE[d] }); });
-  (R.spots || []).forEach(function (s) { spots.push({ id: s.id, r: lr(R, s.r), at: lw(R, s.at), face: s.face }); });
+  (R.spots || []).forEach(function (s) { spots.push({ id: s.id, r: lr(R, s.r), at: lw(R, s.at), face: s.face, fl: s.fl ? 1 : 0 }); });
   (R.vend || []).forEach(function (v) { var X = v[2] * R.s, Y = v[3] * R.s; spots.push({ id: 'v_' + v[0], r: [X - 26, Y - 100, X + 26, Y + 6], at: [X, Y + 26], face: 3, vm: v[1] }); });
   if (R.kit) spots.push({ id: R.kit.id, r: lr(R, R.kit.r), at: lw(R, R.kit.at), face: 3 });
   var first = R.doors.exit ? 'exit' : Object.keys(R.doors)[0];
@@ -19706,7 +19706,7 @@ function gymTags(id, D) { var k = D.gym, S = gymS(), out = [], b = !!SAVE.gouki;
     if (s.id === 'search') { return; /* v6.5.29: Ofuda is a drop, not a floor search */ if (!gymOpen() || gearGate('ofuda') || !gearOpen('ofuda') || Math.hypot(W.ryo.x - s.at[0], W.ryo.y - s.at[1]) > 110) return; out.push({ key: id + ':search', lab: 'Search', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: 70, cls: ' srch', obj: s.r, act: { int: 'search', face: s.face, id: 'int:search' } }); return; }
     if (s.id === 'seal' && (S.sl[k] || b)) return; if (/^kit/.test(s.id) && gymKitDone(s.id)) return;
     if (s.id === 'letter' && gymDone() < 3) return; if (s.id === 'slots' && gymDone() < 1) return;
-    out.push({ key: id + ':' + s.id, lab: s.vm ? (s.vm === 'soda' ? 'Get drink' : 'Get food') : s.id === 'seal' ? 'Take seal' : s.id === 'slots' ? 'Press seals' : s.id === 'letter' ? 'Read letter' : 'Look', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: s.vm ? TAG_R.vm : LIB_OBJ_R, vm: !!s.vm, obj: s.r, act: { int: s.id, face: s.face, id: 'int:' + s.id } }); });
+    out.push({ key: id + ':' + s.id, lab: s.vm ? (s.vm === 'soda' ? 'Get drink' : 'Get food') : s.id === 'seal' ? 'Take seal' : s.id === 'slots' ? 'Press seals' : s.id === 'letter' ? 'Read letter' : 'Look', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: s.vm ? TAG_R.vm : LIB_OBJ_R, vm: !!s.vm, obj: s.r, floor: s.fl ? 1 : 0, cls: s.fl ? ' mat' : '', act: { int: s.id, face: s.face, id: 'int:' + s.id } }); });
   return out; }
 function gymSig() { var k = gymRoom(); if (!k) return ''; var S = gymS();
   return ':gym' + gymDone() + JSON.stringify(S.sl) + (SAVE.gouki ? 1 : 0) + Object.keys(S.kit).join('') + (gymOpen() && gearOpen('ofuda') ? 'o' : ''); }
