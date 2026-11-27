@@ -20,3 +20,11 @@ Compat: v6565-ngptracker adds one line after `var N = ngBuild(SAVE, o);` in v640
 - tools/ngpgouki/ngpgouki_test.py --quick (stuck saves + no Fight tag): branch 8/8, live 2/8.
 - NOTE for the Ofuda job: gearOfudaOnWin -> scene -> gearFind; if #gfind is not .on synchronously, then() (chapterEnd) runs right away AND
   W.gfindThen=chapterEnd fires again on Equip/Stash (seen: Ofuda card over the ending's first line). Not touched here (ofuda worktree moves the drop).
+- Full ngpgouki_test (A-D): 23/23 on branch (live --quick 2/8). ngp_test 104/104 (port-patched copy, /workspace/ngpgouki/ngp_test.log). ch_smoke PASS. verify_wired PASS.
+- perf (/workspace/ngpgouki/tools/perf.py 3x interleaved, 4x CPU, dpr3, NG+ Ch1) avg fps live/branch, heat delta:
+  gym front 54.4/55.7 (-2.1), gym front Gouki-down 59.9/59.9 (+0.2), map walk 59.8/59.5 (+4.7, noisy: live 68/48/58 vs 59/64/66 busy), gym foyer 59.3/60.0 (0.0).
+  No per-frame code added (tagDefs only returns earlier). Battle code untouched except one benchOf check at fight start.
+- shot: /workspace/ngpgouki/shots/beforeafter_ngp_gym_exterior.png (left live NG+ Gouki-down with red 'Fight', right branch none).
+- Overlap with v6566-ofuda (cc3b53d): both drop SAVE.ngp from gkFight and NG+ from gkEndingOpen/gkMidOpen -> ONE content conflict
+  (gkEndingOpen..gkFight block). Resolve: take ngpgouki's block (chapter<=1 gate + gkCardOpen) and keep ofuda's ofudaHoldMark('resume') before chapterEnd in gkStuckResume
+  (and add it to gymDialog's resume:ending). ngptracker merges clean.
