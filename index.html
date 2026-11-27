@@ -15605,7 +15605,7 @@ function restockVend() { SAVE.vm = vmFull(); syncVend(); ev('world:vend:restock'
 function vend(id) { // v4.9: a menu (Buy 1 / Buy 2) that opens when you walk up to a tapped machine; nothing pops up on its own
   var v = vmOf(id) || VMS[0], n = SAVE.vm[v.id] | 0, nm = SODAS.ramune, it = SAVE.items, c = SODA.cost; ev('world:vend:' + v.id);
   var b1 = !n ? 'Sold out' : it < c ? 'Buy 1 \u00b7 need \u00a5' + c : 'Buy 1 \u00a5' + c, b2 = n < 2 ? (n ? 'Only 1 left' : 'Sold out') : it < 2 * c ? 'Buy 2 \u00b7 need \u00a5' + 2 * c : 'Buy 2 \u00a5' + 2 * c;
-  dialog('<b>Vending Machine</b><p><strong>' + nm + '</strong> \u00b7 \u00a5' + c + ' each.</p><p class="vst"><span>In this machine: <b>' + (n ? n + ' left' : 'SOLD OUT') + '</b></span><span>Your yen: <b>\u00a5' + it + '</b></span><span>Your sodas: <b>\ud83e\udd64' + sodaN() + '</b></span></p><p class="dim">Tap \ud83e\udd64 on the map bar to drink one: a surprise flavour (Fizz, Cola or Orange) that helps at the start of your <strong>next fight</strong>. One soda per fight.' + (!n ? ' The other corners of the school have their own machines.' : '') + '</p>',
+  dialog('<b>Vending Machine</b><p><strong>' + nm + '</strong> \u00b7 \u00a5' + c + ' each.</p><p class="vst"><span>In this machine: <b>' + (n ? n + ' left' : 'SOLD OUT') + '</b></span><span>Your yen: <b>\u00a5' + it + '</b></span><span>Your sodas: <b>\ud83e\udd64' + sodaN() + '</b></span></p><p class="dim">Tap \ud83e\udd64 on the map bar to drink one: <strong>+5 Spirit</strong> on the map, full Spirit if you win the chug game.' + (!n ? ' The other corners of the school have their own machines.' : '') + '</p>',
     [['Not now', null], [b1, function () { buySoda(v.id, 1); }, 'hot buy', !n || it < c], [b2, function () { buySoda(v.id, 2); }, 'hot buy2', n < 2 || it < 2 * c]]);
 }
 function buySoda(id, q) {
@@ -15626,7 +15626,7 @@ function sodaMenu(back) {
   var ks = Object.keys(SODAS).filter(function (k) { return SAVE.soda[k] > 0; }); ev('world:soda:menu');
   var h = '<b>Sodas</b>' + (SAVE.sodaOn ? '<p>\u26a1 <strong>' + sodaKN(SAVE.sodaK) + '</strong> (' + (SODA_K[SAVE.sodaK] || {}).fx + ') is waiting for your next fight. One soda per fight.</p>' : '') +
     (ks.length ? '<p>In your bag: ' + ks.map(function (k) { return SODAS[k] + ' \u00d7' + SAVE.soda[k]; }).join(', ') + '.</p>' : '<p>No sodas in your items. The vending machines in the four corners of the school sell them (\u00a5' + SODA.cost + ').</p>') +
-    (ks.length && !SAVE.sodaOn ? '<p class="dim">Drink one: its flavour is a surprise (Fizz, Cola or Orange) and helps at the start of your next fight.</p>' : '');
+    (ks.length && !SAVE.sodaOn ? '<p class="dim">Drink one: +5 Spirit on the map, full Spirit if you win the chug game.</p>' : '');
   var bt = ks.length && !SAVE.sodaOn ? ks.map(function (k) { return ['\ud83e\udd64 Drink a ' + SODAS[k], function () { drinkSoda(k); if (back) back(); }, 'hot soda']; }) : [];
   dialog(h, [[bt.length ? 'Not now' : 'OK', back || null]].concat(bt)); if (bt.length) helpTip('sodabtn', { t: 'Quick drink', h: '<p>The \ud83e\udd64 button on the top bar drinks one in a single tap.</p>' });
 }
