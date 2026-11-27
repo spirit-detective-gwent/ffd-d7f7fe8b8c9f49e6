@@ -53468,7 +53468,7 @@ function hsProp(id, x, y, w, h, html, z) { var L = hsLayer(); if (!L) return nul
 function hsPropsOff() { ['hssteam', 'hspour', 'hsbot', 'hsanchor'].forEach(function (id) { var e = document.getElementById(id); if (e) e.remove(); }); }
 function hsBottleSvg(fill) { return '<svg viewBox="0 0 40 40" width="100%" height="100%" aria-hidden="true"><defs><clipPath id="hsbcl"><path d="M16.8 10h6.4v4.6c4.6 1.9 7.6 5.6 7.6 10.4v6.8a3.4 3.4 0 0 1-3.4 3.4H12.6a3.4 3.4 0 0 1-3.4-3.4V25c0-4.8 3-8.5 7.6-10.4z"/></clipPath></defs><path d="M15 5h10v4h-10z" fill="#b98a52" stroke="#14110d" stroke-width="2"/><path d="M16 9h8v5c5 2 8 6 8 11v7a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4v-7c0-5 3-9 8-11z" fill="rgba(210,230,240,.35)" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/><g clip-path="url(#hsbcl)"><rect class="hslq" x="8" y="' + (36 - 26 * (fill || 0)) + '" width="24" height="30" fill="#7a4520"/></g><rect x="12" y="21" width="16" height="10" rx="2" fill="#efe4c8" stroke="#14110d" stroke-width="1.4" opacity=".9"/><path d="M20 30c-3-2-5-4-5-6.5 2 .4 3.4-.6 3.6-2 1 .9 1.8.9 2.8 0 .2 1.4 1.6 2.4 3.6 2-.1 2.5-2 4.5-5 6.5z" fill="#5f9e4a" stroke="#14110d" stroke-width="1"/><path d="M11 15c-1.2 1.6-2 3.4-2.2 5.4" stroke="#fff" stroke-width="1.4" fill="none" opacity=".7" stroke-linecap="round"/></svg>'; }
 function hsCineCss() { if (document.getElementById('hscine')) return; var s = document.createElement('style'); s.id = 'hscine';
-  s.textContent = '.hsprop{position:absolute;display:block;pointer-events:none}' +
+  s.textContent = 'body.hscine #wbub{display:none!important}' + '.hsprop{position:absolute;display:block;pointer-events:none}' +
     '#hssteam b{position:absolute;bottom:0;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#fff 0,#f2efe8 45%,rgba(240,236,228,0) 72%);opacity:0;animation:hspuff 1.5s ease-out 3}' +
     '#hssteam b:nth-child(2){animation-delay:.5s;left:60%}#hssteam b:nth-child(3){animation-delay:1s;left:35%}#hssteam b:nth-child(1){left:50%}' +
     '@keyframes hspuff{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:.95}100%{opacity:0;transform:translate(6px,-34px) scale(1.9)}}' +
@@ -53479,7 +53479,7 @@ function hsCineCss() { if (document.getElementById('hscine')) return; var s = do
   document.head.appendChild(s); }
 function hsSu() { return W.c2n && W.c2n.sumire; }
 function hsWait(ms, f) { setTimeout(f, root.FFF_HS_FAST ? 30 : ms); }
-function hsCineSetup(next) { hsCineCss(); var su = hsSu(), L = [];
+function hsCineSetup(next) { hsCineCss(); try { document.body.classList.add('hscine'); } catch (eB) {} var su = hsSu(), L = [];
   if (W.ryo) L.push([W.ryo, HSC.RYO[0], HSC.RYO[1], 90]); if (W.aoi && W.aoi.el && W.aoi.el.parentNode) L.push([W.aoi, HSC.AOI[0], HSC.AOI[1], 90]);
   if (su && su.el) { try { if (typeof celLoopOff === 'function') celLoopOff(su); } catch (e) {} L.push([su, HSC.SU[0], HSC.SU[1], 70]); }
   hsProp('hsbot', HSC.BOT[0], HSC.BOT[1], 22, 22, hsBottleSvg(0));
@@ -53503,10 +53503,10 @@ function hsGive(next) { var b = document.getElementById('hsbot');
   if (b) { b.style.left = (HSC.RYO[0] + 10 - 11) + 'px'; b.style.top = (HSC.RYO[1] - 40 - 22) + 'px'; b.style.zIndex = String(103 + HSC.RYO[1]); }
   try { AU.play('place', { gain: 0.6 }); } catch (e) {} try { actPlay('pick', W.ryo); } catch (e2) {}
   ev('world:hs:cine:give'); hsWait(1100, next); }
-function hsCineEnd() { hsPropsOff(); var su = hsSu(); if (su && su.el) { try { if (IMG.tsukikage_idle && typeof celLoop === 'function') celLoop(su, 'tsukikage_idle', 0, { ms: 420 }); } catch (e) {} } }
+function hsCineEnd() { try { document.body.classList.remove('hscine'); } catch (eB) {} hsPropsOff(); var su = hsSu(); if (su && su.el) { try { if (IMG.tsukikage_idle && typeof celLoop === 'function') celLoop(su, 'tsukikage_idle', 0, { ms: 420 }); } catch (e) {} } }
 var HS_LESSON = function () { return [
   ['@fn', hsCineSetup],
-  ['', '<p class="dim">She drops the mugwort and the ginger into the Brass Kettle and lets it roll.</p>'],
+  ['', '<p class="dim">She drops the mugwort and the ginger into the big brass bowl and lets it roll.</p>'],
   ['@fn', hsCineBrew],
   ['', '<p class="dim">Steam rolls off it. She pours it dark into a little glass bottle. Ryo coughs.</p>'],
   ['tsukikage', 'Bitter means it works.'],
@@ -53523,7 +53523,7 @@ var HS_LESSON = function () { return [
   hsStage('win', 520),
   ['tsukikage', 'So stop using those. Hand me what\u2019s left. From now on, you drink this.', { mood: 'neutral' }],
   ['ryo', 'It smells like a gym bag.'],
-  ['tsukikage', 'Then hold your nose. Come back a quarter dead.', { mood: 'neutral' }]
+  ['tsukikage', 'Then hold your nose. You brew your own at that bowl. One mugwort, one ginger. Come back a quarter dead.', { mood: 'neutral' }]
 ]; };
 function hsLearnedCard(then) {
   W.paused = false;
