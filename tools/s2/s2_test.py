@@ -140,8 +140,8 @@ async def main():
             buy: !!(S2 && /EATG/.test(String(S2)))
           };
         })()""")
-        ok('north door stands in the street (y < 2760)', art and art.get('doorY') is not None and art['doorY'] < 2760, art)
-        ok('door rect sits on the north band', art and art.get('doorR') and art['doorR'][3] <= 2770 and art['doorR'][1] < 2760, art)
+        ok('shop stand is in the lantern lane, south of Lucky 7 (y 2600-2680)', art and art.get('doorY') is not None and 2600 <= art['doorY'] <= 2680, art)
+        ok('door rect is the Lucky 7 doorway, not the sidewalk (ends at y=2600)', art and art.get('doorR') and art['doorR'][3] <= 2600 and art['doorR'][1] >= 2500, art)
         ok('Chiyo walk is the new sheet, not the clerk', art and 'nq_chiyo_walk' in str(art.get('walk') or ''), art)
         ok('Chiyo portrait mapped', art and art.get('pt')=='chiyo' and art.get('has'), art)
         ok('S2P + C2H painters live', art and art.get('s2p') and art.get('c2h'), art)

@@ -20654,9 +20654,9 @@ function c2TetsuKnown() { try { var e = c2S().e; return !!(e && (e.informant || 
 function c2PunkDealt() { var S = c2S(); if (!S) return false; if (S.f && S.f.punk1) return true; if (S.e && S.e.ckSlip) return true; if (S.ck && S.ck.f && S.ck.f.ck6) return true; return false; }
 function c2InformantLines() { return [['informant', 'Tsukikage\'s kids, right? Word travels. Make it quick.', { mood: 'neutral' }], ['aoi', 'Someone\'s squeezing the shops on her lane. Who?', { mood: 'neutral' }], ['informant', 'Loud guy. Aloha shirt. Calls himself Punk Tetsu.', { mood: 'neutral' }], ['informant', 'Runs Club Kitsune. Neon fox sign, two streets up from here.', { mood: 'neutral' }], ['informant', 'He sits in the back office, past the dance floor.', { mood: 'neutral' }], ['ryo', 'That\'s it? He\'s just sitting there?', { mood: 'neutral' }], ['informant', 'Behind a lot of muscle. Now walk off like you never met me.', { mood: 'neutral' }]]; }
 function c2ClubChoiceLines() { var bp = typeof c2Path === 'function' ? c2Path() : 'balanced';
-  if (bp === 'fierce') return [['ryo', 'Four names. And that club.', { mood: 'neutral' }], ['ryo', '{fast}Neon fox. I could be there tonight.{/fast}', { mood: 'neutral' }], ['aoi', 'Door says members only. You\u2019re not a member of anything.', { mood: 'neutral' }], ['ryo', 'Tch. Then we join something. Fast.', { mood: 'neutral' }], ['aoi', 'A crew first. Tetsu keeps.', { mood: 'neutral' }]];
-  if (bp === 'strategic') return [['aoi', 'Four names. And that club.', { mood: 'neutral' }], ['aoi', 'Tetsu hides behind this city\u2019s muscle. We can\u2019t reach him from outside it.', { mood: 'neutral' }], ['ryo', 'So we get inside. One of the four.', { mood: 'neutral' }], ['aoi', 'Win their streets. Sooner or later a boss tells us who Tetsu works for.', { mood: 'neutral' }], ['ryo', 'Tetsu stays on the list.', { mood: 'neutral' }]];
-  return [['aoi', 'Four names. And that club.', { mood: 'neutral' }], ['ryo', 'Or we go knock on Tetsu ourselves.', { mood: 'neutral' }], ['aoi', 'Two kids at a members-only door, with nobody behind us? He\u2019d see us a block away.', { mood: 'neutral' }], ['ryo', 'So we get a crew first. Pick a side, win some streets.', { mood: 'neutral' }], ['aoi', 'And somebody out there knows who Tetsu answers to. Then the club.', { mood: 'neutral' }]]; }
+  if (bp === 'fierce') return [['ryo', 'Four names. And that club.', { mood: 'neutral' }], ['ryo', '{fast}Neon fox. I could be there tonight.{/fast}', { mood: 'neutral' }], ['aoi', 'Door says members only. You\u2019re not a member of anything.', { mood: 'neutral' }], ['ryo', 'Tch. Then we ask around. The gangs might know.', { mood: 'neutral' }], ['aoi', 'Ask around first. Tetsu keeps.', { mood: 'neutral' }]];
+  if (bp === 'strategic') return [['aoi', 'Four names. And that club.', { mood: 'neutral' }], ['aoi', 'Tetsu hides behind this city\u2019s muscle. We can\u2019t reach him from outside it.', { mood: 'neutral' }], ['ryo', 'So we ask around. One of the four might know.', { mood: 'neutral' }], ['aoi', 'We ask around. Sooner or later someone tells us who Tetsu works for.', { mood: 'neutral' }], ['ryo', 'Tetsu stays on the list.', { mood: 'neutral' }]];
+  return [['aoi', 'Four names. And that club.', { mood: 'neutral' }], ['ryo', 'Or we go knock on Tetsu ourselves.', { mood: 'neutral' }], ['aoi', 'Two kids at a members-only door, with nobody behind us? He\u2019d see us a block away.', { mood: 'neutral' }], ['ryo', 'Let\u2019s check out the gangs, see if someone knows anything.', { mood: 'neutral' }], ['aoi', 'And somebody out there knows who Tetsu answers to. Then the club.', { mood: 'neutral' }]]; }
 function c2TellLines() { var bp = typeof c2Path === 'function' ? c2Path() : 'balanced';
   if (bp === 'fierce') return [['ryo', '{fast}Punk Tetsu. Neon fox. I could be there in ten minutes.{/fast}', { mood: 'neutral' }], ['aoi', '{fast}And walk into his muscle blind?{/fast} Genji hears this first.', { mood: 'neutral' }], ['ryo', 'Tch. Fine. Gym first.', { mood: 'neutral' }]];
   if (bp === 'strategic') return [['aoi', 'A name, a sign, a back office. That\'s a start, not a plan.', { mood: 'neutral' }], ['ryo', 'Genji knows this city. We know a name. Fair trade.', { mood: 'neutral' }], ['aoi', 'Then he hears it before we do anything.', { mood: 'neutral' }]];
@@ -21988,7 +21988,7 @@ C2SC.sealToast = 'Central Tower: the night elevator is awake.';
 function c2RoofLines() { var tail = c2Path() === 'strategic' ? [['aoi', '{brisk}He wants a reaction. Short openings. Same timing.{/brisk}', { mood: 'neutral' }], ['ryo', '{brisk}Then we don\u2019t give him one. Your mark.{/brisk}', { mood: 'neutral' }]] : c2Path() === 'balanced' ? [['aoi', 'Steady. We’ve climbed worse nights.', { mood: 'neutral' }], ['ryo', 'With you.{p} Let’s end his night.', { mood: 'neutral' }]] : [['ryo', 'Then we break you {shout}first{/shout}.', { hype: 1, mood: 'rage' }], ['aoi', '{fast}Together. Don’t freestyle this.{/fast}', { mood: 'neutral' }]]; return [['c2_boss', 'Two children.{p} {slow}Four of my seals broken.{/slow}', { mood: 'calm' }], ['ryo', 'You’re the gray coat. Gouki’s deal. These streets.', { mood: 'neutral' }], ['c2_boss', '{slow}Kagerō.{/slow}{p} I only gave this city what it wanted.', { mood: 'calm' }], ['aoi', 'Power shaped by desire. You knew what they’d become.', { mood: 'neutral' }], ['c2_boss', 'I knew their ancestors too,{p} Hayase.{p} Kazan.', { mood: 'calm' }], ['c2_boss', 'Fox and blade. Centuries ago.{p} {slow}You wear their faces.{/slow}', { mood: 'calm' }], ['ryo', 'You’ve lived too long.', { mood: 'neutral' }], ['c2_boss', 'Long enough to know one door is never enough.', { mood: 'calm' }], ['aoi', '{slow}…One door?{/slow}', { mood: 'neutral' }], ['c2_boss', '{slow}Did you think I worked alone?{/slow}', { mood: 'calm' }], ['ryo', '…', { mood: 'neutral' }], ['c2_boss', 'There are more of us.{p} Come prove you can climb.', { mood: 'calm' }]].concat(tail); }
 C2SC.roof = [];
 C2SC.roofOut = [['', '<p class="dim">The night air rushes the tower. Night air rushes the tower.</p>'], ['c2_boss', 'Hah… fox and blade… still…', { mood: 'calm' }], ['c2_boss', 'This was one door.{p} {slow}My people hold deeper ones.{/slow}', { mood: 'calm' }], ['aoi', '{quiet}Kazan…{/quiet}{p} the city’s lights. They’re warmer.', { mood: 'neutral' }], ['ryo', 'Kitsune-Chūō’s quieter. Chapter Two’s done.', { mood: 'neutral' }], ['aoi', 'Not finished.{p} Just… next.', { mood: 'neutral' }]];
-C2SC.locks = [['kurogane', 'Trail’s hot. Four names. Four seals.', { mood: 'neutral' }], ['kurogane', 'Arcade, game center, bathhouse, depot.', { mood: 'neutral' }], ['kurogane', 'Keep working the crews, or go hunt. Your call.', { mood: 'neutral' }]];
+C2SC.locks = [['kurogane', 'Trail’s hot. Four names. Four seals.', { mood: 'neutral' }], ['kurogane', 'Arcade, game center, bathhouse, depot.', { mood: 'neutral' }], ['kurogane', 'Ask around the gangs, or go hunt. Your call.', { mood: 'neutral' }]];
 C2_INTEL.length = 0;
 [['kurogane', 'The coat is still out there.', { mood: 'neutral' }], ['kurogane', 'Gouki wanted to never lose. So he got back up.', { mood: 'neutral' }]].forEach(function () {});
 C2_INTEL.push([['kurogane', 'The coat is still out there.', { mood: 'neutral' }], ['kurogane', 'Gouki wanted to never lose. So he got back up.', { mood: 'neutral' }]], [['kurogane', 'Same man in the gray coat. Out here on these streets.', { mood: 'neutral' }], ['aoi', 'The crews who answer that coat hit like Gouki.', { mood: 'neutral' }]], [['kurogane', 'Flurry crews throw strings. Aoi counters the first hit.', { mood: 'neutral' }], ['kurogane', 'Bruisers stack Guard. Ryo, break it.', { mood: 'neutral' }]], [['kurogane', 'Street fights are two. Don’t wait for a third to wander in.', { mood: 'neutral' }], ['kurogane', 'Lantern Alley is the exception. A Sukajan Punk arrives on round three.', { mood: 'neutral' }]]);
@@ -31128,7 +31128,7 @@ c2Back = function (win, st) { var c = st && st.ctx || {};
 if (CXD.enforcer && SAVE && SAVE.dg && SAVE.dg.c2 && SAVE.dg.c2.e && SAVE.dg.c2.e.banRe) CXD.enforcer.b = 'Beaten at the Central Tower door. He stepped aside.';
 
 /* ---------- Four Corners: steps, journal, map target ---------- */
-var C2S_STEPS = ['Throw in with a crew (or go it alone)', 'Take the Sh\u014dtengai arcade seal', 'Take the Neon Game Center seal', 'Take the station bathhouse seal', 'Take the freight depot seal',
+var C2S_STEPS = ['Check out the gangs (or go it alone)', 'Take the Sh\u014dtengai arcade seal', 'Take the Neon Game Center seal', 'Take the station bathhouse seal', 'Take the freight depot seal',
   'Beat Punk Tetsu at Club Kitsune', 'Bring the seals and the slip to Genji', 'Get past Ban Shigure at Central Tower', 'Defeat Kager\u014d atop Central Tower'];
 function c2sDone() { var e = c2sE(), n = C2LMK.length; return [!!(e.run_fac || e.solo || c2Seals() > 0)].concat(C2LMK.map(function (k) { return !!e['seal_' + k]; })).concat([!!e.ckSlip, !!e.roofTold, !!e.banRe, !!(e.bossWon || e.ch2done)]); }
 function c2sLocksSync() { if (!c2sOn()) return; var S = c2S(); if (C2Q.cq2_locks) C2Q.cq2_locks.steps = C2S_STEPS.slice(); if (S.qa !== CQ.locks) return;
@@ -31600,9 +31600,9 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
   /* ---------- report: Punk only, then map talk, then their talk, then two quests ---------- */
   function c2lStreetTalk() {
     var bp = typeof c2Path === 'function' ? c2Path() : 'balanced';
-    if (bp === 'fierce') return [['ryo', 'Four names. And that club.'], ['ryo', '{fast}Neon fox. I could be there tonight.{/fast}'], ['aoi', 'Door says members only. You\u2019re not a member of anything.'], ['ryo', 'Tch. Then we join something. Fast.'], ['aoi', 'A crew first. Tetsu keeps.']];
-    if (bp === 'strategic') return [['aoi', 'Four names. And that club.'], ['aoi', 'Tetsu hides behind this city\u2019s muscle. We can\u2019t reach him from outside it.'], ['ryo', 'So we get inside. One of the four.'], ['aoi', 'Win their streets. Sooner or later a boss tells us who Tetsu works for.'], ['ryo', 'Tetsu stays on the list.']];
-    return [['aoi', 'Four names. And that club.'], ['ryo', 'Or we go knock on Tetsu ourselves.'], ['aoi', 'Two kids at a members-only door, with nobody behind us? He\u2019d see us a block away.'], ['ryo', 'So we get a crew first. Pick a side, win some streets.'], ['aoi', 'And somebody out there knows who Tetsu answers to. Then the club.']];
+    if (bp === 'fierce') return [['ryo', 'Four names. And that club.'], ['ryo', '{fast}Neon fox. I could be there tonight.{/fast}'], ['aoi', 'Door says members only. You\u2019re not a member of anything.'], ['ryo', 'Tch. Then we ask around. The gangs might know.'], ['aoi', 'Ask around first. Tetsu keeps.']];
+    if (bp === 'strategic') return [['aoi', 'Four names. And that club.'], ['aoi', 'Tetsu hides behind this city\u2019s muscle. We can\u2019t reach him from outside it.'], ['ryo', 'So we ask around. One of the four might know.'], ['aoi', 'We ask around. Sooner or later someone tells us who Tetsu works for.'], ['ryo', 'Tetsu stays on the list.']];
+    return [['aoi', 'Four names. And that club.'], ['ryo', 'Or we go knock on Tetsu ourselves.'], ['aoi', 'Two kids at a members-only door, with nobody behind us? He\u2019d see us a block away.'], ['ryo', 'Let\u2019s check out the gangs, see if someone knows anything.'], ['aoi', 'And somebody out there knows who Tetsu answers to. Then the club.']];
   }
   function c2lOpenSplit() {
     var st = S();
@@ -32175,7 +32175,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     var steps = [];
     if (!sided && !E.solo) {
       FACO.forEach(function (id, i) {
-        steps.push({ lab: FACL[id], state: 'pend', sec: i ? null : 'Talk to a crew' });
+        steps.push({ lab: FACL[id], state: 'pend', sec: i ? null : 'Check out the gangs' }); /* v6.5.64 */
       });
     } else {
       if (f) {
@@ -32213,7 +32213,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     }
     var tetsuState = E.ckSlip || done ? 'ok' : (sided || E.solo ? 'pend' : 'pend');
     var tetsuLab = (E.ckSlip || known) ? (E.ckSlip ? 'Got Punk Tetsu\u2019s handbook' : 'Get Punk Tetsu\u2019s handbook') : 'Hear out Punk Tetsu at Club Kitsune';
-    var tetsuHint = E.ckSlip ? null : (known ? 'One of the pieces Genji needs. Still out.' : (sided ? 'A single job: get what he\u2019s holding. The crew have our back.' : 'Wiser to have a crew at your back first.'));
+    var tetsuHint = E.ckSlip ? null : (known ? 'One of the pieces Genji needs. Still out.' : (sided ? 'A single job: get what he\u2019s holding. The crew have our back.' : 'Ask around first. See if someone knows anything.'));
     steps.push({ lab: tetsuLab, state: tetsuState, hint: tetsuHint, rule: 'the club' });
     return steps;
   }
@@ -33691,8 +33691,8 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     try {
       if (r && id === QLOCK && on() && onboarding() && r.rich && !r.rich.fc13s) {
         var b = firstBorder();
-        r.rich.forEach(function (st) { if (st.sec === 'Talk to a crew') st.sec = 'The crews'; });
-        r.rich.unshift({ lab: 'Back a crew in a border fight', state: 'cur', sec: 'First', hint: b ? cap(bName(b)) + '. Two crews keep squaring off there.' : '' });
+        r.rich.forEach(function (st) { if (st.sec === 'Talk to a crew' || st.sec === 'Check out the gangs') st.sec = 'The crews'; });
+        r.rich.unshift({ lab: 'Check out the gangs at a border', state: 'cur', sec: 'First', hint: b ? cap(bName(b)) + '. Two crews keep squaring off there.' : '' });
         r.rich.fc13s = 1;
         r.steps = r.rich.map(function (st) { return [st.lab + (st.state === 'closed' ? '  CLOSED' : ''), st.state === 'ok']; });
       }
@@ -33703,8 +33703,8 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
   /* the step-outside beat: first time in town after the split (Ryo and Aoi's idea, not Genji's order) */
   function outsideLines(b) {
     var p = typeof c2Path === 'function' ? c2Path() : 'balanced', n = cap(bName(b));
-    if (p === 'fierce') return [['ryo', n + '. The crews are always at it there.'], ['aoi', 'Help one win. Then they\u2019ll talk to us.']];
-    return [['aoi', n + '. Two crews keep squaring off there.'], ['ryo', 'Help one win, and they\u2019ll talk to us.']];
+    if (p === 'fierce') return [['ryo', n + '. The crews are always at it there.'], ['aoi', 'Then we look in. Someone might know something.']];
+    return [['aoi', n + '. Two crews keep squaring off there.'], ['ryo', 'Then we go look. See if someone knows anything.']]; /* v6.5.64: ask around, don\u2019t pledge to join or win streets */
   }
   function stepOutside() {
     var e = E(); if (e.fc13sOut || !onboarding() || !inTown()) return;
@@ -33715,7 +33715,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     try { if (W.ryo && typeof c2Face === 'function') { c2Face(W.ryo, B.at[0], B.at[1]); if (W.aoi) c2Face(W.aoi, B.at[0], B.at[1]); } } catch (eF) {}
     scene(null, outsideLines(b), function () {
       W.dlg = false;
-      try { qBanner('FOUR CORNERS', cap(bName(b)), 'Back a crew in a border fight'); } catch (eB) {}
+      try { qBanner('FOUR CORNERS', cap(bName(b)), 'Check out the gangs at a border'); } catch (eB) {}
       beaconKey = ''; /* the beacon lands with its sound */
     });
   }
@@ -34705,7 +34705,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     var K = knownBorders().filter(borderLive);
     var hint = 'Northwest, up by the casino on Chuo-d\u014dri \u2014 Hustlers vs Syndicate. East, by the Ginko arcade on Wagashi row \u2014 Punks vs Riders. Pick either one.';
     if (K.length) hint = K.map(function (b) { return cap(bName(b)) + ' \u2014 ' + BCREWS[b]; }).join('. ') + '. Pick either one.';
-    return { lab: 'Back a crew in a border fight', state: 'cur', sec: 'First', hint: hint };
+    return { lab: 'Check out the gangs at a border', state: 'cur', sec: 'First', hint: hint }; /* v6.5.64: look in, don't pledge to join */
   }
   /* 13l's Four Corners card still adds "<boss> has jobs — see Side." / "Jobs n / m — see Side." (no jobs any more) */
   function noJobs(x) { return String(x).replace(/ ?Jobs \d+ \/ \d+ \u2014 see Side\./g, ' Their door stays shut for now.').replace(/ ?[^.>]*? has jobs \u2014 see Side\./g, ' Their door stays shut for now.'); }
@@ -34716,8 +34716,8 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     try { if (r && id === QLOCK && on() && r.rich) { r.rich.forEach(function (x) { if (x && x.hint) x.hint = noJobs(x.hint); }); } } catch (eJ) {}
     try {
       if (r && id === QLOCK && on() && live() && r.rich) {
-        var rest = r.rich.filter(function (x) { return x && x.lab !== 'Back a crew in a border fight' && x.lab !== 'Ask around about the crews'; })
-          .map(function (x) { if (x.sec === 'Talk to a crew') x.sec = 'The crews'; return x; });
+        var rest = r.rich.filter(function (x) { return x && x.lab !== 'Back a crew in a border fight' && x.lab !== 'Check out the gangs at a border' && x.lab !== 'Ask around about the crews'; })
+          .map(function (x) { if (x.sec === 'Talk to a crew' || x.sec === 'Check out the gangs') x.sec = 'The crews'; return x; });
         r.rich = [lockFirst()].concat(rest);
         r.steps = r.rich.map(function (x) { return [x.lab + (x.state === 'closed' ? '  CLOSED' : ''), x.state === 'ok']; });
       }
@@ -34858,7 +34858,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     W.dlg = true;
     scene(null, BEAT[path()], function () {
       W.dlg = false;
-      try { qBanner('FOUR CORNERS', 'Chuo-d\u014dri \u00b7 Wagashi row', 'Back a crew in a border fight'); } catch (eB) {}
+      try { qBanner('FOUR CORNERS', 'Chuo-d\u014dri \u00b7 Wagashi row', 'Check out the gangs at a border'); } catch (eB) {}
       pinKey = '';
     });
   }
@@ -35953,7 +35953,7 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
 
   /* ---------------- places ---------------- */
   var ARC = C2W.doors.arcade, ARC_AT = ARC.at, APRON = [2090, 3290, 2270, 3440];
-  var GK_DOOR = { r: [2096, 2560, 2212, 2676], at: [2150, 2692] }, GK_CURB = [2226, 2712]; /* ch2-fixes GGD-26: was [2202, 2606], which sorts BEHIND the big tree (tree y 2690, canopy drawn over him). Now just left of the trunk base, one step in front of it (y 2700 > 2690), so he is fully in view. */
+  var GK_DOOR = { r: [2108, 2520, 2190, 2600], at: [2150, 2640] }, GK_CURB = [2226, 2712]; /* v6.5.64 ch2ov: doorway only, flush with the lane wall like the clinic (was 116x116 into the sidewalk). ch2-fixes GGD-26: Flip's curb just left of the tree trunk base, in front of it (y 2712 > tree 2690) so he is fully in view (was [2202, 2606]). */
   var LOOK = { bat: { at: [1340, 1970], route: [[1300, 1955], [1390, 1955], [1390, 1985], [1300, 1985]], z: 'the Chuo-d\u014dri south edge', id: 'c2_hustler', lab: 'Chuo-d\u014dri south edge' },
     dep: { at: [2630, 3190], route: [[2590, 3175], [2680, 3175], [2680, 3205], [2590, 3205]], z: 'the east end of Wagashi row', id: 'c2_boso', lab: 'Wagashi row, east end' } };
   var LK = 'n13_look';
@@ -46165,7 +46165,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   }
 
   /* ---------------- journal card for Wagashi Row ---------------- */
-  var X3C = [2560, 3190], FLIP_AT = [2360, 3190], SHOP_AT = [3080, 2680];
+  var X3C = [2560, 3190], FLIP_AT = [2360, 3190], SHOP_AT = [3080, 2640]; /* v6.5.64: stand in the lane, south of the Lucky 7 frontage */
   function rich() {
     var s = stg(), done = qDone(), out = [];
     var brief = s !== '' && s !== 'open';
@@ -46238,8 +46238,11 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (typeof PT_HAS !== 'undefined') PT_HAS.chiyo_neutral = 1;
   })();
 
-  /* ---------------- door + room (north facade, x≈3080) ---------------- */
-  var WAGA_DOOR = { r: [3030, 2688, 3130, 2764], at: SHOP_AT, to: 'waga', out: [SHOP_AT[0], SHOP_AT[1] - 24] };
+  /* ---------------- door + room (Lucky 7 south frontage, x≈3080) ----------------
+     v6.5.64: occupy the Lucky 7 storefront on shopsE (base at the lantern-lane
+     wall y=2600). The old overlay sat in the sidewalk (y=2600–2760) on top of
+     Lucky 7 and covered Ban's downed bodies. */
+  var WAGA_DOOR = { r: [3040, 2520, 3120, 2600], at: SHOP_AT, to: 'waga', out: [SHOP_AT[0], SHOP_AT[1] + 16] };
   var RW = 1280, RH = 900;
   function roomDef() {
     var id = 'c2_nq_waga'; C2R.waga = id;
@@ -46254,10 +46257,10 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   roomDef();
   if (typeof c2DoorOf === 'function') { var door0 = c2DoorOf; c2DoorOf = function (k) { if (k === 'waga') return WAGA_DOOR; return door0.apply(this, arguments); }; }
   if (typeof c2Surf === 'function') { var surf0 = c2Surf; c2Surf = function (x, y) { if (c2Room() === 'waga') return 'wood'; return surf0.apply(this, arguments); }; }
-  INT.c2_town.spots.push({ id: 's2_e_waga', r: WAGA_DOOR.r, at: WAGA_DOOR.at, face: 0, lab: 'Enter' });
+  INT.c2_town.spots.push({ id: 's2_e_waga', r: WAGA_DOOR.r, at: WAGA_DOOR.at, face: 3, lab: 'Enter' });
   if (typeof TRANS !== 'undefined') TRANS.s2_e_waga = 1;
   delete INT.c2_town.G;
-  /* painted door overlay, flush on the existing Wagashi north band (400×160, center 3080, bottom on y=2760).
+  /* painted storefront, 400×160, center 3080, bottom flush on y=2600 (Lucky 7 south wall).
      NQ's FAC / propEl / facades live inside the NQ IIFE, so we append the canvas ourselves and hook c2Pop. */
   var WAGA_FAC = null;
   function placeDoor() {
@@ -46268,7 +46271,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       try { if (root.FFF_S2P && root.FFF_S2P.facadeDoor) root.FFF_S2P.facadeDoor(WAGA_FAC.getContext('2d')); } catch (eF) { ev('world:s2:err:facade:' + (eF && eF.message)); }
     }
     WAGA_FAC.className = 'nqprop'; WAGA_FAC.id = 's2WagaDoor';
-    WAGA_FAC.style.cssText = 'position:absolute;left:2880px;top:2600px;width:400px;height:160px;z-index:' + (100 + 2760) + ';pointer-events:none';
+    WAGA_FAC.style.cssText = 'position:absolute;left:2880px;top:2440px;width:400px;height:160px;z-index:' + (100 + 2600) + ';pointer-events:none';
     var host = null, sample = document.querySelector('#world .nqprop, #wimap .nqprop, .nqprop');
     if (sample && sample.parentNode) host = sample.parentNode;
     if (!host) host = document.getElementById('world') || document.getElementById('wimap') || (W && W.el);
@@ -46300,7 +46303,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   hookBattle();
   try { later(0, hookBattle); } catch (eB) { try { setTimeout(hookBattle, 0); } catch (eB2) {} }
   function roomOpen() { return on() && qDone(); }
-  S2.roomOpen = roomOpen; S2.DOOR = WAGA_DOOR;
+  S2.roomOpen = roomOpen; S2.DOOR = WAGA_DOOR; S2.FAC_BOX = [2880, 2440, 3280, 2600]; S2.inWagaDoor = inWagaDoor; S2.doorTalk = doorTalk;
 
   function paintPlaceholder(g) {
     g.fillStyle = '#2a1c1c'; g.fillRect(0, 0, RW, RH);
@@ -46479,8 +46482,24 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     });
     return true;
   }
+  function inWagaDoor() {
+    var r = WAGA_DOOR.r, p = W.ryo;
+    return !!(p && p.x >= r[0] && p.x < r[2] && p.y >= r[1] && p.y < r[3]);
+  }
+  function armWagaLatch() {
+    /* v6.5.64: TRANS auto-enter retriggered shopCold forever while you stood in the door. */
+    W._s2WagaSaid = 1;
+    var poll = function () {
+      if (!W._s2WagaSaid) return;
+      if (!inWagaDoor()) { W._s2WagaSaid = 0; return; }
+      (root.FFF_NATIVE_TO || setTimeout)(poll, 150);
+    };
+    (root.FFF_NATIVE_TO || setTimeout)(poll, 150);
+  }
   function doorTalk() {
-    if (qDone()) { c2Enter('waga'); return; }
+    if (qDone()) { W._s2WagaSaid = 0; c2Enter('waga'); return; }
+    if (W._s2WagaSaid) return;
+    armWagaLatch();
     if (qOn() && (stg() === 'open' || stg() === 'sawshop' || stg() === '')) {
       talk(pv(stg() === 'sawshop' || path() === 'balanced' ? VO.shopFirst : VO.shopCold), function () {
         if (path() === 'balanced' && stg() === 'sawshop') { setStg('w1'); qStep(1); crewSync(); }
@@ -50640,7 +50659,7 @@ ROOMS.lantern_alley = { name: 'Lantern Alley · Ban Shigure', paint: function (x
     floor(x, { kind: 'stone', far: '#2a2030', near: '#120e18', line: 'rgba(255,120,120,.12)', cols: 12, rows: 14 });
     wet(x, [[90, 0, 40, '255,70,60', 0.34], [210, 0, 40, '255,70,60', 0.3], [360, 0, 60, '170,200,255', 0.34], [510, 0, 40, '255,70,60', 0.3], [630, 0, 40, '255,70,60', 0.34], [235, 0, 60, '255,60,80', 0.22]], 0.7);
     x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0, 0, 90, HT); x.fillRect(630, 0, 90, HT); vign(x, 0.75); },
-  lights: [[90, 132, '255,70,50', 70, 0.4, 'lantern'], [210, 156, '255,70,50', 70, 0.4, 'lantern'], [360, 168, '170,200,255', 80, 0.42, 'lantern'], [510, 156, '255,70,50', 70, 0.4, 'lantern'], [630, 132, '255,70,50', 70, 0.4, 'lantern']], rain: 80, mood: 'rain', neon: [[235, 200, 110, '255,60,80']], sway: 1 };
+  lights: [[90, 132, '255,70,50', 70, 0.4, 'lantern'], [210, 156, '255,70,50', 70, 0.4, 'lantern'], [360, 168, '170,200,255', 80, 0.42, 'lantern'], [510, 156, '255,70,50', 70, 0.4, 'lantern'], [630, 132, '255,70,50', 70, 0.4, 'lantern']], rain: 80, mood: 'rain', neon: [[235, 200, 110, '255,60,80']], sway: 1, feet: 52 }; /* v6.5.64: Ban's alley — stand on the stone, not float */
 /* 9. the streets: border brawls, the west street clash, lane ambushes */
 ROOMS.street = { name: 'Streets · border brawls / West Street', paint: function (x) {
     sky(x, '#141830', '#2c2a48', 40); skyline(x, '#262840', 21, 160);

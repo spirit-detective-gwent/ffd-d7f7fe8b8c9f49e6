@@ -204,7 +204,7 @@
   }
 
   /* ---------------- journal card for Wagashi Row ---------------- */
-  var X3C = [2560, 3190], FLIP_AT = [2360, 3190], SHOP_AT = [3080, 2680];
+  var X3C = [2560, 3190], FLIP_AT = [2360, 3190], SHOP_AT = [3080, 2640]; /* v6.5.64: stand in the lane, south of the Lucky 7 frontage */
   function rich() {
     var s = stg(), done = qDone(), out = [];
     var brief = s !== '' && s !== 'open';
@@ -277,8 +277,11 @@
     if (typeof PT_HAS !== 'undefined') PT_HAS.chiyo_neutral = 1;
   })();
 
-  /* ---------------- door + room (north facade, x≈3080) ---------------- */
-  var WAGA_DOOR = { r: [3030, 2688, 3130, 2764], at: SHOP_AT, to: 'waga', out: [SHOP_AT[0], SHOP_AT[1] - 24] };
+  /* ---------------- door + room (Lucky 7 south frontage, x≈3080) ----------------
+     v6.5.64: occupy the Lucky 7 storefront on shopsE (base at the lantern-lane
+     wall y=2600). The old overlay sat in the sidewalk (y=2600–2760) on top of
+     Lucky 7 and covered Ban's downed bodies. */
+  var WAGA_DOOR = { r: [3040, 2520, 3120, 2600], at: SHOP_AT, to: 'waga', out: [SHOP_AT[0], SHOP_AT[1] + 16] };
   var RW = 1280, RH = 900;
   function roomDef() {
     var id = 'c2_nq_waga'; C2R.waga = id;
@@ -293,10 +296,10 @@
   roomDef();
   if (typeof c2DoorOf === 'function') { var door0 = c2DoorOf; c2DoorOf = function (k) { if (k === 'waga') return WAGA_DOOR; return door0.apply(this, arguments); }; }
   if (typeof c2Surf === 'function') { var surf0 = c2Surf; c2Surf = function (x, y) { if (c2Room() === 'waga') return 'wood'; return surf0.apply(this, arguments); }; }
-  INT.c2_town.spots.push({ id: 's2_e_waga', r: WAGA_DOOR.r, at: WAGA_DOOR.at, face: 0, lab: 'Enter' });
+  INT.c2_town.spots.push({ id: 's2_e_waga', r: WAGA_DOOR.r, at: WAGA_DOOR.at, face: 3, lab: 'Enter' });
   if (typeof TRANS !== 'undefined') TRANS.s2_e_waga = 1;
   delete INT.c2_town.G;
-  /* painted door overlay, flush on the existing Wagashi north band (400×160, center 3080, bottom on y=2760).
+  /* painted storefront, 400×160, center 3080, bottom flush on y=2600 (Lucky 7 south wall).
      NQ's FAC / propEl / facades live inside the NQ IIFE, so we append the canvas ourselves and hook c2Pop. */
   var WAGA_FAC = null;
   function placeDoor() {
@@ -307,7 +310,7 @@
       try { if (root.FFF_S2P && root.FFF_S2P.facadeDoor) root.FFF_S2P.facadeDoor(WAGA_FAC.getContext('2d')); } catch (eF) { ev('world:s2:err:facade:' + (eF && eF.message)); }
     }
     WAGA_FAC.className = 'nqprop'; WAGA_FAC.id = 's2WagaDoor';
-    WAGA_FAC.style.cssText = 'position:absolute;left:2880px;top:2600px;width:400px;height:160px;z-index:' + (100 + 2760) + ';pointer-events:none';
+    WAGA_FAC.style.cssText = 'position:absolute;left:2880px;top:2440px;width:400px;height:160px;z-index:' + (100 + 2600) + ';pointer-events:none';
     var host = null, sample = document.querySelector('#world .nqprop, #wimap .nqprop, .nqprop');
     if (sample && sample.parentNode) host = sample.parentNode;
     if (!host) host = document.getElementById('world') || document.getElementById('wimap') || (W && W.el);
@@ -339,7 +342,7 @@
   hookBattle();
   try { later(0, hookBattle); } catch (eB) { try { setTimeout(hookBattle, 0); } catch (eB2) {} }
   function roomOpen() { return on() && qDone(); }
-  S2.roomOpen = roomOpen; S2.DOOR = WAGA_DOOR;
+  S2.roomOpen = roomOpen; S2.DOOR = WAGA_DOOR; S2.FAC_BOX = [2880, 2440, 3280, 2600]; S2.inWagaDoor = inWagaDoor; S2.doorTalk = doorTalk;
 
   function paintPlaceholder(g) {
     g.fillStyle = '#2a1c1c'; g.fillRect(0, 0, RW, RH);
@@ -518,8 +521,24 @@
     });
     return true;
   }
+  function inWagaDoor() {
+    var r = WAGA_DOOR.r, p = W.ryo;
+    return !!(p && p.x >= r[0] && p.x < r[2] && p.y >= r[1] && p.y < r[3]);
+  }
+  function armWagaLatch() {
+    /* v6.5.64: TRANS auto-enter retriggered shopCold forever while you stood in the door. */
+    W._s2WagaSaid = 1;
+    var poll = function () {
+      if (!W._s2WagaSaid) return;
+      if (!inWagaDoor()) { W._s2WagaSaid = 0; return; }
+      (root.FFF_NATIVE_TO || setTimeout)(poll, 150);
+    };
+    (root.FFF_NATIVE_TO || setTimeout)(poll, 150);
+  }
   function doorTalk() {
-    if (qDone()) { c2Enter('waga'); return; }
+    if (qDone()) { W._s2WagaSaid = 0; c2Enter('waga'); return; }
+    if (W._s2WagaSaid) return;
+    armWagaLatch();
     if (qOn() && (stg() === 'open' || stg() === 'sawshop' || stg() === '')) {
       talk(pv(stg() === 'sawshop' || path() === 'balanced' ? VO.shopFirst : VO.shopCold), function () {
         if (path() === 'balanced' && stg() === 'sawshop') { setStg('w1'); qStep(1); crewSync(); }
