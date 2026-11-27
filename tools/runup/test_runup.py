@@ -83,6 +83,8 @@ async def run_boss(pg, boss, first):
     t0 = time.time(); clicked = None; s = None
     while time.time() - t0 < 60:
         s = await ev(pg, STATE)
+        if s.get("ru0"):
+            clicked = time.time(); break
         if s.get("fight"):
             await ev(pg, "(function(){var b=[...document.querySelectorAll('button')].find(e=>e.textContent.trim()==='Fight'&&e.offsetParent);b.click();return 1})()")
             clicked = time.time(); break
