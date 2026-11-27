@@ -13701,8 +13701,20 @@ function dlgIsSpeakerName(name, portrait, opt) {
   if (portrait) return !/^(Low health|Save over|Load slot|Delete slot|Reset slot|Reload the|Choose the|Central Station|Soda machine|Food machine|First Aid|Lunch counter)/i.test(name);
   return false;
 }
+/* v6.5.64 sukajan: a versus / choice face prefers the painted bust (portraits/*.webp) over the zoomed sprite whenever one exists.
+   'x_fig' -> who 'x'; '_kneel' / '_fig_down' -> the beaten mood. The Punk lock-ask reads whichever Y1/Y2/Y3 look IMG.c2_punk_fig carries. */
+function dlgPaintKey(key, I) {
+  if (!key || typeof ptPaintUrl !== 'function') return '';
+  var k = String(key), mood = '', m = /^(.+?)_(fig_down|fig_hurt|fig|kneel|kn|lie|map|idle)$/.exec(k), who = m ? m[1] : k;
+  if (m && /down|kneel|kn|lie/.test(m[2])) mood = 'beaten';
+  if ((who === 'c2_punk' || who === 'c2_punkg') && I) { var cur = I[who + '_fig'] || I.c2_punk_fig; ['c2_punkY2', 'c2_punkY3', 'c2_punkY1'].some(function (v) { if (cur && I[v + '_fig'] === cur) { who = v; return true; } return false; }); }
+  var u = ptPaintUrl(who, mood) || (who !== k ? ptPaintUrl(k, mood) : '');
+  return u || '';
+}
 function dlgFaceStyle(key) {
   var I = (root.ASSETS && root.ASSETS.img) || (typeof IMG !== "undefined" && IMG) || {};
+  var pu = dlgPaintKey(key, I);
+  if (pu) return 'background-image:url(' + pu + ');background-repeat:no-repeat;background-size:120% auto;background-position:center 8%;';
   if (key && typeof FACE !== "undefined" && FACE && FACE[key]) {
     var f = FACE[key], url = I[f.img]; if (!url) return '';
     var k = Math.max(88 / f.cw, 110 / f.ch);
@@ -13764,7 +13776,7 @@ function dlgRenderChoice(d, html, btns, portrait, opt, mode) {
   d.onclick = null;
   d.className = 'on ' + (versus ? 'd3' : 'd2');
   if (face) {
-    d.querySelectorAll('.d2-face, .d3-face').forEach(function (el) { el.style.cssText = dlgFaceStyle(face); });
+    d.querySelectorAll('.d2-face, .d3-face').forEach(function (el) { el.style.cssText = dlgFaceMoodStyle(face, opt.mood || (versus ? 'vs' : '')); });
   }
   dlgBindButtons(d.querySelector('.d2-list'), btns, dlgRibbon);
 }
@@ -13885,10 +13897,13 @@ var PT_PAINT = {ryo:'ryo',aoi:'aoi',kurata:'kurata',mb_cafe:'kurata',gouki:'gouk
 function ptPaintId(who) { return (who && (PT_PAINT[who] || PT_PAINT[String(who).replace(/f$/, '')] || '')) || ''; }
 function ptMoodOf(who, opt, txt) {
   opt = opt || {};
-  if (opt.mood) return opt.mood;
-  if (opt.kneel) return 'beaten';
+  var m0 = opt.mood; /* v6.5.64 angry: an explicit neutral/calm tag can still be overruled by the angry-line table below */
+  if (m0 && m0 !== 'neutral' && m0 !== 'calm') return m0;
+  if (!m0 && opt.kneel) return 'beaten';
   txt = String(txt == null ? '' : txt);
-  if (opt.shout || /\{shout\}/.test(txt)) return (opt.hype || opt.rage) ? 'rage' : 'angry';
+  if (!m0 && (opt.shout || /\{shout\}/.test(txt))) return (opt.hype || opt.rage) ? 'rage' : 'angry';
+  if (typeof ptAngryHit === 'function' && ptAngryHit(who, txt, arguments[3])) return 'angry'; /* arguments[3]: the scene id */
+  if (m0) return m0;
   var id = ptPaintId(who);
   return (id && PT_HAS[id + '_calm'] && id !== 'ryo' && id !== 'aoi') ? 'calm' : 'neutral';
 }
@@ -13904,6 +13919,39 @@ function ptPaintUrl(who, mood) {
   else { add('neutral'); add('calm'); }
   for (var i = 0; i < tryM.length; i++) if (PT_HAS[id + '_' + tryM[i]]) return 'portraits/' + id + '_' + tryM[i] + '.webp';
   return '';
+}
+/* v6.5.64 angry: every NPC but Ryo/Aoi has portraits/<id>_angry.webp. Lazy: nothing loads until a scene or versus box needs it.
+   Angry when: the line carries {mood:'angry'} / {shout}; or its text matches PT_ANGRY_LN[id] (battle openers, taunts, threats, scolding);
+   or the scene id is listed in PT_ANGRY_SC (1 = every NPC speaker, or a list of paint ids). Versus boxes default to angry (except allies in PT_VS_CALM).
+   Calm lines keep neutral/calm; ptPaintUrl falls back angry -> calm -> neutral when a file is missing. */
+'artstu attendant aya bouncer bully2 bully3 bully4 c2boso c2dock c2hustler c2punk c2punkhachi c2punkleo c2runner c2suit cafestu chinpira chiyo ckcashier ckdealer ckhostess courier drum endo fence fence3 flip fumi gachakid gekko genji graycoat haru hase hina hon informant kaede kaji kanda kenji kenta machi mina mio moku mori nami nao nurse oda ono rei riku rin sabu sada sato sora sota student tatsumi tetsuo tome tsukikage yuki yuto'.split(' ').forEach(function (k) { PT_HAS[k + '_angry'] = 1; });
+var PT_ANGRY_SC = {}, PT_VS_CALM = { genji: 1, nurse: 1, tsukikage: 1 };
+var PT_ANGRY_LN = {"chinpira":["You think I feel like talk","Watched you on six screens","You think this is my club?","My Thursday crates never s","I\u2019m the guy in the middle.","Oi, schoolboy. This street","Make me. \u2026Yeah. Thought so"],"c2suit":["Door's shut. Walk.","Neither is the door.","Door\u2019s shut. Jin\u2019s orders.","Come back when the floor f","Children. In our lights.","The club doesn't take kids","Someone lose their student","Run along. Grown-ups are t","A boy and a girl playing c","You're in over your heads.","We'll see.","You can try to keep it.","You're a long way from the"],"ckdealer":["Count's not finished."],"bouncer":["Office is past me.","Members only tonight. Walk","Club\u2019s closed to schoolkid","Leave him. Boss is waiting"],"c2hustler":["Hey. Gym kids. You lost?","Go back to Genji. This str","A boy and a girl. Cute.","Run home before someone ta","Kurogane's sending childre","You two wouldn't last a ro","You're on the wrong street","Plaza's ours tonight.","Hey. You two lost?","This street isn't for you.","A boy and a girl on our wa","Heard Nails sent kids.","Nails sends schoolkids now","Cute.","Hah\u2026 you think the wall ma","The bathhouse. By the stat","Staff only, kids. The old ","Boss says she stays out of","Steam\u2019s private now. Pay o"],"c2punk":["School's that way, kids.","Or did the uniforms scare ","Look. Freshmen.","Walk on, little foxes. Thi","You two playing gang tonig","Cute. Go finish your homew","We live here. Push up.","Keep your bikes off this w","And you're a long way from"],"c2boso":["Kids on our street. Cute.","You can't even reach a peg","You hear a bike and flinch","Take her home before the f","Freight's no place for chi","Keep moving, both of you.","Then move.","Suits don't belong down he","Punks on Masa\u2019s row?","Punks on the bridge? This ","Second bike. You already h","Last bag of the night. You","Schedule\u2019s sacred. You\u2019re "],"gekko":["Not now.","You again. Still slow.","This shop\u2019s under G\u014dda now"],"graycoat":["{quiet}Keep walking.{/quie"],"bully2":["Class is over. Everything\u2019","{quiet}Shhh.{/quiet} Libra"],"bully4":["Look who walked in. The de","Again. Five hundred times.","Then you\u2019ll be quiet soone"],"student":["Wrong office, Kazan."],"bully3":["Wrong answer."],"gouki":["Come earn it inside. I\u2019m n","{slow}Still standing. Stil","Solo strikes never outlast","{slow}How many times can y","You walked my halls. Good."],"shigure":["Turn around. This alley\u2019s ","Back again. You learn anyt","Third time. I respect that","{slow}Name\u2019s Ban.{/slow}{p","You telegraph that punch. ","Two of you, and you still ","Kazan.{p=500} {slow}You fi","You eat every hit whole. A","The coat pays me to keep t","{slow}Show me.{/slow}"],"nails":["Students. Toll\u2019s a hundred","{slow}Wouldn\u2019t you like to","{slow}Then I decide what y","Gekko\u2019s street. Weeks of n","Tell the street what skimm","Bold. I like bold. It brui","Sneaking in my arcade? Tha","Loud kid. Let\u2019s make you q","{slow}A gray coat who unde"],"goda":["{slow}Forty years I heated","Then you read my mail. Kid","\u2026{p=500}{slow}The seal kee","An \u014dzeki doesn\u2019t step out ","Bath\u2019s closed. Forty years","Towel off and leave, child","Kicking a sent\u014d door. Your","I can smell you in the ste","Polite. Fine. Polite gets ","He gave me a seal. I gave "],"kagero":["Two children.{p} {slow}Fou","Four locks broken by two c","Kager\u014d. I only gave this c","{slow}Did you think I work","There are more of us.{p} C"],"kaneda":["Members, family, and peopl","Then you\u2019re the reason I\u2019m","{slow}Observant.{/slow} Do","You again. Upstairs is the","\u2026Then you know he\u2019s not go","Make me.","{slow}You counted.{/slow} ","Plenty of kids tried that.","The door is me."],"masa":["You used a late load to wa","The shutter is mine. You w","You read a board. You have","Honest freight still goes ","End of the line. The lift ","You do not use my paperwor","I said no. The schedule ne","Night freight. Gray crates","Rats in the crates again.","You\u2019re a question. Off my "],"mizuno":["{quiet}You came through my"],"mai":["You broke my section.{p} {"],"kurata":["You threw out my bread.{p}"],"bando":["{slow}Who put a third hurd"],"jin":["New challengers. I\u2019ve got ","He lost. Losers pay. House","Rude. You don\u2019t touch anot","Reading me? Two can play.","New challenger? Cute. Inse"],"genji":["Hands off my gear until we","You\u2019re not bleeding. Save ","Either way: it took two of","Sit.{p} Then get up.","Sync Break. Your partner i","Losing three times isn\u2019t t","I\u2019m not fighting your figh","\u201cTwo of you, still swingin"],"nurse":["Not yet. Sit. Let me see t","Your pride is your own pro","Back with us? You look ter","Try losing less."],"tsukikage":["Your color\u2019s fine. Off you","Good. Now stop collecting ","Because you keep earning i","I know. Your kind always i","Spirit burns love cold bod","Come back a quarter dead.","You are on your feet. I do"],"oda":["You\u2019ll pay twice, then. Ma","It\u2019s noodles, boy. Machi n","It\u2019s noodles. Don\u2019t push i"]};
+function ptAngryHit(who, txt, sc) {
+  var id = ptPaintId(who); if (!id || id === 'ryo' || id === 'aoi' || !PT_HAS[id + '_angry']) return false;
+  var S = sc && PT_ANGRY_SC[sc]; if (S === 1 || (S && S.indexOf(id) >= 0)) return true;
+  var L = PT_ANGRY_LN[id]; if (!L || !txt) return false;
+  for (var i = 0; i < L.length; i++) if (txt.indexOf(L[i]) >= 0) return true;
+  return false;
+}
+var PT_PRE = {};
+function ptPreload(u) { if (!u || PT_PRE[u]) return; PT_PRE[u] = 1; try { var im = new Image(); im.decoding = 'async'; im.src = u; } catch (eP) {} }
+/* once per scene start: warm only the angry busts this scene will show (one Image each, cached by URL) */
+function ptPreloadScene(id, L) { if (!L || !L.length) return; for (var i = 0; i < L.length; i++) { var r = L[i]; if (!r || typeof r[0] !== 'string' || r[0].charAt(0) === '@') continue; var m = ptMoodOf(r[0], r[2], r[1], id); if (m === 'angry' || m === 'rage') ptPreload(ptPaintUrl(r[0], m)); } }
+/* a versus / choice face with a mood: the painted <id>_<mood> bust when that exact file exists, else the usual dlgFaceStyle */
+function dlgMoodFace(key, mood) {
+  if (!key || !mood || typeof ptPaintId !== 'function') return '';
+  var k = String(key), m = /^(.+?)_(fig_down|fig_hurt|fig|kneel|kn|lie|map|idle)$/.exec(k), who = m ? m[1] : k;
+  if (m && /down|kneel|kn|lie/.test(m[2])) return '';
+  if ((who === 'c2_punk' || who === 'c2_punkg') && typeof IMG !== 'undefined') { var cur = IMG[who + '_fig'] || IMG.c2_punk_fig; ['c2_punkY2', 'c2_punkY3', 'c2_punkY1'].some(function (v) { if (cur && IMG[v + '_fig'] === cur && ptPaintId(v)) { who = v; return true; } return false; }); }
+  var id = ptPaintId(who) || ptPaintId(k); if (!id || id === 'ryo' || id === 'aoi') return '';
+  if (mood === 'vs') { if (PT_VS_CALM[id]) return ''; mood = 'angry'; }
+  return PT_HAS[id + '_' + mood] ? 'portraits/' + id + '_' + mood + '.webp' : '';
+}
+function dlgFaceMoodStyle(key, mood) {
+  var u = dlgMoodFace(key, mood);
+  if (u) { ptPreload(u); return 'background-image:url(' + u + ');background-repeat:no-repeat;background-size:120% auto;background-position:center 8%;'; }
+  return dlgFaceStyle(key);
 }
 /* v6.5.63 ch2-ports: painted bust HTML for hardcoded dialog heads (same hang as scene()). */
 function ptFace(who, name, fig) {
@@ -14497,6 +14545,7 @@ function scene(id, pre, done, i) {
   if (i === 0) { sLock(1, id || 'talk'); var d0 = done, rel = false, sg = W.scGen | 0; done = function () { if (!scOk(sg)) { rel = true; ev('world:scene:stale:' + (id || 'talk')); return; } if (!rel) { rel = true; sLock(0, id || 'talk'); } if (root.FFF_SCAM) FFF_SCAM.end(); /* v6.5.61 story camera eases back */ if (d0) d0(); }; } // v4.30.2: no tap-to-move / stick while a scripted scene runs
   if (i === 0 && id) { SAVE.sc[id] = 1; save(); ev('world:scene:' + id); }
   if (i === 0) setFire(SCF[id] ? 1 : 0, id);
+  if (i === 0 && typeof ptPreloadScene === 'function') { try { ptPreloadScene(id, L); } catch (ePre) {} } /* v6.5.64 angry: lazy, per scene */
   var ln = L[i], who = ln[0], last = i >= L.length - 1, txt = ln[1];
   if (root.FFF_SCAM) { try { FFF_SCAM.line(id, ln, i, L); } catch (eSc) { ev('world:scam:err:' + (eSc && eSc.message)); } } /* v6.5.61: story camera (light frame, or ln[2].cam) */
   if (who === '@bond') { close(); bondAsk(txt, function (L2) { var cont = function () { if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } }; if (L2 && L2.length) scene(null, L2, cont); else cont(); }); return; }
@@ -14517,7 +14566,7 @@ function scene(id, pre, done, i) {
   if (ln[2] && ln[2].punch) { AU.play('fist', { gain: 1 }); setTimeout(function () { AU.play('hit', { gain: 0.8 }); }, 90); wSparks(); ev('world:gouki:ko'); }
   var nm = who ? (NM[who] || KN_NM[who] || (CD.chars[who] && CD.chars[who].name) || who) : '';
   txt = twMarkup(txt, id || 'talk');
-  var mood = ptMoodOf(who, ln[2], ln[1]), paint = ptPaintUrl(who, mood), ptUrl = paint || (pt && IMG[pt]);
+  var mood = ptMoodOf(who, ln[2], ln[1], id), paint = ptPaintUrl(who, mood), ptUrl = paint || (pt && IMG[pt]);
   var html = (who ? '<div class="sh' + (hype ? ' hype' : '') + (paint ? ' pt-hang' : '') + '">' + (ptUrl ? '<i class="pt2' + (who === 'gouki' && kn ? ' kneel' : '') + '" style="background-image:url(' + ptUrl + ')"></i>' : '') + (pt && (who === 'ryo' || who === 'aoi') && GEAR ? gearPt(who) : '') + '<b class="snm">' + nm + '</b></div>' : '') +
     '<div class="tw' + (who ? '' : ' nar') + '">' + (who ? '<p class="q">' + (/^<(p|div|strong)\b/.test(txt) ? txt : '\u201c' + txt + '\u201d') + '</p>' : txt) + '</div>';
   var nxd = 0, nx = function () { if (nxd++) return; if (!last) scene(id, pre, done, i + 1); else { ev('world:scene:end:' + id); if (done) done(); } };
@@ -18174,7 +18223,7 @@ function actFW(s, x, y, cb) { var last = performance.now(), tok = s.actT = (s.ac
 function actSay(s, t, ms) { var who = s.who || (s === W.ryo ? 'ryo' : s === W.aoi ? 'aoi' : (s.el && s.el.dataset.npc) || ''), nm = s.nm || NM[who] || (typeof KN_NM !== 'undefined' && KN_NM[who]) || '';
   var b = document.createElement('i'); b.className = 'asay'; b.innerHTML = '<b></b><b></b><b></b>'; s.el.appendChild(b);
   var d = $('#wdlg'), tok = W.sayTok = (W.sayTok | 0) + 1; if (!d.classList.contains('on') || d.classList.contains('sayb')) { var pt = who === 'ryo' ? ryoPt() : PT[who];
-    var _ps = ptPaintUrl(who, ptMoodOf(who)); d.innerHTML = '<div class="tx"><div class="sh' + (_ps ? ' pt-hang' : '') + '">' + ((_ps || (pt && IMG[pt])) ? '<i class="pt2" style="background-image:url(' + (_ps || IMG[pt]) + ')"></i>' : '') + (nm ? '<b class="snm">' + nm + '</b>' : '') + '</div><div class="tw"><p class="q">\u201c' + t + '\u201d</p></div></div><div class="bt"></div>';
+    var _ps = ptPaintUrl(who, ptMoodOf(who, null, t)); d.innerHTML = '<div class="tx"><div class="sh' + (_ps ? ' pt-hang' : '') + '">' + ((_ps || (pt && IMG[pt])) ? '<i class="pt2" style="background-image:url(' + (_ps || IMG[pt]) + ')"></i>' : '') + (nm ? '<b class="snm">' + nm + '</b>' : '') + '</div><div class="tw"><p class="q">\u201c' + t + '\u201d</p></div></div><div class="bt"></div>';
     d.className = 'on scene sayb'; d.dataset.say = t; }
   ev('world:say:' + (who || 'x') + ':' + t); setTimeout(function () { b.remove(); if (W.sayTok === tok && d.classList.contains('sayb')) d.className = ''; }, ms || 1400); }
 /* v4.42 #6 (Ernest, shot 01M6NV01): the Music Hall bond scene, redone. Camera locked on the low bench (lower left). The first-year runs
