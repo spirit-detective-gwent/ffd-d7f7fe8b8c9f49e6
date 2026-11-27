@@ -53084,17 +53084,17 @@ function hsCss() {
     '#hspanel .hsbt{display:flex;gap:8px;margin-top:9px}#hspanel .hsbt button{flex:1;height:38px;border:0;border-radius:9px;font:900 14px system-ui;color:#fff;background:#1f7a72;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}' +
     '#hspanel.k-potion .hsbt button.use{background:#9a5a22}#hspanel .hsbt button.cr{background:#2c4a6a}#hspanel .hsbt button:disabled{opacity:.45}' +
     '#hspanel .hsbt button small{display:block;font:700 9px system-ui;opacity:.8;margin-top:1px}' +
-    '#hscmp{position:absolute;left:14px;right:14px;top:150px;z-index:44;display:flex;gap:10px;justify-content:center;pointer-events:none;animation:hspop .25s ease-out}' +
-    '#hscmp .c{flex:1;max-width:165px;background:#fbf6ea;border-radius:14px;box-shadow:0 0 0 2.5px #14110d,0 6px 0 rgba(20,17,13,.35);padding:10px 8px 10px;text-align:center;color:#14110d;font:700 12px/1.25 system-ui;position:relative;transition:transform .35s,opacity .35s,filter .35s}' +
+    '#hscmp{position:absolute;left:14px;right:14px;top:212px;z-index:44;display:flex;gap:10px;justify-content:center;pointer-events:none;animation:hspop .25s ease-out}' +
+    '#hscmp .c{flex:1;max-width:158px;background:#fbf6ea;border-radius:14px;box-shadow:0 0 0 2.5px #14110d,0 6px 0 rgba(20,17,13,.35);padding:10px 8px 10px;text-align:center;color:#14110d;font:700 12px/1.25 system-ui;position:relative;transition:transform .35s,opacity .35s,filter .35s}' +
     '#hscmp .c svg{width:64px;height:64px;display:block;margin:0 auto 4px}#hscmp .c b{display:block;font:900 15px/1.1 system-ui}#hscmp .c .v{display:block;margin-top:5px;font:900 18px/1 system-ui;color:#1f7a72}' +
     '#hscmp .c .t{display:block;margin-top:4px;font-size:11px;color:#6b5f4c}' +
     '#hscmp .c.kp{background:#fff3dc;box-shadow:0 0 0 2.5px #14110d,0 0 0 6px #d9a868,0 6px 0 rgba(20,17,13,.35)}#hscmp .c.kp .v{color:#9a4a12}' +
     '#hscmp .c.kp.hid{opacity:0;transform:translateY(16px) scale(.9)}' +
-    '#hscmp .c.old.dim{filter:grayscale(.85);opacity:.6;transform:scale(.92)}#hscmp .c.old.dim::after{content:"";position:absolute;left:12%;right:12%;top:50%;height:4px;background:#e84a4a;border-radius:2px;transform:rotate(-14deg);box-shadow:0 0 0 1.5px #14110d}' +
-    '#hscmp .vs{align-self:center;font:900 italic 20px "Arial Black",system-ui;color:#fff;text-shadow:0 2px 0 #14110d,0 0 6px #14110d}' +
-    '.hscard{text-align:center;color:#14110d}.hscard .hsbig{width:72px;height:72px;display:block;margin:4px auto 2px}.hscard h4{margin:2px 0 2px;font:900 12px system-ui;letter-spacing:2px;color:#9a4a12;text-transform:uppercase}' +
+    '#hscmp .c.old.dim{background:#e6e1d6;transform:scale(.92)}#hscmp .c.old.dim>*{filter:grayscale(.9);opacity:.55}#hscmp .c.old.dim::after{content:"";position:absolute;left:12%;right:12%;top:50%;height:5px;background:#e84a4a;border-radius:3px;transform:rotate(-14deg);box-shadow:0 0 0 2px #14110d}' +
+    '#hscmp .vs{align-self:center;flex:0 0 auto;margin:0 -4px;font:900 italic 20px "Arial Black",system-ui;color:#fff;text-shadow:0 2px 0 #14110d,0 0 6px #14110d}' +
+    '.hscard{text-align:center;color:#f4f1ea}.hscard .hsbig{width:72px;height:72px;display:block;margin:4px auto 2px}.hscard h4{margin:2px 0 2px;font:900 12px system-ui;letter-spacing:2px;color:#ffd25a;text-transform:uppercase}' +
     '.hscard b.nm{display:block;font:900 20px/1.1 system-ui}.hscard p{margin:6px 0 0;font:600 13px/1.35 system-ui}.hscard .hsl{margin:8px auto 0;max-width:290px;text-align:left}' +
-    '.hscard .hsl div{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 8px;margin-top:5px;border-radius:8px;background:rgba(20,17,13,.06);font:700 12px/1.2 system-ui}.hscard .hsl i{font-style:normal;color:#9a4a12;font-weight:900}' +
+    '.hscard .hsl div{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 8px;margin-top:5px;border-radius:8px;background:rgba(255,255,255,.09);font:700 12px/1.2 system-ui;color:#f4f1ea}.hscard .hsl i{font-style:normal;color:#ffd25a;font-weight:900}' +
     '.hscard .hsl div span:last-child{text-align:right;white-space:nowrap}';
   document.head.appendChild(s);
 }
@@ -53199,7 +53199,7 @@ function hsSwapCard(o, then) {
   rows += '<div><span>' + o.dress + ' Healing Dressing' + (o.dress === 1 ? '' : 's') + '</span><span><i>\u2192</i> ' + o.kampo + ' Kampo Potion' + (o.kampo === 1 ? '' : 's') + '</span></div>';
   rows += '<div><span>' + o.pairs + ' Gauze + Tape set' + (o.pairs === 1 ? '' : 's') + '</span><span><i>\u2192</i> ' + o.pairs + ' Mugwort + ' + o.pairs + ' Ginger</span></div>';
   if (o.yen) rows += '<div><span>' + o.yen + ' loose roll' + (o.yen === 1 ? '' : 's') + '</span><span><i>\u2192</i> \u00a5' + o.yen + '</span></div>';
-  dialog('<div class="hscard"><h4>Old supplies traded in</h4><p>Dr. Tsukikage takes your dressings and gauze for the clinic.</p><div class="hsl">' + rows + '</div><p class="dim" style="font-size:12px;color:#6b5f4c">Nothing was lost. Your remedy slot now holds Kampo.</p></div>', [['OK', then, 'hot']]);
+  dialog('<div class="hscard"><h4>Old supplies traded in</h4><p>Dr. Tsukikage takes your dressings and gauze for the clinic.</p><div class="hsl">' + rows + '</div><p style="font-size:12px;color:#b9c8d6">Nothing was lost. Your remedy slot now holds Kampo.</p></div>', [['OK', then, 'hot']]);
 }
 function hsLesson(done) {
   W.dlg = true; ev('world:hs:lesson:start');
