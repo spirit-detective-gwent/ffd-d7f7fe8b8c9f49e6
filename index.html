@@ -13630,6 +13630,15 @@ function dlgPlace(d, lock, who) {
   try { ev('world:dlg:dock:' + side + (slide ? ':slide' : '') + (who ? ':' + who : '')); } catch (eEv) {}
 }
 
+function dlgPtUrl(key, mood) {
+  if (!key) return '';
+  if (/^(https?:|data:|portraits\/)/.test(key)) return key;
+  var who = key === 'nurse_fig' ? 'nurse' : (key.length > 4 && key.slice(-4) === '_fig' ? key.slice(0, -4) : key);
+  var u = (typeof ptPaintUrl === 'function') ? ptPaintUrl(who, mood || 'neutral') : '';
+  if (u) return u;
+  var I = (root.ASSETS && root.ASSETS.img) || (typeof IMG !== 'undefined' && IMG) || {};
+  return I[key] || '';
+}
 function dialog(html, btns, portrait, opt) {
   if (typeof commentHide === 'function') commentHide(); if (typeof lvDefer === 'function') lvDefer();
   var d = $('#wdlg'); W.dlg = true; W.path = []; W.arrive = null; W.run = false; W.stv = null; stickEnd(); save();
@@ -13646,7 +13655,7 @@ function dialog(html, btns, portrait, opt) {
   btns = btns || [];
   var mode = dlgMode(btns, portrait, opt);
   if (mode === 'classic') {
-    d.innerHTML = (portrait ? '<i class="pt" style="background-image:url(' + IMG[portrait] + ')"></i>' : '') + '<div class="tx">' + nobr(html) + '</div><div class="bt"></div>';
+    d.innerHTML = (portrait ? '<i class="pt" style="background-image:url(' + (typeof dlgPtUrl === 'function' ? dlgPtUrl(portrait) : IMG[portrait]) + ')"></i>' : '') + '<div class="tx">' + nobr(html) + '</div><div class="bt"></div>';
     var bt = d.querySelector('.bt');
     dlgBindButtons(bt, btns);
     d.onclick = null; d.className = 'on' + (portrait ? ' wp' : '');
@@ -13721,7 +13730,11 @@ function dlgFaceStyle(key) {
     var k = Math.max(88 / f.cw, 110 / f.ch);
     return 'background-image:url(' + url + ');background-repeat:no-repeat;background-size:' + (f.w * k).toFixed(1) + 'px auto;background-position:' + (-f.x * k).toFixed(1) + 'px ' + (-f.y * k).toFixed(1) + 'px;';
   }
-  var url2 = (key && I[key]) || '';
+  var painted = (typeof dlgPtUrl === 'function') ? dlgPtUrl(key) : '';
+  if (painted && painted !== ((key && I[key]) || '')) {
+    return 'background-image:url(' + painted + ');background-repeat:no-repeat;background-size:contain;background-position:center top;';
+  }
+  var url2 = painted || (key && I[key]) || '';
   if (!url2) return '';
   return 'background-image:url(' + url2 + ');background-repeat:no-repeat;background-size:180% auto;background-position:center 6%;';
 }
@@ -15577,7 +15590,7 @@ function codexPane(sec) {
   if (!got.length) return h + '<p class="pnote">Nothing yet. Entries are added after you fight someone, and when you reach a new place.</p>';
   var sel = got.indexOf(W.cxSel) >= 0 ? W.cxSel : got[0], e = CXD[sel], lv = cxLv(sel), c = CD.chars[sel] || {}, person = !!CD.chars[sel];
   h += '<div class="cxenc"><div class="cxlist">' + got.map(function (id) { return '<button data-a="cx" data-id="' + id + '"' + (id === sel ? ' class="on"' : '') + '><small>' + CXD[id].k + '</small>' + cxName(id) + '</button>'; }).join('') + '</div><div class="cxinfo">' +
-    (e.img && IMG[e.img] ? '<i class="cxpt" style="background-image:url(' + IMG[e.img] + ')"></i>' : '') + '<b>' + cxName(sel) + '</b><small>' + (c.title || e.k) + '</small>' +
+    ((function(){ var u = (sel === 'nurse' || (e && e.img === 'nurse_fig')) && typeof nursePtUrl === 'function' ? nursePtUrl() : ''; u = u || (e.img && IMG[e.img]); return u ? '<i class="cxpt" style="background-image:url(' + u + ')"></i>' : ''; })()) + '<b>' + cxName(sel) + '</b><small>' + (c.title || e.k) + '</small>' +
     (e.a ? '<p>' + e.a + '</p>' : person ? '<p>' + (c.title || 'Possessed delinquent') + '. ' + (c.hp || 18) + ' HP. A weak spirit from the Veil rides them; knock them out and it slips back.</p>' : '') +
     cxLvInfo(sel) + (person ? '<p class="cxc"><b>Cards:</b> ' + cxCards(sel) + '</p>' : '') + (e.b ? (lv >= 2 ? '<p class="cxb">' + e.b + '</p>' : '<p class="dim">' + (e.more || 'Win against them to learn more.') + '</p>') : '') + '</div></div>';
   return h;
@@ -15883,6 +15896,7 @@ var NURSE_TXT = {
     ['nurse', 'I\u2019ve never seen anything like it. I don\u2019t know what\u2019s happening.', { mood: 'sad' }],
     ['aoi', 'You\u2019re safe now. I\u2019m Hayase Aoi.', { mood: 'neutral' }],
     ['nurse', 'Shiraishi. School nurse. Thank you. Both of you.', { mood: 'happy' }],
+    ['@fn', function (next) { nurseReveal(next); }],
     ['aoi', 'Seen anyone else like them today?', { mood: 'neutral' }],
     ['@cin', 'memory'],
     ['nurse', 'Mizuno.{p} The student librarian. The same look in his eyes as those three.', { mood: 'neutral' }],
@@ -15952,7 +15966,28 @@ var NURSE_TXT = {
 };
 SCENES.drift = NURSE_TXT.drift; SCENES.nurse1 = NURSE_TXT.enter1; SCENES.nurse2 = NURSE_TXT.after1; SCENES.nurse3 = NURSE_TXT.after1b; SCENES.nurse4 = []; /* v4.14: the lines come from healedLines() */ SCENES.reveal = NURSE_TXT.reveal;
 /* v6.5.35: NURSE_TXT.aoiStop is path-keyed; scene('after') appends nurseTxt('aoiStop') at play time */
-PT.nurse = 'nurse_fig'; NM.nurse = NURSE_NAME;
+PT.nurse = 'nurse_fig';
+/* v6564-nurse: nametag is "Nurse" until she says her name; then the intro card, then Shiraishi-sensei. */
+function nurseKnown() { try { return !!(SAVE && SAVE.sc && (SAVE.sc.nurseName || SAVE.sc.nurse)); } catch (eK) { return false; } }
+function nurseLabel() { return nurseKnown() ? NURSE_NAME : 'Nurse'; }
+function nurseSyncName() {
+  NM.nurse = nurseLabel();
+  try { if (typeof CXD !== 'undefined' && CXD.nurse) CXD.nurse.n = NM.nurse; } catch (eC) {}
+  try { if (typeof CX_CAST !== 'undefined') CX_CAST.forEach(function (e) { if (e && e.id === 'nurse') e.n = NM.nurse; }); } catch (eH) {}
+}
+function nursePtUrl(mood) { var u = (typeof ptPaintUrl === 'function') && ptPaintUrl('nurse', mood || 'neutral'); return u || (typeof IMG !== 'undefined' && IMG.nurse_fig) || ''; }
+function nurseReveal(done) {
+  SAVE.sc = SAVE.sc || {};
+  var first = !SAVE.sc.nurseName;
+  SAVE.sc.nurseName = 1;
+  try { save(); } catch (eS) {}
+  nurseSyncName();
+  var skip = !!(typeof root !== 'undefined' && root.FFF_SKIP_INTRO);
+  charIntro('nurse', done, (first && !skip) ? { force: 1 } : {});
+}
+NM.nurse = 'Nurse';
+var _nurseLoad = load;
+load = function () { var r = _nurseLoad.apply(this, arguments); try { nurseSyncName(); } catch (eN) {} return r; };
 /* ================= v4.13 BOND DECISIONS =================
  * Aoi's calls. Each decision picks (or switches) the Bond path: Fierce = Fox Fire Fist, Strategic = Detention Slip,
  * Balanced = Hundred Fist Barrage (STORY.bond*). A decision counts once; later wins feed the current path. The first one
@@ -16706,7 +16741,7 @@ function roomIn(mode) { mode = mode || {}; var D = INT.room, first = !nurseDone(
       W.runUp = true; W.dlg = false; W.cut = false; var t0 = performance.now(), ok = walkTo(tx[0], tx[1], true, false); if (ok === false) { W.ryo.x = tx[0]; W.ryo.y = tx[1]; fin(); return; }
       (function wait() { if ((!W.path || !W.path.length) && performance.now() - t0 > 300 || performance.now() - t0 > BED.walkMax) { W.path = []; W.dlg = true; fin(); return; } setTimeout(wait, 60); })(); }); }, 160); return; }
   if (first) { W.dlg = true; var p = findPath(W.ryo.x, W.ryo.y, D.stage[0], D.stage[1]); W.path = p || []; W.arrive = { intStage: 1 }; ev('world:room:walkin'); if (!W.path.length) arrived(); return; } // you walk in, then they see you
-  if (mode.post) { W.dlg = true; tell('nurse'); tell('gouki'); SAVE.sc.kn = 1; SAVE.sc.k_mb_lib = 1; save(); /* v4.14: she names Mizuno only */ charIntro('nurse', function () { scene('nurse2', null, function () { W.dlg = true; nurseHeal(true, function () { SAVE.sc.nurse = 1; save(); roomBoard(); scene('nurse4', [['@tip', 'bond']], function () { scene('nurse3', null, function () { (W.intDown || []).forEach(function (s) { s.el.classList.add('out'); }); setTimeout(function () { (W.intDown || []).forEach(function (s) { s.el.remove(); }); W.intDown = null; }, 900); W.dlg = false; ev('world:nurse:first:done'); if (cxAdd('nurse', 2)) cxNote(['nurse']); }); }); }); }); }); return; }
+  if (mode.post) { W.dlg = true; tell('nurse'); tell('gouki'); SAVE.sc.kn = 1; SAVE.sc.k_mb_lib = 1; save(); /* v4.14: she names Mizuno only; v6564-nurse: intro card waits until she says her name in nurse2 */ scene('nurse2', null, function () { W.dlg = true; nurseHeal(true, function () { SAVE.sc.nurse = 1; nurseSyncName(); save(); roomBoard(); scene('nurse4', [['@tip', 'bond']], function () { scene('nurse3', null, function () { (W.intDown || []).forEach(function (s) { s.el.classList.add('out'); }); setTimeout(function () { (W.intDown || []).forEach(function (s) { s.el.remove(); }); W.intDown = null; }, 900); W.dlg = false; ev('world:nurse:first:done'); if (cxAdd('nurse', 2)) cxNote(['nurse']); }); }); }); }); return; }
   if (qReady() && !mode.wake) { W.dlg = true; setTimeout(function () { qTurnIn(); }, Math.round(500 * cinK())); return; } /* v4.35: back with a quest done: hand it in */
   if (mode.restore) return; var bl = NURSE_TXT.back; var nline = bl[(SAVE.fights | 0) % bl.length]; if (typeof nurseSay === 'function') nurseSay(nline); else if (typeof comment === 'function') comment(['ryo', nline]);
 }
@@ -16721,7 +16756,7 @@ function roomEnter() { if (W.inside || W.fading) return; ev('world:room:enter');
 function roomOpen(mode) { roomIn(mode); }
 function roomLeave() { intExit(); }
 function rmAct(a) { intAct(a); }
-CXD.nurse = { k: 'Ally', n: NURSE_NAME, img: 'nurse_fig', a: 'The school nurse. Sharp, careful, and braver than she thinks. She ran into Mizuno at lunch and sent you after him; each time you come back, she tells you what she has heard since. Come back after your battles and tap her in the Nurse\u2019s Office for a heal; her chalkboard lists what she knows. The training room is next door.' };
+CXD.nurse = { k: 'Ally', n: (typeof nurseLabel === 'function' ? nurseLabel() : 'Nurse'), img: 'nurse_fig', a: 'The school nurse. Sharp, careful, and braver than she thinks. She ran into Mizuno at lunch and sent you after him; each time you come back, she tells you what she has heard since. Come back after your battles and tap her in the Nurse\u2019s Office for a heal; her chalkboard lists what she knows. The training room is next door.' };
 CX_ORDER.splice(CX_ORDER.indexOf('infirmary'), 0, 'nurse');
 /* v4.13 dropped cards: the card itself, big in the won-card spotlight, "Card dropped from <name>", Next (locked for the first
  * second, as on the victory screen); several drops one after another. */
@@ -19505,7 +19540,7 @@ var CX_CAST = [
   { id: 'ryo', n: 'Ryo Kazan', img: 'ryo_plain_fig', role: 'Spirit-Touched Transfer Student', lore: 'Delinquent transfer bonded to the fox spirit. Fierce fists, Fox Fire Fist specials, leads from the front.', always: 1 },
   { id: 'aoi', n: 'Aoi Hayase', img: 'aoi_blade_fig', role: 'Shrine Heir & Partner', lore: 'Disciplinary officer and Warden heir. Blade and talisman work; keeps Ryo honest.', always: 1 },
   { id: 'fox', n: 'Fox Spirit (Kitsune)', img: 'ryo_plain', role: 'Shrine Guardian Spirit', lore: 'Bound to Ryo & Aoi through Bond. Mood follows your locked path.', always: 1 },
-  { id: 'nurse', n: (typeof NURSE_NAME !== 'undefined' ? NURSE_NAME : 'School Nurse'), img: 'nurse_fig', role: 'Infirmary Ally', lore: 'Heals, briefs, and houses rescued students. Campus intel hub.', need: function () { return nurseDone() || told('nurse'); } },
+  { id: 'nurse', n: (typeof nurseLabel === 'function' ? nurseLabel() : 'Nurse'), img: 'nurse_fig', role: 'Infirmary Ally', lore: 'Heals, briefs, and houses rescued students. Campus intel hub.', need: function () { return nurseDone() || told('nurse'); } },
   { id: 'warden1', n: 'Sora', img: 'warden1_fig', role: 'Shrine Warden', lore: 'Family at the cracked shrine.', need: function () { return !!(SAVE.ch1 || SAVE.sc && SAVE.sc.fox); } },
   { id: 'warden2', n: 'Kenji', img: 'warden2_fig', role: 'Shrine Warden', lore: 'Family at the cracked shrine.', need: function () { return !!(SAVE.ch1 || SAVE.sc && SAVE.sc.fox); } },
   { id: 'warden3', n: 'Yuki', img: 'warden3_fig', role: 'Shrine Warden', lore: 'Family at the cracked shrine.', need: function () { return !!(SAVE.ch1 || SAVE.sc && SAVE.sc.fox); } }
@@ -19577,7 +19612,7 @@ function cxCatList(cat) {
 function cxCatInfo(cat, item) {
   if (!item || !item.ok) return '<div class="cxinfo"><b>???</b><p class="dim">Not discovered yet.</p></div>';
   if (cat === 'cast') {
-    var e = item.raw, img = (e.img && IMG[e.img]) ? IMG[e.img] : (IMG[e.img + '_fig'] || '');
+    var e = item.raw, img = ((e.id === 'nurse' || (e.img === 'nurse_fig')) && typeof nursePtUrl === 'function' && nursePtUrl()) || ((e.img && IMG[e.img]) ? IMG[e.img] : (IMG[e.img + '_fig'] || ''));
     return '<div class="cxinfo">' + (img ? '<i class="cxpt" style="background-image:url(' + img + ')"></i>' : '') + '<b>' + e.n + '</b><small>' + e.role + '</small><p>' + e.lore + '</p></div>';
   }
   if (cat === 'food') {
@@ -19599,7 +19634,7 @@ function cxCatInfo(cat, item) {
   }
   /* foes + places: reuse CXD dossier */
   var id = item.id, e = CXD[id] || {}, lv = cxLv(id), c = CD.chars[id] || {}, person = !!CD.chars[id];
-  var img = e.img && IMG[e.img] ? IMG[e.img] : '';
+  var img = (id === 'nurse' && typeof nursePtUrl === 'function' && nursePtUrl()) || (e.img && IMG[e.img] ? IMG[e.img] : '');
   var h = '<div class="cxinfo">' + (img ? '<i class="cxpt" style="background-image:url(' + img + ')"></i>' : '') + '<b>' + cxName(id) + '</b><small>' + (item.tier || c.title || e.k || '') + '</small>';
   if (e.a) h += '<p>' + e.a + '</p>';
   else if (person) h += '<p>' + (c.title || 'Possessed delinquent') + '. ' + (c.hp || 18) + ' HP.</p>';
@@ -22872,7 +22907,7 @@ function n9Cabinet() {
   var body = '<b>White cabinet</b><p>The nurse keeps a restocking stash here. Clean gauze and medical tape. Not your own items.</p>';
   if (teach) body += '<p>She shows the wrap once. Gauze, then tape. A 20% dressing.</p>';
   if (wait) body += '<p class="dim">The shelf is thin. Give it a minute.</p>';
-  dialog(body, b, 'nurse_fig');
+  dialog(body, b, (typeof nursePtUrl === 'function' && nursePtUrl()) || 'nurse_fig');
 }
 
 function n9Slam(step, need) {
@@ -23760,14 +23795,14 @@ intDoorsFrame = function () { intDoorsFrame0(); try { v630TrainGate(); } catch (
 function v630DressTalk() {
   SAVE.sc = SAVE.sc || {};
   var st = SAVE.sc.dress || '';
-  if (st === 'fetch') { dialog('<b>' + NURSE_NAME + '</b><p class="q">\u201cThe gauze is in the white cabinet. Bring a roll, and tape if it is there.\u201d</p>', [['OK', null]]); return; }
+  if (st === 'fetch') { dialog('<b>' + nurseLabel() + '</b><p class="q">\u201cThe gauze is in the white cabinet. Bring a roll, and tape if it is there.\u201d</p>', [['OK', null]], (typeof nursePtUrl === 'function' && nursePtUrl()) || 'nurse_fig'); return; }
   if (st === 'cine') { W.v630Lesson = 'dress'; W.phBagTab = 'craft'; W.dlg = false; pause('bag'); return; }
   var b = [['Maybe later', function () { SAVE.sc.dress = 'later'; save(); ev('world:dress:later'); }], ['Teach me', function () {
     SAVE.sc.dress = 'fetch'; save(); ev('world:dress:fetch');
     scene(null, [['nurse', 'The gauze is in the white cabinet. Watch once, then you do it.']], function () { W.dlg = false; });
   }, 'hot']];
   if (SAVE.hp < MAXHP) b.push(['Bandaging (+' + Math.round(MAXHP * HEAL.freePct) + ' HP)', function () { infirmary0(); }]);
-  dialog('<b>' + NURSE_NAME + '</b><p class="q">\u201cYou keep coming back scraped. I can teach you a dressing, if you want it.\u201d</p>', b, 'nurse_fig');
+  dialog('<b>' + nurseLabel() + '</b><p class="q">\u201cYou keep coming back scraped. I can teach you a dressing, if you want it.\u201d</p>', b, (typeof nursePtUrl === 'function' && nursePtUrl()) || 'nurse_fig');
 }
 var infirmary0 = infirmary;
 infirmary = function () {
@@ -24921,6 +24956,7 @@ function v640NgStart(o) {
   if (W.ryo) { W.ryo.x = SAVE.x; W.ryo.y = SAVE.y; W.ryo.dir = 3; if (W.aoi) { W.aoi.x = SAVE.x; W.aoi.y = SAVE.y + 60; } resetTrail(SAVE.x, SAVE.y, 3); leaderSprites(); }
   if (typeof syncMinis === 'function') syncMinis();
   save(); if (typeof hud === 'function') hud();
+  try { if (typeof nurseSyncName === 'function') nurseSyncName(); } catch (eNS) {}
   ev('world:ngplus:' + SAVE.ngp + ':' + v640NgMode());
   if (cold) { W.dlg = false; W.paused = false; enter(false); return; } /* v6.5.13: enter() shows the map, starts its loop and camera, then the opening (SAVE.intro is 0) */
   var wp = document.getElementById('wpause'); if (wp && wp.classList.contains('on')) { wp.className = ''; wp.innerHTML = ''; } W.paused = false; W.path = [];
@@ -50555,16 +50591,20 @@ root.WORLD_API.reloadEnter = function () { titleReset(); enter(true); };
     var face = document.createElement('i');
     face.className = 'nb-face';
     try {
-      var n = document.querySelector('.rn-nurse, .int-nurse, [data-who="nurse"]');
-      var bg = n && window.getComputedStyle(n).backgroundImage;
-      if (bg && bg !== 'none') face.style.backgroundImage = bg;
-      else if (typeof IMG !== 'undefined' && (IMG.nurse_fig || IMG.nurse)) {
-        face.style.backgroundImage = 'url(' + (IMG.nurse_fig || IMG.nurse) + ')';
+      var u = (typeof nursePtUrl === 'function' && nursePtUrl()) || ((typeof ptPaintUrl === 'function') && ptPaintUrl('nurse', 'neutral')) || '';
+      if (u) face.style.backgroundImage = 'url(' + u + ')';
+      else {
+        var n = document.querySelector('.rn-nurse, .int-nurse, [data-who="nurse"]');
+        var bg = n && window.getComputedStyle(n).backgroundImage;
+        if (bg && bg !== 'none') face.style.backgroundImage = bg;
+        else if (typeof IMG !== 'undefined' && (IMG.nurse_fig || IMG.nurse)) {
+          face.style.backgroundImage = 'url(' + (IMG.nurse_fig || IMG.nurse) + ')';
+        }
       }
     } catch (e1) {}
     face.style.backgroundSize = '150%';
     face.style.backgroundPosition = '50% 4%';
-    var name = (typeof NURSE_NAME !== 'undefined' && NURSE_NAME) ? NURSE_NAME : 'Shiraishi-sensei';
+    var name = (typeof nurseLabel === 'function') ? nurseLabel() : ((typeof NURSE_NAME !== 'undefined' && NURSE_NAME) ? NURSE_NAME : 'Shiraishi-sensei');
     bub.innerHTML = '<div class="nb-body"><b class="nb-name">' + esc(name) + '</b><p>' + esc(line) + '</p></div><i class="nb-tail"></i>';
     bub.insertBefore(face, bub.firstChild);
     host.appendChild(bub);
