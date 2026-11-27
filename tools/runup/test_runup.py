@@ -81,7 +81,7 @@ async def run_boss(pg, boss, first):
     info = await ev(pg, setup(boss, first))
     print("SETUP", tag, info, flush=True)
     t0 = time.time(); clicked = None; s = None
-    while time.time() - t0 < 60:
+    while time.time() - t0 < (120 if PERF else 60):
         s = await ev(pg, STATE)
         if s.get("ru0"):
             clicked = time.time(); break
@@ -99,6 +99,8 @@ async def run_boss(pg, boss, first):
         s = await ev(pg, STATE)
         if SHOT and not shot_done and s.get("ru") and time.time() - clicked > 0.45:
             await pg.screenshot(path=str(SHOTS / f"{TAG}_{tag}_runup.png")); shot_done = True; mid = s
+        if SHOT and shot_done and shot_done is not 2 and s.get("ru") and time.time() - clicked > 1.1:
+            await pg.screenshot(path=str(SHOTS / f"{TAG}_{tag}_late.png")); shot_done = 2
         if s.get("ru1"): break
         await pg.wait_for_timeout(40)
     if PERF:
