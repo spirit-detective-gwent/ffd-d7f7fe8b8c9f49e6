@@ -19758,7 +19758,7 @@ function gkCine(next) { var r = W.ryo, a = W.aoi && W.aoi.el && W.aoi.el.style.v
   function arrived() { if (--n) return; c2Face(r, g.x, g.y); if (a) c2Face(a, g.x, g.y); gkCineSettle(r); if (a) gkCineSettle(a); c2Face(r, g.x, g.y); if (a) { c2Face(a, g.x, g.y); a.actMove = 1; }
     if (typeof resetTrail === 'function') resetTrail(r.x, r.y, r.dir); W.gkCineAt = [Math.round(r.x), Math.round(r.y)]; ev('world:gkcine:stop');
     setTimeout(function () { if (!W.gkCine) return; free(); next(fin); }, Math.round(260 * k)); }
-  gkCineWalk(r, P.r, k, arrived); if (n > 1) gkCineWalk(a, P.a, k, arrived); }
+  gkCineWalk(r, P.r, k, function () { c2Face(r, g.x, g.y); gkCineSettle(r); arrived(); }); if (n > 1) gkCineWalk(a, P.a, k, function () { c2Face(a, g.x, g.y); gkCineSettle(a); a.actMove = 1; arrived(); }); }
 function gymPress() { var S = gymS(), n = gymDone(); if (n < 1) { if (typeof sayKey === 'function') sayKey('hint', 'seal_none'); else toast('No seals yet.'); return; }
   if (S.e.press && n >= 3) { if (typeof sayKey === 'function') sayKey('hint', 'seal_done'); else toast('All three seals are pressed. The arena gate is open.'); return; }
   AU.play('place', { gain: 0.7 }); ev('world:gym:press:' + n);

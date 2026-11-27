@@ -107,7 +107,9 @@ async def run_mode(p, mode):
             if not (c["cine"] or c["busy"]): continue
             if p[who][0] == c[who][0] and p[who][1] == c[who][1]:
                 f = c[who]; standing = f[2] in (2, 6) if f[5] == 8 else True
-                if f[2] != p[who][2] or f[3] or f[4] or not standing: bad.append((who, c["T"], p[who], f))
+                pp = L[i - 2] if i > 1 else None  # the frame may settle once on the arrival sample; after that it must hold
+                still2 = pp and pp.get(who) and pp[who][0] == p[who][0] and pp[who][1] == p[who][1]
+                if (still2 and f[2] != p[who][2]) or f[3] or f[4] or not standing: bad.append((who, c["T"], p[who], f))
     held = sum(1 for x in stop)
     ok(f"{mode}: nobody runs in place while stopped (run anim off when velocity is 0)", not bad and held > 5, {"bad": bad[:6], "held_samples": held})
     fs = [x for x in L if x["fight"]]
