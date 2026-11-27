@@ -13714,7 +13714,7 @@ function dlgPaintKey(key, I) {
 function dlgFaceStyle(key) {
   var I = (root.ASSETS && root.ASSETS.img) || (typeof IMG !== "undefined" && IMG) || {};
   var pu = dlgPaintKey(key, I);
-  if (pu) return 'background-image:url(' + pu + ');background-repeat:no-repeat;background-size:cover;background-position:center 14%;';
+  if (pu) return 'background-image:url(' + pu + ');background-repeat:no-repeat;background-size:120% auto;background-position:center 8%;';
   if (key && typeof FACE !== "undefined" && FACE && FACE[key]) {
     var f = FACE[key], url = I[f.img]; if (!url) return '';
     var k = Math.max(88 / f.cw, 110 / f.ch);
