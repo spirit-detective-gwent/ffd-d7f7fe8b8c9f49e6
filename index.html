@@ -358,7 +358,7 @@ body.cuc .sparks{z-index:19}
 #fE.bt-feet-c2{transform:translateY(var(--bt-feet, 52px))}
 /* v6.5.64 GGD-25 r2: Genji's spar ring — lift the sprites (not the HUD plates) so Ryo's feet clear the near ropes and Aoi sits a little higher, both still inside the ropes. top/margin, not transform, so attack animations keep working. */
 #game[data-bfx="c2_gym"] #fP .fbody{top:-42px}
-#game[data-bfx="c2_gym"] #fE .fbody{top:6px}
+#game[data-bfx="c2_gym"] #fE .fbody{top:-54px} /* v6.5.64 rc: the C2BT ground offset (GROUND.gym 60) now also moves the foe down; -60 keeps the approved GGD-25 r2 spot (feet on the canvas just inside the far ropes) */
 
 .fchip{position:relative;width:44px;height:52px;padding:0;border:0;border-radius:10px;background:#1a1530;box-shadow:inset 0 0 0 2px rgba(200,160,255,.35);overflow:hidden}
 .fchip i{position:absolute;inset:2px 2px 9px;background-size:auto 150%;background-position:50% 8%;background-repeat:no-repeat}
@@ -12425,7 +12425,7 @@ function fight(grp, boss, ctx) { if (typeof ptWarmFoes === 'function') { try { p
   if (W.libCamHold || W.bossCamHold) { W._bossCamUntilSwirl = 1; } /* v6.5.64: hold the framing through the run-up; release under the swirl */
   if (typeof encCamHandoffIntoFight === 'function') encCamHandoffIntoFight(); /* v6564-gangcam: settle sting / story zoom behind the board */
   W.fightT = performance.now(); W.on = false; save(); var n = grp.length; ctx = ctx || {}; if (typeof c2On === 'function' && c2On() && !(ctx.c2spar || ctx.matspar)) W.v640LossKind = ctx.enfDoom ? 'enforcer' : (n > 1 || boss || ctx.mini ? 'many' : 'one'); if (ctx.flv == null && !boss) ctx.flv = fightLv(ctx); if (ctx.flvs && ctx.flvs.length !== n) ctx.flvs = null; // v4.24: the enemies' level (Bond XP falls off below the party)
-  var join = boss ? MINIS.filter(function (m) { return !beaten(m.id); }).map(function (m) { return m.id + '_j'; }) : [], foes = boss ? ['gouki'].concat(join) : ctx.mini ? [ctx.mini] : n === 1 ? grp : grp.map(function (id) { return id + 'g'; });
+  var join = boss ? MINIS.filter(function (m) { return !beaten(m.id); }).map(function (m) { return m.id + '_j'; }) : [], foes = boss ? ['gouki'].concat(join) : ctx.mini ? [ctx.mini] : n === 1 ? grp : grp.map(function (id) { var CHg = root.ENGINE && root.ENGINE.chars ? root.ENGINE.chars() : null; return (!CHg || CHg[id + 'g']) ? id + 'g' : id; }); /* v6.5.64: a foe with no group twin (Masa at the depot shutter, mb2_depot) fights as himself instead of crashing newGroup on CH.mb2_depotg */
   var base = boss ? 5 + join.length : ctx.mini ? 3 : n, extra = 0; // v4.7 soda: +1 item, 50% +2 in a group / relay fight, +2 vs Gouki; uses one of its 2 fights
   var sodaFx = ''; if (SAVE.sodaOn > 0 && !ctx.c2spar) { sodaFx = SODA_K[SAVE.sodaK] ? SAVE.sodaK : ''; SAVE.sodaOn--; var sk = SAVE.sodaK; if (!SAVE.sodaOn) SAVE.sodaK = ''; save(); hud(); ev('world:soda:used:' + sk + ':' + extra + ':' + SAVE.sodaOn); }
   var yb = ctx.c2spar ? 0 : (ctx.dg === 'c2' ? ch2FightYen(foes, boss, ctx) : fightYen(boss ? base : 0, !!ctx.mini, n)), ye = 0; ev('world:yen:roll:' + yb + ':' + ye); // v4.31.1; Ch2 uses ch2FightYen (50% of ¥3 / ¥2). No floating yen popup.

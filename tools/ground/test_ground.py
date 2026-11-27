@@ -20,12 +20,12 @@ FLOOR = {
   '1': (125, [['bully1']]), 'lib_hall': (135, [['bully1'], ['bully2']]), 'lib_archive': (125, [['mb_lib']]), 'art_studio': (140, [['paint']]),
   'art_stage': (135, [['mb_art'], ['drum']]), 'cafe_line': (150, [['bully3']]), 'cafe_dining': (150, [['mb_cafe']]), 'store_bay': (150, [['bully4']]),
   'store_track': (120, [['mb_field']]), 'gym_side': (165, [['bully2']]), 'gym_arena': (150, [['gouki']]), 'gekko_cafe': (150, [[H, H, H]]),
-  # Ch2 painted rooms
+  # Ch2 painted rooms (c2_gym = ch2-fixes GGD-25 boxing ring: its canvas starts just inside the far ropes, ~140)
   'c2_sento_hall': (217, [[S], [B], [P], [H], [P, S, B]]), 'c2_sento_boiler': (217, [['mb2_sento']]), 'c2_sento_kitchen': (217, [[H, H]]),
   'c2_sento_trophy': (217, [[H, 'c2_doorman']]), 'c2_hotel_door': (217, [[H, H, S], [S, S]]), 'c2_west_wall': (217, [[P, P, P], [P, P]]),
   'c2_udon': (217, [['chinpira1'], [P, P]]), 'c2_lantern_alley': (217, [['enforcer'], [H, H], ['c2_boss']]),
   'c2_street': (213, [[P, P, P], [S, S], [B, B], [H, H, H], ['c2_doorman', H, H]]), 'c2_club': (217, [['bouncer'], ['chinpira1'], [S, S]]),
-  'c2_gym': (217, [['aoi'], ['ryo']]), 'c2_depot': (217, [['mb2_depot']]), 'c2_arcade': (217, [['mb2_arcade'], ['mb2_game']]),
+  'c2_gym': (140, [['aoi'], ['ryo']]), 'c2_depot': (217, [['mb2_depot']]), 'c2_arcade': (217, [['mb2_arcade'], ['mb2_game']]),
   'c2_waga': (217, [[B, B, B]]), 'c2_br': (214, [[B, B]]), 'c2_se': (214, [[B, B]]), 'c2_lk': (195, [['nq_kaji', B]]), 'c2_qy': (203, [['nq_kaji', B]]),
   'c2_gg': (210, [['nq_sada', B, B]]), 'c2_ap': (212, [['nq_sada', B, B]]), 'c2_sh': (212, [['mb2_depot', B, B]]),
   # Jin's turf rooms (v6564-jin, registered by FFF_S2P6.hookBattle when that branch is merged)
