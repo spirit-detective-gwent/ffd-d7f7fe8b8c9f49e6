@@ -10366,7 +10366,7 @@ function build() {
   var gd = WD.doors.find(function (d) { return d.boss; }); W.gouki = (function () { /* v4.54/v4.64: cel Gouki — hidden outdoors until beaten (fight only inside gym base); kneeling rematch after */ var s = sprite('gouki_cw', false, 1); frameBg(s.el, 'gouki_cw', 2, 0, SPW, SPH); s.el.dataset.cel = 1; s.bw = undefined; s.el.classList.add('boss', 'mbmodel'); s.el.dataset.who = 'gouki'; s.x = gd.x; s.y = gd.y - 42; place(s, 0); s.el.style.display = 'none'; return s; })();
   W.minis = MINIS.map(function (m) { var s = mbSprite(m.id); s.el.classList.add('boss', 'mini'); s.el.dataset.mb = m.id; s.x = m.x; s.y = m.y; place(s, 0); return s; }); // v4.3
   landmarks(); rain();
-  view.addEventListener('pointerdown', stickDown); view.addEventListener('pointermove', stickMove); view.addEventListener('pointerup', stickUp); view.addEventListener('pointercancel', stickUp); view.addEventListener('lostpointercapture', function (e) { if (W.stk && W.stk.id === e.pointerId) stickUp({ pointerId: e.pointerId, type: 'pointercancel' }); }); /* v4.13: never leave a thumb stuck */ keysOn(); // v4.12: floating stick (default) or the v4.11 tap controls
+  view.addEventListener('pointerdown', stickDown); view.addEventListener('pointermove', stickMove); view.addEventListener('pointerup', stickUp); view.addEventListener('pointercancel', stickUp); view.addEventListener('lostpointercapture', function (e) { zmUp(e); if (W.stk && W.stk.id === e.pointerId) stickUp({ pointerId: e.pointerId, type: 'pointercancel' }); }); /* v4.13: never leave a thumb stuck */ keysOn(); // v4.12: floating stick (default) or the v4.11 tap controls
   $('#wMenu').onclick = function (e) { e.stopPropagation(); AU.play('ui_sel'); pause(); };
   if ($('#wSwap')) { $('#wSwap').onclick = function (e) { e.stopPropagation(); swapTap(); }; $('#wSwap').addEventListener('pointerdown', function (e) { e.stopPropagation(); }); } // v4.31 one-tap switch, next to the menu button
   /* v4.10.2: the map shortcut icon is gone; the menu opens on the Map tab */
@@ -10483,8 +10483,9 @@ function pcApply() { /* v5.3.1: this save's PC scale + button layout */ var v = 
 function padBindsSave(B) { SAVE.padBinds = B; SAVE.padRev = 611; ST.set.padBinds = B; ST.set.padRev = 611; save(); try { localStorage.setItem('fff_set', JSON.stringify(ST.set)); } catch (e) {} ev('world:padbinds:save'); }
 function bindsSave(B) { SAVE.binds = B; ST.set.binds = B; save(); try { localStorage.setItem('fff_set', JSON.stringify(ST.set)); } catch (e) {} ev('world:binds:save'); }
 function layout() { W.vw = view.clientWidth; W.vh = view.clientHeight; var S0 = W.S;
-  if (W.vw >= 1024 && W.vh >= 600) { var pk = pcK(); W.S = Math.max(0.62, Math.min(1.15 * pk, (Math.min(W.vw, W.vh) / 560) * 1.12)); } /* v5.3.1: native PC scale (150% default), no CSS zoom */
-  else W.S = Math.max(0.62, Math.min(1.15, Math.min(W.vw, W.vh) / 560));
+  if (W.vw >= 1024 && W.vh >= 600) { var pk = pcK(); W.Sbase = Math.max(0.62, Math.min(1.15 * pk, (Math.min(W.vw, W.vh) / 560) * 1.12)); } /* v5.3.1: native PC scale (150% default), no CSS zoom */
+  else W.Sbase = Math.max(0.62, Math.min(1.15, Math.min(W.vw, W.vh) / 560));
+  applyCamS();
   if (S0 !== W.S && W.inside) W.inside.hb = null; }
 function camAt(x, y) { var S = W.S, cw = W.vw / S, chh = W.vh / S;
   var tx = Math.max(0, Math.min(MW - cw, x - cw / 2)), ty = Math.max(0, Math.min(MH - chh, y - chh * 0.55));
@@ -10494,12 +10495,128 @@ function camAt(x, y) { var S = W.S, cw = W.vw / S, chh = W.vh / S;
     var tp = I.hb / S, room = chh - tp; ty = room >= MH ? -tp - (room - MH) / 2 : Math.max(-tp, Math.min(MH - chh, y - tp - room * 0.55)); }
   return [tx, ty]; }
 function camera(force) {
+  applyCamS();
   var S = W.S, cw = W.vw / S, chh = W.vh / S, ct = (W.camFocus && g38CamAt()) || camAt(W.ryo.x, W.ryo.y), tx = ct[0], ty = ct[1]; /* v6.5.38: W.camFocus frames a group */
   if (W.pan) { tx = W.cam.x; ty = W.cam.y; force = true; } // v4.8: the aftermath camera pan drives the view itself
   var dx = tx - W.cam.x, dy = ty - W.cam.y;
   if (!force && dx * dx + dy * dy < 0.04) { if (!W.camRest) { W.cam.x = tx; W.cam.y = ty; W.camRest = 1; map.style.transform = 'translate3d(' + (-W.cam.x * S).toFixed(1) + 'px,' + (-W.cam.y * S).toFixed(1) + 'px,0) scale(' + S + ')'; } }
   else { W.camRest = 0; if (force) { W.cam.x = tx; W.cam.y = ty; } else { W.cam.x += dx * 0.15; W.cam.y += dy * 0.15; } map.style.transform = 'translate3d(' + (-W.cam.x * S).toFixed(1) + 'px,' + (-W.cam.y * S).toFixed(1) + 'px,0) scale(' + S + ')'; }
   tiles(cw, chh);
+}
+/* v6564-gangcam: walking-map two-finger pinch zoom. W.zoom is the player's
+ * scale (0.85..1.15). Fight / cut / boss / dialogue / menus lock to 1 and
+ * the existing camera() tick eases W.zoomShow back. No new rAF loop. */
+var ZM = { min: 0.85, max: 1.15, slop: 16, pts: {}, d0: 0, z0: 1, pinching: 0, maxMove: 0, pair: 0, didPinch: 0, lastTap: 0 };
+function zoomLocked() {
+  if (!W.on) return true;
+  if (W.cut || W.dlg || W.scr || W.paused || W.fading || W.runUp) return true;
+  if (W.libCamHold || W.bossCamHold) return true;
+  try { if (root.FFF_SCAM && FFF_SCAM.st && (FFF_SCAM.st.on || FFF_SCAM.st.boss)) return true; } catch (eL) {}
+  if (W.ambSg) return true;
+  var wd = document.getElementById('world');
+  if (wd && wd.classList.contains('behind')) return true;
+  try { if (typeof ST !== 'undefined' && ST && ST.inWorld === false) return true; } catch (eS) {}
+  var ids = ['wpause', 'wenh', 'wbag', 'wdlg', 'wintro'], i, el;
+  for (i = 0; i < ids.length; i++) { el = document.getElementById(ids[i]); if (el && el.classList.contains('on')) return true; }
+  return false;
+}
+function applyCamS() {
+  if (W.libCamHold || W.bossCamHold) return;
+  if (W.Sbase == null) return;
+  if (W.zoom == null) W.zoom = 1;
+  var target = zoomLocked() ? 1 : W.zoom, cur = (W.zoomShow == null ? 1 : W.zoomShow), S;
+  if (ZM && ZM.pinching) cur = W.zoom;
+  else if (Math.abs(cur - target) < 0.002) cur = target;
+  else cur += (target - cur) * 0.18;
+  W.zoomShow = cur;
+  S = W.Sbase * cur;
+  if (W.S !== S) { W.S = S; W.camRest = 0; if (W.inside) W.inside.hb = null; }
+}
+function camAtS(x, y, S) {
+  var cw = W.vw / S, chh = W.vh / S;
+  var tx = Math.max(0, Math.min(MW - cw, x - cw / 2)), ty = Math.max(0, Math.min(MH - chh, y - chh * 0.55));
+  if (cw >= MW) tx = (MW - cw) / 2; if (chh >= MH) ty = (MH - chh) / 2;
+  if (W.inside) {
+    var I = W.inside; if (I.hb == null) { var st = $('#wstat'); I.hb = st ? Math.max(0, st.getBoundingClientRect().bottom + 6) : 0; }
+    var tp = I.hb / S, room = chh - tp;
+    ty = room >= MH ? -tp - (room - MH) / 2 : Math.max(-tp, Math.min(MH - chh, y - tp - room * 0.55));
+  }
+  return [tx, ty, cw, chh];
+}
+function wideRect(padx, pady) {
+  var Sb = W.Sbase != null ? W.Sbase : (W.S || 1), S = Sb * ZM.min, r = W.ryo || { x: 0, y: 0 }, t = camAtS(r.x, r.y, S);
+  padx = padx || 0; pady = pady || 0;
+  return [t[0] - padx, t[1] - pady, t[0] + t[2] + padx, t[1] + t[3] + pady];
+}
+function visSpawn(x, y, m) {
+  if (typeof visible === 'function' && visible(x, y, m)) return true;
+  var wr = wideRect(m || 0, m || 0);
+  return x > wr[0] && x < wr[2] && y > wr[1] && y < wr[3];
+}
+function wideCam(m) { return wideRect(m || 0, m || 0); }
+function widePad() {
+  var Sb = W.Sbase != null ? W.Sbase : (W.S || 1), cw0 = W.vw / Sb, ch0 = W.vh / Sb, cw = W.vw / (Sb * ZM.min), ch = W.vh / (Sb * ZM.min);
+  return { x: (cw - cw0) / 2, y: Math.max((ch - ch0) * 0.55, (ch - ch0) * 0.45) };
+}
+function zmIds() { var a = [], id; for (id in ZM.pts) if (Object.prototype.hasOwnProperty.call(ZM.pts, id)) a.push(+id); return a; }
+function zmDist() { var ids = zmIds(); if (ids.length < 2) return 0; var a = ZM.pts[ids[0]], b = ZM.pts[ids[1]]; return Math.hypot(a.x - b.x, a.y - b.y); }
+function zmHud(e) {
+  var t = e && e.target;
+  if (!t || !t.closest) return false;
+  return !!t.closest('#wMenu,#wSwap,#wdrink,#wstat,#whud,#wpause,#wdlg,#wenh,#wbag,#wtags,button,.wtag,#wstick,#wmapbtn');
+}
+function zmDown(e) {
+  if (e.pointerType === 'mouse' && !root.FFF_ZOOM_MOUSE) return false;
+  if (zmHud(e)) return false;
+  ZM.pts[e.pointerId] = { x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, t: performance.now() };
+  if (zmIds().length >= 2) {
+    if (W.stk) W.stk.lock = true;
+    ZM.d0 = zmDist(); ZM.z0 = (W.zoom == null ? 1 : W.zoom); ZM.pinching = 0; ZM.maxMove = 0; ZM.pair = 1;
+    try { view.setPointerCapture(e.pointerId); } catch (eC) {}
+    ev('world:zoom:pinch:start');
+    return true;
+  }
+  return false;
+}
+function zmMove(e) {
+  var p = ZM.pts[e.pointerId], d, z, moved;
+  if (!p) return false;
+  p.x = e.clientX; p.y = e.clientY;
+  moved = Math.hypot(p.x - p.sx, p.y - p.sy);
+  if (moved > ZM.maxMove) ZM.maxMove = moved;
+  if (zmIds().length < 2) return false;
+  if (zoomLocked()) return true;
+  d = zmDist();
+  if (!ZM.pinching) {
+    if (Math.abs(d - ZM.d0) < ZM.slop) return true;
+    ZM.pinching = 1; ZM.didPinch = 1;
+    ev('world:zoom:pinch');
+    if (W.stk) stickEnd();
+  }
+  if (!ZM.d0) return true;
+  z = Math.max(ZM.min, Math.min(ZM.max, ZM.z0 * (d / ZM.d0)));
+  if (z !== W.zoom) { W.zoom = z; W.zoomShow = z; applyCamS(); camera(true); ev('world:zoom:' + (Math.round(z * 1000) / 1000)); }
+  return true;
+}
+function zmUp(e) {
+  var p = ZM.pts[e.pointerId], n, now, pair, did;
+  if (!p) return false;
+  delete ZM.pts[e.pointerId];
+  n = zmIds().length;
+  if (n < 2) ZM.pinching = 0;
+  if (n === 0) {
+    pair = ZM.pair; did = ZM.didPinch; ZM.pair = 0; ZM.didPinch = 0;
+    if (W.stk && W.stk.lock) stickEnd();
+    if (pair && !did && ZM.maxMove < 16) {
+      now = performance.now();
+      if (now - ZM.lastTap < 450 && !zoomLocked()) {
+        ZM.lastTap = 0; W.zoom = 1; ev('world:zoom:reset');
+      } else ZM.lastTap = now;
+    }
+    ZM.maxMove = 0;
+    return !!(pair || did);
+  }
+  return !!(ZM.pair || ZM.didPinch || ZM.pinching);
 }
 function tiles(cw, chh) { // lazily add the 720 px map tiles around the view
   if (W.inside) { if (INT[W.inside.id] && INT[W.inside.id].tiles) c2Tiles(cw, chh); return; } var T = WD.tile, m = 300;
@@ -10664,6 +10781,7 @@ function sLock(on, why) { var was = W.scr | 0; W.scr = Math.max(0, was + (on ? 1
   if (on) { W.path = []; W.arrive = null; W.run = false; W.ryo.v = 0; W.stv = null; if (W.stk) stickEnd(); }
   if (!was && W.scr) ev('world:input:lock:' + why); else if (was && !W.scr) ev('world:input:free:' + why); }
 function stickDown(e) {
+  if (zmDown(e)) return;
   if (ctlMode() !== 'stick' || (e.pointerType === 'mouse' && !root.FFF_STICK_MOUSE) || !stickFree()) return onTap(e);
   if (W.stk && !(e.isPrimary && W.stk.id !== e.pointerId)) return; // one thumb steers; a second finger is ignored (v4.13: a new first finger replaces a stuck one whose release was lost)
   if (W.stk) stickEnd();
@@ -10671,14 +10789,14 @@ function stickDown(e) {
   try { view.setPointerCapture(e.pointerId); } catch (er) {}
   var s = stickEl(); s.style.left = e.clientX + 'px'; s.style.top = e.clientY + 'px'; s.firstChild.style.transform = ''; s.className = 'pre';
 }
-function stickMove(e) { var k = W.stk; if (!k || e.pointerId !== k.id) return; k.x = e.clientX; k.y = e.clientY;
+function stickMove(e) { if (zmMove(e)) return; var k = W.stk; if (!k || e.pointerId !== k.id) return; k.x = e.clientX; k.y = e.clientY;
   var dx = k.x - k.sx, dy = k.y - k.sy, d = Math.hypot(dx, dy);
   if (!k.on && d > STK.TAP) { if (!stickFree()) return; k.on = true; W.path = []; W.arrive = null; stickEl().className = 'on'; ev('world:stick:on'); }
   if (!k.on) return;
   if (d > STK.R) { k.sx = k.x - dx / d * STK.R; k.sy = k.y - dy / d * STK.R; dx = k.x - k.sx; dy = k.y - k.sy; d = STK.R; } // the base trails the thumb
   var s = stickEl(); s.style.left = k.sx.toFixed(1) + 'px'; s.style.top = k.sy.toFixed(1) + 'px'; s.firstChild.style.transform = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px)';
 }
-function stickUp(e) { var k = W.stk; if (!k || e.pointerId !== k.id) return; stickEnd();
+function stickUp(e) { if (zmUp(e)) return; var k = W.stk; if (!k || e.pointerId !== k.id) return; stickEnd();
   if (!k.on && e.type === 'pointerup' && performance.now() - k.t < 500) onTap({ clientX: k.sx, clientY: k.sy }); // a plain tap
   else if (k.on) ev('world:stick:off'); }
 function stickEnd() { W.stk = null; var s = $('#wstick'); if (s) s.className = ''; }
@@ -11628,6 +11746,9 @@ function nearSafe(x, y) { // no fights right at the infirmary, nor for a few sec
  * charge, so you can dodge one you spot early; they give up beyond SP.giveUp px. */
 var HOMES = (WD.homes || []).slice(); (WD.patrols || []).forEach(function (b) { (b.pts || []).forEach(function (pt) { if (!HOMES.some(function (h) { return Math.hypot(h[0] - pt[0], h[1] - pt[1]) < 150; })) HOMES.push(pt.slice()); }); }); /* v4.29: the authored beats' corners */
 function visible(x, y, m) { var cw = W.vw / W.S, ch = W.vh / W.S; return x > W.cam.x - m && x < W.cam.x + cw + m && y > W.cam.y - m && y < W.cam.y + ch + m; }
+root.FFF_ZOOM = { min: ZM.min, max: ZM.max, get: function () { return W.zoom == null ? 1 : W.zoom; }, show: function () { return W.zoomShow == null ? 1 : W.zoomShow; },
+  set: function (z) { W.zoom = Math.max(ZM.min, Math.min(ZM.max, z)); W.zoomShow = W.zoom; applyCamS(); if (W.ryo) camera(true); },
+  locked: zoomLocked, visSpawn: visSpawn, wideCam: wideCam, widePad: widePad, apply: applyCamS };
 function sprCull(s, m) { /* v6.5.18: hide offscreen sprites so they do not composite or paint */
   if (!s || !s.el) return false;
   var on = visible(s.x, s.y, m == null ? 160 : m);
@@ -11638,8 +11759,8 @@ function sprCull(s, m) { /* v6.5.18: hide offscreen sprites so they do not compo
 function freePt(x, y) { var c = nearestFree.apply(null, cellOf(x, y)); return c ? [c[0] * CELL + CELL / 2, c[1] * CELL + CELL / 2] : null; }
 function spawnRoamer() {
   var r = W.ryo, cands = [];
-  PLACES.forEach(function (p) { if (p.spawn && p.door) ENTS.forEach(function (e) { if (e.b !== p.id) return; var d = Math.hypot(e.at[0] - r.x, e.at[1] - r.y); if (d > 330 && d < 1000) cands.push({ door: p, ent: e, x: e.at[0], y: e.at[1], w: (d < 750 ? 3 : 1) * spawnK(e.at[0], e.at[1]) / Math.max(1, ENTS.filter(function (o) { return o.b === p.id; }).length) }); }); }); /* v4.29: out of any of its doorways */
-  HOMES.forEach(function (h) { var d = Math.hypot(h[0] - r.x, h[1] - r.y); if (d > 380 && d < 1000 && !visible(h[0], h[1], 40)) cands.push({ x: h[0], y: h[1], w: spawnK(h[0], h[1]) }); });
+  PLACES.forEach(function (p) { if (p.spawn && p.door) ENTS.forEach(function (e) { if (e.b !== p.id) return; var d = Math.hypot(e.at[0] - r.x, e.at[1] - r.y); if (d > 330 && d < 1000 && !visSpawn(e.at[0], e.at[1], 40)) cands.push({ door: p, ent: e, x: e.at[0], y: e.at[1], w: (d < 750 ? 3 : 1) * spawnK(e.at[0], e.at[1]) / Math.max(1, ENTS.filter(function (o) { return o.b === p.id; }).length) }); }); }); /* v4.29: out of any of its doorways */
+  HOMES.forEach(function (h) { var d = Math.hypot(h[0] - r.x, h[1] - r.y); if (d > 380 && d < 1000 && !visSpawn(h[0], h[1], 40)) cands.push({ x: h[0], y: h[1], w: spawnK(h[0], h[1]) }); });
   cands = cands.filter(function (c) { return c.w > 0 && openAway(c.x, c.y) && !nearSafe(c.x, c.y) && !crowdZone(c.x, c.y) && !bossQuiet(c.x, c.y) && /* v4.7 */ !W.roam.some(function (q) { return Math.hypot(q.hx - c.x, q.hy - c.y) < 150; }) && !(calmAt(c.x, c.y) && W.roam.some(function (q) { return zoneOf(q.hx, q.hy) === zoneOf(c.x, c.y); })); }); // v4.5: a calm zone holds 1 bully at a time
   if (!cands.length) return null;
   var tot = cands.reduce(function (a, c) { return a + c.w; }, 0), k = Math.random() * tot, c = cands[0];
@@ -11812,7 +11933,7 @@ function crowds() {
     var miss = n - mine.length - dd.length, first = !W.crowdI[c.z]; if (miss <= 0) { W.crowdI[c.z] = 1; return; }
     var pts = ringPts(c); if (!pts.length) return; var placed = 0;
     for (var j = 0; j < (first ? miss : 1); j++) {
-      var best = null, bs = -1; pts.forEach(function (pt) { if (!first && visible(pt[0], pt[1], 60)) return; if (Math.hypot(pt[0] - r.x, pt[1] - r.y) < 260) return; var m = 1e9; W.roam.forEach(function (q) { m = Math.min(m, Math.hypot(q.hx - pt[0], q.hy - pt[1])); }); if (m > bs) { bs = m; best = pt; } });
+      var best = null, bs = -1; pts.forEach(function (pt) { if (!first && visSpawn(pt[0], pt[1], 60)) return; if (Math.hypot(pt[0] - r.x, pt[1] - r.y) < 260) return; var m = 1e9; W.roam.forEach(function (q) { m = Math.min(m, Math.hypot(q.hx - pt[0], q.hy - pt[1])); }); if (m > bs) { bs = m; best = pt; } });
       if (!best) break; crowdOne(c.z, best); placed++;
     }
     if (first) { W.crowdI[c.z] = 1; ev('world:crowd:place:' + c.z + ':' + placed); } else if (placed) ev('world:crowd:respawn:' + c.z);
@@ -12045,6 +12166,68 @@ function ambStingHandoff() { var g = W.ambSg, wv = g && g.wv, z; if (!g || !wv) 
   ev('world:amb2:handoff:' + z.toFixed(2));
   var a = wv.animate([{ scale: z }, { scale: 1 }], { duration: 2000, easing: 'cubic-bezier(.45,.05,.2,1)', fill: 'forwards' });
   a.onfinish = function () { try { a.cancel(); } catch (e) {} wv.style.transformOrigin = ''; wv.style.scale = ''; wv.style.translate = ''; }; }
+  /* v6564-gangcam: street / ambush / pack encounter zoom lives on #wv (sting + FFF_SCAM).
+   * Restore eases it back to the default follow on every fight exit (win, loss, flee,
+   * cancelled run-up, dialogue after). Never a snap. Boss arrivals and the Archive cam
+   * are left alone (v6564-mizunocam). */
+  function encCamBossHold() {
+    try { if (root.FFF_SCAM && FFF_SCAM.st && FFF_SCAM.st.boss) return true; } catch (e) {}
+    return !!(W.libCamHold || W.bossCamHold);
+  }
+  function encCamRead() {
+    var v = document.getElementById('wv'), z = 1, x = 0, y = 0;
+    try {
+      if (v) {
+        var cs = getComputedStyle(v), t = String(cs.translate || '').split(/\s+/);
+        z = (cs.scale && cs.scale !== 'none') ? (parseFloat(cs.scale) || 1) : 1;
+        if (cs.translate && cs.translate !== 'none') { x = parseFloat(t[0]) || 0; y = parseFloat(t[1]) || 0; }
+      }
+    } catch (eR) {}
+    return { v: v, z: z, x: x, y: y, sting: !!W.ambSg, held: !!(W.ambSg || (z > 1.02 || Math.abs(x) > 1 || Math.abs(y) > 1)) };
+  }
+  function encCamClearStyle(v) {
+    if (!v) return;
+    v.style.transformOrigin = ''; v.style.scale = ''; v.style.translate = '';
+  }
+  function encCamUnlock() {
+    if (W.pan && !W.pan.teach && !W.pan.nurse) W.pan = null;
+    W.scrCam = null;
+    if (W.camFocus && !W.g38Ring && !W.c2lesBusy) W.camFocus = null;
+  }
+  function encCamHandoffIntoFight() {
+    if (encCamBossHold()) return;
+    if (typeof ambStingHandoff === 'function' && W.ambSg) ambStingHandoff();
+    try { if (root.FFF_SCAM && FFF_SCAM.st && FFF_SCAM.st.on && !FFF_SCAM.st.boss) FFF_SCAM.end(); } catch (eH) {}
+    ev('world:enccam:handoff');
+  }
+  function encCamCancelEase() {
+    var a = W._encCamAn; W._encCamAn = null;
+    if (a) { try { a.cancel(); } catch (eC) {} }
+  }
+  function encCamRestore(ms, done) {
+    W._encCamTok = (W._encCamTok | 0) + 1; var tok = W._encCamTok;
+    encCamCancelEase(); /* v6564-gangcam: a prior fill:forwards ease must not keep driving #wv */
+    if (encCamBossHold()) { ev('world:enccam:skip:boss'); if (done) done(); return; }
+    encCamUnlock();
+    if (typeof ambStingRelease === 'function' && W.ambSg) {
+      ev('world:enccam:sting'); ambStingRelease(ms || 1800, function () { if (tok === W._encCamTok && !encCamBossHold() && done) done(); }); return;
+    }
+    var H = encCamRead(), v = H.v, dur;
+    try {
+      if (root.FFF_SCAM && FFF_SCAM.st && FFF_SCAM.st.on && !FFF_SCAM.st.boss) {
+        ev('world:enccam:scam'); FFF_SCAM.reset(Math.max(ms || 0, 1800), function () { if (tok === W._encCamTok && !encCamBossHold() && done) done(); }); return;
+      }
+    } catch (eS) {}
+    if (!H.held || !v) { encCamClearStyle(v); ev('world:enccam:clear'); if (done) done(); return; }
+    dur = Math.max(ms || 0, 1600);
+    ev('world:enccam:ease:' + H.z.toFixed(2) + ':' + dur);
+    if (!v.animate) { encCamClearStyle(v); if (done) done(); return; }
+    var a = v.animate([{ scale: H.z, translate: H.x + 'px ' + H.y + 'px' }, { scale: 1, translate: '0px 0px' }], { duration: dur, easing: 'cubic-bezier(.45,.05,.2,1)', fill: 'forwards' });
+    W._encCamAn = a;
+    var fin = function () { if (fin.d) return; fin.d = 1; if (W._encCamAn === a) W._encCamAn = null; if (tok !== W._encCamTok || encCamBossHold()) return; try { a.cancel(); } catch (eF) {} encCamClearStyle(v); if (done) done(); };
+    a.onfinish = fin; setTimeout(fin, dur + 80);
+  }
+  root.FFF_ENC_CAM = { restore: encCamRestore, read: encCamRead, handoff: encCamHandoffIntoFight, unlock: encCamUnlock };
 function ambFight(q) { var r = W.ryo, A = W.ambOn, amb = { k: A.fx.k, side: A.side }, I = W.inside, D = I ? INT[I.id] : null, s = q.s; s.el.classList.remove('ambhit'); q.ambd = 0;
   var grp = noticedPack(q, ambList());
   ev('world:amb2:fight:' + grp.length + ':' + amb.side + ':' + amb.k);
@@ -12134,7 +12317,7 @@ function runUpClash(done) { W.bossCamMode = 'clash'; ev('world:runup:clash');
 function runUp(grp, boss, go, tg, ch) { var r = W.ryo, t = r && (tg ? { x: tg.x, y: tg.y, d: Math.hypot(tg.x - r.x, tg.y - r.y) } : runUpTarget(grp, boss)); if (root.FFF_NO_RUNUP || !t) return false;
   if (ch && ch.length && t.d > 62) { var fw = !!(W.fastWalkCharge || (ch[0] && ch[0].fastWalk) || (typeof root.FFF_T37 !== 'undefined' && root._fw)); if (!fw) { try { fw = !!(root.FFF_UI && root.FFF_UI.ST && root.FFF_UI.ST.story && root.FFF_UI.ST.story.ctx && root.FFF_UI.ST.story.ctx.fastWalk); } catch (eFw) {} } if (fw && typeof chargeWalk === 'function') return chargeWalk(t, ch, go); return chargeUp(t, ch, go); } /* v6.5.37: new encounters fast-walk; existing charges still run */
   var ux = (r.x - t.x) / t.d, uy = (r.y - t.y) / t.d, sx = t.x + ux * 58, sy = t.y + uy * 58, t0 = performance.now(); W.runUp = true; W.path = []; KEYS = {}; stickEnd(); ev('world:runup:start'); if (W.bossCamHold || W.libCamHold) { W.bossCamMode = 'wide'; if (typeof libBossCam === 'function') libBossCam(); }
-  var lim = Math.max(3000, t.d / 200 * 1000 + 1500), ok = t.d < 62 ? true : walkTo(sx, sy, true, true); if (ok === false) { W.runUp = false; return false; }
+  var lim = Math.max(3000, t.d / 200 * 1000 + 1500), ok = t.d < 62 ? true : walkTo(sx, sy, true, true); if (ok === false) { W.runUp = false; if (typeof encCamRestore === 'function') encCamRestore(); return false; }
   (function wait() { var d = Math.hypot(r.x - sx, r.y - sy); if ((d < 16 || !W.path || !W.path.length) && performance.now() - t0 > 250 || performance.now() - t0 > lim) { r.dir = dirTo(r, t.x, t.y); place(r, 0); setTimeout(function () { if ((W.bossCamHold || W.libCamHold) && typeof runUpClash === 'function') runUpClash(function () { W.runUp = false; ev('world:runup:end'); go(); }); else { W.runUp = false; ev('world:runup:end'); go(); } }, 180); return; } setTimeout(wait, 60); })();
   return true; }
 /* v4.37a (Ernest t895u): a CHARGE: Ryo and the bullies (ch = their sprites) run at each other with the drawn run cycles and meet
@@ -12196,6 +12379,7 @@ function fight(grp, boss, ctx) { if (typeof commentHide === 'function') commentH
   if (STORY && STORY.isOpen && STORY.isOpen()) STORY.close(); // never leave the cards screen over a fight
   if ($('#wpause').classList.contains('on')) { $('#wpause').className = ''; W.paused = false; }
   if (W.libCamHold || W.bossCamHold) { W._bossCamUntilSwirl = 1; } /* v6.5.64: hold the framing through the run-up; release under the swirl */
+  if (typeof encCamHandoffIntoFight === 'function') encCamHandoffIntoFight(); /* v6564-gangcam: settle sting / story zoom behind the board */
   W.fightT = performance.now(); W.on = false; save(); var n = grp.length; ctx = ctx || {}; if (typeof c2On === 'function' && c2On() && !(ctx.c2spar || ctx.matspar)) W.v640LossKind = ctx.enfDoom ? 'enforcer' : (n > 1 || boss || ctx.mini ? 'many' : 'one'); if (ctx.flv == null && !boss) ctx.flv = fightLv(ctx); if (ctx.flvs && ctx.flvs.length !== n) ctx.flvs = null; // v4.24: the enemies' level (Bond XP falls off below the party)
   var join = boss ? MINIS.filter(function (m) { return !beaten(m.id); }).map(function (m) { return m.id + '_j'; }) : [], foes = boss ? ['gouki'].concat(join) : ctx.mini ? [ctx.mini] : n === 1 ? grp : grp.map(function (id) { return id + 'g'; });
   var base = boss ? 5 + join.length : ctx.mini ? 3 : n, extra = 0; // v4.7 soda: +1 item, 50% +2 in a group / relay fight, +2 vs Gouki; uses one of its 2 fights
@@ -12387,10 +12571,10 @@ function aoiDullOk(st) { var c = (st && st.ctx) || {}; if (!st || !(st.aoiSword 
   if (W.libPend || W.dlg || W.cut || (STORY && STORY.isOpen && STORY.isOpen())) return false; return true; }
 function aoiDull() { SAVE.sc.aoi_dull = 1; save(); ev('world:aoi:dull'); scene(null, AOI_DULL); }
 function back(win, st) { rdyOff(W.ryo); rdyOff(W.aoi); var bb = $('#wbub'); if (bb) bb.classList.remove('go'); document.querySelectorAll('.wbub2,.wsay').forEach(function (e) { e.remove(); });
-  if (st && st.ctx && st.ctx.gkBond) { clearFoes(); W.busy = false; W.forced = null; W.cool = SP.bossCool; if (st.endHp != null) SAVE.hp = Math.max(1, Math.min(MAXHP, st.endHp)); SAVE.hp = Math.min(SAVE.hp, Math.max(8, Math.floor(MAXHP * 0.28))); keepPartnerSp(st); save(); enter(true); syncVend(); hud(); ev('world:back:gkbond'); gkFinaleBond(); return; }
-  if (st && st.ctx && st.ctx.c2spar) { clearFoes(); W.busy = false; W.forced = null; W.cool = 2; settle(win, st); if (typeof c2SparBack === 'function') c2SparBack(win, st); save(); enter(true); syncVend(); hud(); ev('world:back:spar:' + (win ? 'win' : 'lose')); if (typeof c2SparAfter === 'function') c2SparAfter(win, st); return; } /* v5.3: the sparring round restores its snapshot (no penalty, no wake) */
+  if (st && st.ctx && st.ctx.gkBond) { clearFoes(); W.busy = false; W.forced = null; W.cool = SP.bossCool; if (st.endHp != null) SAVE.hp = Math.max(1, Math.min(MAXHP, st.endHp)); SAVE.hp = Math.min(SAVE.hp, Math.max(8, Math.floor(MAXHP * 0.28))); keepPartnerSp(st); if (typeof encCamRestore === 'function') encCamRestore(); save(); enter(true); syncVend(); hud(); ev('world:back:gkbond'); gkFinaleBond(); return; }
+  if (st && st.ctx && st.ctx.c2spar) { clearFoes(); W.busy = false; W.forced = null; W.cool = 2; settle(win, st); if (typeof c2SparBack === 'function') c2SparBack(win, st); if (typeof encCamRestore === 'function') encCamRestore(); save(); enter(true); syncVend(); hud(); ev('world:back:spar:' + (win ? 'win' : 'lose')); if (typeof c2SparAfter === 'function') c2SparAfter(win, st); return; } /* v5.3: the sparring round restores its snapshot (no penalty, no wake) */
   if (st && st.ctx && st.ctx.gkLoop && !win) { /* v4.64: player hit 0 during item-revival loop — skip defeat/nurse; Bond unlock */
-    clearFoes(); W.busy = false; W.forced = null; W.cool = SP.bossCool; SAVE.gkPhp = 0; keepPartnerSp(st); save(); enter(true); syncVend(); hud();
+    clearFoes(); W.busy = false; W.forced = null; W.cool = SP.bossCool; SAVE.gkPhp = 0; keepPartnerSp(st); if (typeof encCamRestore === 'function') encCamRestore(); save(); enter(true); syncVend(); hud();
     ev('world:back:gkloop:lose:' + (SAVE.gkRevives | 0)); gkFinaleBond(); return; }
   if (st && st.ctx && st.ctx.nurse && (!win || st.escaped)) intExit(true); // v4.11: lost / fled the office fight: back outside its door
   if (st && st.ctx && st.ctx.dg) { dgAfter(win, st); if (st.ctx.dg === 'lib') libBack(win, st); if (st.ctx.dg === 'art') artBack(win, st); if (st.ctx.dg === 'cafe') cafBack(win, st); if (st.ctx.dg === 'field') fldBack(win, st); if (st.ctx.dg === 'c2') c2Back(win, st); } if (!win && !(st && st.escaped) && W.inside && INT[W.inside.id].dg && !INT[W.inside.id].c2) intExit(true); // v4.13: lost in a dungeon: Aoi carries you out
@@ -12405,6 +12589,7 @@ function back(win, st) { rdyOff(W.ryo); rdyOff(W.aoi); var bb = $('#wbub'); if (
   if (win) { SAVE.wins++; SAVE.hp = Math.max(1, SAVE.hp); var gi = yenRoll(gearFx('it')); if (gi && st) { SAVE.items += gi; st.drop = (st.drop | 0) + gi; ev('world:gear:items:' + gi); } var gw = gearFx('hw'); if (gw && SAVE.hp < MAXHP) { SAVE.hp = Math.min(MAXHP, SAVE.hp + Math.ceil(MAXHP * gw)); ev('world:gear:heal'); } if (W.dgRelay && st && st.mini && beaten(W.dgRelay.el.dataset.mb)) { var rr = W.dgRelay; W.dgRelay = null; rr.el.classList.add('out'); setTimeout(function () { rr.el.remove(); }, 600); } } // v4.3: rewards were applied in settle()
   if (!win) { var scriptLoss = st.ctx && (st.ctx.ckDoom || st.ctx.enfDoom); if (!(st.ctx && st.ctx.ckDoom)) SAVE.losses++; // v4.3 fix: this branch used to hang off the restock check, so a win without a restock was booked as a loss. A scripted club dump does not add a loss.
     var ch2Wake = typeof c2On === 'function' && c2On() && C2W, matSpar = !!(st.ctx && st.ctx.matspar); SAVE.hp = WAKE_HP; var pc = scriptLoss ? 0 : koYenLoss(SAVE.items), lostMats = scriptLoss ? {} : koStripMats(); if (!scriptLoss) SAVE.items -= pc; var nurseMats = !matSpar && !ch2Wake; if (nurseMats) { koGrantMat('gauze', 1); koGrantMat('tape', 1); } W.pen = { coins: pc, heal: 0, mats: lostMats, exempt: koYenExempt(), nurse: nurseMats ? { gauze: 1, tape: 1 } : null }; ev('world:penalty:' + pc + ':' + (lostMats.gauze | 0) + ':' + (lostMats.tape | 0) + (W.pen.exempt ? ':exempt' : '')); W.safe = 6; clearRoam(); W.roamT = 4; if (!(st.ctx && st.ctx.matspar)) { var nu = W.inside && INT[W.inside.id].c2 ? [W.ryo.x, W.ryo.y] : (ch2Wake ? [W.ryo.x, W.ryo.y] : nurseAt()); if (!ch2Wake || !(W.inside && INT[W.inside.id].c2)) { W.ryo.x = nu[0]; W.ryo.y = nu[1]; W.ryo.dir = 0; W.aoi.x = W.ryo.x; W.aoi.y = W.ryo.y + 50; resetTrail(W.ryo.x, W.ryo.y, 3); } ev('world:respawn:' + (ch2Wake ? 'gym' : 'nurse') + ':' + Math.round(W.ryo.x) + ',' + Math.round(W.ryo.y) + ':' + SAVE.hp); } } // Both chapters wake on low HP. Chapter 1: the nurse then stands and fills it. Chapter 2: Genji's gym, no full heal. A mat spar stays on the mat.
+  if (typeof encCamRestore === 'function') encCamRestore(); /* v6564-gangcam */
   save(); enter(true);
   syncVend();
   var CARDS = root.ENGINE.cards(), newC = res.cards || []; if (typeof waveBack === 'function') { var _wv = waveBack(win, st, newC, cxu); if (_wv === 1) return; if (_wv && _wv.cards) { newC = _wv.cards; cxu = _wv.cx; } } /* v6.5.30 chain battles */
@@ -12452,6 +12637,7 @@ function escaped(st) {
   clearFoes(); W.busy = false; W.cool = 0; W.rollAcc = 0; W.forced = null; /* v6.5.64: back() clears it on a win/loss; the escape path returned early and left a bully who was running you down (now a new roam object) as W.forced = input locked for good */ // v4.22: no global grace; the ones you got away from are dazed for a moment instead
   if (st.endHp != null) { SAVE.hp = Math.max(1, Math.min(MAXHP, st.endHp)); SAVE.sp = Math.max(0, Math.min(SPMAX, st.endSpirit | 0)); } keepPartnerSp(st); // v4.24.1
   keep.forEach(function (f, i) { if (W.roam.length >= SP.roamMax) { f.s.el.remove(); return; } var id = (st.grp && st.grp[i]) || BULLIES[0]; f.s.el.classList.add('foe', 'roam'); W.roam.push({ id: id, s: f.s, hx: f.s.x, hy: f.s.y, path: [], wait: 2 + Math.random(), st: 'wander', door: null, t: 1, dazed: SP.daze }); });
+  if (typeof encCamRestore === 'function') encCamRestore(); /* v6564-gangcam */
   save(); enter(true); syncVend(); ev('world:back:escape');
 }
 /* ---------- HUD / dialogs ---------- */
@@ -28201,7 +28387,7 @@ function c1ePatrolTick() { var B = c1eBodies('PT'), now = performance.now();
   if (c1eIsDown('PT')) { W.c1pv = null; return; }
   if (!W.c1pv) W.c1pv = c1eFar();
   var V = W.c1pv; c1eAdvance(V, (now - V.t) / 1000); V.t = now; var r = W.ryo;
-  if (Math.hypot(V.x - r.x, V.y - r.y) < C1E.SPAWN_R && !visible(V.x, V.y, 80) && !(typeof inEnergyBan === 'function' && inEnergyBan(V.x, V.y)) && openAway(V.x, V.y)) c1eSpawnPatrol(V); }
+  if (Math.hypot(V.x - r.x, V.y - r.y) < C1E.SPAWN_R && !visSpawn(V.x, V.y, 80) && !(typeof inEnergyBan === 'function' && inEnergyBan(V.x, V.y)) && openAway(V.x, V.y)) c1eSpawnPatrol(V); }
 function c1eSpawnPatrol(V) { var lv = packLvAt(V.x, V.y), n = lv >= 4 ? 2 : 3; if (packBodies('path').length + n > PACK_CAP) return;
   var ids = ['bully1', 'bully2', 'bully3', 'bully4'], grp = { id: 'PT', mem: [] }, P = C1E.LOOP, to = P[V.ri % P.length], hd = Math.atan2(to[1] - V.y, to[0] - V.x), ca = Math.cos(hd), sa = Math.sin(hd);
   for (var i = 0; i < n; i++) { var off = fileOffsets(i, n), x = V.x - off[1] * ca - off[0] * sa, y = V.y - off[1] * sa + off[0] * ca; if (!walkableAt(x, y)) { x = V.x; y = V.y; }
@@ -28223,7 +28409,7 @@ function c1eSpawnGroup(G) { var lv = c1eGroupLv(G), ids = ['bully1', 'bully2', '
 function c1eGroupsTick() { var r = W.ryo; if (!nurseDone()) return;
   C1E.GROUPS.forEach(function (G) { var B = c1eBodies(G.id), d = Math.hypot(r.x - G.at[0], r.y - G.at[1]);
     if (B.length) { if (d > C1E.AWAY_R && !visible(G.at[0], G.at[1], 80) && !B.some(function (q) { return q.st === 'force' || W.waveQ && W.waveQ.next && W.waveQ.next.indexOf(q) >= 0; })) B.forEach(dropPack); return; }
-    if (c1eIsDown(G.id) || d >= C1E.SPAWN_R || visible(G.at[0], G.at[1], 80)) return;
+    if (c1eIsDown(G.id) || d >= C1E.SPAWN_R || visSpawn(G.at[0], G.at[1], 80)) return;
     if (typeof inEnergyBan === 'function' && inEnergyBan(G.at[0], G.at[1])) return;
     if (packBodies('path').length + G.n > PACK_CAP) return; c1eSpawnGroup(G); }); }
 /* fixed men never see from afar, never get pulled into a chase */
@@ -28255,7 +28441,7 @@ function c1eSweep() { var S = SAVE && SAVE.crewDown; if (!S) return; var r = W.r
     var t0 = typeof S[k] === 'number' && S[k] > 1e12 ? S[k] : 0; /* a bare 1 (crew-clear's mark) = just now */ if (!t0) { S[k] = now; return; }
     if (now - t0 < c1eRespawnS(k) * 1000) return;
     var at = k === 'PT' ? c1eFar() : C1E.GROUPS.find(function (g) { return g.id === k; }).at, x = at.x != null ? at.x : at[0], y = at.y != null ? at.y : at[1];
-    if (Math.hypot(r.x - x, r.y - y) < C1E.AWAY_R || visible(x, y, 80)) return;
+    if (Math.hypot(r.x - x, r.y - y) < C1E.AWAY_R || visSpawn(x, y, 80)) return;
     delete S[k]; if (k === 'PT') W.c1pv = c1eFar(); save(); ev('world:c1e:up:' + k + ':time'); }); }
 var c1eSync0 = syncPathPacks;
 syncPathPacks = function () { if (!g38Ch1()) return c1eSync0.apply(this, arguments);
@@ -28398,7 +28584,7 @@ function c2v2SpawnTick(force) { if (!W.dgF || !c2v2Town() || !c2S().e.genji) ret
   C2CREW.forEach(function (c) { if (!c2v2Lazy(c)) return; if (c.pre && roam) return; var men = c2v2Men(c.k), d = Math.hypot(r.x - c.at[0], r.y - c.at[1]);
     if (c2v2Kind(c.k) === 'group' && c2v2Down(g38tFacOf(c.ids[0]))) { men.forEach(g38tDrop); return; }
     if (men.length) { if (d > C2V2.DESPAWN_R && men.every(c2v2Calm)) { men.forEach(function (f) { var i = W.dgF.indexOf(f); if (i >= 0) W.dgF.splice(i, 1); if (f.s && f.s.el) f.s.el.remove(); }); ev('world:c2v2:out:' + c.k); } return; }
-    if (d < C2V2.SPAWN_R && (force || !visible(c.at[0], c.at[1], 40) || d < 300)) c2v2SpawnGroup(c); }); }
+    if (d < C2V2.SPAWN_R && (force || !visSpawn(c.at[0], c.at[1], 40) || d < 300)) c2v2SpawnGroup(c); }); }
 
 /* ---- respawn: timestamps in SAVE.crewDown['c2_<crew>'] ---- */
 function c2v2DownS() { return SAVE.crewDown || (SAVE.crewDown = {}); }
@@ -28407,7 +28593,7 @@ function c2v2Far(c) { var r = W.ryo, bi = 0, bd = -1; c.route.forEach(function (
 function c2v2Sweep() { var D = SAVE.crewDown; if (!D) return; var r = W.ryo, now = Date.now(), CS = c2S();
   Object.keys(D).forEach(function (kk) { if (!/^c2_/.test(kk)) return; var k = kk.slice(3), c = c2Crew(k); if (!c) { delete D[kk]; return; }
     var kind = c2v2Kind(k), T = c2v2Grind() ? C2V2.RESPAWN.grind : kind === 'street' ? C2V2.RESPAWN.street : C2V2.RESPAWN.group; if (now - D[kk] < T * 1000) return;
-    var at = kind === 'street' ? c.route[c2v2Far(c)] : c.at; if (Math.hypot(r.x - at[0], r.y - at[1]) < C2V2.AWAY_R || visible(at[0], at[1], 80)) return;
+    var at = kind === 'street' ? c.route[c2v2Far(c)] : c.at; if (Math.hypot(r.x - at[0], r.y - at[1]) < C2V2.AWAY_R || visSpawn(at[0], at[1], 80)) return;
     delete D[kk]; c.ids.forEach(function (id, i) { delete CS.f[k + '_' + i]; });
     if (kind === 'street') { var bi = c2v2Far(c); c.ids.forEach(function (id, i) { var key = k + '_' + i; if (W.dgF.some(function (o) { return o.key === key; })) return; var f = g38tSpawn(c, id, i, key); f.c2v2 = 1; c2v2Street(c, f, i, bi); }); }
     save(); ev('world:c2v2:up:' + k); }); }
@@ -28807,7 +28993,7 @@ root.ASSETS.snd['ginger_pick'] = 'data:audio/mpeg;base64,SUQzBAAAAAAAIlRTU0UAAAA
         }
         continue;
       }
-      if (c1eIsDown(G.id) || d >= C1E.SPAWN_R || visible(G.at[0], G.at[1], 80)) continue;
+      if (c1eIsDown(G.id) || d >= C1E.SPAWN_R || visSpawn(G.at[0], G.at[1], 80)) continue;
       if (typeof inEnergyBan === 'function' && inEnergyBan(G.at[0], G.at[1])) continue;
       if (c1cLiveN() + G.n > C1E.LIVE) continue;
       if (typeof packBodies === 'function' && packBodies('path').length + G.n > (typeof PACK_CAP === 'number' ? PACK_CAP : 20)) continue;
@@ -29220,7 +29406,7 @@ function spawn(sp, type, force) {
 actSheet();
 var R = rnd, L = layout(sp, type, R), id = 'S_' + sp.id, G = C1E.GROUPS.find(function (g) { return g.id === id; }) || { id: id, n: P.CREW, at: sp.at, zone: sp.zone };
 var lv = c1eGroupLv(G), grp = { id: id, mem: [], act: 'c1x' }, ids = ['bully2', 'bully3', 'bully4', 'bully1', 'bully2'], hurtN = [2, 1, 3, 4].find(hasHurt) || 2, ii = 0;
-var cam = camR([P.OFFCAM_MARGIN, P.OFFCAM_MARGIN]), bb = bbox(L);
+var cam = (root.FFF_ZOOM && FFF_ZOOM.wideCam ? FFF_ZOOM.wideCam(P.OFFCAM_MARGIN) : camR([P.OFFCAM_MARGIN, P.OFFCAM_MARGIN])), bb = bbox(L);
 if (!force && hitR(bb, cam)) return null;
 var t0 = performance.now();
 var scn = { id: id, sp: sp, type: type, L: L, mem: [], props: [], stu: null, cour: null, posed: 1, t0: t0, bb: bb, say: L.say, sayT: 2 + rnd() * 3, born: Date.now() };
@@ -29307,7 +29493,7 @@ if (W.busy || W.dlg || W.cut || W.inside || W.fading || (typeof g38Ch1 === 'func
 if (liveIds().length >= P.MAX_GROUPS) return;
 if (liveN() + P.CREW > P.LIVE_CAP) { evx('cap'); return; }
 if (typeof packBodies === 'function' && packBodies('path').length + P.CREW > (typeof PACK_CAP === 'number' ? PACK_CAP : 20)) return;
-var trig = camR([P.TRIGGER_PAD_X, P.TRIGGER_PAD_Y]), cam = camR([P.OFFCAM_MARGIN, P.OFFCAM_MARGIN]);
+var trig = camR([P.TRIGGER_PAD_X, P.TRIGGER_PAD_Y]), cam = (root.FFF_ZOOM && FFF_ZOOM.wideCam ? FFF_ZOOM.wideCam(P.OFFCAM_MARGIN) : camR([P.OFFCAM_MARGIN, P.OFFCAM_MARGIN]));
 var only = root.FFF_C1X && root.FFF_C1X.only; 
 var C = SPOTS.filter(function (sp) { return (!only || only.indexOf(sp.id) >= 0) && eligible(sp, now, trig, cam) === true; });
 if (!C.length) return;
@@ -29434,7 +29620,7 @@ seed: function (n) { RS = n | 0; },
 scenes: function () { return Object.keys(SC).map(function (k) { var s = SC[k]; return { id: s.sp.id, type: s.type, area: s.sp.area, at: s.sp.at, posed: s.posed, n: s.mem.filter(function (q) { return W.roam.indexOf(q) >= 0; }).length, poses: s.mem.map(function (q) { return q.s && q.s.loop ? q.s.loop.sh + ':' + q.s.loop.row : (q.s && q.s.el && q.s.el.classList.contains('c1xbr') && q.s.el.dataset.bw ? q.s.el.dataset.bw + ':' + q.s.el.dataset.dir : 'none'); }), props: s.props.length, stu: !!s.stu, cour: !!s.cour }; }); },
 force: function (id, type) { var sp = SPOT[id]; if (!sp) return null; var s = spawn(sp, type || sp.rolls[0], true); return s ? s.id : null; },
 clear: function () { Object.keys(SC).forEach(function (k) { despawn(SC[k], 'clear'); }); Object.keys(COOL).forEach(function (k) { delete COOL[k]; }); LAST.length = 0; },
-eligible: function (id) { var sp = SPOT[id], why = null; var r = eligible(sp, Date.now(), camR([P.TRIGGER_PAD_X, P.TRIGGER_PAD_Y]), camR([P.OFFCAM_MARGIN, P.OFFCAM_MARGIN]), function (w) { why = w; return false; }); return r === true ? 'ok' : why; },
+eligible: function (id) { var sp = SPOT[id], why = null; var r = eligible(sp, Date.now(), camR([P.TRIGGER_PAD_X, P.TRIGGER_PAD_Y]), (root.FFF_ZOOM && FFF_ZOOM.wideCam ? FFF_ZOOM.wideCam(P.OFFCAM_MARGIN) : camR([P.OFFCAM_MARGIN, P.OFFCAM_MARGIN])), function (w) { why = w; return false; }); return r === true ? 'ok' : why; },
 cam: function () { return camR([0, 0]); }
 };
 evx('ready:' + SPOTS.length);
@@ -32849,7 +33035,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
     if (enemyCount() >= LIVE_CAP) return;
     var r = W.ryo; if (!r) return;
     var trig = camR([TRIGGER_PAD_X, TRIGGER_PAD_Y]);
-    var camOff = camR([OFFCAM_MARGIN, OFFCAM_MARGIN]);
+    var camOff = (root.FFF_ZOOM && FFF_ZOOM.wideCam ? FFF_ZOOM.wideCam(OFFCAM_MARGIN) : camR([OFFCAM_MARGIN, OFFCAM_MARGIN]));
     var cand = [], i, j, E, p, pts, bb, dpl;
     function inRange(x, y) {
       dpl = Math.hypot(x - r.x, y - r.y);
@@ -35258,7 +35444,7 @@ installContest();
 var r = W.ryo; if (!r || !town()) return;
 if (LP) { var dx = r.x - LP[0], dy = r.y - LP[1], d = Math.hypot(dx, dy); if (d > 4) DIR = [DIR[0] * 0.5 + dx / d * 0.5, DIR[1] * 0.5 + dy / d * 0.5]; } LP = [r.x, r.y];
 if (IN.liveList().length >= P.MAX_GROUPS) return;
-var now = IN.now(), trig = camR([P.TRIGGER_PAD_X, P.TRIGGER_PAD_Y]), off = camR([P.OFFCAM_MARGIN, P.OFFCAM_MARGIN]), sec = sectionAt(r.x, r.y);
+var now = IN.now(), trig = camR([P.TRIGGER_PAD_X, P.TRIGGER_PAD_Y]), off = (root.FFF_ZOOM && FFF_ZOOM.wideCam ? FFF_ZOOM.wideCam(P.OFFCAM_MARGIN) : camR([P.OFFCAM_MARGIN, P.OFFCAM_MARGIN])), sec = sectionAt(r.x, r.y);
 var C = EVS.filter(function (E) {
 if (!IN.roamOn() && !(IN.earlyKind && IN.earlyKind(E))) return false;
 return eligible(E, now, trig, off, function () { return false; }) === true;
@@ -35474,7 +35660,7 @@ root.FFF_C2X = {
 P: P, LOG: LOG, AREAS: AREAS, CONTEST: CONTEST, EVENTS: EVS, SAY: SAY, layout: layout, bbox: bboxOf, sectionAt: sectionAt, men: men, gangN: gangN,
 agg: aggFac, nearBorder: nearBorder, brawlNeed: brawlNeed, director: director,
 scenes: function () { return IN.liveList().map(function (L) { return { id: L.id, act: L.def.act, kind: L.def.kind, g: L.def.g, n: L.men.length, posed: L.c2x ? L.c2x.posed : -1, civ: !!(L.civ && L.civ.el), poses: L.men.map(function (f) { return f.s && f.s.loop ? f.s.loop.sh + ':' + f.s.loop.row : 'idle'; }), civPose: L.civ && L.civ.loop ? L.civ.loop.sh : '', at: [L.def.x, L.def.y] }; }); },
-eligible: function (id) { var E = IN.EV_BY[id], w = null; var r = eligible(E, IN.now(), camR([P.TRIGGER_PAD_X, P.TRIGGER_PAD_Y]), camR([P.OFFCAM_MARGIN, P.OFFCAM_MARGIN]), function (x) { w = x; return false; }); return r === true ? 'ok' : w; },
+eligible: function (id) { var E = IN.EV_BY[id], w = null; var r = eligible(E, IN.now(), camR([P.TRIGGER_PAD_X, P.TRIGGER_PAD_Y]), (root.FFF_ZOOM && FFF_ZOOM.wideCam ? FFF_ZOOM.wideCam(P.OFFCAM_MARGIN) : camR([P.OFFCAM_MARGIN, P.OFFCAM_MARGIN])), function (x) { w = x; return false; }); return r === true ? 'ok' : w; },
 audit: function () {
 return EVS.map(function (E) {
 var L0 = layout(E), bad = [];
