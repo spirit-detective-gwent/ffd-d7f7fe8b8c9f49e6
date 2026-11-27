@@ -50828,8 +50828,15 @@ function room(story) {
   if (ctx.c2fac || ctx.laneAmb || ctx.amb || ctx.dg === 'c2' || rm === 'town' || inside === 'c2_town') return 'c2_street';
   return '0';
 }
-function feetPx(k) { var id = KEY[k], R = id && ROOMS[id]; return (R && R.feet) || 0; }
-root.FFF_C2BT = { ROOMS: ROOMS, KEY: KEY, has: has, still: still, fx: drawFx, reset: reset, room: room, W: WD, H: HT, feetPx: feetPx };
+/* v6.5.64 ground lines: how far (CSS px) the foe column drops from the default foot (y 164 at 390x844) so the feet land on that backdrop's floor,
+ * with the contact shadow on the floor and not on the wall base. The painted rooms share one floor seam (H0 = 330 of 1280, 217 px on screen), so
+ * 60 puts the feet 7 px into the floor. Lantern Alley stays at 52 (same value as v6564-ch2ov, so the merge is clean). A room that carries its own
+ * `feet:` (the S2 and Jin rooms, 52) wins; a painted room with no entry gets GROUND_DEF, so a new backdrop can never leave the foe on the wall. */
+var GROUND_DEF = 60;
+var GROUND = { sento_hall: 60, sento_boiler: 60, sento_kitchen: 60, sento_trophy: 60, hotel_door: 60, west_wall: 60, udon: 60, lantern_alley: 52, street: 52,
+  club: 60, gym: 60, depot: 60, arcade: 60, waga: 60 };
+function feetPx(k) { var id = KEY[k], R = id && ROOMS[id]; if (!R) return 0; if (R.feet != null) return R.feet; return GROUND[id] != null ? GROUND[id] : GROUND_DEF; }
+root.FFF_C2BT = { ROOMS: ROOMS, KEY: KEY, has: has, still: still, fx: drawFx, reset: reset, room: room, W: WD, H: HT, feetPx: feetPx, GROUND: GROUND, GROUND_DEF: GROUND_DEF };
 root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
 })(window);
 /* v6.5.61 FFF_C2AMB: luminescent Ch2 overworld (grade + bloom cached per room; motes / steam / rain / lantern / neon
