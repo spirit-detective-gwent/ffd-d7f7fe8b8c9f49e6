@@ -53177,7 +53177,7 @@ function hsStage(stage, ms) { return ['@fn', function (next) { hsCmpCard(stage);
 
 /* ---------- the lesson cinematic: she brews, pours, hands Ryo the bottle. Props are DOM in the sprite layer (world px,
  * z = 100 + feet y), CSS animations with fixed counts, and finite c2Walk / camera moves. Nothing runs after the scene. ---------- */
-var HSC = { K: [613, 436], SPOUT: [636, 424], BOT: [668, 470], SU: [700, 500], RYO: [596, 610], AOI: [530, 622], HAND: [652, 604] };
+var HSC = { K: [611, 421], SPOUT: [668, 405], BOT: [678, 472], SU: [702, 446], RYO: [598, 612], AOI: [532, 624], HAND: [650, 606] };
 function hsLayer() { return document.getElementById('wisp') || (typeof layer !== 'undefined' ? layer : null); }
 function hsProp(id, x, y, w, h, html, z) { var L = hsLayer(); if (!L) return null; var e = document.getElementById(id); if (!e) { e = document.createElement('i'); e.id = id; e.className = 'hsprop'; L.appendChild(e); }
   e.style.left = (x - w / 2) + 'px'; e.style.top = (y - h) + 'px'; e.style.width = w + 'px'; e.style.height = h + 'px'; e.style.zIndex = String(z != null ? z : 100 + Math.round(y)); if (html != null) e.innerHTML = html; return e; }
