@@ -54538,7 +54538,7 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
       QS.hint[f.qsCrew] = 1; var n = (W.dgF || []).filter(function (o) { return o.qsHold && o.qsCrew === f.qsCrew && !o.gone; }).length;
       try { comment([['aoi', (n > 1 ? n + ' of them' : 'One of them') + ', holding the corner. They won\u2019t move until we do. Tap the red marker to take it.']]); } catch (e) {} return true; });
   }
-  function sweep() { if (!on() || !inTown()) return; try { exSync(); if (!act()) return; purge(); posts(); chip(); hint(); } catch (e) { ev('world:qs:err:sweep:' + (e && e.message)); } }
+  function sweep() { if (!on() || !inTown()) return; try { exSync(); if (!act()) return; purge(); posts(); chip(); hint(); if (now() - (QS.rt || 0) > 3000) { QS.rt = now(); repair(); } } catch (e) { ev('world:qs:err:sweep:' + (e && e.message)); } }
   QS.sweep = sweep;
   /* ---- chain repair for every quest that a town ambush KO (ambKO -> dgAfter, no c2Back) can skip ---- */
   function allFlags(p, n) { var f = S().f || {}; for (var i = 0; i < n; i++) if (!f[p + '_' + i]) return false; return true; }
