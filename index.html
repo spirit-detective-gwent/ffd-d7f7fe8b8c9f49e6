@@ -53323,7 +53323,8 @@ function hsCraftDone(k, got, opt) {
 }
 /* the dressing lesson's close: the learned card (with how to use it) and Shiraishi's how-to lines (Erik: lessons explain using a remedy) */
 var HS_DRESS_USE = [
-  ['nurse', 'When it stings, tap that slot under your health. Press the tape down when the ring closes on the wrap. Miss it, you still get the whole dressing.', { mood: 'neutral' }],
+  ['nurse', 'When it stings, tap that slot under your health.', { mood: 'neutral' }],
+  ['nurse', 'Press the tape down when the ring closes. Miss it, you still get the whole dressing.', { mood: 'neutral' }],
   ['nurse', 'The Fine ones go first. Unless a plain one covers the scrape. Don\u2019t waste good work on a scratch.', { mood: 'neutral' }],
   ['nurse', 'Take that one. The first is on me.']
 ];
@@ -53507,9 +53508,10 @@ var HS_LESSON = function () { return [
   ['tsukikage', 'So stop using those. Hand me what\u2019s left. From now on, you drink this.', { mood: 'neutral' }],
   ['ryo', 'It smells like a gym bag.'],
   ['tsukikage', 'Then hold your nose. You brew your own at that bowl. One mugwort, one ginger. Come back a quarter dead.', { mood: 'neutral' }],
-  ['tsukikage', 'When you need one, tap the slot under your health. Drink as the ring meets the bottle and it works a little harder. Miss it and you still get all of it.', { mood: 'neutral' }],
+  ['tsukikage', 'When you need one, tap the slot under your health.', { mood: 'neutral' }],
+  ['tsukikage', 'Drink as the ring meets the bottle and it works harder. Miss, you still get it all.', { mood: 'neutral' }],
   ['aoi', 'And the good ones?'],
-  ['tsukikage', 'Fine brews go first. Unless a plain one already covers what you\u2019ve lost. I don\u2019t waste good medicine on a scratch.', { mood: 'neutral' }]
+  ['tsukikage', 'Fine brews go first. Unless a plain one already covers what you\u2019ve lost.', { mood: 'neutral' }]
 ]; };
 function hsLearnedCard(then) {
   W.paused = false;

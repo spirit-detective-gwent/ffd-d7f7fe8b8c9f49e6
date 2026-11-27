@@ -95,6 +95,9 @@ async def main():
         ok('Bag: no Crafting tab', 'Crafting' not in r and 'Items' in r, r[:200])
         r = await ev(pg, "SAVE.craft={dress:1};FFF_HS.vendors();[SHOPS.nq_gk2.items.map(function(i){return i.id}),FFF_S2P2.MENU.length]")
         ok('vendor swap reverts when not learned', 'gauze' in r[0] and r[1] == 2, r)
+        src = (root / 'index.html').read_text(encoding='utf-8')
+        ok('lessons explain using a remedy (slot tap, ring bonus, Fine first) + Use row on both cards', src.count("tap that slot under your health") == 1 and src.count("tap the slot under your health") == 1 and src.count("<span>Use</span><span>Tap the slot \\u00b7 Fine first</span>") == 2 and 'The Fine ones go first' in src and 'Fine brews go first' in src)
+        ok('no stale craft-from-Bag / kettle-for-tea text in Ch1/Ch2', 'The kettle is for tea' not in src and 'Craft potions from your Bag' not in src and 'dressings crafted from your Bag.</p>\' })' not in src and 'gauze and tape in your Bag' not in src)
         ok('garden rare find -> ginger after lesson (source)', "return { k: 'ginger', n: 1, t: 'A ginger root in the mud.' }" in (root / 'index.html').read_text(encoding='utf-8'))
         # clinic fixes
         await pg.evaluate("WORLD_API.c2Go('clinic')"); await pg.wait_for_timeout(2500); await pg.evaluate(HUSH)
