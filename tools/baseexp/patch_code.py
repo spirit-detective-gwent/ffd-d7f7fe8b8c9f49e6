@@ -136,6 +136,11 @@ rep("} else if (f.st === 'patrol' || f.st === 'search') { f.st = 'scan'; f.wait 
 rep("if (mv > 0.3) f.fa = Math.atan2(s.y - py, s.x - px); if (on) waddle(s, mv, f.fa);",
     "if (mv > 0.3) f.fa = Math.atan2(s.y - py, s.x - px); if (on && (mv > 0 || !f.grd || f.st !== 'grd' || f.turn || !f._wd)) { waddle(s, mv, f.fa); if (f.grd) f._wd = !f.turn && f.st === 'grd'; }")
 
+# the live sight is the v6.5.30 override (x2 reach etc.): room guards use their own notice (q.N) at the v4.23 sight numbers (SIGHT23, rk 1)
+rep("seeK = function (q, tx, ty, ok, noSense) { var s = q.s, dx = tx - s.x, dy = ty - s.y, d = Math.hypot(dx, dy), N = ntc(q.id), G = sightOf(q),",
+    "seeK = function (q, tx, ty, ok, noSense) { var s = q.s, dx = tx - s.x, dy = ty - s.y, d = Math.hypot(dx, dy), N = q.N || ntc(q.id), G = q.grd ? SIGHT23 : sightOf(q), /* GGD-89 room guards: own reach, x1 */")
+rep("susStep = function (q, k, dt) { var N = ntc(q.id), G = sightOf(q);", "susStep = function (q, k, dt) { var N = q.N || ntc(q.id), G = q.grd ? SIGHT23 : sightOf(q);")
+
 # ======================= STOREHOUSE =======================
 rep("gE: { r: [1055, 330, 1125, 562], at: [1032, 450], to: 'coach:gW' } },\n    spots: [{ id: 'board', r: [700, 30, 980, 110], at: [840, 180], face: 3 }], hurdle: [300, 640], foes:",
     "gE: { r: [1055, 330, 1125, 562], at: [1032, 450], to: 'coach:gW' }, gW: " + GW % 'cage:gE' + " },\n    spots: [{ id: 'board', r: [700, 30, 980, 110], at: [840, 180], face: 3 }], foes:")

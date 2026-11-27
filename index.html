@@ -55598,11 +55598,11 @@ if (typeof WORLD_API === 'object' && WORLD_API) {
 var SIGHT30 = { rk: 2, core: 52, side: 0.83, far: 0.5 }, SIGHT23 = { rk: 1, core: 35, side: 0.55, far: 0.35 };
 AW.core = SIGHT30.core; AW.side = SIGHT30.side; AW.far = SIGHT30.far; AW.rk = SIGHT30.rk;
 function sightOf(q) { return /^c3_/.test(String(q && q.id || '')) ? SIGHT23 : SIGHT30; }
-seeK = function (q, tx, ty, ok, noSense) { var s = q.s, dx = tx - s.x, dy = ty - s.y, d = Math.hypot(dx, dy), N = ntc(q.id), G = sightOf(q), r = N.r * G.rk * (q.talk ? AW.talkK : 1), a = N.a * (q.talk ? AW.talkA : 1) * Math.PI / 180;
+seeK = function (q, tx, ty, ok, noSense) { var s = q.s, dx = tx - s.x, dy = ty - s.y, d = Math.hypot(dx, dy), N = q.N || ntc(q.id), G = q.grd ? SIGHT23 : sightOf(q), /* GGD-89 room guards: own reach, x1 */ r = N.r * G.rk * (q.talk ? AW.talkK : 1), a = N.a * (q.talk ? AW.talkA : 1) * Math.PI / 180;
   var at = Math.atan2(dy, dx), th = Math.abs(angD(at, q.fa || 0)), c = G.core * Math.PI / 180; if (q.st === 'look' && q.lk0 != null) th = Math.min(th, Math.abs(angD(at, q.lk0))); if (th > a) return 0;
   var rr = th <= c ? r : r * (1 - (1 - G.side) * (th - c) / Math.max(1e-3, a - c));
   if (d > rr || !losClear(s.x, s.y, tx, ty, ok)) return 0; return Math.max(0.02, 1 - d / rr); };
-susStep = function (q, k, dt) { var N = ntc(q.id), G = sightOf(q); if (k > 0) { var ambK = gpAmbK(), rate = (G.far + (3 - G.far) * k) / (N.t * (q.talk ? 1.4 : 1)); q.sus = (q.sus || 0) + dt * (ambK === 1 ? rate : rate * ambK); if (q.sus >= AW.susQ && !q.qm) { q.qm = 1; bubbleOn(q.s, '?'); ev('world:aware:sus:' + q.id); } }
+susStep = function (q, k, dt) { var N = q.N || ntc(q.id), G = q.grd ? SIGHT23 : sightOf(q); if (k > 0) { var ambK = gpAmbK(), rate = (G.far + (3 - G.far) * k) / (N.t * (q.talk ? 1.4 : 1)); q.sus = (q.sus || 0) + dt * (ambK === 1 ? rate : rate * ambK); if (q.sus >= AW.susQ && !q.qm) { q.qm = 1; bubbleOn(q.s, '?'); ev('world:aware:sus:' + q.id); } }
   else { q.sus = Math.max(0, (q.sus || 0) - dt * 0.6); if (!q.sus) q.qm = 0; } return q.sus >= 1; };
 
 /* ---- 2. fight noise: a fight starting / ending pulls a "?" from bullies close by with a clear line (never "!") ---- */
