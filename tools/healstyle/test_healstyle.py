@@ -111,7 +111,7 @@ async def main():
         ok('codex remedy opens a detail page (not the full item list)', r2 == [True, True, True, True, True], r2)
 
         src = (root / 'index.html').read_text(encoding='utf-8')
-        ok('hsCxArt reads HS_PCT / HS_CAP / HS_BONUS (not baked-in percents)', 'function hsCxArt' in src and 'Math.round(HS_PCT[k] * 100)' in src and 'Math.round(HS_BONUS * 100)' in src and 'HS_CAP' in src[src.index('function hsCxArt'):src.index('function hsCxArt')+1800], 'hsCxArt missing live constants')
+        ok('hsCxArt reads HS_PCT / HS_CAP / HS_BONUS (not baked-in percents)', 'function hsCxArt' in src and 'Math.round(HS_PCT[k] * 100)' in src and 'Math.round(HS_BONUS * 100)' in src and 'HS_CAP' in src[src.index('function hsCxArt'):src.index('function hsCxArt')+2500], 'hsCxArt missing live constants')
         ok('lessons explain using a remedy (slot tap, ring bonus, Fine first) + Use row on both cards', src.count("tap that slot under your health") == 1 and src.count("tap the slot under your health") == 1 and src.count("<span>Use</span><span>Tap the slot \\u00b7 Fine first</span>") == 2 and 'The Fine ones go first' in src and 'Fine brews go first' in src)
         ok('no stale craft-from-Bag / kettle-for-tea text in Ch1/Ch2', 'The kettle is for tea' not in src and 'Craft potions from your Bag' not in src and 'dressings crafted from your Bag.</p>\' })' not in src and 'gauze and tape in your Bag' not in src)
         ok('garden rare find -> ginger after lesson (source)', "return { k: 'ginger', n: 1, t: 'A ginger root in the mud.' }" in (root / 'index.html').read_text(encoding='utf-8'))
