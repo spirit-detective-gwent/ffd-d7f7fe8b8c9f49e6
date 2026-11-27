@@ -53452,7 +53452,7 @@ function hsCmpCard(stage) {
   var host = document.getElementById('world') || document.body, c = document.getElementById('hscmp');
   if (stage === 'off') { if (c) c.remove(); return; }
   if (!c) { c = document.createElement('div'); c.id = 'hscmp'; c.setAttribute('aria-hidden', 'true'); host.appendChild(c);
-    c.innerHTML = '<div class="c old">' + hsSvg('dress') + '<b>Healing Dressing</b><span class="v">+10 HP</span><span class="t">closes a cut</span></div><span class="vs">VS</span><div class="c kp hid">' + hsSvg('potion') + '<b>Kampo Potion</b><span class="v">+25% HP</span><span class="t">perfect brew 35%</span></div>'; }
+    c.innerHTML = '<div class="c old">' + hsSvg('dress') + '<b>Healing Dressing</b><span class="v">+10 HP</span><span class="t">closes a cut</span></div><span class="vs">VS</span><div class="c kp hid">' + hsSvg('potion') + '<b>Kampo Potion</b><span class="v">+25% HP</span><span class="t">Fine brew 35%</span></div>'; }
   var kp = c.querySelector('.kp'), old = c.querySelector('.old');
   if (stage === 'kampo' || stage === 'win') kp.classList.remove('hid');
   if (stage === 'win') old.classList.add('dim');
@@ -53527,7 +53527,7 @@ var HS_LESSON = function () { return [
 ]; };
 function hsLearnedCard(then) {
   W.paused = false;
-  dialog('<div class="hscard"><h4>New remedy learned</h4>' + hsSvg('potion', 'hsbig') + '<b class="nm">Kampo Potion</b><p>Heals ' + HS_REM.potion.heal() + '.<br>A perfect brew heals ' + HS_REM.potion.perf() + '.</p><div class="hsl"><div><span>Recipe</span><span>1 Mugwort Leaf + 1 Ginger Root</span></div><div><span>Carry</span><span>up to ' + HS_CAP + '</span></div><div><span>Remedy slot</span><span>Dressing <i>\u2192</i> Kampo</span></div></div></div>', [['Next \u25b8', then, 'hot']]);
+  dialog('<div class="hscard"><h4>New remedy learned</h4>' + hsSvg('potion', 'hsbig') + '<b class="nm">Kampo Potion</b><p>Heals ' + HS_REM.potion.heal() + '.<br>A Fine brew heals ' + HS_REM.potion.perf() + '.</p><div class="hsl"><div><span>Recipe</span><span>1 Mugwort Leaf + 1 Ginger Root</span></div><div><span>Brew at</span><span>the big bowl, here</span></div><div><span>Carry</span><span>up to ' + HS_CAP + '</span></div><div><span>Remedy slot</span><span>Dressing <i>\u2192</i> Kampo</span></div></div></div>', [['Next \u25b8', then, 'hot']]);
   try { AU.play('pl_heal', { gain: 0.5 }); } catch (e) {}
 }
 function hsSwapCard(o, then) {
