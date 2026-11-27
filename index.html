@@ -11250,7 +11250,7 @@ waveBack = function (win, st, newC, cxu) {
 /* ---- fast-walk charge (existing walk frames, not runK / chaseSpd) ---- */
 function chargeWalk(t, ch, go) {
   var r = W.ryo, mx = r.x + (t.x - r.x) * CHARGE_MEET, my = r.y + (t.y - r.y) * CHARGE_MEET, ux = (r.x - t.x) / t.d, uy = (r.y - t.y) / t.d, t0 = performance.now(), lim = Math.max(3000, t.d / FAST_WALK * 1000 + 1500);
-  W.runUp = true; W.path = []; KEYS = {}; stickEnd(); ev('world:runup:start'); ev('world:fastwalk:start:' + ch.length); var fwRaf = !!W.fwRafNext; W.fwRafNext = 0; if (fwRaf) ev('world:fastwalk:raf');
+  W.runUp = true; W.path = []; KEYS = {}; stickEnd(); ev('world:runup:start'); if (W.bossCamHold || W.libCamHold) { W.bossCamMode = 'wide'; if (typeof libBossCam === 'function') libBossCam(); } ev('world:fastwalk:start:' + ch.length); var fwRaf = !!W.fwRafNext; W.fwRafNext = 0; if (fwRaf) ev('world:fastwalk:raf');
   var sx = mx + ux * CHARGE_GAP / 2, sy = my + uy * CHARGE_GAP / 2, ok = walkTo(sx, sy, true, true); if (ok === false) { sx = r.x; sy = r.y; }
   var goal = ch.map(function (s) { return [s.x + (mx - ux * CHARGE_GAP / 2 - t.x), s.y + (my - uy * CHARGE_GAP / 2 - t.y)]; }), last = performance.now();
   ch.forEach(function (s) { s.runK = 0; s.fastWalk = 1; if (s.id && IMG[s.id + '_walk']) { s.bw = s.id + '_walk'; s.sheet = s.id + '_walk'; } });
@@ -11260,7 +11260,7 @@ function chargeWalk(t, ch, go) {
       waddle(s, mv, Math.atan2(r.y - s.y, r.x - s.x)); });
     var d = Math.hypot(r.x - sx, r.y - sy), rdone = (d < 16 || !W.path || !W.path.length) && now - t0 > 250;
     if (rdone && !moving || now - t0 > lim) { ch.forEach(function (s) { s.runK = 0; waddle(s, 0, Math.atan2(r.y - s.y, r.x - s.x)); }); r.dir = dirTo(r, t.x, t.y); place(r, 0); ev('world:fastwalk:met');
-      setTimeout(function () { W.runUp = false; ev('world:runup:end'); go(); }, 180); return; } requestAnimationFrame(step); /* v6.5.63: was setTimeout 30ms unless W.fwRafNext */
+      setTimeout(function () { if ((W.bossCamHold || W.libCamHold) && typeof runUpClash === 'function') runUpClash(function () { W.runUp = false; ev('world:runup:end'); go(); }); else { W.runUp = false; ev('world:runup:end'); go(); } }, 180); return; } requestAnimationFrame(step); /* v6.5.63: was setTimeout 30ms unless W.fwRafNext */
   })();
   return true;
 }
@@ -12128,17 +12128,20 @@ function runUpTarget(grp, boss) { var ids = boss ? ['gouki'] : grp, best = null,
   pool.forEach(function (o) { var e = o.el, k = e.dataset.mb || e.dataset.who || e.dataset.id || ''; if (o === r || o === W.aoi || e.style.display === 'none') return; if (!(boss && o === W.gouki) && !ids.some(function (id) { return k === id || k.indexOf(id) === 0 || e.classList.contains(id); })) return;
     var d = Math.hypot(o.x - r.x, o.y - r.y); if (!best || d < best.d) best = { x: o.x, y: o.y, d: d }; });
   return best; }
+function runUpClash(done) { W.bossCamMode = 'clash'; ev('world:runup:clash');
+  try { if (root.FFF_SCAM && FFF_SCAM.shot) { var b = (typeof bossCamSpr === 'function' && bossCamSpr()) || null; FFF_SCAM.shot([b, W.ryo, W.aoi].filter(Boolean), { z: 1.28, ms: 420, f: 0.7, gy: 0.4 }); } } catch (eC) {}
+  setTimeout(function () { if (done) done(); }, 420); }
 function runUp(grp, boss, go, tg, ch) { var r = W.ryo, t = r && (tg ? { x: tg.x, y: tg.y, d: Math.hypot(tg.x - r.x, tg.y - r.y) } : runUpTarget(grp, boss)); if (root.FFF_NO_RUNUP || !t) return false;
   if (ch && ch.length && t.d > 62) { var fw = !!(W.fastWalkCharge || (ch[0] && ch[0].fastWalk) || (typeof root.FFF_T37 !== 'undefined' && root._fw)); if (!fw) { try { fw = !!(root.FFF_UI && root.FFF_UI.ST && root.FFF_UI.ST.story && root.FFF_UI.ST.story.ctx && root.FFF_UI.ST.story.ctx.fastWalk); } catch (eFw) {} } if (fw && typeof chargeWalk === 'function') return chargeWalk(t, ch, go); return chargeUp(t, ch, go); } /* v6.5.37: new encounters fast-walk; existing charges still run */
-  var ux = (r.x - t.x) / t.d, uy = (r.y - t.y) / t.d, sx = t.x + ux * 58, sy = t.y + uy * 58, t0 = performance.now(); W.runUp = true; W.path = []; KEYS = {}; stickEnd(); ev('world:runup:start');
+  var ux = (r.x - t.x) / t.d, uy = (r.y - t.y) / t.d, sx = t.x + ux * 58, sy = t.y + uy * 58, t0 = performance.now(); W.runUp = true; W.path = []; KEYS = {}; stickEnd(); ev('world:runup:start'); if (W.bossCamHold || W.libCamHold) { W.bossCamMode = 'wide'; if (typeof libBossCam === 'function') libBossCam(); }
   var lim = Math.max(3000, t.d / 200 * 1000 + 1500), ok = t.d < 62 ? true : walkTo(sx, sy, true, true); if (ok === false) { W.runUp = false; return false; }
-  (function wait() { var d = Math.hypot(r.x - sx, r.y - sy); if ((d < 16 || !W.path || !W.path.length) && performance.now() - t0 > 250 || performance.now() - t0 > lim) { r.dir = dirTo(r, t.x, t.y); place(r, 0); setTimeout(function () { W.runUp = false; ev('world:runup:end'); go(); }, 180); return; } setTimeout(wait, 60); })();
+  (function wait() { var d = Math.hypot(r.x - sx, r.y - sy); if ((d < 16 || !W.path || !W.path.length) && performance.now() - t0 > 250 || performance.now() - t0 > lim) { r.dir = dirTo(r, t.x, t.y); place(r, 0); setTimeout(function () { if ((W.bossCamHold || W.libCamHold) && typeof runUpClash === 'function') runUpClash(function () { W.runUp = false; ev('world:runup:end'); go(); }); else { W.runUp = false; ev('world:runup:end'); go(); } }, 180); return; } setTimeout(wait, 60); })();
   return true; }
 /* v4.37a (Ernest t895u): a CHARGE: Ryo and the bullies (ch = their sprites) run at each other with the drawn run cycles and meet
  * about halfway (CHARGE_MEET of the gap), then the fight starts. The bullies run at the chase speed; Ryo at his sprint. */
 var CHARGE_MEET = 0.5, CHARGE_GAP = 58;
 function chargeUp(t, ch, go) { var r = W.ryo, mx = r.x + (t.x - r.x) * CHARGE_MEET, my = r.y + (t.y - r.y) * CHARGE_MEET, ux = (r.x - t.x) / t.d, uy = (r.y - t.y) / t.d, t0 = performance.now(), lim = Math.max(3000, t.d / 150 * 1000 + 1500);
-  W.runUp = true; W.path = []; KEYS = {}; stickEnd(); ev('world:runup:start'); ev('world:charge:start:' + ch.length);
+  W.runUp = true; W.path = []; KEYS = {}; stickEnd(); ev('world:runup:start'); if (W.bossCamHold || W.libCamHold) { W.bossCamMode = 'wide'; if (typeof libBossCam === 'function') libBossCam(); } ev('world:charge:start:' + ch.length);
   var sx = mx + ux * CHARGE_GAP / 2, sy = my + uy * CHARGE_GAP / 2, ok = walkTo(sx, sy, true, true); if (ok === false) { sx = r.x; sy = r.y; }
   var goal = ch.map(function (s) { return [s.x + (mx - ux * CHARGE_GAP / 2 - t.x), s.y + (my - uy * CHARGE_GAP / 2 - t.y)]; }), last = performance.now();
   ch.forEach(function (s) { s.runK = 1; s.bw = undefined; if (s.el.dataset.cel && !s.src) s.src = (s.el.style.backgroundImage.match(/bully\d/) || [''])[0]; });
@@ -12147,7 +12150,7 @@ function chargeUp(t, ch, go) { var r = W.ryo, mx = r.x + (t.x - r.x) * CHARGE_ME
       waddle(s, mv, Math.atan2(r.y - s.y, r.x - s.x)); });
     var d = Math.hypot(r.x - sx, r.y - sy), rdone = (d < 16 || !W.path || !W.path.length) && now - t0 > 250;
     if (rdone && !moving || now - t0 > lim) { ch.forEach(function (s) { s.runK = 0; waddle(s, 0, Math.atan2(r.y - s.y, r.x - s.x)); }); r.dir = dirTo(r, t.x, t.y); place(r, 0); ev('world:charge:met');
-      setTimeout(function () { W.runUp = false; ev('world:runup:end'); go(); }, 180); return; } requestAnimationFrame(step); /* v6.5.63: was setTimeout 30ms */ })();
+      setTimeout(function () { if ((W.bossCamHold || W.libCamHold) && typeof runUpClash === 'function') runUpClash(function () { W.runUp = false; ev('world:runup:end'); go(); }); else { W.runUp = false; ev('world:runup:end'); go(); } }, 180); return; } requestAnimationFrame(step); /* v6.5.63: was setTimeout 30ms */ })();
   return true; }
 /* v4.36 (Ernest): THE standard for scripted fights. o = { key, lines, grp: enemy ids, foe: the sprite Ryo runs up to,
  * focus: sprites the camera frames (the victim + the bully giving orders), ctx: fight ctx }.
@@ -12192,7 +12195,7 @@ function fight(grp, boss, ctx) { if (typeof commentHide === 'function') commentH
   if ((boss || (ctx && (ctx.mini || ctx.nurse || ctx.libev || ctx.artev || ctx.ruT || ctx.charge))) && !(ctx && ctx._ru)) { var c2 = ctx || {}; if (c2.fastWalk) { W.fastWalkCharge = 1; if (c2.charge) c2.charge.forEach(function (s) { if (s) { s.fastWalk = 1; s.runK = 0; } }); } if (runUp(grp, boss, function () { c2._ru = 1; W.fastWalkCharge = 0; fight(grp, boss, c2); }, c2.ruT, c2.charge)) return; W.fastWalkCharge = 0; } /* v4.34 run-up; v6.5.37 fast-walk for outGang */
   if (STORY && STORY.isOpen && STORY.isOpen()) STORY.close(); // never leave the cards screen over a fight
   if ($('#wpause').classList.contains('on')) { $('#wpause').className = ''; W.paused = false; }
-  if (W.libCamHold) { W.libCamHold = 0; if (typeof libBossCamOff === 'function') libBossCamOff(); } /* v5.3 #11: the Archive framing holds through miniDialog and the run-up */
+  if (W.libCamHold || W.bossCamHold) { W._bossCamUntilSwirl = 1; } /* v6.5.64: hold the framing through the run-up; release under the swirl */
   W.fightT = performance.now(); W.on = false; save(); var n = grp.length; ctx = ctx || {}; if (typeof c2On === 'function' && c2On() && !(ctx.c2spar || ctx.matspar)) W.v640LossKind = ctx.enfDoom ? 'enforcer' : (n > 1 || boss || ctx.mini ? 'many' : 'one'); if (ctx.flv == null && !boss) ctx.flv = fightLv(ctx); if (ctx.flvs && ctx.flvs.length !== n) ctx.flvs = null; // v4.24: the enemies' level (Bond XP falls off below the party)
   var join = boss ? MINIS.filter(function (m) { return !beaten(m.id); }).map(function (m) { return m.id + '_j'; }) : [], foes = boss ? ['gouki'].concat(join) : ctx.mini ? [ctx.mini] : n === 1 ? grp : grp.map(function (id) { return id + 'g'; });
   var base = boss ? 5 + join.length : ctx.mini ? 3 : n, extra = 0; // v4.7 soda: +1 item, 50% +2 in a group / relay fight, +2 vs Gouki; uses one of its 2 fights
@@ -12238,7 +12241,7 @@ function snapMap(cv, dpr) {
   g.fillStyle = 'rgba(150,160,175,.16)'; g.fillRect(vr.left, vr.top, vr.width, vr.height); // the overcast haze
   g.restore(); g.setTransform(1, 0, 0, 1, 0, 0);
 }
-function swirl(done) {
+function swirl(done) { if (W._bossCamUntilSwirl) { W._bossCamUntilSwirl = 0; try { if (root.FFF_SCAM && FFF_SCAM.clear) FFF_SCAM.clear(); } catch (eS) {} if (typeof libBossCamOff === 'function') libBossCamOff(true); }
   var D = root.FFF_SWIRL_MS != null ? root.FFF_SWIRL_MS : 1050, T1 = 0.72; W.swirlN = (W.swirlN | 0) + 1; ev('world:swirl:start');
   if (!D || !view) { ev('world:swirl:match'); done(); ev('world:swirl:end'); return; }
   var dpr = Math.min(2, root.devicePixelRatio || 1), w = innerWidth, h = innerHeight, snap = document.createElement('canvas'), cv = document.createElement('canvas');
@@ -14088,7 +14091,7 @@ function bossEnt(id, lines, done, opt) { opt = opt || {}; var C = CHAR_INTRO[id]
       sLock(0, 'bent'); }, { keepBars: 1, cls: 'onshot' }); }
   function onTap(e) { if (SPL_ON || (e && e.target && e.target.closest && e.target.closest('#wintro'))) return; if (e) { e.preventDefault(); e.stopPropagation(); } ev('world:bent:skip:' + id); stopAll(); fin = 0; setTimeout(card, 0); }
   document.addEventListener('pointerdown', onTap, true);
-  SC.bars(1); SC.st.boss = true; /* v6.5.63: MGS camera: cuts and one-way pushes only, never an animated zoom-out */
+  SC.bars(1); SC.st.boss = true; if (BENT_EASE[id]) { SC.st.ease = true; SC.st.bridge = true; SC.st.bentId = id; W.bossCamHold = 1; W.bossCamSpr = boss; } /* v6.5.64: Ch1 minis ease (no hard cuts); Gouki / Ch2 keep the MGS cuts */
   var rz = null, B = boss;
   function reveal() { var rk = BENT_REVEAL[id]; if (!rk) { card(); return; } /* a splash on the reveal, then a hard cut to a still shot and the name card */
     bossSplash(rk, function () { if (fin) return; if (rz && SC.shot) SC.shot(rz[0], { z: rz[1], z0: rz[1], f: rz[4], gy: rz[5] }); card(); }); }
@@ -14139,6 +14142,7 @@ var SPL = {
   vs_kaneda: { kind: 'vs', vs: 'lite', team: [['ryo', 'angry', '#ff9a3c', 196, 182], ['aoi', 'angry', '#6ec8ff', 188, 176]], p: ['kaneda', 'angry', '#ff2d2d', 178, 160], c1: '#ff2d2d', c2: '#3c5ad0', bg: '#10080c', names: ['RYO', 'AOI', 'KANEDA'], ms: 820 }
 };
 var SPL_ON = null;
+var BENT_EASE = { mb_lib: 1, mb_art: 1, mb_cafe: 1, mb_field: 1 };
 var BENT_REVEAL = { gouki: 'gouki_reveal', mb_lib: 'mizuno_reveal', mb_art: 'mai_reveal', mb_cafe: 'kurata_reveal', mb_field: 'bando_reveal', mb2_depot: 'masa_reveal', hall_mon: 'saeki_reveal', enforcer: 'shigure_reveal', c2_doorman: 'kaneda_reveal' };
 var BENT_BEAT = { gouki: 'gouki_eyes', mb2_game: 'jin_eyes', mb_lib: 'mizuno_eyes', mb_art: 'mai_eyes', mb_cafe: 'kurata_eyes', mb_field: 'bando_eyes', mb2_depot: 'masa_eyes', c2_doorman: 'kaneda_eyes' };
 var BENT_VS = { gouki: 'vs_gouki', mb2_game: 'vs_jin', mb_lib: 'vs_mizuno', mb_art: 'vs_mai', mb_cafe: 'vs_kurata', mb_field: 'vs_bando', mb2_depot: 'vs_masa', hall_mon: 'vs_saeki', enforcer: 'vs_shigure', c2_doorman: 'vs_kaneda' };
@@ -17841,20 +17845,62 @@ function libBossDoor(k, d) { var n = libUnp();
 /* arriving in a room: first-visit scenes */
 /* v4.19: the boss room: the encounter starts by itself each time you walk in (the scene the first time), no Fight tag or button
  * on him; "Walk away" takes you back out through the door you came in. */
-function libBoss() { var S = libS(), first = !S.e.archive, m = MINIS.find(function (q) { return q.id === 'mb_lib'; }); W.path = []; W.ryo.v = 0; ev('world:lib:boss:auto:' + (first ? 1 : 0));
-  if (first) { S.e.archive = 1; save(); }
-  /* v4.43 (Ernest t1041u): camera-only: frame Ryo, Aoi and Mizuno together when the Archive opens (same pan lock as the cafeteria boss). Dialogue, timing, sprites, room and the auto-encounter stay as they were. */
-  libPend(function () { libBossCam(); var go = function () { W.libCamHold = 1; miniDialog(m, { base: 1, away: function () { W.libCamHold = 0; libBossCamOff(); if (libRoom() === 'archive' && !beaten('mb_lib')) libThrough('archive', 'gE'); } }); }; if (first) bossEnt('mb_lib', LIB_SC.motive.concat(libBond('boss')), go); else go(); }); }
-function libBossCam() { var mz = W.libN && W.libN.mizuno, pts = [W.ryo, W.aoi, mz].filter(Boolean); if (!pts.length) return;
+function bossCamSpr() { if (W.bossCamSpr && W.bossCamSpr.el && W.bossCamSpr.el.parentNode) return W.bossCamSpr;
+  var N = W.libN || {}, i, k, s, ids = ['mizuno', 'mai', 'kurata', 'bando'];
+  for (i = 0; i < ids.length; i++) { s = N[ids[i]]; if (s && s.el && s.el.parentNode) return s; }
+  if (W.bentS && W.bentS.s && W.bentS.s.el) return W.bentS.s;
+  if (typeof bentSpr === 'function' && root.FFF_SCAM && FFF_SCAM.st && FFF_SCAM.st.bentId) { try { return bentSpr(FFF_SCAM.st.bentId); } catch (eS) {} }
+  return null; }
+function bossCamTarget() {
+  var mz = bossCamSpr(), r = W.ryo, a = W.aoi, aim = W.bossCamAim, mode = W.bossCamMode || (W.runUp ? 'wide' : 'talk'), pts = [], s, cx, cy, needW, needH, Sfit, Sbase, S;
+  if (mode === 'wide' || mode === 'clash') pts = [mz, r, a].filter(Boolean);
+  else if (aim && aim.x != null) { pts = [aim]; if (mz && aim !== mz && Math.hypot(aim.x - mz.x, aim.y - mz.y) < 220) pts.push(mz); }
+  else { if (mz) pts.push(mz); [r, a].forEach(function (q) { if (q && mz && Math.hypot(q.x - mz.x, q.y - mz.y) < 180) pts.push(q); }); }
+  if (!pts.length) pts = [r, mz, a].filter(Boolean);
+  if (!pts.length) return null;
   var xs = pts.map(function (q) { return q.x; }), ys = pts.map(function (q) { return q.y; });
   var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs), minY = Math.min.apply(null, ys) - SPH, maxY = Math.max.apply(null, ys);
-  var cx = (minX + maxX) / 2, cy = (minY + maxY) / 2 + 20;
-  /* zoom so the trio fills most of the shorter side (portrait and landscape), then pan to their centre; restore on go() */
-  var needW = (maxX - minX) + 260, needH = (maxY - minY) + 220, Sfit = Math.min((W.vw || 800) / needW, (W.vh || 600) / needH);
-  W._libCamS = W.S; W.S = Math.max(W.S, Math.min(1.25, Sfit * 0.9));
-  var tc = camAt(cx, cy), a0 = [W.cam.x, W.cam.y], t = 0, k = root.FFF_PAN_K || 1;
-  W.scrCam = [cx, cy]; W.pan = { scr: 1, run: function (dt) { t += dt; var e = ease(Math.min(1, t / (0.75 * k))); W.cam.x = a0[0] + (tc[0] - a0[0]) * e; W.cam.y = a0[1] + (tc[1] - a0[1]) * e; } }; ev('world:lib:boss:cam'); }
-function libBossCamOff() { if (W._libCamS != null) { W.S = W._libCamS; W._libCamS = null; } W.pan = null; W.scrCam = null; camera(true); }
+  if (mode === 'wide' || mode === 'clash') {
+    cx = (minX + maxX) / 2; cy = (minY + maxY) / 2 + 16;
+    if (mz) { var half = (W.vw / (W.S || 1)) / 2, margin = 90; if (mz.x < cx - half + margin) cx = mz.x + half - margin; if (mz.x > cx + half - margin) cx = mz.x - half + margin; }
+  } else if (aim && mz && aim !== mz && Math.hypot(aim.x - mz.x, aim.y - mz.y) < 200) { cx = mz.x * 0.62 + aim.x * 0.38; cy = mz.y * 0.72 + aim.y * 0.28; }
+  else if (mz) { cx = mz.x; cy = mz.y - 6; }
+  else { cx = (minX + maxX) / 2; cy = (minY + maxY) / 2 + 16; }
+  needW = (maxX - minX) + (mode === 'wide' || mode === 'clash' ? 220 : 170);
+  needH = (maxY - minY) + (mode === 'wide' || mode === 'clash' ? 210 : 210);
+  Sfit = Math.min((W.vw || 800) / Math.max(80, needW), (W.vh || 600) / Math.max(80, needH));
+  Sbase = (W._libCamS != null) ? W._libCamS : (W.S || 1);
+  if (mode === 'clash') S = Math.max(Sbase, Math.min(1.38, Sfit * 1.08));
+  else if (mode === 'wide') S = Math.max(0.7, Math.min(Sbase, Sfit * 0.9));
+  else S = Math.max(Sbase, Math.min(1.2, Sbase * 1.06));
+  return { cx: cx, cy: cy, S: S };
+}
+function libBoss() { var S = libS(), first = !S.e.archive, m = MINIS.find(function (q) { return q.id === 'mb_lib'; }); W.path = []; W.ryo.v = 0; ev('world:lib:boss:auto:' + (first ? 1 : 0));
+  if (first) { S.e.archive = 1; save(); }
+  /* v6.5.64: walk Ryo and Aoi in toward Mizuno, then glide + zoom the camera onto him (centred, above the box). */
+  libPend(function () { libBossApproach(function () { var go = function () { W.libCamHold = 1; W.bossCamHold = 1; miniDialog(m, { base: 1, away: function () { W.libCamHold = 0; W.bossCamHold = 0; libBossCamOff(); if (libRoom() === 'archive' && !beaten('mb_lib')) libThrough('archive', 'gE'); } }); }; if (first) bossEnt('mb_lib', LIB_SC.motive.concat(libBond('boss')), go); else go(); }); }); }
+function libBossApproach(done) {
+  var mz = W.libN && W.libN.mizuno, r = W.ryo, a = W.aoi, R = LIBG.archive, talk = lw(R, (LIBP.archive[0] && LIBP.archive[0].talk) || [672, 545]), n = 0, fired = 0;
+  function next() { if (fired++) return; if (done) done(); }
+  function land(s, x, y) { if (!s) { if (++n >= 2) next(); return; } if (Math.hypot(s.x - x, s.y - y) < 18) { s.dir = mz ? dirTo(s, mz.x, mz.y) : 3; place(s, 0); if (++n >= 2) next(); return; }
+    if (typeof actTo === 'function') actTo(s, x, y, 160, function () { s.dir = mz ? dirTo(s, mz.x, mz.y) : 3; place(s, 0); if (++n >= 2) next(); });
+    else { s.x = x; s.y = y; s.dir = mz ? dirTo(s, mz.x, mz.y) : 3; place(s, 0); if (++n >= 2) next(); } }
+  ev('world:lib:boss:approach');
+  land(r, talk[0], talk[1]);
+  land(a, talk[0] + 52, talk[1] + 8);
+  W.bossCamSpr = mz; W.bossCamMode = 'talk'; libBossCam();
+  setTimeout(next, 2400); }
+function libBossCam() { var a0 = [W.cam.x, W.cam.y], S0 = W.S, t = 0, k = root.FFF_PAN_K || 1, first = bossCamTarget(); if (!first) return;
+  if (W._libCamS == null) W._libCamS = W.S;
+  W.bossCamHold = 1; W.scrCam = [first.cx, first.cy];
+  W.pan = { scr: 1, boss: 1, run: function (dt) { t += dt; var tgt = bossCamTarget(); if (!tgt) return; var go = 0.8 * k;
+    if (t <= go) { var e = ease(Math.min(1, t / go)); W.S = S0 + (tgt.S - S0) * e; var tc = camAt(tgt.cx, tgt.cy); W.cam.x = a0[0] + (tc[0] - a0[0]) * e; W.cam.y = a0[1] + (tc[1] - a0[1]) * e; W.scrCam = [tgt.cx, tgt.cy]; }
+    else { var fol = 1 - Math.pow(0.08, Math.max(0.008, dt) * 60); W.S += (tgt.S - W.S) * fol; var t2 = camAt(tgt.cx, tgt.cy); W.cam.x += (t2[0] - W.cam.x) * fol; W.cam.y += (t2[1] - W.cam.y) * fol; W.scrCam = [tgt.cx, tgt.cy]; }
+  } }; ev('world:lib:boss:cam'); }
+function libBossCamOff(hard) { if (W._bossCamOff) return; var fin = function () { if (W._libCamS != null) { W.S = W._libCamS; W._libCamS = null; } W.pan = null; W.scrCam = null; W.bossCamHold = 0; W.libCamHold = 0; W.bossCamMode = null; W.bossCamAim = null; try { if (root.FFF_SCAM) { FFF_SCAM.st.bridge = false; FFF_SCAM.st.ease = false; } } catch (eC) {} camera(true); ev('world:lib:boss:camoff'); };
+  if (hard || root.FFF_SCAM && FFF_SCAM.st && !FFF_SCAM.st.ease) { fin(); return; }
+  var a0 = [W.cam.x, W.cam.y], S0 = W.S, S1 = W._libCamS != null ? W._libCamS : W.S, t = 0, end = camAt(W.ryo ? W.ryo.x : a0[0], W.ryo ? W.ryo.y : a0[1]);
+  W._bossCamOff = 1; W.pan = { scr: 1, run: function (dt) { t += dt; var e = ease(Math.min(1, t / 0.7)); W.S = S0 + (S1 - S0) * e; W.cam.x = a0[0] + (end[0] - a0[0]) * e; W.cam.y = a0[1] + (end[1] - a0[1]) * e; if (e >= 1) { W._bossCamOff = 0; fin(); } } }; }
 function libArrive(k) { var S = libS(), b = beaten('mb_lib'); if (k === 'archive' && !b) { libBoss(); return; } if (S.e[k]) return; var L = null, after = null;
   if (k === 'foyer') { L = LIB_SC.foyer; after = function () { helpTip('libdg', { t: 'The Library', h: '<p>Mizuno\u2019s library is a maze of rooms. <b>Walk into a doorway</b> to go through. Some doors are locked: look for keys and switches.</p><p>Rooms with a green <b>SAFE ROOM</b> plaque are safe: no patrols, two vending machines (3 buys each) and a first-aid kit. The <b>Map</b> tab draws every room you have seen.</p>' }); }; }
   else if (k === 'hall') L = LIB_SC.hall.concat(libBond('hall')); else if (k === 'ante' && !b) L = LIB_SC.ante.slice(0, -1).concat(libBond('ante'), LIB_SC.ante.slice(-1)); else if (k === 'archive' && !b) { libBoss(); return; }
@@ -18355,7 +18401,7 @@ function artBack(win, st) { var c = st && st.ctx; if (!c || !c.artev || !win || 
     ['ad1', 'ad2'].forEach(function (id) { var s = W.libN && W.libN[id]; if (s) { s.el.classList.add('out'); setTimeout(function () { s.el.remove(); }, 600); } }); scene(null, ART_SC.band2); }); return; }
   if (c.artev === 'hallb') { ev('world:art:back:hallb'); libPend(function () { scene(null, ART_SC.hallb2); }); } }
 function artBoss() { var S = artS(), first = !S.e.stage, m = MINIS.find(function (q) { return q.id === 'mb_art'; }); W.path = []; W.ryo.v = 0; ev('world:art:boss:auto:' + (first ? 1 : 0)); if (first) { S.e.stage = 1; save(); }
-  libPend(function () { var go = function () { miniDialog(m, { base: 1, away: function () { if (artRoom() === 'stage' && !beaten('mb_art')) artDoor('gS'); } }); }; if (first) bossEnt('mb_art', ART_SC.boss, go); else go(); }); }
+  libPend(function () { var go = function () { W.bossCamHold = 1; if (typeof libBossCam === 'function') libBossCam(); miniDialog(m, { base: 1, away: function () { W.bossCamHold = 0; if (typeof libBossCamOff === 'function') libBossCamOff(); if (artRoom() === 'stage' && !beaten('mb_art')) artDoor('gS'); } }); }; if (first) bossEnt('mb_art', ART_SC.boss, go); else go(); }); }
 /* after the Mai fight (from back(), before her relay scene + the 3-way decision): the drums stop, she drops to her knees */
 function artPost(done) { W.dlg = true; AU.play('shatter', { gain: 0.8 }); wSparks(); ev('world:art:post');
   if (artRoom() === 'stage') { var o = W.libN && W.libN.mai, a = lw(ARTG.stage, ARTP.stage[0].at); if (o && o.el) o.el.remove(); var s = celKneel('mai', 0, 'lkneel'); if (s) { s.x = a[0]; s.y = a[1]; place(s, 0); W.libN.mai = s; ev('world:art:kneel'); } }
@@ -18621,7 +18667,7 @@ function cafArrive(k) { var S = cafS(), b = beaten('mb_cafe'); if (cafHide(k)) {
   libPend(function () { scene(null, L, after); }); }
 function cafBoss() { var S = cafS(), first = !S.e.dining, m = MINIS.find(function (q) { return q.id === 'mb_cafe'; }), R = CAFG.dining; W.path = []; W.ryo.v = 0; ev('world:cafe:boss:auto:' + (first ? 1 : 0)); if (first) { S.e.dining = 1; save(); }
   libPend(function () { var k0 = lw(R, CAFP.dining[0].at), tc = camAt(k0[0], k0[1] + 60), a0 = [W.cam.x, W.cam.y], t = 0; W.dlg = true; W.pan = { scr: 1, run: function (dt) { t += dt; var e = ease(Math.min(1, t / 0.8)); W.cam.x = a0[0] + (tc[0] - a0[0]) * e; W.cam.y = a0[1] + (tc[1] - a0[1]) * e; } }; ev('world:cafe:boss:pan');
-    var go = function () { W.pan = null; W.dlg = false; var up = lw(R, [640, 360]); walkTo(up[0], up[1], true, false); /* a short controlled walk-up, then the challenge */ setTimeout(function () { miniDialog(m, { base: 1, away: function () { if (cafRoom() === 'dining' && !beaten('mb_cafe')) cafDoor('gS'); } }); }, 700); };
+    var go = function () { W.bossCamHold = 1; if (typeof libBossCam === 'function') libBossCam(); W.dlg = false; var up = lw(R, [640, 360]); walkTo(up[0], up[1], true, false); /* a short controlled walk-up, then the challenge */ setTimeout(function () { miniDialog(m, { base: 1, away: function () { W.bossCamHold = 0; if (typeof libBossCamOff === 'function') libBossCamOff(); if (cafRoom() === 'dining' && !beaten('mb_cafe')) cafDoor('gS'); } }); }, 700); };
     setTimeout(function () { if (first) bossEnt('mb_cafe', cafBossLines(), go); else go(); }, 850); }); }
 function cafBack(win, st) { if (W.carry) cafDrop('fight'); }
 function cafPost(done) { W.dlg = true; AU.play('shatter', { gain: 0.8 }); wSparks(); ev('world:cafe:post');
@@ -18987,7 +19033,7 @@ function fldBoss(o) { var S = fldS(), first = !S.e.boss, m = MINIS.find(function
   (function () { var a = lw(R, FLDP.track[0].at), ban = W.libN && W.libN.bando; if (!ban || !ban.el || !ban.el.parentNode) { fldClearBando(); ban = fldMkBando('dgrelay'); ban.x = a[0]; ban.y = a[1]; place(ban, 0); W.libN.bando = ban; W.dgRelay = ban; W.fldA = [ban]; }
     else { ban.x = a[0]; ban.y = a[1]; ban.runK = 0; place(ban, 0); waddle(ban, 0, Math.PI); } })();
   var run = function () { var k0 = lw(R, FLDP.track[0].at), tc = camAt(k0[0], k0[1] + 40), a0 = [W.cam.x, W.cam.y], t = 0; W.dlg = true; W.pan = { scr: 1, run: function (dt) { t += dt; var e = ease(Math.min(1, t / 0.75)); W.cam.x = a0[0] + (tc[0] - a0[0]) * e; W.cam.y = a0[1] + (tc[1] - a0[1]) * e; } }; ev('world:field:boss:pan');
-    var go = function () { W.pan = null; W.dlg = true; fldLegs(W.ryo, [640, 420], 150, function () { W.dlg = false; ev('world:field:boss:ready'); miniDialog(m, { base: 1, away: function () { W.fldBossT = 0; if (fldRoom() === 'track' && !beaten('mb_field')) fldDoor('gS'); } }); }); };
+    var go = function () { W.bossCamHold = 1; if (typeof libBossCam === 'function') libBossCam(); W.dlg = true; fldLegs(W.ryo, [640, 420], 150, function () { W.dlg = false; ev('world:field:boss:ready'); miniDialog(m, { base: 1, away: function () { W.fldBossT = 0; W.bossCamHold = 0; if (typeof libBossCamOff === 'function') libBossCamOff(); if (fldRoom() === 'track' && !beaten('mb_field')) fldDoor('gS'); } }); }); };
     setTimeout(function () { if (first) bossEnt('mb_field', FLD_SC.boss, go); else go(); }, 800); };
   if (o && o.direct) { ev('world:field:boss:direct'); run(); } else libPend(run); }
 function fldBack(win, st) { if (W.carry && String(W.carry).indexOf('h:') === 0) fldDrop('fight'); }
@@ -39062,8 +39108,10 @@ var GINKO = (function () {
   function unfocus() { if (S.cfSet) { W.camFocus = S.cf0; S.cf0 = null; S.cfSet = false; } }
   /* a sprite's upper body in #wv's own (unscaled) pixels; null when it is off screen */
   function pt(s) { var v = wv(); if (!v || !s || !s.el || !s.el.parentNode || !s.el.getBoundingClientRect) return null; var P = (v.parentNode || v).getBoundingClientRect(), e = s.el.getBoundingClientRect(), c = cur();
-    if (!e.width || e.right < P.left || e.left > P.right || e.bottom < P.top || e.top > P.bottom) return null;
-    return [(e.left + e.width / 2 - P.left - c.x) / c.z, (e.top + e.height * 0.38 - P.top - c.y) / c.z]; }
+    if (e.width && e.right >= P.left && e.left <= P.right && e.bottom >= P.top && e.top <= P.bottom)
+      return [(e.left + e.width / 2 - P.left - c.x) / c.z, (e.top + e.height * 0.38 - P.top - c.y) / c.z];
+    if (s && s.x != null && W && W.cam && W.S) { var vv = wv(); if (!vv) return null; var ph = (typeof SPH === 'number' ? SPH : 64); return [(s.x - W.cam.x) * W.S, (s.y - ph * 0.62 - W.cam.y) * W.S]; }
+    return null; }
   /* commit the current zoom onto #wv before cancelling, or a fill:forwards cancel snaps back to 1 */
   function stop() { if (!S.an) return; try { if (S.an.commitStyles) S.an.commitStyles(); S.an.cancel(); } catch (e) { try { S.an.cancel(); } catch (e2) {} } S.an = null; }
   function clearStyle(v) { if (!v) return; v.style.transformOrigin = ''; v.style.scale = ''; v.style.translate = ''; }
@@ -39074,11 +39122,12 @@ var GINKO = (function () {
     return { z: Z, x: Math.max(W0 * (1 - Z), Math.min(0, tx)), y: Math.max(H0 * (1 - Z), Math.min(0, ty)) }; }
   function cutPush(A, B, ms, ease) { var v = wv(); if (!v || !A) return false; stop(); v.style.transformOrigin = '0 0';
     var Q = function (q) { return { scale: q.z, translate: q.x + 'px ' + q.y + 'px' }; };
-    v.style.scale = A.z; v.style.translate = A.x + 'px ' + A.y + 'px';
-    if (B && B.z > A.z + 0.004 && v.animate && ms > 0) S.an = v.animate([Q(A), Q(B)], { duration: ms, easing: ease || 'cubic-bezier(.37,0,.63,1)', fill: 'forwards' });
+    if (S.ease) { var cP = cur(), dest = B || A; A = { z: cP.z, x: cP.x, y: cP.y }; B = dest; ms = ms || 1100; } /* v6.5.64: Ch1 minis ease from the current frame, never a hard cut */
+    else { v.style.scale = A.z; v.style.translate = A.x + 'px ' + A.y + 'px'; }
+    if (B && v.animate && ms > 0 && (S.ease || B.z > A.z + 0.004)) S.an = v.animate([Q(A), Q(B)], { duration: ms, easing: ease || 'cubic-bezier(.37,0,.63,1)', fill: 'forwards' });
     S.on = true; arm(); return true; }
   function to(Z, p, ms, f, ease, from) { var v = wv(); if (!v || !v.animate || !p) return false; var W0 = v.clientWidth, H0 = v.clientHeight, c = from || cur();
-    if (S.boss && !from && Z < c.z - 0.02) return cutPush(poseG(Z, p, f, S.gyK), null);
+    if (S.boss && !S.ease && !from && Z < c.z - 0.02) return cutPush(poseG(Z, p, f, S.gyK), null);
     var gx = p[0] + (W0 / 2 - p[0]) * (f || 0), gy = p[1] + (H0 * (S.gyK || 0.42) - p[1]) * (f || 0), tx = gx - Z * p[0], ty = gy - Z * p[1];
     tx = Math.max(W0 * (1 - Z), Math.min(0, tx)); ty = Math.max(H0 * (1 - Z), Math.min(0, ty));
     stop(); v.style.transformOrigin = '0 0';
@@ -39088,10 +39137,10 @@ var GINKO = (function () {
   function ping() { var L = S.pend || []; S.pend = []; L.forEach(function (f) { try { f(); } catch (e) {} }); }
   function after(cb) { if (!cb) return; if (!S.an) { cb(); return; } S.pend = (S.pend || []).concat([cb]); }
   /* instant clear — only while the screen is already black (a fade mid-point), never as a visible reset */
-  function clear() { var v = wv(); clearTimeout(S.wd); S.keep = false; S.outMs = 0; S.boss = false; unfocus(); stop(); S.on = false; S.heavy = false; S.soft = false; S.held = null; if (S.bars) bars(0); clearStyle(v); ping(); }
+  function clear() { var v = wv(); clearTimeout(S.wd); S.keep = false; S.outMs = 0; S.boss = false; S.ease = false; S.bridge = false; S.bentId = null; unfocus(); stop(); S.on = false; S.heavy = false; S.soft = false; S.held = null; if (S.bars) bars(0); clearStyle(v); ping(); }
   /* ease back to 1. Never instant: heavy beats take 1.5–2.5 s, light frames a bit less, skipped zoom still eases. */
   function reset(ms, cb) { if (cb) S.pend = (S.pend || []).concat([cb]); var v = wv(), oms = S.outMs; clearTimeout(S.wd); S.keep = false; S.outMs = 0; if (!v || !S.on) { unfocus(); stop(); S.heavy = false; S.soft = false; S.held = null; ping(); return; }
-    if (S.boss) { S.boss = false; stop(); unfocus(); S.on = false; S.heavy = false; S.soft = false; S.held = null; clearStyle(v); ping(); return; } /* v6.5.63: back to the play camera with a clean cut, never a long zoom-out */
+    if (S.boss && !S.ease) { S.boss = false; stop(); unfocus(); S.on = false; S.heavy = false; S.soft = false; S.held = null; clearStyle(v); ping(); return; } /* v6.5.63: Gouki / Ch2 keep the clean cut; Ch1 minis ease out */
     var c = cur(); stop(); unfocus(); S.on = false; S.heavy = false; S.soft = false; S.held = null;
     var z = c.z, dur, outE = oms ? 'cubic-bezier(.37,0,.63,1)' : 'cubic-bezier(.45,.05,.2,1)'; /* v6.5.63: a boss arrival settles on a gentle sine ease */
     if (oms && !still()) ms = Math.max(ms || 0, oms, Math.round(2400 + 2600 * (z - 1)));
@@ -39121,10 +39170,10 @@ var GINKO = (function () {
     if (still()) { S.prev = who; return; }
     if (has('hold') || (S.heavy && !has('push') && !has('pull') && !has('frame'))) { arm(); S.prev = who; return; }
     if (has('push') && p) { if (!o.nofocus) p = focus(me, p);
-      if (S.boss && o.cut) { var Ze = o.z || 1.55, ff0 = o.f != null ? o.f : 0.45; cutPush(poseG(o.z0 || Ze * 0.84, p, ff0, o.gy), poseG(Ze, p, ff0, o.gy), o.ms || 1600, o.ease); S.heavy = true; S.soft = false; S.held = null; S.prev = who; return; }
+      if (S.boss && o.cut && !S.ease) { var Ze = o.z || 1.55, ff0 = o.f != null ? o.f : 0.45; cutPush(poseG(o.z0 || Ze * 0.84, p, ff0, o.gy), poseG(Ze, p, ff0, o.gy), o.ms || 1600, o.ease); S.heavy = true; S.soft = false; S.held = null; S.prev = who; return; }
       S.gyK = o.gy || 0; to(o.z || 1.55, p, o.ms || 1600, o.f != null ? o.f : 0.45, o.ease || 'cubic-bezier(.3,.05,.2,1)'); S.gyK = 0; S.heavy = true; S.prev = who; return; }
     if (has('pull') && p) { var v = wv(), c0 = cur(), dest = (S.soft && S.held) ? S.held : { z: o.z1 || 1, x: 0, y: 0 };
-      if (S.boss) { cutPush(dest, null); S.heavy = false; if (!(S.soft && S.held)) { S.soft = false; S.held = null; } S.prev = who; return; } /* a pull is a cut during a boss arrival */
+      if (S.boss && !S.ease) { cutPush(dest, null); S.heavy = false; if (!(S.soft && S.held)) { S.soft = false; S.held = null; } S.prev = who; return; } /* a pull is a cut during a boss arrival; Ch1 minis ease */
       var Z0 = c0.z, tx = c0.x, ty = c0.y;
       if (!(c0.z > 1.08)) { var W0 = v.clientWidth, H0 = v.clientHeight, Zs = o.z || 1.5; Z0 = Zs; tx = Math.max(W0 * (1 - Zs), Math.min(0, W0 / 2 * 0.3 + p[0] * 0.7 - Zs * p[0])); ty = Math.max(H0 * (1 - Zs), Math.min(0, H0 * 0.42 * 0.3 + p[1] * 0.7 - Zs * p[1])); }
       stop(); v.style.transformOrigin = '0 0';
@@ -39151,13 +39200,28 @@ var GINKO = (function () {
       S.prev = who; return;
     }
     if (!cam.length) {
+      if (S.ease) { easeTalk(who, me); S.prev = who; return; }
       if (S.soft) { arm(); S.prev = who; return; } /* hold still — no per-line reframe */
       var pa = aim(me);
       var zIn = cur().z > 1.15; /* v6.5.63: settling from a held close-up (a boss arrival) is a slow ease-in-out, never a quick drop */
       if (pa) { S.held = pose(1.06, pa, 0.2); to(1.06, pa, zIn ? Math.round(2400 + 2600 * (cur().z - 1.06)) : 2400, 0.2, zIn ? 'cubic-bezier(.37,0,.63,1)' : 'cubic-bezier(.33,.1,.25,1)'); S.soft = true; ev('world:scam:soft:' + (id || 'talk')); }
     }
     S.prev = who; }
-  function end() { S.prev = null; S.shoutShake = false; var keepBars = S.bars && S.heavy; if (S.bars && !keepBars) bars(0);
+  function easeTalk(who, me) {
+    var boss = (S.bentId && typeof spr === 'function') ? spr(S.bentId) : null;
+    if (!boss && S.bentId && typeof bentSpr === 'function') { try { boss = bentSpr(S.bentId); } catch (eB) {} }
+    if (!boss && typeof bossCamSpr === 'function') boss = bossCamSpr();
+    var sp = me || spr(who), isBoss = !who || !sp || (boss && sp === boss) || (S.bentId && (who === S.bentId || (typeof bentIsBoss === 'function' && bentIsBoss(S.bentId, who))));
+    var close = sp && boss && sp !== boss && Math.hypot((sp.x || 0) - boss.x, (sp.y || 0) - boss.y) < 200;
+    var at = isBoss ? (boss || sp) : sp, z = isBoss ? 1.62 : (close ? 1.28 : 1.4), f = close && !isBoss ? 0.55 : 0.88;
+    if (at && at.x != null) W.bossCamAim = isBoss ? (boss || at) : (close ? null : at);
+    if (!isBoss && close && boss) {
+      var pa = pt(sp), pb = pt(boss), pm = (pa && pb) ? mid(pa, pb, 0.42) : (pa || pb);
+      if (pm) { to(z, pm, 1100, f, 'cubic-bezier(.37,0,.63,1)'); arm(); return; }
+    }
+    var p = pt(at); if (p) to(z, p, 1100, f, 'cubic-bezier(.37,0,.63,1)'); arm();
+  }
+  function end() { if (S.ease && S.bridge) { S.prev = null; S.shoutShake = false; arm(); return; } S.prev = null; S.shoutShake = false; var keepBars = S.bars && S.heavy; if (S.bars && !keepBars) bars(0);
     if (keepBars) setTimeout(function () { if (S.bars) bars(0); }, 700);
     reset(S.heavy ? (S.outMs || 2200) : undefined); }
   /* v6.5.63 boss entrances: one held cinematic shot outside dialogue (the reveal before the intro card). at = a speaker id, a sprite,
