@@ -57596,7 +57596,7 @@ function hsBeat(it, done) {
   if (root.FFF_HS_BEAT_OFF) { done(false); return; }
   hsCss2();
   var base = it.replace(/F$/, ''), fine = it !== base, host = document.getElementById('world') || document.body;
-  var T = root.FFF_HS_BEAT_T || 1600, tol = hsBeatTol(T), R = HS_BEAT.R, ri = R * (1 - tol), ro = R * (1 + tol);
+  var T = root.FFF_HS_BEAT_T || 1600, tol = hsBeatTol(T), R = HS_BEAT.R, ri = R * Math.max(0, 1 - tol), ro = R * Math.min(1 + HS_BEAT.grow, 1 + tol); /* clamps only matter for test overrides of FFF_HS_BEAT_WIN */
   var o = document.createElement('div'); o.id = 'hsbw'; o.className = 'k-' + base;
   o.innerHTML = '<div class="bw"><div class="hint">' + (base === 'potion' ? 'Tap when the ring meets the bottle' : 'Tap when the ring meets the wrap') + '</div><div class="tg">' + (fine ? hsSvgF(base) : hsSvg(base)) + '</div>' +
     '<div class="pz"><i style="left:' + (-ro).toFixed(2) + 'px;top:' + (-ro).toFixed(2) + 'px;width:' + (2 * ro).toFixed(2) + 'px;height:' + (2 * ro).toFixed(2) + 'px;border-width:' + (ro - ri).toFixed(2) + 'px"></i></div>' +
