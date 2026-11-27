@@ -1,0 +1,14 @@
+Fox Fire Fist: Delinquent Duel — Chapter One safe rooms
+
+Title: Stay the Course
+Artist: Kevin MacLeod (incompetech.com)
+Source: https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1900018
+License: Creative Commons Attribution 4.0 (CC BY 4.0) http://creativecommons.org/licenses/by/4.0/
+In-game file: music/safe_room.mp3 (plays in the Chapter One safe rooms)
+
+Required in-game credit:
+"Stay the Course" Kevin MacLeod (incompetech.com)
+Licensed under Creative Commons: By Attribution 4.0 License
+http://creativecommons.org/licenses/by/4.0/
+
+Edit: 2:08 excerpt from 11.1 s of the original, cut on bar lines (60 bpm), the head crossfaded with what follows the cut so the file loops as a whole-file loop; level-matched. Stereo MP3 at 128 kbps, 44.1 kHz.
