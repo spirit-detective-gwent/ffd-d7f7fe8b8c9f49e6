@@ -5,7 +5,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 import bh
 from playwright.async_api import async_playwright
-PORT = 8986
+PORT = int(__import__("os").environ.get("BOND_PORT") or 8986)
 R = []
 def ok(name, cond, extra=''):
     R.append((name, bool(cond), extra)); print(('PASS ' if cond else 'FAIL ') + name + (' :: ' + str(extra) if (extra and not cond) else ''))
