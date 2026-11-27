@@ -74,6 +74,14 @@ ONE = """(function(a){ var FOES=a.foes, o={}, T=window.__T; return T.quiet(funct
   var g = phMatN('gauze'), t = phMatN('tape'); SAVE.chapter = ch0;
   return {tot: tot, g: g, t: t, mats: g + t, dress: Math.min(g, t)};
 }); })"""
+async def free_world(pg):
+    """Clear the opening scene so the screenshot shows the plain world."""
+    await ev(pg, "(function(){ W.scGen=(W.scGen|0)+1; try{sLock(0,'x')}catch(e){} try{close()}catch(e){} W.cut=false; W.dlg=false; W.scr=false; W.busy=false; document.body.classList.remove('fff-dlg-on'); })()")
+    for _ in range(40):
+        d = await ev(pg, "({dlg:W.dlg,cut:!!W.cut,cls:document.body.className})")
+        if not d['dlg'] and not d['cut'] and 'fff-dlg-on' not in d['cls']: break
+        await pg.evaluate("(()=>{var b=[...document.querySelectorAll('button')].find(e=>/^(OK|Next|Skip|Close)/.test(e.textContent.trim())&&e.offsetParent);if(b)b.click()})()"); await pg.wait_for_timeout(500)
+    await pg.wait_for_timeout(800)
 async def main():
     h = serve(root, PORT)
     html = (root / 'index.html').read_text(encoding='utf-8')
@@ -144,9 +152,10 @@ async def main():
         ok('thorough Ch1: mean total materials 15-18', 15 <= res['mean'] <= 18.5, res)
         ok('thorough Ch1: mean dressings craftable 7-9 (= min(gauze,tape))', 6.5 <= res['dress'] <= 9.5, res['dress'])
         # ---------- popup ----------
+        await free_world(pg)
         pop = await ev(pg, """(function(){ SAVE.chapter=1; __T.reset(); var f=document.getElementById('wmatpop'); if(f) f.remove(); W.matPopQ=[]; W.on=false; root.FFF_MAT_ROLL=0; root.FFF_MAT_KIND='gauze'; healDrops({foes:[1]},{}); root.FFF_MAT_ROLL=null; root.FFF_MAT_KIND=null; return {queued:(W.matPopQ||[]).length, shown:!!document.getElementById('wmatpop')&&document.querySelectorAll('#wmatpop .mp').length}; })()""")
         ok('popup waits (queued) while the result screen covers the world', pop['queued'] == 1 and not pop['shown'], pop)
-        await ev(pg, "W.on=true"); await pg.wait_for_timeout(900)
+        await ev(pg, "W.on=true"); await pg.wait_for_timeout(1300)
         pp = await pg.evaluate("""()=>{var e=document.querySelector('#wmatpop .mp'); if(!e) return null; var r=e.getBoundingClientRect(), s=getComputedStyle(e.parentNode), c=getComputedStyle(e); var top=document.elementFromPoint(r.x+r.width/2, r.y+r.height/2); return {t:e.textContent, x:Math.round(r.x), y:Math.round(r.y), w:Math.round(r.width), h:Math.round(r.height), pe:s.pointerEvents, op:c.opacity, hit:top&&top.closest('#wmatpop')?'blocks':'passes'}}""")
         ok("popup reads '+1 Gauze' and never blocks a tap", pp and pp['t'] == '+1 Gauze' and pp['pe'] == 'none', pp)
         if shot:

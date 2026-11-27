@@ -22040,9 +22040,7 @@ function matPopShow(list) {
   ev('world:mat:pop:' + list.join(','));
 }
 function matPopFlush() { var q = W.matPopQ; if (!q || !q.length) { W.matPopT = 0; return; } if (!W.on) { if ((W.matPopT = (W.matPopT | 0) + 1) > 120) { W.matPopQ = []; W.matPopT = 0; return; } setTimeout(matPopFlush, 500); return; } W.matPopQ = []; W.matPopT = 0; matPopShow(q); }
-function koQuietMats(list, why) { list.forEach(function (k) { phMatAdd(k, 1); }); ev('world:mat:drop:' + why + ':' + list.join(',')); W.matPopQ = (W.matPopQ || []).concat(list); if (W.on) setTimeout(matPopFlush, 120); }
-var back0Craft = back;
-back = function (win, st) { var r = back0Craft.apply(this, arguments); if (W.matPopQ && W.matPopQ.length) setTimeout(matPopFlush, 700); return r; };
+function koQuietMats(list, why) { list.forEach(function (k) { phMatAdd(k, 1); }); ev('world:mat:drop:' + why + ':' + list.join(',')); W.matPopQ = (W.matPopQ || []).concat(list); setTimeout(matPopFlush, W.on ? 120 : 500); } /* W.on is false while the battle result screen covers the world; matPopFlush re-arms every 500 ms until the world is back */
 healDrops = function (st, res) { ev('world:heal:drop:none'); if (!st || !res) return; var ch = SAVE.chapter | 0; if (ch !== 1 && ch !== 2) return; if (st.boss || (st.ctx && st.ctx.c2boss)) return;
   var g = phMatN('gauze'), t = phMatN('tape');
   if (st.mini) { if (!res.firstMini) return; var n = ch >= 2 ? 2 : 1, got = []; for (var i = 0; i < n; i++) { var kk = koDropKind(i, g, t); got.push(kk); if (kk === 'gauze') g++; else t++; } if (n >= 2 && got[0] === got[1]) got[1] = got[0] === 'gauze' ? 'tape' : 'gauze'; koQuietMats(got, 'mini'); return; }
@@ -54404,7 +54402,7 @@ var DBL = root.DBL = { play: play, stop: stop, release: release, moves: MOVES, G
 #wmats .mchip{position:relative;display:flex;align-items:center;gap:4px;min-width:52px;padding:3px 7px 3px 3px;border-radius:10px;background:rgba(16,14,12,.78);color:#f4efe4;font:700 12px/1 system-ui,sans-serif;box-shadow:0 1px 3px rgba(0,0,0,.4);}
 #wmats .mchip .hbsvg,#wmats .mchip svg{width:22px;height:22px;display:block;flex:none;}
 /* v6564-craft: '+1 Gauze' / '+1 Tape' drop pill. Top-centre under the status bar, never takes a tap, one fade (no loop). */
-#wmatpop{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 74px);transform:translateX(-50%);z-index:12;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;}
+#wmatpop{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 172px);transform:translateX(-50%);z-index:12;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;}
 #wmatpop .mp{display:block;padding:5px 12px;border-radius:999px;background:rgba(16,14,12,.82);color:#f4efe4;font:800 13px/1 system-ui,sans-serif;letter-spacing:.2px;box-shadow:0 1px 4px rgba(0,0,0,.45),inset 0 0 0 1px rgba(255,255,255,.14);animation:matpop 2.2s ease-out both;}
 #wmatpop .mp.gauze{color:#e9f6d8}#wmatpop .mp.tape{color:#ffe9b8}
 @keyframes matpop{0%{opacity:0;transform:translateY(-6px) scale(.92)}12%{opacity:1;transform:none}78%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-4px)}}
