@@ -21219,9 +21219,9 @@ function c2TransDraw(c, w, h, u, t, sh) { var e = function (x) { return x < 0 ? 
   /* each layer only where it can show past the next one in (the road fills the screen width from dRd in): no full-screen overdraw */
   var dRd = 2 * f * 4.2 / w, dSw = 2 * f * 6.4 / w; c.fillStyle = '#1c1628'; c.fillRect(0, hz, w, Math.min(h - hz + 2, f * C2T_CH / dSw + 2));
   c.fillStyle = '#3a3046'; quad(-6.4, 6.4, zc + dRd * 0.97, FAR); c.fillStyle = '#2b2236'; quad(-4.2, 4.2, zc, FAR); c.fillStyle = '#463a52'; quad(-4.35, -4.2, zc, FAR); quad(4.2, 4.35, zc, FAR);
-  c.fillStyle = 'rgba(244,236,216,.55)'; for (var dz = Math.floor(zc / 6) * 6; dz < zc + 140; dz += 6) if (dz + 2.6 > zc + ZN) quad(-0.09, 0.09, dz, dz + 2.6);
+  c.fillStyle = 'rgba(244,236,216,.55)'; for (var dz = Math.floor(zc / 6) * 6; dz < zc + 96; dz += 6) if (dz + 2.6 > zc + ZN) quad(-0.09, 0.09, dz, dz + 2.6);
   /* far-to-near: lamps (both sides, every 12 m), the school gate, the two of them */
-  var items = [], k0 = Math.floor(zc / 12) * 12; for (var lz = k0 + 12; lz < zc + 110; lz += 12) { items.push([lz, 'L', -5.3]); items.push([lz + 6, 'L', 5.3]); }
+  var items = [], k0 = Math.floor(zc / 12) * 12; for (var lz = k0 + 12; lz < zc + 96; lz += 12) { items.push([lz, 'L', -5.3]); items.push([lz + 6, 'L', 5.3]); }
   items.push([C2T_GATE, 'G']); items.push([cam.zr, 'R', -0.62, 0]); items.push([cam.zr + 0.5, 'R', 0.62, 1]); items.sort(function (A, B) { return B[0] - A[0]; });
   var fade = 1 - e((u - 0.9) / 0.1) * 0.25, lw = Math.max(1, h * 0.003);
   items.forEach(function (it) { var d = it[0] - zc; if (d < ZN + 0.2) return; var fog = Math.max(0.25, Math.min(1, 1.25 - d / 110));
