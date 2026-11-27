@@ -54411,10 +54411,10 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
 /* v6.5.65 FFF_QS: street corner takeovers (Erik's redesign, t486u / t492u).
  * Once Four Corners is given and the Punk side is picked, every quest street is a SCRIPTED street:
  *  - nothing roams, spawns or stands off in its rect: c2ev scenes (EX_RECT), border standoff / clash extras, c2Respawn'd crews and strays are gone;
- *  - the quest crews (Lookout Corner, west street, hotel door, west wall, Wagashi Row) are HELD until the player taps "Take the corner"
+ *  - the quest crews (Lookout Corner, west street, hotel door, west wall, Wagashi Row) are HELD until the player walks up to them
  *    (hot_<fac> can no longer make them chase), with a red pin over each foe;
  *  - one tap fights the WHOLE crew (c2v2Go, kind 'street'); a win gives a short touch immunity so nobody piles on;
- *  - a live count (n/N) in the quest log, the map tracker and a small chip; and
+ *  - a live count (n/N) in the quest log and the Ch1 side-quest slam (1/3, 2/3...); and
  *  - every corner that is won gets two Punks posted there for good.
  * Streets that are not quest streets keep the Ch2-entry behaviour (greeting, no ambush). Nothing here is on the Fierce / Strategic copy.
  * Wraps only. Frame work rides c2Frame at 1 Hz; no new rAF / interval.
@@ -54462,8 +54462,8 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
     { qid: 'cq2_s2_waga', noun: 'crews', groups: [K('s2_w1', 2), K('s2_w2', 3), K('s2_x', 3)] }
   ];
   function specOf(qid) { for (var i = 0; i < SPEC.length; i++) if (SPEC[i].qid === qid) return SPEC[i]; return null; }
-  function count(qid) {
-    var sp = specOf(qid); if (!sp || !act() || !qOpenId(qid)) return null; var f = S().f || {}, n = 0, t;
+  function count(qid, any) {
+    var sp = specOf(qid); if (!sp || !act() || (!any && !qOpenId(qid))) return null; var f = S().f || {}, n = 0, t;
     if (sp.groups.length > 1) { t = sp.groups.length; sp.groups.forEach(function (g) { if (g.every(function (k) { return f[k]; })) n++; }); }
     else { t = sp.groups[0].length; sp.groups[0].forEach(function (k) { if (f[k]) n++; }); }
     return { n: n, t: t, noun: sp.noun, txt: 'Beat the ' + t + ' rival ' + sp.noun + ' \u00b7 ' + n + '/' + t };
@@ -54485,7 +54485,7 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
   }
   if (typeof c2Npc === 'function') { var cn0 = c2Npc; c2Npc = function (id, x, y) { var s = cn0.apply(this, arguments); try { if (npcFoe(id, x, y)) pin(s); } catch (e) {} return s; }; }
   var gp0 = gangPeace;
-  gangPeace = function (f) { try { if (f && typeof f === 'object' && f.c2) { if (f.qsHold) return true; if (QS.imm && now() < QS.imm) return true; } } catch (e) {} return gp0.apply(this, arguments); };
+  gangPeace = function (f) { try { if (f && typeof f === 'object' && f.c2) { if (f.qsHold) { /* v6.5.65: the standard Ch2 walk-up: held crews only wake at touch range (dgFrame d<34 -> c2v2Touch -> whole crew); no sight, no chase */ if (!(QS.imm && now() < QS.imm) && W.ryo && f.s && Math.hypot(W.ryo.x - f.s.x, W.ryo.y - f.s.y) < 34) return false; return true; } if (QS.imm && now() < QS.imm) return true; } } catch (e) {} return gp0.apply(this, arguments); };
   /* the border clash does not start inside a quest street */
   if (typeof g38tStart === 'function') { var gs0 = g38tStart; g38tStart = function (b) { try { if (act()) { var B = G38T.BORDER[b]; if (B && zoneAt(B.at[0], B.at[1])) return false; } } catch (e) {} return gs0.apply(this, arguments); }; }
   /* ---- the tag: one per held crew ---- */
@@ -54498,7 +54498,7 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
     if (!act() || !inTown()) return; var seen = {};
     (W.dgF || []).forEach(function (f) { if (!f.qsHold || f.gone || !f.s || !f.s.el || !f.s.el.parentNode || seen[f.qsCrew]) return; seen[f.qsCrew] = 1;
       var men = (W.dgF || []).filter(function (o) { return o.qsHold && o.qsCrew === f.qsCrew && !o.gone; }), ck = f.qsCrew;
-      out.push({ key: 'c2_town:qs:' + ck, lab: 'Take the corner', x: f.s.x, y: f.s.y - (typeof SPH === 'number' ? SPH : 64) * 1.15 - 22, below: false, ax: f.s.x, ay: f.s.y + 44, R: 150, cls: ' qstag', fn: function () { startCrew(ck); } }); });
+      /* v6.5.65 (Erik): no yellow tag - the crew is taken by walking up (standard touch). Hook point for the cart / skill ambush: push a tag here, e.g. out.push({ key: 'c2_town:qs:' + ck + ':sk', lab: 'Alley Cat', ... fn: function () { startCrew(ck); } }). */ });
   }
   if (typeof c2TagsX === 'function') { var tx0 = c2TagsX; c2TagsX = function (out) { tx0.apply(this, arguments); try { qsTags(out); } catch (e) { ev('world:qs:err:tags:' + (e && e.message)); } }; }
   if (typeof c2SigX === 'function') { var sg0 = c2SigX; c2SigX = function () { var h = sg0.apply(this, arguments); try { if (act()) { var n = 0; (W.dgF || []).forEach(function (f) { if (f.qsHold && !f.gone) n++; }); h += ':qs' + n; } } catch (e) {} return h; }; }
@@ -54524,8 +54524,14 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
       if (!z.posts || !z.won()) return; var L = QS.NP[z.id] || (QS.NP[z.id] = []);
       z.posts.forEach(function (p, i) { if (alive(L[i])) return; var s = c2Npc('c2_punk', p[0], p[1], i ? Math.PI : 0); if (s && s.el) { s.el.classList.add('qsfr'); s.qsfr = z.id; L[i] = s; try { waddle(s, 0, i ? Math.PI : 0); } catch (e) {} } }); });
   }
-  /* the chip */
-  function chip() {
+  /* v6.5.65 (Erik): the count pops with the Ch1 side-quest tracker (n9Slam: big 1/3, 2/3, last one with the whoosh), then the quest's own QUEST COMPLETE banner */
+  QS.last = {};
+  function slam() {
+    if (!act() || !inTown() || typeof n9Slam !== 'function') return;
+    SPEC.forEach(function (sp) { var c = count(sp.qid, true); if (!c) { return; } var k = sp.qid, was = QS.last[k]; QS.last[k] = c.n; if (was == null || c.n <= was || c.n < 1) return; if (W.paused) return; ev('world:qs:slam:' + k + ':' + c.n + '/' + c.t); try { n9Slam(c.n, c.t); } catch (e) {} });
+  }
+  QS.slam = slam;
+  function chipOld() {
     var el = document.getElementById('qschip'), c = null;
     try { if (act() && inTown() && W.ryo) { c = activeCount(); if (c) { var z = null; ZONES.forEach(function (q) { var r = q.r; if (W.ryo.x > r[0] - 320 && W.ryo.x < r[2] + 320 && W.ryo.y > r[1] - 320 && W.ryo.y < r[3] + 320) z = q; }); if (!z) c = null; } } } catch (e) { c = null; }
     if (!c || W.paused || W.dlg) { if (el) el.style.display = 'none'; return; }
@@ -54536,9 +54542,9 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
     if (!inTown() || busy() || !W.ryo) return; var r = W.ryo;
     (W.dgF || []).some(function (f) { if (!f.qsHold || f.gone || !f.s || QS.hint[f.qsCrew]) return false; if (Math.hypot(f.s.x - r.x, f.s.y - r.y) > 300) return false;
       QS.hint[f.qsCrew] = 1; var n = (W.dgF || []).filter(function (o) { return o.qsHold && o.qsCrew === f.qsCrew && !o.gone; }).length;
-      try { comment([['aoi', (n > 1 ? n + ' of them' : 'One of them') + ', holding the corner. They won\u2019t move until we do. Tap the red marker to take it.']]); } catch (e) {} return true; });
+      try { comment([['aoi', (n > 1 ? n + ' of them' : 'One of them') + ', holding the corner. They won\u2019t move until we do. Walk up to take it.']]); } catch (e) {} return true; });
   }
-  function sweep() { if (!on() || !inTown()) return; try { exSync(); if (!act()) return; purge(); posts(); chip(); hint(); if (now() - (QS.rt || 0) > 3000) { QS.rt = now(); repair(); } } catch (e) { ev('world:qs:err:sweep:' + (e && e.message)); } }
+  function sweep() { if (!on() || !inTown()) return; try { exSync(); if (!act()) return; purge(); posts(); slam(); hint(); if (now() - (QS.rt || 0) > 3000) { QS.rt = now(); repair(); } } catch (e) { ev('world:qs:err:sweep:' + (e && e.message)); } }
   QS.sweep = sweep;
   /* ---- chain repair for every quest that a town ambush KO (ambKO -> dgAfter, no c2Back) can skip ---- */
   function allFlags(p, n) { var f = S().f || {}; for (var i = 0; i < n; i++) if (!f[p + '_' + i]) return false; return true; }
