@@ -76,3 +76,26 @@ Reran /workspace/angry/run_tests.sh from the worktree; verify_wired from /worksp
 - yk ch_smoke: PASS
 Did not add tools/ngp/shots/.
 
+### Perf vs live v6.5.63 (e1ba0d4 / /tmp/angry_old)
+Interleaved live/branch, 2 reps, 1x and 4x throttle, via waitrun2.sh + angry_test.py final. Averages (fps, heat). Heap flat (0.76–0.77 MB both trees).
+
+1x (no throttle):
+- idle:        live 59.8 fps / 23.25 heat → branch 60.0 / 22.25  (Δheat −1.0)
+- dialogue:    live 59.95 / 25.15 → branch 60.0 / 23.85  (Δheat −1.3)
+- versus:      live 60.0 / 21.4 → branch 59.5 / 24.45  (Δheat +3.05)
+- opener:      live 60.0 / 22.0 → branch 59.8 / 24.1  (Δheat +2.1)
+- idle_after:  live 60.0 / 22.7 → branch 60.0 / 20.65  (Δheat −2.05)
+- battle:      live 60.0 / 27.4 → branch 59.25 / 28.7  (Δheat +1.3)
+
+4x throttle:
+- idle:        live 60.0 / 77.9 → branch 59.4 / 71.9  (Δheat −6.0)
+- dialogue:    live 58.85 / 79.45 → branch 58.35 / 81.75  (Δheat +2.3)
+- versus:      live 58.2 / 76.5 → branch 59.2 / 79.2  (Δheat +2.7)
+- opener:      live 59.25 / 78.35 → branch 56.2 / 77.7  (Δheat −0.65)  **fps below the 58 key-spot gate**; two runs 57.6 and 54.8 with 133 ms and 200 ms spikes (table-only lines, slam off)
+- idle_after:  live 59.8 / 74.5 → branch 59.9 / 69.25  (Δheat −5.25)
+- battle:      live 58.2 / 88.25 → branch 58.4 / 90.95  (Δheat +2.7)
+
+Heat at 4x is within +5 everywhere. Memory flat. 1x fps all ≥58; battle 1x 59.25 and 4x 58.4 meet the 55 battle gate. No separate long-walk window in this script (idle/idle_after stay ≥59.4).
+
+Sheets refreshed: /workspace/angry/angry_sheet.png, ingame_genji_scold.png, ingame_versus.png, ingame_battle.png, ingame_battle_boss.png. Func recheck: 82 angry files, none missing, expected faces, no page errors.
+
