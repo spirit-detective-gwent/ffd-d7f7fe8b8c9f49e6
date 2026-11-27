@@ -49707,7 +49707,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
         if (!met()) return menu0.apply(this, arguments);
         var S = cyc(), full = SAVE.hp >= (typeof MAXHP !== 'undefined' ? MAXHP : 55), tea = typeof C2_TEA !== 'undefined' ? C2_TEA : 26;
         var poor = (SAVE.items | 0) < tea, m = S.mugLeft | 0;
-        /* GGD-51: the Full Heal Tea goes once a hotel rest is reachable (Hotel Chuo / Kitsune Hotel, ¥40 once per job). Seeds and herbs stay. */
+        /* GGD-51: Full Heal Tea is gone on every route. Seeds and herbs stay. */
         var b = [[full ? 'Full Heal Tea · ¥' + tea + ' (HP full)' : 'Full Heal Tea · ¥' + tea + (poor ? ' (need ¥' + tea + ')' : ''), function () { c2Heal(tea); }, 'hot', full || poor],
           ['Seeds · ' + m + '/' + (typeof C2_MUG !== 'undefined' ? C2_MUG : 3) + ' packets', function () { setTimeout(c2MugShop, 0); }],
           ['Later', null]]; if (window.FFF_TEA_OFF && window.FFF_TEA_OFF()) b.shift();
@@ -50721,9 +50721,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (typeof restFinishArm === 'function') restFinishArm(o, (root.FFF_REST_MS || rs * 1000), done); else later(root.FFF_REST_MS || rs * 1000, done);
   }
   P6.hotelRest = hotelRest; P6.doRest = doRest;
-  /* the herbalist's paid Full Heal Tea leaves once a hotel rest is reachable on this run (Kitsune Hotel lobby open, or the strip) */
+  /* GGD-51: Full Heal Tea is gone on every Chapter 2 route (restaurants already give full heals). Seeds/herbs and free story heals stay. restReach still means a ¥40 hotel rest is available. */
   function restReach() { try { if (!on()) return false; var NQ = root.FFF_NQ; if (NQ && typeof NQ.roomOpen === 'function' && NQ.roomOpen('hotel')) return true; return stripOpen(); } catch (e) { return false; } }
-  root.FFF_TEA_OFF = restReach; P6.restReach = restReach;
+  root.FFF_TEA_OFF = function () { return true; }; P6.restReach = restReach;
 
   /* the Kitsune Hotel desk gets the same rest (all Chapter 2 runs; the herbalist's Full Heal Tea is gone) */
   try { var KH = INT[C2R.hotel] || INT.c2_nq_hotel; if (KH && KH.spots && !KH.spots.some(function (q) { return q.id === 'j6_rest_kh'; })) KH.spots.push({ id: 'j6_rest_kh', r: [740, 250, 840, 362], at: [790, 400], face: 0, lab: 'Rest \u00a5' + REST_PRICE }); } catch (eKH) { ev('world:s2p6:err:kh:' + (eKH && eKH.message)); }

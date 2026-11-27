@@ -415,7 +415,7 @@
         if (!met()) return menu0.apply(this, arguments);
         var S = cyc(), full = SAVE.hp >= (typeof MAXHP !== 'undefined' ? MAXHP : 55), tea = typeof C2_TEA !== 'undefined' ? C2_TEA : 26;
         var poor = (SAVE.items | 0) < tea, m = S.mugLeft | 0;
-        /* GGD-51: the Full Heal Tea goes once a hotel rest is reachable (Hotel Chuo / Kitsune Hotel, ¥40 once per job). Seeds and herbs stay. */
+        /* GGD-51: Full Heal Tea is gone on every route. Seeds and herbs stay. */
         var b = [[full ? 'Full Heal Tea · ¥' + tea + ' (HP full)' : 'Full Heal Tea · ¥' + tea + (poor ? ' (need ¥' + tea + ')' : ''), function () { c2Heal(tea); }, 'hot', full || poor],
           ['Seeds · ' + m + '/' + (typeof C2_MUG !== 'undefined' ? C2_MUG : 3) + ' packets', function () { setTimeout(c2MugShop, 0); }],
           ['Later', null]]; if (window.FFF_TEA_OFF && window.FFF_TEA_OFF()) b.shift();

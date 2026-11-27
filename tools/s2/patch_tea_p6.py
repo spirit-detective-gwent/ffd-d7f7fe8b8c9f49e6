@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""GGD-51: the herbalist's paid Full Heal Tea goes away once a ¥40 hotel rest is reachable
-(window.FFF_TEA_OFF(), set by s2p6.js). Seeds/herbs stay; free story heals (c2HealAsk(true)) stay.
+"""GGD-51: hide the herbalist's paid Full Heal Tea on every route (window.FFF_TEA_OFF() is always true).
+Seeds/herbs stay; free story heals (c2HealAsk(true)) stay.
 Covers the base c2SumireMenu and both v630PotOffer 'Tea' buttons. Idempotent; tagged /* GGD-51 tea */."""
 import sys
 from pathlib import Path

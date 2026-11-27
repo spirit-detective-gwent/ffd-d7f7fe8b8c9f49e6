@@ -38,18 +38,18 @@ Build: `cd /workspace/ffd && python3 tools/s2/build.py` (base patches: tools/s2/
    - VIP: bossEnt j6_kanzaki (Kanzaki, c2_suitR sheet) -> fight 44 HP lv7 -> Hotel Chuo 7F lead. Stage 'kara', q2. t_kara.py.
 3. Hotel Chuo — commits 76806f6, 400d213 (tested t_hotel.py)
    - Town door x≈4610. Lobby hchuo: glowing room-photo panel, frosted-glass desk (voice behind glass), brass lift, nightclub cones.
-   - Lift (needs stage 'kara') -> hhall 7F: VO, wave fight 2× c2_suit (hhall1), then bossEnt j6_dealer "Ogata" (provisional, c2_suit sheet ×1.1, intro_mini at merge), 48 HP lv7 (hhall2) -> stage 'hotel', q3.
+   - Lift (needs stage 'kara') -> hhall 7F: VO, wave fight 2× c2_suit (hhall1), then bossEnt j6_dealer "Ogata" (name approved, c2_suit sheet ×1.1, intro_mini at merge), 48 HP lv7 (hhall2) -> stage 'hotel', q3.
    - ¥40 rest (P6.hotelRest): Hotel Chuo desk + Kitsune Hotel desk spot 'j6_rest_kh' (all Ch2 runs). Full HP+SP both, once per c2Cyc().cyc (restocks on quest turn-in via c2RefreshCycle). Moon #wrest anim.
-   - Full Heal Tea: hidden whenever window.FFF_TEA_OFF() (= a hotel rest is reachable: NQ Kitsune Hotel open, or the strip). Base menu + both v630PotOffer Tea buttons via tools/s2/patch_tea_p6.py (idempotent), s2garden menu too. Seeds/herbs kept. Routes without a hotel keep the tea (flag to Erik).
+   - Full Heal Tea: gone on every Chapter 2 route (Erik 2026-11-26 20:47 ET: restaurants already give full heals). window.FFF_TEA_OFF always returns true; restReach stays a hotel-availability helper. Base menu + both v630PotOffer Tea buttons (patch_tea_p6.py) and the s2garden menu. Seeds/herbs and free story heals kept.
    - Note: the base low-HP "nurse will bandage you" choice dialog appears after fights (nurse branch territory; untouched). Tests click it away.
 4. Club Kitsune back office — 400d213. Own room ckoff (staff door x≈3226 right of the club, drawn STAFF door overlay), base club chain untouched.
    - If Tetsu not dealt (c2PunkDealt false and !J().tetsu): fight chinpira1 "Punk Tetsu" + Club Dealer join round 3 -> ledger scene. Else variant scene (ice pack). -> stage 'club', q4. Sets only J().tetsu (no base ck flags) — flag.
-5. Izakaya Tanuki — 400d213. Owner "Ponta" (npc_attendant sheet, provisional). Menu j6_izak (izak theme): Yakitori +10 ¥6, Karaage +14 ¥8, Edamame +6 ¥3, Onigiri +12 ¥5, eat-in games. First meal at stage 'club' -> tip -> stage 'izak', q5.
+5. Izakaya Tanuki — 400d213. Owner "Ponta" (name approved, npc_attendant sheet). Menu j6_izak (izak theme): Yakitori +10 ¥6, Karaage +14 ¥8, Edamame +6 ¥3, Onigiri +12 ¥5, eat-in games. First meal at stage 'club' -> tip -> stage 'izak', q5.
 6. Neon Game Center — 8680187, 2cacfa5 (tested t_gc.py)
    - Strip run only: base lm_game door redirects to own rooms gc (1280x900 floor) + gcback (Jin's prize room, 1000x900). Ch1/other routes keep base landmark (Ch1 no arcade).
    - 5 cabinets (FFF_S2ARC.cabPlay, c201d73): Kitsune Blaster, Fox Fist, Ember Run, Neon Rings, Midnight Street. ¥1 a play, rAF only while open.
      Bronze/silver/gold pay 1/2/3 tokens once per tier; gold = mastered (star on cabinet, board). J().arc {best,tier,g,tok,spent}.
-   - Prize counter (Prize Clerk, npc_clerk sheet, provisional): tokens only, cosmetics only = run gang uniform. Nails run: Showa Yankii Tokkofuku 8, +Tinted Shades 6, +Leopard Hachimaki 8 (shades/hachimaki need the set). Other runs: suit/hoodie/rider 8 each (FAC_SHOP jackets untouched).
+   - Prize counter (Prize Clerk, name approved, npc_clerk sheet): tokens only, cosmetics only = run gang uniform. Nails run: Showa Yankii Tokkofuku 8, +Tinted Shades 6, +Leopard Hachimaki 8 (shades/hachimaki need the set). Other runs: suit/hoodie/rider 8 each (FAC_SHOP jackets untouched).
      yk_west stall locks those items with "At the Game Center prize counter now" while the strip is open.
    - Stage izak: Jin (mb2_game) at the Blaster cabinet -> 'met', q6. Staff door -> gcback -> bossEnt -> fight mb2_game (flv 8) -> 'won', q7. Prize-safe seal -> e.seal_game, down_neo, FFF_OPN grant, c2sLocksSync -> 'done', qClose, strip flip (n.won.strip, E().stripPunk, NQ.BLK.strip): Punk turf, no discount.
    - ecdbeec: seal waits for Jin's win talk; stale Jin sprite swept.
@@ -77,3 +77,4 @@ Build: `cd /workspace/ffd && python3 tools/s2/build.py` (base patches: tools/s2/
 - Plan: rebuild check, regs, chain, perf vs e1ba0d4, rooms_fps, shots_final + cabinet contact sheet.
 - Step A: shots_final building shots taken (1..6). Review found cabinet HUD overlaps: Fox Fire Fist foe pips/name under the score box; Midnight Chuo km/h under the score box. Fixed in s2arc.js (pips/names to y142/168, round y188; km/h to 312,144). Rebuilt.
 - Step B (on 9eac413): s2 167 pass, ngp 104/104, bond 109, ch_smoke 13, test_no_old_art full run PASS (superset of quick), verify_wired PASS. Cabinet 5-up re-shot: shots_final/7_game_center_cabinets_5up.png.
+- Step C (Erik t422): Ogata, Ponta, and Prize Clerk names approved, kept. Full Heal Tea removed on every route (FFF_TEA_OFF always true). t_tea.py: pot offer has Teach me and no Tea; post-lesson herbalist has Buy Herbs and no Full Heal Tea; TEA_OFF is not aliased to restReach. errs [].

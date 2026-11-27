@@ -648,9 +648,9 @@
     if (typeof restFinishArm === 'function') restFinishArm(o, (root.FFF_REST_MS || rs * 1000), done); else later(root.FFF_REST_MS || rs * 1000, done);
   }
   P6.hotelRest = hotelRest; P6.doRest = doRest;
-  /* the herbalist's paid Full Heal Tea leaves once a hotel rest is reachable on this run (Kitsune Hotel lobby open, or the strip) */
+  /* GGD-51: Full Heal Tea is gone on every Chapter 2 route (restaurants already give full heals). Seeds/herbs and free story heals stay. restReach still means a ¥40 hotel rest is available. */
   function restReach() { try { if (!on()) return false; var NQ = root.FFF_NQ; if (NQ && typeof NQ.roomOpen === 'function' && NQ.roomOpen('hotel')) return true; return stripOpen(); } catch (e) { return false; } }
-  root.FFF_TEA_OFF = restReach; P6.restReach = restReach;
+  root.FFF_TEA_OFF = function () { return true; }; P6.restReach = restReach;
 
   /* the Kitsune Hotel desk gets the same rest (all Chapter 2 runs; the herbalist's Full Heal Tea is gone) */
   try { var KH = INT[C2R.hotel] || INT.c2_nq_hotel; if (KH && KH.spots && !KH.spots.some(function (q) { return q.id === 'j6_rest_kh'; })) KH.spots.push({ id: 'j6_rest_kh', r: [740, 250, 840, 362], at: [790, 400], face: 0, lab: 'Rest \u00a5' + REST_PRICE }); } catch (eKH) { ev('world:s2p6:err:kh:' + (eKH && eKH.message)); }
