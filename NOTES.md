@@ -25,3 +25,12 @@ not during W.runUp, not while W.path has steps, not while Aoi is still catching 
 - ch_smoke PASS, verify_wired PASS, mizcam test_cam 41/41, gangcam test_cam 40/40 (shots redirected to /workspace/runup/gangcam_shots).
   Note: mizcam test_cam writes its shots to /workspace/mizuno-cam/shots (tag runup_after_*).
 - Shot: /workspace/runup/shots/strip_mb_art_before_after.jpg (live 0.5 s / 1.1 s vs fix 0.5 s / 1.1 s at Mai's stage)
+
+## Perf (Mai's stage run-up, first visit + repeat, live vs branch interleaved, 3 rounds at 4x; medians; load waited < 6)
+- First visit 4x: live fps 59.4 / heat 16.9 ; branch fps 57.8 / heat 29.2 (+12.3)
+- Repeat 4x (identical code path in both builds): live fps 54.8 / heat 46.6 ; branch fps 59.2 / heat 26.5 (noise, same code)
+- 1x: first live 59.7/6.0 vs branch 60.0/10.6 (1 round); repeat live 60.0/10.8 vs branch 60.0/10.4
+- The first-visit heat gap is the bug itself: live's window is ~3.5 s of frame() early-return (no moveRyo/follow/roam = cheap
+  run-in-place); branch's is ~1.3 s of the real run + clash push-in. Branch's first-visit run-up costs the same as live's own working
+  run-up (repeat, 46.6 median) and less total CPU per run-up (29.2% x 1.3 s = 0.38 s vs 16.9% x 3.5 s = 0.59 s). Heap flat (55-58 MB).
+- Tip ce1160a: ch_smoke PASS, verify_wired PASS (rerun on tip).
