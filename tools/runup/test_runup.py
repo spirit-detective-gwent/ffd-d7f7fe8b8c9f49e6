@@ -139,7 +139,7 @@ async def main():
     bosses = [b for b in ["mb_lib", "mb_art", "mb_cafe", "mb_field"] if not any(a.startswith("--only=") for a in sys.argv) or b in [x.split("=",1)[1] for x in sys.argv if x.startswith("--only=")][0].split(",")]
     async with async_playwright() as p:
         for boss in bosses:
-            for first in ((True,) if "--firstonly" in sys.argv else (True, False)):
+            for first in ((True,) if "--firstonly" in sys.argv else (False,) if "--repeatonly" in sys.argv else (True, False)):
                 b = await p.chromium.launch(headless=True, args=["--disable-dev-shm-usage"])
                 ctx = await b.new_context(viewport={"width": 390, "height": 844}, device_scale_factor=1, is_mobile=True, has_touch=True)
                 pg = await ctx.new_page(); errs = []
