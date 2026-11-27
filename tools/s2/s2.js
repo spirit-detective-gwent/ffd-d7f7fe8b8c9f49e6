@@ -342,7 +342,7 @@
   hookBattle();
   try { later(0, hookBattle); } catch (eB) { try { setTimeout(hookBattle, 0); } catch (eB2) {} }
   function roomOpen() { return on() && qDone(); }
-  S2.roomOpen = roomOpen; S2.DOOR = WAGA_DOOR; S2.FAC_BOX = [2880, 2440, 3280, 2600]; S2.inWagaDoor = inWagaDoor;
+  S2.roomOpen = roomOpen; S2.DOOR = WAGA_DOOR; S2.FAC_BOX = [2880, 2440, 3280, 2600]; S2.inWagaDoor = inWagaDoor; S2.doorTalk = doorTalk;
 
   function paintPlaceholder(g) {
     g.fillStyle = '#2a1c1c'; g.fillRect(0, 0, RW, RH);

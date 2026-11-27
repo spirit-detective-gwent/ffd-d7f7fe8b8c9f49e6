@@ -199,44 +199,52 @@ async def main():
            lines and lines.get('c2s') and 'gang' in lines['c2s'].lower() and 'throw in' not in lines['c2s'].lower(),
            lines and lines.get('c2s'))
 
-        # --- Chiyo shopCold loop ---
-        # Punk route not required: doorTalk shopCold when shop isn't open
+        # --- Chiyo shopCold loop (exported S2.doorTalk + latch state; no scoped talk) ---
         loop = await ev(pg, """(function(){
-          var S2=root.FFF_S2; if(!S2||!S2.DOOR) return {err:'no S2'};
-          // stand in the doorway and fire the closed-shop talk twice
-          var d=S2.DOOR, at=d.at, r=d.r;
-          W.ryo.x=(r[0]+r[2])/2; W.ryo.y=(r[1]+r[3])/2; place(W.ryo,0);
-          // closed shop: not qDone
-          var talks=0, last=null;
-          var origTalk = talk;
-          window.__talks=0;
-          talk = function(){ window.__talks++; return origTalk.apply(this, arguments); };
-          try { c2ActC('town','s2_e_waga'); } catch(e){ return {err:String(e&&e.message||e)}; }
-          var t1=window.__talks, dlg1=!!W.dlg, said1=!!W._s2WagaSaid;
-          // end dialogue the way the player would (advance until closed)
-          try { W.dlg=false; var el=document.getElementById('wdlg'); if(el){el.className='';el.innerHTML='';} } catch(e2){}
-          // still in the door: a retrigger must not start a new talk
-          try { c2ActC('town','s2_e_waga'); } catch(e3){}
-          var t2=window.__talks, said2=!!W._s2WagaSaid;
-          // walk out of the door, latch must clear
-          W.ryo.x=at[0]; W.ryo.y=at[1]+80; place(W.ryo,0);
-          // allow the latch poll (150ms) to notice
-          return {t1:t1,t2:t2,said1:said1,said2:said2,dlg1:dlg1,at:at,r:r,y:W.ryo.y};
+          var S2=root.FFF_S2;
+          if(!S2||typeof S2.doorTalk!=='function'||!S2.DOOR) return {err:'no S2.doorTalk hook'};
+          var r=S2.DOOR.r, at=S2.DOOR.at;
+          function stand(x,y){
+            W.ryo.x=x; W.ryo.y=y;
+            try{ if(typeof place==='function') place(W.ryo,0); }catch(e){}
+          }
+          function hushDlg(){
+            W.dlg=false; W.busy=false; W.cut=false;
+            try{ var el=document.getElementById('wdlg'); if(el){ el.className=''; el.innerHTML=''; } }catch(e){}
+          }
+          stand((r[0]+r[2])/2, (r[1]+r[3])/2);
+          hushDlg(); W._s2WagaSaid=0;
+          var open0=!!(S2.qDone&&S2.qDone());
+          S2.doorTalk();
+          var t1={dlg:!!W.dlg, said:!!W._s2WagaSaid, inDoor:!!S2.inWagaDoor(), entered:!!(typeof c2Room==='function'&&c2Room()==='waga'), open:open0};
+          var txt='';
+          try{ var d=document.getElementById('wdlg'); txt=(d&&(d.innerText||d.textContent)||''); }catch(e2){}
+          t1.txt=txt.slice(0,160);
+          // player closes the line but is still in the doorway
+          hushDlg();
+          S2.doorTalk();
+          var t2={dlg:!!W.dlg, said:!!W._s2WagaSaid};
+          // walk out of the rect; latch poll is 150ms
+          stand(at[0], at[1]+80);
+          return {t1:t1,t2:t2,at:at,r:r,y:W.ryo.y,inDoorNow:!!S2.inWagaDoor()};
         })()""")
-        await pg.wait_for_timeout(250)
+        await pg.wait_for_timeout(280)
         loop2 = await ev(pg, """(function(){
-          var saidStill=!!W._s2WagaSaid;
-          // after leaving, a new talk is allowed
-          var t0=window.__talks||0;
-          try { W.ryo.x=(FFF_S2.DOOR.r[0]+FFF_S2.DOOR.r[2])/2; W.ryo.y=(FFF_S2.DOOR.r[1]+FFF_S2.DOOR.r[3])/2; place(W.ryo,0); W._s2WagaSaid=0;
-            c2ActC('town','s2_e_waga'); } catch(e){}
-          return {saidAfterLeave:saidStill, talksAfterReenter:(window.__talks||0)-t0, dlg:!!W.dlg};
+          var S2=root.FFF_S2, r=S2.DOOR.r;
+          var saidAfterLeave=!!W._s2WagaSaid, stillIn=!!S2.inWagaDoor();
+          function stand(x,y){ W.ryo.x=x; W.ryo.y=y; try{ if(typeof place==='function') place(W.ryo,0); }catch(e){} }
+          function hushDlg(){ W.dlg=false; W.busy=false; W.cut=false; try{ var el=document.getElementById('wdlg'); if(el){ el.className=''; el.innerHTML=''; } }catch(e){} }
+          hushDlg();
+          stand((r[0]+r[2])/2, (r[1]+r[3])/2);
+          S2.doorTalk();
+          return {saidAfterLeave:saidAfterLeave, stillIn:stillIn, dlgReenter:!!W.dlg, saidReenter:!!W._s2WagaSaid};
         })()""")
-        ok('shopCold talk starts once at the closed door', loop and loop.get('t1')==1, loop)
-        ok('still standing in the door cannot retrigger shopCold (no loop)', loop and loop.get('t2')==loop.get('t1'), loop)
-        ok('latch arms on the closed-shop talk', loop and loop.get('said1'), loop)
-        ok('leaving the door clears the shopCold latch', loop2 and loop2.get('saidAfterLeave') is False, loop2)
-        ok('re-entering the door can talk again after leaving', loop2 and loop2.get('talksAfterReenter')==1, loop2)
+        ok('S2.doorTalk hook is exported', loop and 'err' not in (loop or {}), loop)
+        ok('shopCold talk starts once at the closed door', loop and loop.get('t1') and loop['t1'].get('dlg') and not loop['t1'].get('entered'), loop)
+        ok('still standing in the door cannot retrigger shopCold (no loop)', loop and loop.get('t2') and loop['t2'].get('dlg') is False and loop['t2'].get('said') is True, loop)
+        ok('latch arms on the closed-shop talk', loop and loop.get('t1') and loop['t1'].get('said'), loop)
+        ok('leaving the door clears the shopCold latch', loop2 and loop2.get('saidAfterLeave') is False and loop2.get('stillIn') is False, loop2)
+        ok('re-entering the door can talk again after leaving', loop2 and loop2.get('dlgReenter') is True, loop2)
 
         # mid-sidewalk at kissa x should not auto-enter gekko
         walk = await ev(pg, """(function(){
