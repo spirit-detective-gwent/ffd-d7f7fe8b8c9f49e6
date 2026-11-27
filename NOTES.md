@@ -18,3 +18,15 @@ locker mouth (hidden), burst the locker, ran him at Ryo, 1-foe fight. The 2nd ro
 - After Bando: existing refill (dgMarkRefill on exit) brings back the 2 bay roamers, normal roaming (sq_yuto).
 - NG+: SAVE.dg is fresh -> pending again.
 ## Log
+- 98888d1 WIP code. tools/lockeramb/test_lockeramb.py **29/29 PASS** (logs: /workspace/lockeramb/test_after.log):
+  A fresh: staged pair on marks facing door, no .wlockburst, max step <=60px/100ms and never hidden (no teleport), one fight
+    group == [fbay0,fbay1], W.dgFight set, win -> 0 foes (W.dgF + DOM), entry set, controls free, Locker Corridor roamers move,
+    bay re-entry and reload stay clear.
+  B flee: both back on marks (exactly 2), no replay at distance, walk-up replays short confront -> same 2, win clears.
+  C loss: carried to the nurse, re-entry replays with the same 2 (no dups); reload while pending -> fight with both.
+  D Bando beaten + exit: 2 bay roamers back, not scripted, roaming (one touch-fought Ryo like live); persists over reload.
+  E NG+: field fresh, pair staged, one fight with the 2, win clears.
+  F real battle opens after the walk-up (2 foe portraits).
+- ch_smoke PASS, ngp_test 104/104, verify_wired PASS (logs in /workspace/lockeramb/logs).
+- Media: /workspace/lockeramb/media/before_after_entry_strip.png, before_after_entry.mp4 (live left / branch right),
+  live_entry.mp4, branch_entry.mp4. Script tools/lockeramb/shoot_entry.py.
