@@ -53554,7 +53554,7 @@ function hsVendors() {
   if (mot && HS_V0.mot) { put(mot.items, on ? HS_V0.mot.filter(med) : HS_V0.mot); mot.hi = on ? 'Cold cans. The bike stuff\u2019s not for kids.' : HS_V0.motHi; }
   if (P2M && HS_V0.hase) { put(P2M, on ? HS_V0.hase.filter(med) : HS_V0.hase); if (hase) hase.hi = on ? 'Medical stock went to the clinic. Bikes only.' : HS_V0.haseHi; }
   try { if (root.FFF_S2MENUS && FFF_S2MENUS.syncShops) FFF_S2MENUS.syncShops(); } catch (eS) {}
-  if (root.FFF_S2MENUS && FFF_S2MENUS.SHOPS && FFF_S2MENUS.SHOPS.s2_hase && FFF_S2MENUS.SHOPS.s2_hase.hi) { var H = FFF_S2MENUS.SHOPS.s2_hase; if (!H._hi0) H._hi0 = H.hi; H.hi = on ? { fierce: 'Medical stock went to the clinic. Bikes only.', strategic: 'Medical stock went to the clinic. Bikes only.', balanced: 'Gauze went to the doctor. Bikes only now.' } : H._hi0; }
+  if (root.FFF_S2MENUS && FFF_S2MENUS.SHOPS && FFF_S2MENUS.SHOPS.s2_hase && FFF_S2MENUS.SHOPS.s2_hase.hi) { var H = FFF_S2MENUS.SHOPS.s2_hase; if (!H._hi0) H._hi0 = H.hi; H.hi = on ? { fierce: 'Medical stock went to the clinic. Bikes only. Nails prices, if that is the deal.', strategic: 'Medical stock went to the clinic. Bikes only. Nails prices, if that is the deal.', balanced: 'Gauze went to the doctor. Bikes only now.' } : H._hi0; }
   return on;
 }
 var hsShop0 = c2Shop; c2Shop = function (id) { try { hsVendors(); } catch (e) {} return hsShop0.apply(this, arguments); };
