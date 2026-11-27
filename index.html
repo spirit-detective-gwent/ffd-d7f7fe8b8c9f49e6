@@ -2849,6 +2849,10 @@ html.pc-desk #wstat>#wbag{position:static;top:auto;right:auto;left:auto;margin-l
 #techcard .tcok{display:block;width:min(180px,70%);margin:14px auto 2px;min-height:46px;border:0;border-radius:999px;background:#1f7a72;color:#f4fffc;font:800 16px/1 system-ui}
 #wtags .wtag.obj.mat{border-color:rgba(120,190,196,.55);background:radial-gradient(ellipse at 50% 50%,rgba(31,111,120,.16),rgba(31,111,120,0) 72%);box-shadow:0 0 12px 1px rgba(31,111,120,.35),inset 0 0 12px rgba(159,216,210,.22)}
 #wtags .wtag.obj.mat.near{border-color:rgba(159,216,210,.95);box-shadow:0 0 16px 3px rgba(31,111,120,.55),inset 0 0 14px rgba(159,216,210,.35)}
+/* v6.5.66 floorwalk: walkable floor props (LANE 1 chalk, Gym mats): a flat outline only, no fill or inner glow over Ryo; dim while he stands on it */
+#wtags .wtag.obj.flr{background:none;box-shadow:none;border-color:rgba(159,216,210,.30)}
+#wtags .wtag.obj.flr.near{background:none;border-color:rgba(159,216,210,.85);box-shadow:0 0 10px 1px rgba(31,111,120,.40);animation:none}
+#wtags .wtag.obj.flr.near.stand,#wtags .wtag.obj.flr.stand{border-color:rgba(159,216,210,.40);box-shadow:none}
 /* Club Kitsune seats use the hidden-item highlight: nothing until Ryo is on the stool, then the same yellow edge.
    The box must not take the touch. A drag anywhere on the floor is walking; a tap on the machine is handled by the map hit test. */
 #wtags .wtag.obj.ck{pointer-events:none;background:none;box-shadow:none;border-color:transparent;animation:none;opacity:0}
@@ -17375,7 +17379,8 @@ function tagsFrame() {
   W.tagL.forEach(function (t) { if (t.obj) { var o = t.obj, ox = Math.round((o[0] - W.cam.x) * S), oy = Math.round((o[1] - W.cam.y) * S), ow = Math.round((o[2] - o[0]) * S), oh = Math.round((o[3] - o[1]) * S), ov = ox + ow > -20 && ox < vw + 20 && oy + oh > -20 && oy < vh + 20, oon = t === nb;
       if (ov !== t.vis) { t.vis = ov; t.el.style.display = ov ? '' : 'none'; } if (!ov) return;
       if (ox !== t.sx || oy !== t.sy || ow !== t.sw) { t.sx = ox; t.sy = oy; t.sw = ow; t.el.style.transform = 'translate(' + ox + 'px,' + oy + 'px)'; t.el.style.width = ow + 'px'; t.el.style.height = oh + 'px'; }
-      if (oon !== t.on) { t.on = oon; t.el.classList.toggle('near', oon); if (oon) ev('world:tag:near:' + t.key); } return; }
+      if (oon !== t.on) { t.on = oon; t.el.classList.toggle('near', oon); if (oon) ev('world:tag:near:' + t.key); }
+      if (t.flr) { var ost = W.ryo.x >= o[0] && W.ryo.x <= o[2] && W.ryo.y >= o[1] && W.ryo.y <= o[3]; if (ost !== t.st) { t.st = ost; t.el.classList.toggle('stand', ost); } } /* v6.5.66 floorwalk: a floor prop's outline dims while Ryo stands on it, so he never sits under a glass box */ return; }
     if (t.silent) return;
     var sx = Math.round((t.x - W.cam.x) * S), sy = Math.round((t.y - W.cam.y) * S), vis = sx > -80 && sx < vw + 80 && sy > -40 && sy < vh + 40, on = t === nb;
     if (vis !== t.vis) { t.vis = vis; t.el.style.display = vis ? '' : 'none'; } if (!vis) return;
@@ -19512,7 +19517,7 @@ function fldTags(id, D) { var k = D.field, S = fldS(), out = [], b = beaten('mb_
     if (s.id === 'warm' && !b) return; if (/^kit/.test(s.id) && fldKitDone(s.id)) return;
     if (s.id === 'hurdle' && (S.hr[k] || b || W.carry)) return;
     if (/^slot/.test(s.id)) { if (b || S.sl[s.id] || !W.carry) return; out.push({ key: id + ':' + s.id, lab: 'Set', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: 70, cls: ' srch', obj: s.r, act: { int: s.id, face: s.face, id: 'int:' + s.id } }); return; }
-    out.push({ key: id + ':' + s.id, lab: s.vm ? (s.vm === 'soda' ? 'Get drink' : 'Get food') : s.id === 'hurdle' ? 'Lift' : s.id === 'warm' ? 'Warm-up' : 'Look', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: s.vm ? TAG_R.vm : LIB_OBJ_R, vm: !!s.vm, obj: s.r, floor: s.fl ? 1 : 0, cls: s.fl ? ' mat' : '', act: { int: s.id, face: s.face, id: 'int:' + s.id } }); });
+    out.push({ key: id + ':' + s.id, lab: s.vm ? (s.vm === 'soda' ? 'Get drink' : 'Get food') : s.id === 'hurdle' ? 'Lift' : s.id === 'warm' ? 'Warm-up' : 'Look', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: s.vm ? TAG_R.vm : LIB_OBJ_R, vm: !!s.vm, obj: s.r, floor: s.fl ? 1 : 0, flr: s.fl ? 1 : 0, cls: s.fl ? ' flr' : '', act: { int: s.id, face: s.face, id: 'int:' + s.id } }); });
   if (k === 'track' && b && !(typeof dgRefilled === 'function' && dgRefilled('field'))) { var a = lw(FLDG.track, FLDP.track[0].at); out.push({ key: id + ':n:bando', lab: 'Talk', x: a[0], y: a[1] - SPH * 1.05 - 4, below: false, ax: a[0], ay: a[1] + 80, R: 110, cls: '', fn: function () { scene(null, FLD_SC.bando2); } }); }
   if (typeof sqFieldSpikesTag === 'function') sqFieldSpikesTag(out, k); return out; }
 function fldSig() { var k = fldRoom(); if (!k) return ''; var S = fldS();
@@ -19706,7 +19711,7 @@ function gymTags(id, D) { var k = D.gym, S = gymS(), out = [], b = !!SAVE.gouki;
     if (s.id === 'search') { return; /* v6.5.29: Ofuda is a drop, not a floor search */ if (!gymOpen() || gearGate('ofuda') || !gearOpen('ofuda') || Math.hypot(W.ryo.x - s.at[0], W.ryo.y - s.at[1]) > 110) return; out.push({ key: id + ':search', lab: 'Search', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: 70, cls: ' srch', obj: s.r, act: { int: 'search', face: s.face, id: 'int:search' } }); return; }
     if (s.id === 'seal' && (S.sl[k] || b)) return; if (/^kit/.test(s.id) && gymKitDone(s.id)) return;
     if (s.id === 'letter' && gymDone() < 3) return; if (s.id === 'slots' && gymDone() < 1) return;
-    out.push({ key: id + ':' + s.id, lab: s.vm ? (s.vm === 'soda' ? 'Get drink' : 'Get food') : s.id === 'seal' ? 'Take seal' : s.id === 'slots' ? 'Press seals' : s.id === 'letter' ? 'Read letter' : 'Look', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: s.vm ? TAG_R.vm : LIB_OBJ_R, vm: !!s.vm, obj: s.r, floor: s.fl ? 1 : 0, cls: s.fl ? ' mat' : '', act: { int: s.id, face: s.face, id: 'int:' + s.id } }); });
+    out.push({ key: id + ':' + s.id, lab: s.vm ? (s.vm === 'soda' ? 'Get drink' : 'Get food') : s.id === 'seal' ? 'Take seal' : s.id === 'slots' ? 'Press seals' : s.id === 'letter' ? 'Read letter' : 'Look', x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: s.vm ? TAG_R.vm : LIB_OBJ_R, vm: !!s.vm, obj: s.r, floor: s.fl ? 1 : 0, flr: s.fl ? 1 : 0, cls: s.fl ? ' flr' : '', act: { int: s.id, face: s.face, id: 'int:' + s.id } }); });
   return out; }
 function gymSig() { var k = gymRoom(); if (!k) return ''; var S = gymS();
   return ':gym' + gymDone() + JSON.stringify(S.sl) + (SAVE.gouki ? 1 : 0) + Object.keys(S.kit).join('') + (gymOpen() && gearOpen('ofuda') ? 'o' : ''); }

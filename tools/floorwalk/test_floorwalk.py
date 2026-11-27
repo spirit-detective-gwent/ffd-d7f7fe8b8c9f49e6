@@ -66,7 +66,7 @@ async def main():
             ok(f'{key} {room}: prop cell is free floor (no block)', not blk, info)
             ok(f'{key} {room}: keyboard walk goes straight across the prop (positions change, passes inside, ends past it)', crossed and moved, info)
             ok(f'{key} {room}: tap-walk crosses the prop on a straight line (no detour)', okw and len(tin) > 0 and straight <= 20 and tw and abs(tw[-1][0] - (R[2] + 45)) < 12, info)
-            ok(f'{key} {room}: Look tag still offered as a floor tag; standing on it selects it', tag and tag['lab'] == 'Look' and tag['floor'] == 1 and near and near.endswith(':' + spot), info)
+            ok(f'{key} {room}: Look tag still offered as a floor tag; standing on it selects it', tag and tag['lab'] == 'Look' and tag['floor'] == 1 and 'flr' in tag['cls'] and near and near.endswith(':' + spot), info)
             ok(f'{key} {room}: inspect line still plays', txt in d, d[:120])
         ok('no page errors', not errs, errs)
         await b.close()
