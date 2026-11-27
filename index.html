@@ -7170,7 +7170,7 @@ function bindMenus() {
   $('#gMenu').onclick = function () { AU.play('ui_sel'); renderSet(); show('settings'); };
   $('#btnAct').onclick = tapAct; $('#btnDisc').onclick = tapDisc; if ($('#btnFree')) $('#btnFree').onclick = function (e) { if (e && e.stopPropagation) e.stopPropagation(); freeSwap(); }; $('#btnRun').onclick = tapRun; if ($('#btnSw')) $('#btnSw').onclick = tapSwitch; if ($('#sbPass')) $('#sbPass').onclick = function (e) { if (e && e.stopPropagation) e.stopPropagation(); sbPassGo(); }; if ($('#btnDbl')) $('#btnDbl').onclick = tapDbl;
   $('#fP').onclick = function () { tapFighter(0); }; $('#fE').onclick = function () { tapFighter(1); };
-  $('#rMap').onclick = function () { AU.play('ui_sel'); vcLeave(backToMap); };
+  $('#rMap').onclick = function () { AU.play('ui_sel'); if (!$('#result') || !$('#result').classList.contains('on')) { ev('vc:leave:hidden'); return; } vcLeave(backToMap); }; /* v6.5.64: a leftover click on a hidden rMap must not abort the next wave */
   $('#quit').onclick = function () { if (ST.story) { ST.b.winner = 1; ev('story:quit'); backToMap(); return; } clearCombatOverlays(); ST.inGame = false; ST.b = null; show('title'); };
   // tap anywhere on the board during an animation = fast-forward it
   $('#game').addEventListener('pointerdown', function () { if (ST.anim) { ST.ff = true; ev('ff'); } });
@@ -7254,7 +7254,7 @@ function foeDoubles(grp) {
     s.combo = true; s.cmax = 2; s.spirit = 0; /* named story fights: a double only, earned Spirit, no triple */
   });
 }
-function startMatch(me, story) { if (typeof commentHide === 'function') commentHide(); if (typeof lvDefer === 'function') lvDefer();
+function startMatch(me, story) { ST._matchTok = (ST._matchTok | 0) + 1; ST._vcLeaving = 0; if (typeof commentHide === 'function') commentHide(); if (typeof lvDefer === 'function') lvDefer();
   try { var _bt = (root.FFF_BTROOM && root.FFF_BTROOM(story)) || (story && root.FFF_CH1OUT && root.FFF_CH1OUT() ? '1' : '0'); $('#game').setAttribute('data-bfx', _bt); if (root.FFF_BTFEET) root.FFF_BTFEET(_bt); else { var _fe = $('#fE'); if (_fe) _fe.classList.toggle('bt-feet-lo', _bt === 'store_bay' || _bt === 'gym_side'); } } catch (e) {} /* v6.5.20: Ch1 indoor room backdrop, or outdoor courtyard. v6.5.63: also the per-room C2BT foot offset. */
   ST.story = story || null; // v4.0: {foes: [char ids], hp: per-foe HP override, onEnd(win)} = a fight started from the school-grounds map
   ST.me = me; ST.me0 = me; ST.foe = story ? story.foes[0] : me === 'ryo' ? 'aoi' : 'ryo'; ST.b = story ? E.newGroup(me, story.foes, story.hp, story.pst) : E.newBattle(me, ST.foe); if (story && story.boss && ST.b.grp) ST.b.anchor = 0; /* v4.10.1 */ var AM = story && story.ctx && story.ctx.amb; if (AM && AM.k && ST.b.grp) { ST.b.grp.forEach(function (a0) { a0.hp = Math.max(1, Math.round(a0.max * AM.k)); }); ev('match:amb:' + AM.side + ':' + ST.b.grp.map(function (a0) { return a0.hp + '/' + a0.max; }).join(',')); } /* every joined foe starts on the ambush HP, not only the one who was struck */ if (story && story.foeNm && ST.b.grp) ST.b.grp.forEach(function (s) { if (story.foeNm[s.ch]) s.nm = story.foeNm[s.ch]; }); /* display label only; the fighter id stays */ ST.sel = null; ST.gq = null; ST.inGame = true; ST.busy = false; ST.anim = false; ST.ff = false;
@@ -7668,6 +7668,7 @@ function renderRun() {
 }
 async function tapRun() {
   var b = ST.b; if (!b || !ST.story || b.over || b.turn !== 0 || ST.busy || ST.phase !== 'play' || b.sbHold || b.sbFreeNow) return;
+  if (ST._leaveGuard && performance.now() < ST._leaveGuard) { ev('escape:guard'); return; } /* v6.5.64: ignore ghost clicks / the second tap after a wave banner */
   var ch = runChance(); if (!ch) return; ST.sel = null; ST.combo = [];
   var r = E.tryEscape(b, 0, ch, root.FFF_ESC_ROLL != null ? root.FFF_ESC_ROLL : null); if (!r) return;
   ST.busy = true; AU.play('whoosh', { gain: 0.8 }); ev('escape:' + (r.ok ? 'ok' : 'fail'));
@@ -9028,8 +9029,15 @@ function victory(b, res) {
   next();
 }
 function vcLeave(cb) { // the result fades out over the map, then the map takes over (no hard cut)
-  var R = $('#result'); if (!VC || VC.left || VC.dead || !R.classList.contains('cine')) { if (VC) VC.dead = 1; resultHide(); cb(); return; } VC.left = true; VC.dead = 1; ev('vc:leave'); R.classList.add('vfade');
-  finUndo(); bwStop(); setTimeout(function () { R.classList.remove('on', 'cine', 'vend', 'vfade'); R.onclick = null; $('#vSpot').className = ''; VC = null; cb(); }, root.FFF_VC_K != null && root.FFF_VC_K < 0.3 ? 60 : 420);
+  /* v6.5.64 (Erik t391u): a second tap during the fade used to call backToMap twice,
+   * and the leftover timer then aborted the just-started ROUND 2 match. One leave per match. */
+  if (ST._vcLeaving) { ev('vc:leave:dup'); return; }
+  var R = $('#result'), tok = ST._matchTok;
+  if ((!R || !R.classList.contains('on')) && !(VC && !VC.dead && R && R.classList.contains('cine'))) { ev('vc:leave:hidden'); return; }
+  function go() { if (ST._matchTok !== tok) { ev('vc:leave:stale'); ST._vcLeaving = 0; return; } try { cb(); } finally { if (ST._matchTok === tok) ST._vcLeaving = 0; } }
+  ST._vcLeaving = 1;
+  if (!VC || VC.left || VC.dead || !R.classList.contains('cine')) { if (VC) VC.dead = 1; resultHide(); go(); return; } VC.left = true; VC.dead = 1; ev('vc:leave'); R.classList.add('vfade');
+  finUndo(); bwStop(); setTimeout(function () { R.classList.remove('on', 'cine', 'vend', 'vfade'); R.onclick = null; $('#vSpot').className = ''; VC = null; go(); }, root.FFF_VC_K != null && root.FFF_VC_K < 0.3 ? 60 : 420);
 }
 function leave() { vcLeave(function () { backToMap(); }); }
 /* ---------- v4.0 story fights (started from the school-grounds map) ---------- */
@@ -9078,7 +9086,7 @@ async function downPhase() { // one bully of the group is knocked out, the rest 
   floatAt(f.querySelector('.fbody'), 'DOWN!', 'brk', -30); await wait(1000); f.classList.remove('ko'); renderFoeRow();
   if (b.turn === 0 || !ST.gq) { var al = E.aliveFoes(b); ST.tgt = al[0]; }
 }
-function backToMap() { clearCombatOverlays(); resultHide(); bwStop(); var scp = document.getElementById('srvChip'); if (scp) scp.remove(); var lcp = document.getElementById('laneChip'); if (lcp) lcp.remove(); ev('story:back'); var cb = ST.story && ST.story.onEnd, w = ST.b && ST.b.winner === 0; if (ST.story && ST.b) { var own = ST.b.s[0].ch === ST.me0 || !ST.b.bench ? ST.b.s[0] : ST.b.bench; ST.story.endHp = ST.b.s[0].hp; ST.story.endSpirit = own.spirit; ST.story.switches = ST.b.sw ? ST.b.sw.n : 0; if (ST.b.bench) ST.story.partnerSpirit = (own === ST.b.bench ? ST.b.s[0] : ST.b.bench).spirit; ST.story.endAs = ST.b.s[0].ch; } /* v4.24: shared HP; the map character keeps their own spirit */ /* v4.1: carried into the next fight */ ST.inGame = false; ST.b = null; var st = ST.story; ST.story = null; if (cb) cb(w, st); }
+function backToMap() { if (ST._backedTok === ST._matchTok) { ev('story:back:dup'); return; } ST._backedTok = ST._matchTok; clearCombatOverlays(); resultHide(); bwStop(); var scp = document.getElementById('srvChip'); if (scp) scp.remove(); var lcp = document.getElementById('laneChip'); if (lcp) lcp.remove(); ev('story:back'); var cb = ST.story && ST.story.onEnd, w = ST.b && ST.b.winner === 0; if (ST.story && ST.b) { var own = ST.b.s[0].ch === ST.me0 || !ST.b.bench ? ST.b.s[0] : ST.b.bench; ST.story.endHp = ST.b.s[0].hp; ST.story.endSpirit = own.spirit; ST.story.switches = ST.b.sw ? ST.b.sw.n : 0; if (ST.b.bench) ST.story.partnerSpirit = (own === ST.b.bench ? ST.b.s[0] : ST.b.bench).spirit; ST.story.endAs = ST.b.s[0].ch; } /* v4.24: shared HP; the map character keeps their own spirit */ /* v4.1: carried into the next fight */ ST.inGame = false; ST.b = null; var st = ST.story; ST.story = null; if (cb) cb(w, st); }
 /* ---------- boot ---------- */
 function boot() {
   buildTitle(); bindMenus(); show('title'); try { document.documentElement.classList.remove('hi-find'); } catch (e) {} /* v6.5.32: findHi removed */
@@ -51099,7 +51107,20 @@ root.FFF_WAVE = (function () {
   function chip(n) { var f = q$('#fE'); var o = q$('#fwvChip'); if (o) o.remove(); if (!f || !n) return; var c = document.createElement('div'); c.id = 'fwvChip'; c.className = 'fwv-chip'; c.innerHTML = 'WAVE <i>' + n + '</i>/2'; f.appendChild(c); }
   function figOf(ch) { try { var C = root.ENGINE.chars()[ch]; var IM = (root.ASSETS && root.ASSETS.img) || {}; return C && C.fig && IM[C.fig] ? IM[C.fig] : ''; } catch (e) { return ''; } }
   var cur = null;
-  function stop() { if (!cur) return; var B = cur; cur = null; clearTimeout(B.t); document.body.classList.remove('fwv-on', 'fwv-on2'); if (B.el && B.el.parentNode) B.el.parentNode.removeChild(B.el); var ST = root.FFF_UI && root.FFF_UI.ST; if (ST && B.busy0 === false && ST.busy === true) ST.busy = false; try { root.FFF_UI.render(false); } catch (e) {} if (root.FFF_UI && root.FFF_UI.ev) root.FFF_UI.ev('wave:banner:end:' + B.n + (B.skip ? ':skip' : '')); }
+  var catcher = null;
+  function armGuard(ms) { /* v6.5.64 (Erik t391u): swallow the click that follows a skipped / ending ROUND banner so it cannot press ESCAPE */
+    ms = ms || 400; var ST = root.FFF_UI && root.FFF_UI.ST; if (ST) ST._leaveGuard = performance.now() + ms;
+    if (catcher && catcher.parentNode) return;
+    var c = document.createElement('div'); c.id = 'fwvCatch'; c.setAttribute('aria-hidden', 'true');
+    c.style.cssText = 'position:fixed;inset:0;z-index:9410;background:transparent;touch-action:none;-webkit-tap-highlight-color:transparent;';
+    function eat(e) { e.stopPropagation(); if (e.cancelable) e.preventDefault(); }
+    c.addEventListener('pointerdown', eat, true); c.addEventListener('pointerup', eat, true);
+    c.addEventListener('click', eat, true); c.addEventListener('touchstart', eat, { capture: true, passive: false });
+    c.addEventListener('touchend', eat, { capture: true, passive: false });
+    document.body.appendChild(c); catcher = c;
+    setTimeout(function () { if (catcher === c && c.parentNode) c.parentNode.removeChild(c); if (catcher === c) catcher = null; }, ms);
+  }
+  function stop() { if (!cur) return; var B = cur; cur = null; clearTimeout(B.t); document.body.classList.remove('fwv-on', 'fwv-on2'); if (B.el && B.el.parentNode) B.el.parentNode.removeChild(B.el); armGuard(400); var ST = root.FFF_UI && root.FFF_UI.ST; if (ST && B.busy0 === false && ST.busy === true) ST.busy = false; try { root.FFF_UI.render(false); } catch (e) {} if (root.FFF_UI && root.FFF_UI.ev) root.FFF_UI.ev('wave:banner:end:' + B.n + (B.skip ? ':skip' : '')); }
   function banner(n, ST, story) {
     stop(); if (root.FFF_WAVE_BANNER === false) return;
     var b = ST.b, total = n === 2 ? 2050 : 1000, skipAt = n === 2 ? 600 : 200, k = ST.set && ST.set.fast ? 0.7 : 1; total *= k;
@@ -51112,8 +51133,9 @@ root.FFF_WAVE = (function () {
     var ring = '';
     if (n === 2) { var hp = q$('#fP .hp'); if (hp) { var r = hp.getBoundingClientRect(); ring = '<div class="fwv-ring" style="left:' + Math.max(2, r.left - 4) + 'px;top:' + (r.top - 4) + 'px;width:' + (r.width + 8) + 'px;height:' + (r.height + 8) + 'px"></div><div class="fwv-hpt" style="left:' + Math.max(4, r.right - 118) + 'px;top:' + Math.max(4, r.top - 30) + 'px">HP CARRIED OVER</div>'; } }
     el.innerHTML = '<div class="fwv-scr"></div>' + figs + '<div class="fwv-band"></div><div class="fwv-t">ROUND ' + n + '</div><div class="fwv-sub">' + sub + '</div>' + ring + '<div class="fwv-fl"></div>';
-    el.addEventListener('pointerdown', function (e) { e.stopPropagation(); e.preventDefault(); if (cur === B && performance.now() - B.t0 >= skipAt) { B.skip = 1; stop(); } }, true);
-    el.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); }, true);
+    el.addEventListener('pointerdown', function (e) { e.stopPropagation(); e.preventDefault(); if (cur === B && performance.now() - B.t0 >= skipAt) B.skip = 1; }, true);
+    el.addEventListener('pointerup', function (e) { e.stopPropagation(); e.preventDefault(); if (cur === B && B.skip) stop(); }, true);
+    el.addEventListener('click', function (e) { e.stopPropagation(); e.preventDefault(); if (cur === B && (B.skip || performance.now() - B.t0 >= skipAt)) { B.skip = 1; stop(); } }, true);
     document.body.appendChild(el); B.el = el; document.body.classList.add('fwv-on'); if (n === 2) document.body.classList.add('fwv-on2');
     try { var AU = root.AUDIO; if (AU && AU.play) setTimeout(function () { if (cur === B) AU.play('cutin', { gain: n === 2 ? 0.65 : 0.5 }); }, (n === 2 ? 300 : 150) * k); } catch (eA) {}
     B.t = setTimeout(function () { if (cur === B) stop(); }, total);
@@ -51124,7 +51146,7 @@ root.FFF_WAVE = (function () {
     /* startMatch, before the first render */
     pre: function (ST, story) { stop(); chip(0); var w = wv(story);
       if (ST.gs && story && story.ctx && story.ctx.amb && story.ctx.amb.side === 'back' && !story.ctx.amb.ko && !(w && w.n === 2) && !story.boss && !story.mini && !story.ctx.c2boss) ST.gs.amb = 1;
-      if (w && w.n === 2) { ST.swapOpen = false; if (root.FFF_ESC == null && story.esc) story.esc = WAVE.esc2; } },
+      if (w && w.n === 2) { ST.swapOpen = false; if (root.FFF_ESC == null && story.esc) story.esc = WAVE.esc2; ST._leaveGuard = performance.now() + 400; } },
     /* startMatch, at its end */
     post: function (ST, story) { var w = wv(story); if (!w) return; chip(w.n); banner(w.n, ST, story); },
     /* endMatch, after the grade + S heal (before the rewards are settled) */
