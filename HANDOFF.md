@@ -11,6 +11,12 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
+### 2026-11-26 — executor (Grok Bot) — v6564-craft (unpublished, off e1ba0d4)
+Branch `v6564-craft`. Version not bumped, nothing published. Live game code is still v6.5.63 (`c7efb9f`; `e1ba0d4` is only this HANDOFF file).
+Ch1 crafting-supply cut (Erik, pt412u): street drop 8% with a queued `+1 Gauze` / `+1 Tape` popup; item scarcity removed (old saves load as normal); no Ch1 quest mats; nurse cabinet restock and post-KO 1+1 removed (lesson 1+1 and the free +12 HP / 90 s kept); Ch1 mini first-win is 1 mat (Ch2 minis stay at 2); kits are 6 safe rooms × 1 plus 2 wall kits (`WKIT_STOCK`); dressing carry cap 5. A later `settle()` wrapper that also granted Ch1 mini/Gouki mats was neutralised for Ch1.
+Tests: `tools/craft/test_supply.py` 30/30 (thorough Ch1 mean **17.8** mats); ch_smoke PASS; no_old_art quick PASS; verify_wired PASS; perf vs live OVERALL PASS (key spots ≥58, battle/pick ≥55, walks ≥50, 4× heat within +5 cpu pts, memory flat). Notes: `tools/craft/NOTES.md`. Popup shot: `/workspace/craft/out/drop_popup.png`.
+Out of scope here: the heal mini-game, potion roles, rare finds, chapter healing style. Crafting later moves to stations on `v6564-healstyle` — craft UI on this branch is only the cap message.
+
 ### 2026-11-26 — executor (Grok Bot) — v6.5.63 (commit c7efb9f) — LIVE after Erik's OK
 Versions: `window.FFF_BUILD="v6563"`, title `.vtag` "v6.5.63", `#ver` text "v6.5.63" (bumped in cdcc7f8).
 Approved by Erik ("Yes, publish v6.5.63."). Fast-forward onto b15775f (v6.5.62). Published commit `c7efb9f`; live serves v6.5.63 with no console errors. Ch1/Ch2 smoke against the published tree passed; a live boot check also saw v6563 / v6.5.63 and no console errors.
