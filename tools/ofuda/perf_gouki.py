@@ -48,7 +48,7 @@ async def one(p, tree, port, thr):
 async def main():
     out = []
     async with H.async_playwright() as p:
-        for thr in (1, 4):
+        for thr in tuple(int(x) for x in os.environ.get('THR', '1,4').split(',')):
             for rep in range(REPS):
                 order = (('live', LIVE), ('branch', BR)) if rep % 2 == 0 else (('branch', BR), ('live', LIVE))
                 for i, (tag, tree) in enumerate(order):
