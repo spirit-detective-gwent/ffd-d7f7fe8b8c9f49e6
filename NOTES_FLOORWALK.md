@@ -32,3 +32,11 @@ No overlap with v6566-lockeramb (it edits the fldEnt staging near FLDG.bay, not 
   tap-walk straight across (0 px deviation), Look floor tag + standing selects it, inspect line plays, no page errors.
   Live sanity (--expect-blocked): 5/5, every prop blocks (Ryo stops at the edge; tap-walk detours 47-77 px).
 - ch_smoke PASS, ngp_test 104/104, verify_wired PASS. Logs are in /workspace/floorwalk/logs.
+
+## Perf (tools/floorwalk/perf_floor.py, live c1a3b8c vs branch, interleaved and order-alternated, waits while load > 6)
+Ryo tap-walks back and forth across each prop for 8 s with the roamers present. Medians: 4x n=3, 1x n=1. Box load 3-5.6.
+- 4x fps: lockers 60.0/60.0, foyer 59.9/60.0, concourse 60.0/60.0, trophy 59.8/59.8 (worst single run: branch 59.3).
+- 4x heat (main-thread busy %): lockers 15.3 -> 17.5 (+2.2), foyer +0.5, concourse -4.0, trophy -0.4.
+- 1x: 59.8-60.0 fps both; heat within +-1.7.
+- heap 55-60 MB on both, flat; no page errors.
+Before/after shot: /workspace/floorwalk/media/before_after_floorwalk.png (live vs branch, LANE 1 and the GRAY COAT FILE mat).
