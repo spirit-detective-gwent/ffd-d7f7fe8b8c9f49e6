@@ -67,6 +67,19 @@ async def main():
         await ev(pg, CLR); await ev(pg, SETUP)
         where = await go_nurse(pg); inside = await ev(pg, "W.inside && W.inside.id")
         print('nurse room:', where, inside)
+        # t511u: empty cabinet art (no restock waiting): no packs on the glass shelves
+        await ev(pg, "(function(){ W.ryo.x=300; W.ryo.y=420; W.aoi.x=340; W.aoi.y=440; })()"); await pg.wait_for_timeout(900)
+        if shots:
+            nm = 'before_live_empty_cabinet.png' if live else 'after_branch_empty_cabinet.png'
+            await pg.screenshot(path=str(Path(shots) / nm))
+            try:
+                from PIL import Image
+                im = Image.open(str(Path(shots) / nm)); bx = await ev(pg, "(function(){ var r=document.getElementById('wimap').getBoundingClientRect(); var s=r.width/536; return [r.left, r.top, s]; })()")
+                x, y, s = bx; im.crop((int(x), int(y), int(x + 170 * s), int(y + 140 * s))).resize((int(170 * s * 3), int(140 * s * 3))).save(str(Path(shots) / nm.replace('.png', '_zoom.png')))
+            except Exception as eZ: print('zoom failed', eZ)
+        if not live:
+            vis = "(function(){ var e=document.getElementById('wcabempty'); return !!(e && e.style.display!=='none' && e.offsetParent!==null); })()"
+            ok('empty cabinet: shelf packs covered (patch shown)', await ev(pg, vis) is True)
         # complete the library main quest the real way (qDoneNow is what the @quest done scene step calls)
         await ev(pg, "qDoneNow()"); await pg.wait_for_timeout(300); await ev(pg, CLR)
         if live:
@@ -75,6 +88,8 @@ async def main():
             if shots: await pg.screenshot(path=str(Path(shots) / 'before_live_cabinet_after_quest.png'))
             ok('no page errors', not errs, errs); await b.close(); h.shutdown(); return
         ok('main quest done -> one restock waiting', await ev(pg, "SAVE.cabR") == 1)
+        ok('restock waiting: packs visible (patch hidden)', await ev(pg, vis) is False)
+        if shots: await pg.screenshot(path=str(Path(shots) / 'after_branch_stocked_cabinet.png'))
         r2 = await ev(pg, "(function(){ qStart('q_mb_art'); SAVE.qs.q_mb_art=3; qDoneNow(); return [SAVE.qs.q_mb_art, SAVE.cabR]; })()"); await ev(pg, CLR)
         ok('second main quest before a visit does not stack', r2 == [9, 1], r2)
         await pg.wait_for_timeout(3800)
@@ -86,6 +101,7 @@ async def main():
         m1 = await ev(pg, MATS)
         ok('take gives exactly 1 gauze + 1 tape (one dressing recipe)', m1[0] - m0[0] == 1 and m1[1] - m0[1] == 1, (m0, m1))
         ok('restock used up', not await ev(pg, "SAVE.cabR"))
+        ok('after taking: packs hidden again', await ev(pg, vis) is True)
         await ev(pg, CLR); await open_cab(pg); t = await ev(pg, DLG)
         ok('empty text explains the restock + amount, no take button', 'Restocks after you finish a main quest: 1 Clean Gauze + 1 Medical Tape' in t and 'Take gauze' not in t, t)
         if shots: await pg.screenshot(path=str(Path(shots) / 'after_branch_cabinet_empty.png'))
@@ -122,6 +138,10 @@ async def main():
         l = await ev(pg, "(function(){ SAVE.herbs={gauze:0,tape:0}; SAVE.sc.dress='fetch'; root.FFF_FAST_KIT=1; n9Cabinet(); root.FFF_FAST_KIT=0; return ["+MATS+", SAVE.cabR]; })()")
         await skipall(pg, 6); await ev(pg, "(function(){ try{ W.v630Lesson=''; resume&&resume(); }catch(e){} })()"); await ev(pg, CLR)
         ok('lesson fetch still 1+1 and leaves the waiting restock alone', l[0] == [1, 1] and l[1] == 1, l)
+        lv = await ev(pg, "(function(){ var c=SAVE.cabR; SAVE.cabR=0; SAVE.sc.dress='fetch'; cabArtSync(); var a=document.getElementById('wcabempty').style.display; SAVE.sc.dress='done'; cabArtSync(); var b=document.getElementById('wcabempty').style.display; SAVE.cabR=c; cabArtSync(); return [a,b]; })()")
+        ok('lesson gauze waiting shows the packs; after the lesson they go', lv == ['none', ''], lv)
+        lv2 = await ev(pg, "(function(){ intGo('hall'); var a=!!document.getElementById('wcabempty'); return a; })()")
+        await pg.wait_for_timeout(800); ok('patch removed when leaving the office', lv2 is False, lv2)
         ok('free heal unchanged (HEAL.freePct, 90 s)', await ev(pg, "[Math.round(MAXHP*HEAL.freePct)]") == [12], await ev(pg, "[MAXHP, HEAL.freePct]"))
         # NG+ starts fresh
         ng = await ev(pg, "(function(){ SAVE.cabR=1; var o=FFF_NG.base(); var n=FFF_NG.build(SAVE,o); return [n.cabR===undefined||!n.cabR, n.chapter]; })()")

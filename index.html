@@ -23468,7 +23468,7 @@ var CAB_RESTOCK = [['gauze', 1], ['tape', 1]], CAB_AMT = '1 Clean Gauze + 1 Medi
 function cabQuestDone(id) {
   if (!/^q_(mb_[a-z]+|gouki)$/.test(id || '')) return;
   if (SAVE.cabR) { ev('world:cabinet:stocked:keep:' + id); return; }
-  SAVE.cabR = 1; save(); ev('world:cabinet:stocked:' + id);
+  SAVE.cabR = 1; save(); ev('world:cabinet:stocked:' + id); cabArtSync();
 }
 function cabTake() {
   if (!SAVE.cabR) return;
@@ -23483,8 +23483,31 @@ function cabTake() {
     if (typeof matPopFlush === 'function') setTimeout(function () { W.matPopQ = (W.matPopQ || []).concat(list); matPopFlush(); }, nq ? nq * 3700 : 120);
   } else koQuietMats(list, 'cabinet');
   list.forEach(function (k) { try { v630SeeMat(k); } catch (e) {} });
-  save(); ev('world:cabinet:restock');
+  save(); ev('world:cabinet:restock'); cabArtSync();
 }
+/* v6565-nursecab (Erik pt511u): the glass shelves of the white cabinet (painted into world/int_room.webp) show little gauze/tape
+ * packs. With no restock waiting they must not show, so an "empty shelves" patch (the same art with the ten packs painted out,
+ * 168x55 art px at 44,28, opaque only over the packs so the frame and shelf lines are never redrawn) sits over them. Shown when the cabinet has nothing for you; hidden while a restock waits (SAVE.cabR)
+ * or the dressing-lesson gauze is in there (sc.dress 'fetch'). Synced on room entry, take, restock and lesson fetch. No loop. */
+var CAB_EMPTY_IMG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKgAAAA3CAYAAACYewEiAAABmElEQVR42u3dXU7CQBQG0Jmmu1DQHfiz/zVI3IEa18H4RFRoaaG3ZArnPBED9jJz+5U0w5ASAABcVk4ppc3nd4n4Zy8P9zmqsMOaxpZY9mpaz1hTx4Dm4cM9r+/yLPXkrgkuPbP+p57V6qJjdEovtbWeOSVLj5NSpucc7jxfSm8/T9aMiZU8FCu/qm3QXEa8qzTy3d+y0lz0cNvg4W/MIDVrDUFwYJViECQoN5ag+hQJCucm6NZILNKIecvLvqshQdGgoEG55s+gRHEfVIKiQcElnqiPFbsHJ66nKctp0CUEqdVMgxfAcqR5B/8IAAAAAAAAAABAv2q3X3z7iqnpdR1f09Hd5LpeuLeb3NNjTE3vHzFjFFXPHDVVvLtd0z3Lg8qMNZ159JkWCO/vJJdHFjTnitno3e2sqA9mX9NYvpNE1VpnPRIUpiRo9iUqam7QOtlxD5d4JGiMGu7xIUFhGQla8vZfIpaOe2FdmwfvnidJNahwRxcgQSu9xo9YLGJnLA0KE5Nm0vPalA5/oZYraoV8fssAAMzkByaPYGXdIa4HAAAAAElFTkSuQmCC';
+function cabHasStock() { return !!(SAVE.cabR || (SAVE.sc && SAVE.sc.dress === 'fetch')); }
+function cabArtSync() {
+  try {
+    var lay = (typeof layer !== 'undefined' && layer) || document.getElementById('wisp');
+    var e = document.getElementById('wcabempty'), inRoom = !!(W.inside && W.inside.id === 'room');
+    if (!inRoom || cabHasStock()) { if (e) e.style.display = 'none'; return; }
+    if (!e || !lay || e.parentNode !== lay) {
+      if (e) e.remove();
+      if (!lay) return;
+      e = document.createElement('i'); e.id = 'wcabempty'; e.setAttribute('aria-hidden', 'true');
+      e.style.cssText = 'position:absolute;pointer-events:none;background:url(' + CAB_EMPTY_IMG + ') 0 0/100% 100% no-repeat;left:27.296px;top:17.370px;width:104.222px;height:34.120px;z-index:85';
+      lay.appendChild(e); if (W.ints) W.ints.push({ el: e });
+    }
+    e.style.display = '';
+  } catch (eA) {}
+}
+if (typeof roomVend === 'function') { var roomVendNC = roomVend; roomVend = function () { var r = roomVendNC.apply(this, arguments); cabArtSync(); return r; }; }
+
 function n9Cabinet() {
   /* v6564-craft took the timed restock out; v6565-nursecab brings back a small one, per main quest (see cabQuestDone).
    * The dressing lesson fetch still goes through v630DressFetch. The free +12 HP bandage every 90 seconds is untouched. */
@@ -24389,6 +24412,7 @@ function v630DressTalk() {
   if (st === 'cine') { W.v630Lesson = 'dress'; W.phBagTab = 'craft'; W.dlg = false; pause('bag'); return; }
   var b = [['Maybe later', function () { SAVE.sc.dress = 'later'; save(); ev('world:dress:later'); }], ['Teach me', function () {
     SAVE.sc.dress = 'fetch'; save(); ev('world:dress:fetch');
+    try { cabArtSync(); } catch (eC) {}
     scene(null, [['nurse', 'The gauze is in the white cabinet. Watch once, then you do it.']], function () { W.dlg = false; });
   }, 'hot']];
   if (SAVE.hp < MAXHP) b.push(['Bandaging (+' + Math.round(MAXHP * HEAL.freePct) + ' HP)', function () { infirmary0(); }]);
@@ -24408,6 +24432,7 @@ infirmary = function () {
 function v630DressFetch() {
   phMatAdd('gauze', 1); phMatAdd('tape', 1);
   SAVE.sc = SAVE.sc || {}; SAVE.sc.dress = 'cine'; save();
+  try { if (typeof cabArtSync === 'function') cabArtSync(); } catch (eC) {}
   v630SeeMat('gauze'); v630SeeMat('tape');
   W.dlg = true;
   try { nurseAnim('band'); } catch (e) {}
@@ -57797,6 +57822,7 @@ intAct = function (a) {
 v630DressFetch = (function (f0) { return function () {
   phMatAdd('gauze', 1); phMatAdd('tape', 1);
   SAVE.sc = SAVE.sc || {}; SAVE.sc.dress = 'cine'; save();
+  try { if (typeof cabArtSync === 'function') cabArtSync(); } catch (eC) {}
   try { v630SeeMat('gauze'); v630SeeMat('tape'); } catch (e0) {}
   W.dlg = true;
   try { nurseAnim('band'); } catch (e) {}
