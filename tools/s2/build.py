@@ -147,7 +147,14 @@ if pg.exists():
 # GGD-51 seal 3 (Jin's turf) chain + strip systems, after S2GARDEN.
 _prev_end = EG
 for _fn, _B, _E in (('s2p6.js', '/* S2P6_BEGIN v6564-jin */\n', '\n/* S2P6_END */\n'),
-                    ('s2arc.js', '/* S2ARC_BEGIN v6564-jin */\n', '\n/* S2ARC_END */\n')):
+                    ('s2arc.js', '/* S2ARC_BEGIN v6564-jin */\n', '\n/* S2ARC_END */\n'),
+                    # v6564-arcade: cabinet shell, then one file per game
+                    ('s2arc_cab.js', '/* S2ARCCAB_BEGIN v6564-arcade */\n', '\n/* S2ARCCAB_END */\n'),
+                    ('s2arc_gun.js', '/* S2ARCGUN_BEGIN v6564-arcade */\n', '\n/* S2ARCGUN_END */\n'),
+                    ('s2arc_fight.js', '/* S2ARCFIGHT_BEGIN v6564-arcade */\n', '\n/* S2ARCFIGHT_END */\n'),
+                    ('s2arc_race.js', '/* S2ARCRACE_BEGIN v6564-arcade */\n', '\n/* S2ARCRACE_END */\n'),
+                    ('s2arc_blast.js', '/* S2ARCBLAST_BEGIN v6564-arcade */\n', '\n/* S2ARCBLAST_END */\n'),
+                    ('s2arc_ember.js', '/* S2ARCEMBER_BEGIN v6564-arcade */\n', '\n/* S2ARCEMBER_END */\n')):
     _f = HERE / _fn
     if not _f.exists():
         continue

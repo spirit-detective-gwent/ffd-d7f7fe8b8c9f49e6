@@ -790,7 +790,7 @@
   try { alias('j6_jin', 'mb2_game', (C2K && C2K.mb2_game) || 1.12, '\u201cHigh-Score\u201d Jin', 'jin'); alias('j6_prize', 'npc_clerk', 1.02, 'Prize Clerk'); alias('j6_gamer', 'npc_courier', 1.0, 'Regular'); } catch (eG) { ev('world:s2p6:err:alias6:' + (eG && eG.message)); }
   var GC_DOOR = (C2W.doors && C2W.doors.gamectr) || { r: [3624, 1500, 3736, 1580], at: [3680, 1630] };
   TOWN_DOORS.gc = { r: GC_DOOR.r, at: GC_DOOR.at, to: 'gc', out: [GC_DOOR.at[0], GC_DOOR.at[1] + 10] };
-  var CAB_X = { shooter: 170, fighter: 330, ember: 490, rings: 650, street: 810 }, PLAY_PRICE = P6.PLAY_PRICE = 1;
+  var CAB_X = { shooter: 170, fighter: 330, ember: 490, gun: 650, street: 810 }, PLAY_PRICE = P6.PLAY_PRICE = 1;
   var gcSpots = Object.keys(CAB_X).map(function (k) { return { id: 'j6_cab_' + k, r: [CAB_X[k] - 50, 40, CAB_X[k] + 50, 180], at: [CAB_X[k], 290], face: 3, lab: 'Play' }; });
   roomDef('gc', 'Neon Game Center \u00b7 \u30b2\u30fc\u30e0\u30bb\u30f3\u30bf\u30fc', 'ck_surf', {
     block: [[110, 40, 900, 230], [960, 300, 1180, 460], [110, 560, 340, 700], [500, 560, 620, 730], [660, 560, 780, 730], [960, 600, 1180, 760]],
@@ -811,23 +811,44 @@
   P6.BT.gcback = { name: 'Neon Game Center \u00b7 prize room', lights: [[360, 110, '255,200,90', 100, 0.3, 'lamp']] };
   P6.innerBack.gcback = function () { enterRoom('gc', [1120, 300, 0]); };
   P6.innerDoor = P6.innerDoor || {}; P6.innerDoor.gc = TOWN_DOORS.gc;
-  function A6() { var j = J(); if (!j.arc || typeof j.arc !== 'object') j.arc = {}; var a = j.arc; a.best = a.best || {}; a.tier = a.tier || {}; a.g = a.g || {}; a.tok = a.tok | 0; a.spent = a.spent | 0; return a; }
+  /* J().arc v2 (v6564-arcade): best/tier/g/tok/spent as before, + paid (tokens paid from best scores), rep (repeat-run tokens),
+     hs (your board entries), ini (last initials). v1 saves migrate: Neon Ring Flight (rings) became Chuo Crisis (gun); every game was
+     rebuilt on a new score scale, so old bests move to old{} while medals (tier, g) and tokens already earned stay. */
+  function A6() { var j = J(); if (!j.arc || typeof j.arc !== 'object') j.arc = {}; var a = j.arc; a.best = a.best || {}; a.tier = a.tier || {}; a.g = a.g || {}; a.tok = a.tok | 0; a.spent = a.spent | 0;
+    if ((a.v | 0) < 2) { var ob = a.best; a.old = a.old || {}; Object.keys(ob).forEach(function (k) { a.old[k] = ob[k]; });
+      if (a.tier.rings != null) { a.tier.gun = Math.max(a.tier.gun | 0, a.tier.rings | 0); delete a.tier.rings; } if (a.g.rings) { a.g.gun = 1; delete a.g.rings; }
+      a.paid = {}; Object.keys(a.tier).forEach(function (k) { a.paid[k] = [0, 1, 3, 6][a.tier[k] | 0] | 0; });
+      a.best = {}; a.rep = {}; a.hs = {}; a.v = 2; }
+    a.paid = a.paid || {}; a.rep = a.rep || {}; a.hs = a.hs || {}; return a; }
   P6.A6 = A6;
-  var TIER_TOK = [0, 1, 2, 3];
   function cab(id) {
-    if (busy()) return true; var X = root.FFF_S2ARC; if (!X || !X.cabPlay) { toastS('The cabinet is booting.'); return true; }
+    if (busy()) return true; var X = root.FFF_S2ARC; if (!X || !X.cabPlay || !X.GAMES || !X.GAMES[id]) { toastS('The cabinet is booting.'); return true; }
     if ((SAVE.items | 0) < PLAY_PRICE) { lockIn(1); talk([['', '<p class="dim">\u00a51 a play. Your pockets are empty.</p>']], function () { lockIn(0); }); return true; }
     try { if (W.ryo) { W.ryo.v = 0; W.path = []; } } catch (e) {}
     SAVE.items = Math.max(0, (SAVE.items | 0) - PLAY_PRICE); try { save(); hud(); } catch (e) {} ev('world:s2p6:cab:pay:' + id);
+    var a = A6();
     X.cabPlay(id, { onEnd: function (res) { return cabEnd(res); }, canAgain: function () { return (SAVE.items | 0) >= PLAY_PRICE; },
+      canPay: function () { return (SAVE.items | 0) >= PLAY_PRICE; }, payCont: function () { SAVE.items = Math.max(0, (SAVE.items | 0) - PLAY_PRICE); try { save(); hud(); } catch (e2) {} ev('world:s2p6:cab:cont:' + id); },
+      hs: (a.hs[id] || []).slice(), ini: a.ini || 'RYO',
       onClose: function (res, again) { try { if (root.AUDIO && root.AUDIO.music) root.AUDIO.music('ck_surf'); } catch (eM) {} P6.resetPaint('gc'); paintRoom(); if (again) later(150, function () { cab(id); }); } });
     return true;
   }
+  /* tokens scale with your best score (FFF_S2ARC.tokOf: medal floor 1/3/6, then +1 per 20% of gold past gold, max 10 a cabinet),
+     paid once as the best climbs. A run at silver or better that doesn't beat your best pays 1 token, 5 times a cabinet. */
   function cabEnd(res) {
-    var a = A6(), id = res.id, prev = a.tier[id] | 0, tok = 0;
-    if (!res.quit) { a.best[id] = Math.max(a.best[id] | 0, res.score); for (var t = prev + 1; t <= res.tier; t++) tok += TIER_TOK[t]; if (res.tier > prev) a.tier[id] = res.tier; if (res.tier >= 3) a.g[id] = 1; a.tok += tok; sv(); }
+    var a = A6(), X = root.FFF_S2ARC, id = res.id, prevT = a.tier[id] | 0, tok = 0, note = '';
+    if (!res.quit) {
+      var ob = a.best[id] | 0; a.best[id] = Math.max(ob, res.score | 0);
+      var due = (X.tokOf ? X.tokOf(id, a.best[id]) : 0) - (a.paid[id] | 0);
+      if (due > 0) { tok += due; a.paid[id] = (a.paid[id] | 0) + due; note = a.best[id] > ob ? 'New best' : ''; }
+      else if (res.tier >= 2 && (a.rep[id] | 0) < (X.TOK_REPEAT_MAX || 5)) { tok += 1; a.rep[id] = (a.rep[id] | 0) + 1; note = 'Repeat run'; }
+      else note = (a.rep[id] | 0) >= (X.TOK_REPEAT_MAX || 5) ? 'Beat your best for more' : '';
+      var bt = X.tierOf(id, a.best[id]); if (bt > prevT) a.tier[id] = bt; if ((a.tier[id] | 0) >= 3) a.g[id] = 1;
+      if (res.ini) a.ini = String(res.ini).slice(0, 3);
+      if (res.entry) { var L = a.hs[id] || []; L.push({ n: res.entry.n, s: res.entry.s | 0 }); L.sort(function (p, q) { return q.s - p.s; }); a.hs[id] = L.slice(0, 10); }
+      a.tok += tok; sv(); }
     ev('world:s2p6:cab:end:' + id + ':' + res.score + ':' + res.tier + ':+' + tok);
-    return { best: a.best[id] | 0, tokens: tok, note: res.tier >= 3 ? 'Mastered. Your initials go up on the board.' : prev >= 3 ? 'Already mastered.' : 'Tokens pay once per medal.' };
+    return { best: a.best[id] | 0, tokens: tok, note: note, medal: a.tier[id] | 0 };
   }
   P6.cab = cab; P6.cabEnd = cabEnd;
   Object.keys(CAB_X).forEach(function (k) { ACT['j6_cab_' + k] = function () { return cab(k); }; });
@@ -1047,7 +1068,8 @@
   ACT.j6_gc_crane = function () { if (busy()) return true; lockIn(1); talk(VO.crane, function () { lockIn(0); }); return true; };
   ACT.j6_gc_medal = function () { if (busy()) return true; lockIn(1); talk(VO.medal, function () { lockIn(0); }); return true; };
   ACT.j6_gc_board = function () { if (busy()) return true; var a = A6(), X = root.FFF_S2ARC, TN = ['\u2014', 'Bronze', 'Silver', 'Gold'];
-    var L = (X && X.CAB_ORDER || []).map(function (k) { return X.CABS[k].n + ': ' + (a.best[k] | 0) + ' \u00b7 ' + TN[a.tier[k] | 0]; }).join('<br>');
+    var L = (X && X.CAB_ORDER || []).filter(function (k) { return X.CABS[k]; }).map(function (k) { var B = X.board ? X.board(k, a.hs[k]) : [], me = -1; B.forEach(function (e, i) { if (me < 0 && e.me) me = i; });
+      return '<b>' + X.CABS[k].n + '</b>: ' + (B[0] ? B[0].n + ' ' + B[0].s : '') + ' \u00b7 you ' + (a.best[k] | 0) + (me >= 0 ? ' (#' + (me + 1) + ')' : '') + ' \u00b7 ' + TN[a.tier[k] | 0]; }).join('<br>');
     lockIn(1); talk([['', '<p class="dim">HIGH SCORES<br>' + L + '</p>']], function () { lockIn(0); }); return true; };
   ACT.j6_gc_staff = function () { if (busy()) return true; if (at('met')) { enterRoom('gcback'); return true; } lockIn(1); talk(VO.gcStaff0, function () { lockIn(0); }); return true; };
   ACT.j6_gc_seal = function () { if (busy()) return true; if (at('won') && !E().seal_game) { askJinThenSeal(); return true; } if (stg() === 'met') { gcBackArrive(); return true; } lockIn(1); talk(E().seal_game ? VO.sealDone : VO.gcStaff0, function () { lockIn(0); }); return true; };
