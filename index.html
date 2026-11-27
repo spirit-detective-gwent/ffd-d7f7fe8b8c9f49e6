@@ -15450,12 +15450,15 @@ function teachGo(s, x, y, ms, tok, done) { if (!s || !s.el) { if (done) done(); 
     if (u < 1) requestAnimationFrame(tick); else { s.x = x; s.y = y; if (s.walker) animWalk(s, 0); else waddle(s, 0, s.fa); place(s, 0); if (done) done(); } })(); }
 function teachRect(s, fy) { var r = s && s.el && s.el.getBoundingClientRect(); return r ? [r.left + r.width / 2, r.top + r.height * (fy == null ? 0.45 : fy)] : [innerWidth / 2, innerHeight / 2]; }
 function teachWvAt(p) { var wv = document.getElementById('wv'), r = wv ? wv.getBoundingClientRect() : { left: 0, top: 0 }; return [p[0] - r.left, p[1] - r.top]; }
+/* v6565 evolvemusic: the lesson's music hush (cuMusic 0.08 / 600 Hz) is owned by W.tcMus; every way out (play, tap-skip, superseded run) lifts it once. */
+function teachMusUp() { if (!W.tcMus) return; W.tcMus = 0; if (root.cuMusic) try { root.cuMusic(false); } catch (e) {} }
 function matGenjiDrill(move, done, opt) {
   opt = opt || {};
   var g = W.c2n && W.c2n.genji, who = teachWho(opt), mode = opt.mode === 'learn' ? 'learn' : 'evo', col = mode === 'learn' ? 'teal' : 'gold';
   var first = opt.first != null ? !!opt.first : !SAVE.genjiTeach;
   var stu = teachStu(who), par = teachPartner(who), M = teachMarks(), card = teachCardOf(move, who, opt);
   ev('world:mat:genji:' + (move || '') + ':' + mode + ':' + who + ':' + (first ? 'first' : 'rep') + (card ? ':' + card.id : ':nocard'));
+  teachMusUp(); /* an earlier lesson cut off mid-hush (superseded run) never lifted it */
   var timers = [], tok = (W.teachTok = (W.teachTok | 0) + 1), dead = false, sh = null, fx = [], stage = null, focus = null;
   function later(ms, fn) { timers.push(setTimeout(function () { if (W.teachTok === tok && !dead) fn(); }, ms)); }
   function wfx(cls, x, y, css) { var e = document.createElement('i'); e.className = 'tcfx ' + cls; e.style.left = x + 'px'; e.style.top = y + 'px'; if (css) e.style.cssText += ';' + css; layer.appendChild(e); fx.push(e); return e; }
@@ -15476,6 +15479,7 @@ function matGenjiDrill(move, done, opt) {
   function finish(skipped) {
     if (dead || W.teachTok !== tok) return; dead = true; W.teachTok++;
     timers.forEach(clearTimeout); timers = [];
+    teachMusUp(); /* v6565 evolvemusic: a tap-skip cleared the T.back timer that lifts the hush, so the music stayed at 8% + 600 Hz low-pass for the rest of the session */
     lit(0); try { opnPoseEnd(stu); } catch (e0) {} if (typeof g5GenjiOff === 'function') g5GenjiOff(g);
     if (sh) { try { celLoopOff(sh); } catch (e1) {} if (sh.el && sh.el.parentNode) sh.el.remove(); sh.gone = 1; sh = null; }
     fx.forEach(function (e) { try { e.remove(); } catch (e2) {} }); fx = [];
@@ -15512,7 +15516,7 @@ function matGenjiDrill(move, done, opt) {
     teachGo(g, M.gx, M.gy, 900, tok, function () { waddle(g, 0, Math.PI); place(g, 0); });
     later(T.zoom, function () { teachPush(stu, g, 1.6, 1900, teachEase, 0.64); });
     later(T.set, function () { teachPose(stu, who, 'guard'); teachGPose(g, 'set'); play('whoosh', { gain: 0.18 }); });
-    later(T.focus, function () { focusOn(); play('whoosh_c', { gain: 0.3 }); if (root.cuMusic) try { root.cuMusic(true, 0.08, 600); } catch (eM) {} });
+    later(T.focus, function () { focusOn(); play('whoosh_c', { gain: 0.3 }); if (root.cuMusic) try { root.cuMusic(true, 0.08, 600); W.tcMus = tok; } catch (eM) {} });
     later(T.form, function () { /* the shadow steps out of Genji */
       sh = c2Npc('kurogane', M.gx - 4, M.gy + 1, Math.PI); sh.el.classList.add('tcshadow', 'tclit'); teachGPose(sh, 'guard'); place(sh, 0); void sh.el.offsetWidth; sh.el.classList.add('on');
       var hx = g.x - 6, hy = g.y - SPH * 0.7; for (var i = 0; i < 12; i++) { var m = wfx('tcmote', hx, hy), jx = (Math.random() - 0.5) * 40, jy = (Math.random() - 0.5) * 50;
@@ -15533,7 +15537,7 @@ function matGenjiDrill(move, done, opt) {
         var w = wfx('tcring', px, py); A(w, [{ transform: 'scale(.2)', opacity: 1 }, { transform: 'scale(2.8)', opacity: 0 }], { duration: 560, easing: 'ease-out', fill: 'forwards' }); }
       flash(p, 0.62, 560); burnIn(p); });
     later(T.big + 380, function () { teachPose(stu, who, 'guard'); teachGPose(g, 'guard'); });
-    later(T.back, function () { focusOff(); lit(0); teachZoom(1, 1900, teachEase); if (root.cuMusic) try { root.cuMusic(false); } catch (eM2) {} });
+    later(T.back, function () { focusOff(); lit(0); teachZoom(1, 1900, teachEase); teachMusUp(); });
     later(T.back + 500, function () { try { opnPoseEnd(stu); } catch (eE) {} c2Face(stu, M.gx, M.gy); if (typeof g5GenjiOff === 'function') g5GenjiOff(g); waddle(g, 0, Math.PI); place(g, 0); });
     later(T.end, function () { finish(false); });
     function burnIn(p) { /* the real card: shatters out of the shadow, a fox-fire brushstroke burns it in, embers; settles toward the hand */
