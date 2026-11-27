@@ -20134,7 +20134,7 @@ function c2Frame(dt) { var k = c2Room(); if (!k) return; c2MaskTetsu(); c2PropTi
     } c2FrameC(dt, k); /* v5.2 */ c2FrameD(dt, k); /* v5.3 */ }
 /* ---------- tags + actions ---------- */
 function c2Tags(id, D) { var out = [], S = c2S();
-  D.spots.forEach(function (s) { if (TRANS[s.id] || s.id === 'exit' || s.id === 'kettle' || (s.id === 'bench' && typeof chN === 'function' && chN() === 2) || (s.id === 'bouncer' && S.f.bouncer1) || (s.id === 'couch' && W.sit && W.sit.phase)) return; var lab = s.lab ? (typeof s.lab === 'function' ? s.lab() : s.lab) : s.vm ? (s.vm === 'soda' ? 'Get drink' : 'Get food') : s.id === 'genji' || s.id === 'sumire' || s.id === 'bouncer' ? 'Talk' : s.id === 'c2sta' ? 'Station' : /^lk_/.test(s.id) ? 'Look' : s.id === 'bench' ? 'Train' : s.id === 'bag' ? 'Train' : s.id === 'board' ? 'Intel' : s.id === 'cot' ? 'Rest' : 'Look';
+  D.spots.forEach(function (s) { if (TRANS[s.id] || s.id === 'exit' || s.id === 'kettle' || (s.id === 'cot' && id === 'clinic') /* v6564-healstyle: the cot stays, no Look (t417) */ || (s.id === 'bench' && typeof chN === 'function' && chN() === 2) || (s.id === 'bouncer' && S.f.bouncer1) || (s.id === 'couch' && W.sit && W.sit.phase)) return; var lab = s.lab ? (typeof s.lab === 'function' ? s.lab() : s.lab) : s.vm ? (s.vm === 'soda' ? 'Get drink' : 'Get food') : s.id === 'genji' || s.id === 'sumire' || s.id === 'bouncer' ? 'Talk' : s.id === 'c2sta' ? 'Station' : /^lk_/.test(s.id) ? 'Look' : s.id === 'bench' ? 'Train' : s.id === 'bag' ? 'Train' : s.id === 'board' ? 'Intel' : s.id === 'cot' ? 'Rest' : 'Look';
     var R = s.vm ? TAG_R.vm : (s.id === 'genji' || s.id === 'sumire' || s.id === 'bouncer') ? 96 : 84;
     out.push({ key: id + ':' + s.id, lab: lab, x: (s.r[0] + s.r[2]) / 2, y: s.r[1] - 4, below: false, ax: s.at[0], ay: s.at[1], R: R, vm: !!s.vm, obj: lab === 'Talk' ? null : s.r, act: { int: s.id, face: s.face, id: 'int:' + s.id } }); });
   c2TagsX(out); /* v5.1 */ c2TagsC(out); /* v5.2 */ return out; }
@@ -20313,7 +20313,7 @@ var C2_PLAN_N = { genji: 'Genji', bench: 'Upgrades', bag: 'Heavy bag', board: 'I
 /* ---------- starting Chapter Two ---------- */
 function c2Preset() { /* a fresh, balanced Chapter Two start (Title > Chapter Two, with no cleared Chapter One save) */
   var keepSet = null; SAVE = fresh(); W.lvHud = null; SAVE.intro = 1; SAVE.ch1 = 1; SAVE.gouki = 1; SAVE.dbl = 1; SAVE.sc = { nurse: 1, after: 1, intro: 1 }; SAVE.mb = {}; MINIS.forEach(function (m) { SAVE.mb[m.id] = 1; });
-  SAVE.items = 30; SAVE.ess = 24; SAVE.soda = { ramune: 2 }; SAVE.heal = ['bandage', 'bandage']; if (STORY) { STORY.ensure(SAVE); if (STORY.bond) { var B = STORY.bond(SAVE); B.path = 'balanced'; B.picks = B.picks || {}; B.picks.first = 'balanced'; B.lock = 1; B.ask = 1; if (STORY.bondTot) B.px = Math.max(B.px | 0, STORY.bondTot(4)); } }
+  SAVE.items = 30; SAVE.ess = 24; SAVE.soda = { ramune: 2 }; SAVE.heal = ['dress', 'dress']; SAVE.craft = { dress: 1 }; SAVE.sc.dress = 'learned'; /* v6564-healstyle: real dressings, so they convert at the Kampo lesson */ if (STORY) { STORY.ensure(SAVE); if (STORY.bond) { var B = STORY.bond(SAVE); B.path = 'balanced'; B.picks = B.picks || {}; B.picks.first = 'balanced'; B.lock = 1; B.ask = 1; if (STORY.bondTot) B.px = Math.max(B.px | 0, STORY.bondTot(4)); } }
   ev('world:c2:preset'); return keepSet; }
 function c2AbortTalk() { W.scGen = (W.scGen | 0) + 1; try { if (typeof scKill === 'function') scKill(); } catch (eK) {} var d = document.getElementById('wdlg'); if (d) d.className = ''; try { document.body.classList.remove('fff-dlg-on'); } catch (eB) {} W.dlg = false; W.cut = false; W.scr = 0; }
 function c2Begin(freshStart) { if (!C2W) return; ev('world:c2:begin:' + (freshStart ? 'fresh' : 'carry'));
@@ -37350,7 +37350,7 @@ var GINKO = (function () {
     c2Tags = function (id, D) {
       var out = c2Tags0.apply(this, arguments);
       try {
-        if (potLearned()) {
+        if (false && potLearned()) { /* v6564-healstyle: no kettle Look tag (Erik t417) */
           var s = potKettleSpot(D);
           if (s && !(out || []).some(function (t) { return t && t.act && t.act.int === 'kettle'; })) {
             out.push({
@@ -37378,7 +37378,6 @@ var GINKO = (function () {
     c2ActD = function (k, a) {
       if (a === 'kettle') {
         ev('world:c2:kettle:retired');
-        if (typeof c2Kettle === 'function') c2Kettle();
         return true;
       }
       return c2ActD0.apply(this, arguments);
@@ -48921,7 +48920,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     (W.g50p || []).forEach(function (o) { if (o.el) o.el.remove(); });
     W.g50p = [];
     if (typeof c2Room !== 'function' || c2Room() !== 'clinic') return;
-    var box = document.getElementById('wimap') || (typeof layer !== 'undefined' ? layer : null);
+    var box = document.getElementById('wisp') || (typeof layer !== 'undefined' ? layer : null) || document.getElementById('wimap'); /* v6564-healstyle: in the sprite layer so feet-y sorting works */
     if (!box) return;
     var spark = met() && !introDone();
     G.POTS.forEach(function (p, i) {
@@ -48933,6 +48932,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       e.style.top = (p.at[1] - 32) + 'px';
       e.style.width = '32px';
       e.style.height = '36px';
+      e.style.zIndex = String(100 + p.at[1]); /* v6564-healstyle: same rule as place(): 100 + feet y */
       e.style.backgroundImage = potSvg(st);
       if (spark && i === 0) {
         var sp = document.createElement('i');
@@ -48972,6 +48972,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (r >= G.RARE_P) return null;
     var t = Math.random();
     if (t < 0.5) return { k: 'yen', n: 5, t: '¥5 in the dirt.' };
+    if (SAVE && SAVE.craft && SAVE.craft.potion && (SAVE.chapter | 0) >= 2) return { k: 'ginger', n: 1, t: 'A ginger root in the mud.' }; /* v6564-healstyle: after the Kampo lesson */
     if (t < 0.75) return { k: 'gauze', n: 1, t: 'A length of gauze in the mud.' };
     return { k: 'tape', n: 1, t: 'A length of tape in the mud.' };
   }
@@ -49417,7 +49418,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (G.world) return; G.world = 1;
     if (typeof c2PopD === 'function') {
       var pop0 = c2PopD;
-      c2PopD = function (k) { var r = pop0.apply(this, arguments); if (k === 'clinic') gardenPop(); if (k === 'town') yardMark(); return r; };
+      c2PopD = function (k) { var r = pop0.apply(this, arguments); gardenPop(); /* v6564-healstyle: clears the pots out of the sprite layer when leaving */ if (k === 'town') yardMark(); return r; };
     }
     if (typeof c2RefreshCycle === 'function') {
       var ref0 = c2RefreshCycle;
@@ -53116,7 +53117,7 @@ function hsPanel(repaint) {
   p.innerHTML = '<button type="button" class="hsx" data-a="x" aria-label="Close">\u00d7</button><div class="hsh">' + hsSvg(k, 'hsbig') + '<div><b>' + R.n + '</b><small>' + R.heal() + ' \u00b7 perfect ' + R.perf() + '</small></div></div>' +
     '<div class="hsrow"><span>Carrying</span><em>' + n + ' / ' + HS_CAP + '</em></div>' +
     '<div class="hsrow"><span>' + R.mats.map(function (m) { return PH_MAT[m[0]]; }).join(' + ') + '</span><em>' + R.mats.map(function (m) { return phMatN(m[0]); }).join(' \u00b7 ') + '</em></div>' +
-    '<div class="hsbt"><button type="button" class="use" data-a="use"' + (n && !full ? '' : ' disabled') + '>' + (full ? 'HP full' : 'Use') + '<small>beat wrap</small></button><button type="button" class="cr" data-a="craft"' + (cap > 0 ? '' : ' disabled') + '>Craft<small>' + (n >= HS_CAP ? 'bag full' : cap > 0 ? 'up to ' + cap : 'need mats') + '</small></button></div>';
+    '<div class="hsbt"><button type="button" class="use" data-a="use"' + (n && !full ? '' : ' disabled') + '>' + (full ? 'HP full' : 'Use') + '<small>' + R.heal() + '</small></button><button type="button" class="cr" data-a="craft"' + (cap > 0 ? '' : ' disabled') + '>Craft<small>' + (n >= HS_CAP ? 'bag full' : cap > 0 ? 'up to ' + cap : 'need mats') + '</small></button></div>';
   var hr = host.getBoundingClientRect();
   if (slot) { var r = slot.getBoundingClientRect(); p.style.left = Math.round(r.left - hr.left) + 'px'; p.style.top = Math.round(r.bottom - hr.top + 8) + 'px'; }
   p.onpointerdown = function (e) { e.stopPropagation(); };
@@ -53173,9 +53174,60 @@ function hsCmpCard(stage) {
   if (stage === 'win') old.classList.add('dim');
 }
 function hsStage(stage, ms) { return ['@fn', function (next) { hsCmpCard(stage); if (stage === 'kampo') { try { AU.play('pl_heal', { gain: 0.4 }); } catch (e) {} } if (stage === 'win') { try { AU.play('place', { gain: 0.7 }); } catch (e2) {} } setTimeout(next, ms || 380); }]; }
+
+/* ---------- the lesson cinematic: she brews, pours, hands Ryo the bottle. Props are DOM in the sprite layer (world px,
+ * z = 100 + feet y), CSS animations with fixed counts, and finite c2Walk / camera moves. Nothing runs after the scene. ---------- */
+var HSC = { K: [613, 436], SPOUT: [636, 424], BOT: [668, 470], SU: [700, 500], RYO: [596, 610], AOI: [530, 622], HAND: [652, 604] };
+function hsLayer() { return document.getElementById('wisp') || (typeof layer !== 'undefined' ? layer : null); }
+function hsProp(id, x, y, w, h, html, z) { var L = hsLayer(); if (!L) return null; var e = document.getElementById(id); if (!e) { e = document.createElement('i'); e.id = id; e.className = 'hsprop'; L.appendChild(e); }
+  e.style.left = (x - w / 2) + 'px'; e.style.top = (y - h) + 'px'; e.style.width = w + 'px'; e.style.height = h + 'px'; e.style.zIndex = String(z != null ? z : 100 + Math.round(y)); if (html != null) e.innerHTML = html; return e; }
+function hsPropsOff() { ['hssteam', 'hspour', 'hsbot', 'hsanchor'].forEach(function (id) { var e = document.getElementById(id); if (e) e.remove(); }); }
+function hsBottleSvg(fill) { return '<svg viewBox="0 0 40 40" width="100%" height="100%" aria-hidden="true"><defs><clipPath id="hsbcl"><path d="M16.8 10h6.4v4.6c4.6 1.9 7.6 5.6 7.6 10.4v6.8a3.4 3.4 0 0 1-3.4 3.4H12.6a3.4 3.4 0 0 1-3.4-3.4V25c0-4.8 3-8.5 7.6-10.4z"/></clipPath></defs><path d="M15 5h10v4h-10z" fill="#b98a52" stroke="#14110d" stroke-width="2"/><path d="M16 9h8v5c5 2 8 6 8 11v7a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4v-7c0-5 3-9 8-11z" fill="rgba(210,230,240,.35)" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/><g clip-path="url(#hsbcl)"><rect class="hslq" x="8" y="' + (36 - 26 * (fill || 0)) + '" width="24" height="30" fill="#7a4520"/></g><rect x="12" y="21" width="16" height="10" rx="2" fill="#efe4c8" stroke="#14110d" stroke-width="1.4" opacity=".9"/><path d="M20 30c-3-2-5-4-5-6.5 2 .4 3.4-.6 3.6-2 1 .9 1.8.9 2.8 0 .2 1.4 1.6 2.4 3.6 2-.1 2.5-2 4.5-5 6.5z" fill="#5f9e4a" stroke="#14110d" stroke-width="1"/><path d="M11 15c-1.2 1.6-2 3.4-2.2 5.4" stroke="#fff" stroke-width="1.4" fill="none" opacity=".7" stroke-linecap="round"/></svg>'; }
+function hsCineCss() { if (document.getElementById('hscine')) return; var s = document.createElement('style'); s.id = 'hscine';
+  s.textContent = '.hsprop{position:absolute;display:block;pointer-events:none}' +
+    '#hssteam b{position:absolute;bottom:0;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#fff 0,#f2efe8 45%,rgba(240,236,228,0) 72%);opacity:0;animation:hspuff 1.5s ease-out 3}' +
+    '#hssteam b:nth-child(2){animation-delay:.5s;left:60%}#hssteam b:nth-child(3){animation-delay:1s;left:35%}#hssteam b:nth-child(1){left:50%}' +
+    '@keyframes hspuff{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:.95}100%{opacity:0;transform:translate(6px,-34px) scale(1.9)}}' +
+    '#hspour svg{overflow:visible}#hspour path{stroke-dasharray:60;stroke-dashoffset:60;animation:hspourin .45s ease-in forwards}' +
+    '#hspour.out{opacity:0;transition:opacity .35s}@keyframes hspourin{to{stroke-dashoffset:0}}' +
+    '#hsbot .hslq{transition:y 1.4s ease-in-out}#hsbot{transition:left .9s cubic-bezier(.4,0,.2,1),top .9s cubic-bezier(.4,0,.2,1),opacity .3s}' +
+    '@media (prefers-reduced-motion:reduce){#hssteam b{animation-duration:2.4s;animation-iteration-count:1}#hsbot{transition-duration:.01s}}';
+  document.head.appendChild(s); }
+function hsSu() { return W.c2n && W.c2n.sumire; }
+function hsWait(ms, f) { setTimeout(f, root.FFF_HS_FAST ? 30 : ms); }
+function hsCineSetup(next) { hsCineCss(); var su = hsSu(), L = [];
+  if (W.ryo) L.push([W.ryo, HSC.RYO[0], HSC.RYO[1], 90]); if (W.aoi && W.aoi.el && W.aoi.el.parentNode) L.push([W.aoi, HSC.AOI[0], HSC.AOI[1], 90]);
+  if (su && su.el) { try { if (typeof celLoopOff === 'function') celLoopOff(su); } catch (e) {} L.push([su, HSC.SU[0], HSC.SU[1], 70]); }
+  hsProp('hsbot', HSC.BOT[0], HSC.BOT[1], 22, 22, hsBottleSvg(0));
+  var a = hsProp('hsanchor', HSC.K[0], HSC.K[1] + 30, 2, 60, '');
+  c2WalkAll(L, function () { if (W.ryo) { W.ryo.dir = 3; place(W.ryo, 0); } if (W.aoi && W.aoi.el) { W.aoi.dir = 3; place(W.aoi, 0); }
+    try { if (root.FFF_SCAM && a) FFF_SCAM.shot({ el: a }, { z: 1.32, ms: 2200, f: 0.42 }); } catch (e2) {}
+    ev('world:hs:cine:setup'); hsWait(1500, next); }); }
+function hsCineBrew(next) { var st = hsProp('hssteam', HSC.SPOUT[0], HSC.SPOUT[1], 30, 44, '<b></b><b></b><b></b>', 900);
+  try { AU.play('craft_pot_work', { gain: 0.8 }); } catch (e) {}
+  hsWait(1300, function () {
+    var dx = HSC.BOT[0] - HSC.SPOUT[0], dy = HSC.BOT[1] - 20 - HSC.SPOUT[1];
+    hsProp('hspour', HSC.SPOUT[0] + dx / 2, HSC.BOT[1] - 18, Math.abs(dx) + 8, dy + 8, '<svg width="100%" height="100%" viewBox="0 0 ' + (Math.abs(dx) + 8) + ' ' + (dy + 8) + '"><path d="M4 4 C' + (dx * 0.7) + ' 2 ' + (dx - 2) + ' ' + (dy * 0.3) + ' ' + (dx + 2) + ' ' + (dy + 4) + '" fill="none" stroke="#7a4520" stroke-width="3" stroke-linecap="round"/><path d="M4 4 C' + (dx * 0.7) + ' 2 ' + (dx - 2) + ' ' + (dy * 0.3) + ' ' + (dx + 2) + ' ' + (dy + 4) + '" fill="none" stroke="#c88a4a" stroke-width="1" stroke-linecap="round" opacity=".8"/></svg>', 899);
+    var q = document.querySelector('#hsbot .hslq'); if (q) setTimeout(function () { q.setAttribute('y', '10'); }, 60);
+    hsWait(1600, function () { var p = document.getElementById('hspour'); if (p) p.classList.add('out'); try { AU.play('craft_pot_finish', { gain: 0.8 }); } catch (e3) {} ev('world:hs:cine:pour'); hsWait(500, next); }); }); }
+function hsCineHand(next) { var su = hsSu(), b = document.getElementById('hsbot'), st = document.getElementById('hssteam'); if (st) st.remove(); var p = document.getElementById('hspour'); if (p) p.remove();
+  if (b) { b.style.left = (HSC.SU[0] - 8 - 11) + 'px'; b.style.top = (HSC.SU[1] - 46 - 22) + 'px'; b.style.zIndex = String(101 + HSC.SU[1]); }
+  hsWait(700, function () {
+    var go = function () { if (b) { b.style.left = (HSC.HAND[0] - 22 - 11) + 'px'; b.style.top = (HSC.HAND[1] - 44 - 22) + 'px'; b.style.zIndex = String(102 + HSC.HAND[1]); } };
+    if (su && su.el) { c2Walk(su, HSC.HAND[0], HSC.HAND[1] - 4, 60, function () { place(su, 0); hsGive(next); }); setTimeout(go, 30); } else { go(); hsWait(900, function () { hsGive(next); }); } }); }
+function hsGive(next) { var b = document.getElementById('hsbot');
+  if (b) { b.style.left = (HSC.RYO[0] + 10 - 11) + 'px'; b.style.top = (HSC.RYO[1] - 40 - 22) + 'px'; b.style.zIndex = String(103 + HSC.RYO[1]); }
+  try { AU.play('place', { gain: 0.6 }); } catch (e) {} try { actPlay('pick', W.ryo); } catch (e2) {}
+  ev('world:hs:cine:give'); hsWait(1100, next); }
+function hsCineEnd() { hsPropsOff(); var su = hsSu(); if (su && su.el) { try { if (IMG.tsukikage_idle && typeof celLoop === 'function') celLoop(su, 'tsukikage_idle', 0, { ms: 420 }); } catch (e) {} } }
 var HS_LESSON = function () { return [
-  ['', '<p class="dim">She grinds the mugwort and the ginger in the Brass Kettle. Steam rolls off it. Ryo coughs.</p>'],
+  ['@fn', hsCineSetup],
+  ['', '<p class="dim">She drops the mugwort and the ginger into the Brass Kettle and lets it roll.</p>'],
+  ['@fn', hsCineBrew],
+  ['', '<p class="dim">Steam rolls off it. She pours it dark into a little glass bottle. Ryo coughs.</p>'],
   ['tsukikage', 'Bitter means it works.'],
+  ['@fn', hsCineHand],
+  ['ryo', 'It\u2019s warm.'],
   ['tsukikage', 'Now. Show me what you two have been patching yourselves up with.', { mood: 'neutral' }],
   hsStage('dress'),
   ['ryo', 'School nurse taught us. Gauze, tape. Wrap it tight.'],
@@ -53204,11 +53256,11 @@ function hsSwapCard(o, then) {
 function hsLesson(done) {
   W.dlg = true; ev('world:hs:lesson:start');
   scene(null, HS_LESSON(), function () {
-    hsCmpCard('off');
+    hsCmpCard('off'); hsCineEnd();
     SAVE.craft = SAVE.craft || {}; SAVE.craft.potion = 1; SAVE.sc = SAVE.sc || {};
     var o = hsConvert();
     if (!SAVE.sc.potGranted) { if (phCount('potion') < HS_CAP) SAVE.heal.push('potion'); SAVE.sc.potGranted = 1; }
-    SAVE.sc.pot = 'learned'; W.v630Lesson = ''; save(); hud();
+    SAVE.sc.pot = 'learned'; W.v630Lesson = ''; save(); hud(); try { hsVendors(); } catch (eV) {}
     hsLearnedCard(function () { hsSwapCard(o, function () { W.dlg = false; ev('world:hs:lesson:done'); if (done) done(); }); });
   });
 }
@@ -53216,7 +53268,37 @@ if (typeof v630PotCine === 'function') v630PotCine = function () { hsLesson(); }
 /* an old save that already learned Kampo before this build: convert once, the next time the bag is opened in Ch2 */
 var hsPause0 = pause;
 pause = function (tab) { hsPanelClose(); try { if ((SAVE.chapter | 0) >= 2 && SAVE.craft && SAVE.craft.potion && !(SAVE.sc && SAVE.sc.hsSwitch)) hsConvert(); } catch (e) {} return hsPause0.apply(this, arguments); };
-root.FFF_HS = { key: hsKey, panel: hsPanel, close: hsPanelClose, lesson: hsLesson, convert: hsConvert, cmp: hsCmpCard, cap: HS_CAP };
+
+/* ---------- after the lesson: Ch2 vendors, foe drops (Erik t416/t417) ---------- */
+function hsLearned() { return (SAVE.chapter | 0) === 2 && !!(SAVE.craft && SAVE.craft.potion); }
+var HS_ONO = [{ id: 'ginger', k: 'herb', hb: 'ginger', n: 'Ginger Root', base: 3, cost: 2, stock: 3, d: 'For a Kampo potion, with mugwort.' }, { id: 'dmug', k: 'herb', hb: 'leaf', n: 'Dried Mugwort', base: 3, cost: 2, stock: 3, d: 'For a Kampo potion, with ginger.' }];
+var HS_V0 = null;
+function hsVendors() {
+  var ono = SHOPS.nq_gk2, mot = SHOPS.nq_motors, hase = SHOPS.s2_hase, P2M = (root.FFF_S2P2 && FFF_S2P2.MENU) || (hase && hase.items);
+  if (!HS_V0) HS_V0 = { ono: ono ? ono.items.slice() : null, onoHi: ono && ono.hi, mot: mot ? mot.items.slice() : null, motHi: mot && mot.hi, hase: P2M ? P2M.slice() : null, haseHi: hase && hase.hi };
+  var on = hsLearned(), med = function (it) { return !(it.k === 'herb' && (it.hb === 'gauze' || it.hb === 'tape')); };
+  function put(arr, list) { if (!arr || !list) return; arr.length = 0; list.forEach(function (x) { arr.push(x); }); }
+  if (ono && HS_V0.ono) { put(ono.items, on ? HS_ONO : HS_V0.ono); ono.hi = on ? 'Ginger and mugwort now. The doctor said you\u2019d come.' : HS_V0.onoHi; }
+  if (mot && HS_V0.mot) { put(mot.items, on ? HS_V0.mot.filter(med) : HS_V0.mot); mot.hi = on ? 'Cold cans. The bike stuff\u2019s not for kids.' : HS_V0.motHi; }
+  if (P2M && HS_V0.hase) { put(P2M, on ? HS_V0.hase.filter(med) : HS_V0.hase); if (hase) hase.hi = on ? 'Medical stock went to the clinic. Bikes only.' : HS_V0.haseHi; }
+  if (root.FFF_S2MENUS && FFF_S2MENUS.SHOPS && FFF_S2MENUS.SHOPS.s2_hase && FFF_S2MENUS.SHOPS.s2_hase.hi) { var H = FFF_S2MENUS.SHOPS.s2_hase; if (!H._hi0) H._hi0 = H.hi; H.hi = on ? { fierce: 'Medical stock went to the clinic. Bikes only.', strategic: 'Medical stock went to the clinic. Bikes only.', balanced: 'Gauze went to the doctor. Bikes only now.' } : H._hi0; }
+  return on;
+}
+var hsShop0 = c2Shop; c2Shop = function (id) { try { hsVendors(); } catch (e) {} return hsShop0.apply(this, arguments); };
+var hsQuiet0 = koQuietMats;
+koQuietMats = function (list, why) { if (hsLearned()) list = list.map(function (k) { return k === 'gauze' || k === 'tape' ? c2HerbDrop() : k; }); return hsQuiet0(list, why); };
+/* ---------- save migration (silent) ---------- */
+function hsMigrate() {
+  if (!SAVE || !Array.isArray(SAVE.heal)) return;
+  var n = 0; SAVE.heal = SAVE.heal.map(function (k) { if (k === 'bandage') { n++; return 'dress'; } return k; });
+  if (SAVE.heal.indexOf('dress') >= 0) { SAVE.craft = SAVE.craft || {}; if (!SAVE.craft.dress) SAVE.craft.dress = 1; }
+  if (hsLearned() && !(SAVE.sc && SAVE.sc.hsSwitch)) hsConvert();
+  if (n) { try { save(); } catch (e) {} ev('world:hs:migrate:bandage:' + n); }
+  try { hsVendors(); } catch (e2) {}
+}
+var hsLoad0 = load; load = function () { var r = hsLoad0.apply(this, arguments); try { hsMigrate(); } catch (e) { ev('world:hs:migrate:err'); } return r; };
+if (typeof qReward === 'function') { var hsQRew0 = qReward; qReward = function () { var r = hsQRew0.apply(this, arguments); try { hsMigrate(); hud(); } catch (e) {} return r; }; }
+root.FFF_HS = { vendors: hsVendors, migrate: hsMigrate, learned: hsLearned, key: hsKey, panel: hsPanel, close: hsPanelClose, lesson: hsLesson, convert: hsConvert, cmp: hsCmpCard, cap: HS_CAP };
 /* HEALSTYLE_END */
 
 root.FFF_WKIT = { table: function () { return WKIT_TABLE; }, stocked: wkitStockedSet, give: wkitGive, strip: wkitStripSearches };
