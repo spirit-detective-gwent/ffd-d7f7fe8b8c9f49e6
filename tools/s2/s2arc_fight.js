@@ -11,7 +11,7 @@
   var root = typeof window !== 'undefined' ? window : this;
   var A = root.FFF_S2ARC = root.FFF_S2ARC || { v: 1 };
   A.GAMES = A.GAMES || {}; A.CABS = A.CABS || {};
-  A.CABS.fighter = { n: 'Sh\u014dnen Showdown', jp: '\u5c11\u5e74\u5bfe\u6c7a', col: '#ff9a3a', body: '#22140e', mq: ['#4a1a06', '#140804'], deck: ['#3a2418', '#1a0e08'],
+  A.CABS.fighter = { n: 'Sh\u014dnen Showdown', jp: '\u5c11\u5e74\u5bfe\u6c7a', mqPx: 21, col: '#ff9a3a', body: '#22140e', mq: ['#4a1a06', '#140804'], deck: ['#3a2418', '#1a0e08'],
     tiers: [12000, 30000, 50000],
     seed: [['JIN', 1.45], ['NLS', 1.22], ['GDA', 1.04], ['MSA', 0.86], ['KNZ', 0.7], ['BAN', 0.55], ['TTS', 0.42], ['OGT', 0.3], ['PNT', 0.2], ['KDE', 0.12]],
     mqArt: function (p, x, y, w, h) { var g = p.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, 'rgba(255,120,40,.35)'); g.addColorStop(0.5, 'rgba(255,200,80,0)'); g.addColorStop(1, 'rgba(255,60,90,.35)'); p.fillStyle = g; p.fillRect(x, y, w, h);
@@ -347,12 +347,12 @@
     function hud(g, t) {
       bar(g, 10, 30, 146, P.hp, P.max, false, '#ffd860'); bar(g, SW - 156, 30, 146, E.hp, E.max, true, '#ffd860');
       txt(g, P.c.n, 12, 56, 12, '#fff', 'left'); txt(g, E.c.n, SW - 12, 56, 12, '#fff', 'right');
-      for (var i = 0; i < 2; i++) { ell(g, 60 + i * 14, 56, 5, 5, i < wins[0] ? '#ffd860' : 'rgba(255,255,255,.2)', 1.5); ell(g, SW - 60 - i * 14, 56, 5, 5, i < wins[1] ? '#ffd860' : 'rgba(255,255,255,.2)', 1.5); }
+      for (var i = 0; i < 2; i++) { ell(g, SW / 2 - 34 - i * 14, 56, 5, 5, i < wins[0] ? '#ffd860' : 'rgba(255,255,255,.2)', 1.5); ell(g, SW / 2 + 34 + i * 14, 56, 5, 5, i < wins[1] ? '#ffd860' : 'rgba(255,255,255,.2)', 1.5); } /* v6566-shonen: round pips beside the timer so long names fit */
       rr(g, SW / 2 - 22, 28, 44, 34, 6, 'rgba(0,0,0,.6)', 2, '#ffd860'); mono(g, String(Math.max(0, Math.ceil(roundT))), SW / 2, 46, 20, roundT < 10 ? '#ff4a5a' : '#ffd860', 'center');
       /* super bars */
       /* v6566-shonen: one super bar (yours), wide; when full it pulses and says to tap SPECIAL */
       var full = P.meter >= 100; rr(g, 10, SH - 30, SW - 20, 18, 6, '#0a0614', 2.5); rr(g, 13, SH - 27, (SW - 26) * clamp(P.meter / 100, 0, 1), 12, 4, full ? (((t * 6) | 0) % 2 ? '#ff5ac8' : '#ffd860') : '#5ad8ff', 0);
-      txt(g, full ? 'SUPER READY \u00b7 TAP SPECIAL' : 'SUPER', SW / 2, SH - 21, full ? 11 : 10, full ? '#fff' : 'rgba(255,255,255,.85)');
+      txt(g, full ? 'SUPER READY \u00b7 TAP SPECIAL' : 'SUPER', SW / 2, SH - 21, full ? 11 : 10, full ? INK : 'rgba(255,255,255,.85)');
       if (combo >= 2 && comboT > 0) { otxt(g, combo + ' HITS', 70, 120, 20, '#ffd860'); }
       if (msgT > 0) otxt(g, msg, SW / 2, 200, msg.length > 10 ? 24 : 40, msg === 'K.O.' ? '#ff4a3a' : '#fff');
       fx.forEach(function (F) { if (F.k === 'tally') txt(g, F.s, SW / 2, 250, 11, '#7aff9a'); });

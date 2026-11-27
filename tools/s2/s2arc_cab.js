@@ -99,7 +99,7 @@
     var mg = p.createLinearGradient(0, 10, 0, 80); mg.addColorStop(0, C.mq ? C.mq[0] : '#2a0e3a'); mg.addColorStop(1, C.mq ? C.mq[1] : '#0e0620'); rr(p, 13, 11, 364, 68, 7, mg, 0);
     p.drawImage(glow(rgb, 140), 195 - 140, 44 - 140);
     if (C.mqArt) { p.save(); rr(p, 13, 11, 364, 68, 7, null, 0); p.clip(); C.mqArt(p, 13, 11, 364, 68); p.restore(); }
-    otxt(p, C.n.toUpperCase(), 195, 38, C.n.length > 14 ? 24 : 28, '#fff', 'center', col); txt(p, C.jp, 195, 66, 12, col);
+    otxt(p, C.n.toUpperCase(), C.mqPx ? 186 : 195, 38, C.mqPx || (C.n.length > 14 ? 24 : 28), '#fff', 'center', col); txt(p, C.jp, 195, 66, 12, col);
     p.fillStyle = 'rgba(255,255,255,.12)'; p.fillRect(16, 14, 358, 8);
     /* bezel */
     rr(p, 6, 86, 378, 514, 16, '#0c0912', 4);
@@ -284,7 +284,7 @@
         q.lineWidth = 9; q.strokeStyle = '#d8d0e0'; q.beginPath(); q.moveTo(S.x, S.y); q.lineTo(kx, ky - 4); q.stroke(); K.ell(q, kx, ky - 6, 17, 17, S.c || '#e83040', 3); K.ell(q, kx - 5, ky - 11, 5, 4, 'rgba(255,255,255,.5)', 0); }
       for (var i = 0; i < B.length; i++) { var b = B[i]; if (b.hide && b.hide()) continue; var dn = b.dn || (st === 'play' && G.lit && G.lit(b.k)), off = dn ? 3 : 0;
         var gl = st === 'play' && b.glow && b.glow(); /* v6566-shonen: a ready button glows; this only runs inside the open cabinet's own frame */
-        if (gl) { q.globalAlpha = 0.6 + 0.4 * Math.sin(t * 9); q.drawImage(glow(b.gc || '255,255,255', b.r + 30), b.x - b.r - 30, b.y - b.r - 30); q.globalAlpha = 1; }
+        if (gl) { var gr = b.r + 34 + Math.sin(t * 9) * 5; q.globalAlpha = 0.75 + 0.25 * Math.sin(t * 9); q.drawImage(glow(b.gc || '255,255,255', b.r + 40), b.x - gr, b.y - gr, gr * 2, gr * 2); q.globalAlpha = 1; q.lineWidth = 3; q.strokeStyle = 'rgba(255,255,255,' + (0.5 + 0.4 * Math.sin(t * 9)) + ')'; q.beginPath(); q.arc(b.x, b.y, b.r + 6, 0, 7); q.stroke(); }
         K.ell(q, b.x, b.y + 4, b.r, b.r * 0.92, '#0a0610', 0); K.ell(q, b.x, b.y + off, b.r, b.r * 0.92, gl ? (b.gcol || b.c) : b.c, 3);
         var rg = st === 'play' && b.ring ? b.ring() : 0; if (rg > 0) { q.lineWidth = 6; q.strokeStyle = rg >= 1 ? '#fff' : 'rgba(255,255,255,.8)'; q.beginPath(); q.arc(b.x, b.y + off, b.r + 7, -Math.PI / 2, -Math.PI / 2 + rg * Math.PI * 2); q.stroke(); }
         if (!dn) K.ell(q, b.x - b.r * 0.3, b.y - b.r * 0.35, b.r * 0.35, b.r * 0.22, 'rgba(255,255,255,.45)', 0);
