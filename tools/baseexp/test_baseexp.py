@@ -185,9 +185,13 @@ async def main():
             ok('S2 every new room has a first-aid box; 8 boxes per base', not r['missing'] and r['box'] == {'caf': 8, 'fld': 8}, (r['missing'], r['box']))
             ok('S3 200 rolls: each base gets exactly 2 gauze + 2 tape (4 of 8 boxes stocked, 4 empty), always >=1 in a guarded/patrolled room', r['nbad'] == 0, r['bad'])
             ok('S4 the stocked boxes vary between rolls (new rooms included)', all(r['cnt'].get(c, 0) > 0 for c in ['cf_cooler', 'cf_dock', 'cf_dish', 'cf_bakery', 'sf_cage', 'sf_showers', 'sf_trainer', 'sf_booth']), r['cnt'])
-            await enter(pg, 'caf'); await go(pg, 'caf', 'dish')
-            kt = await ev(pg, "(typeof wkitTags==='function') ? 1 : (document.querySelectorAll('#wtags *').length>=0)")
-            ok('S5 no page errors', not errs, errs); await b.close()
+            await enter(pg, 'caf'); kd = []
+            for base, k in [('caf', 'cooler'), ('caf', 'dock'), ('caf', 'dish'), ('caf', 'bakery'), ('fld', 'cage'), ('fld', 'showers'), ('fld', 'trainer'), ('fld', 'booth')]:
+                if base == 'fld' and not await ev(pg, "!!fldRoom()"): await enter(pg, 'fld')
+                await go(pg, base, k)
+                kd.append(await ev(pg, "(function(){ var d=wkitDefNow(); if(!d) return null; SAVE.supLay={v:1,c:{}}; SAVE.supLay.c[d.id]='gauze'; var g0=phMatN('gauze'); var w=wkitWallById(d.id); wkitGrantWall(w); return [d.id, d.kind, okAt(d.stand[0], d.stand[1]), wkitInRange(d, d.stand[0], d.stand[1]), phMatN('gauze')-g0, wkitGive(d.id).length]; })()"))
+            ok('S5 each new room: wall box found, stand point walkable and in reach, a stocked box pays once', all(q and q[1] == 'wall' and q[2] and q[3] and q[4] == 1 and q[5] == 0 for q in kd), kd)
+            ok('S6 no page errors', not errs, errs); await b.close()
 
         # ---------- C: full completion of both bases with the real functions
         if 'C' in SECT:

@@ -1,3 +1,49 @@
+# v6566-baseexp — GGD-89: Cafeteria + Storehouse grow to 8 rooms each (Erik t546u/t547u/t548u)
+Branch v6566-baseexp off v6566-lockeramb (f5a8f72) + merge of rc-v6565 d3dc51e (supply rooms; lockeramb is off live and lacks
+SUP_PAIRS). Worktree /workspace/baseexp/wt. Not pushed. No version bump. Merge into v6.5.66 later.
+All code changes are made by tools/baseexp/patch_code.py from /workspace/baseexp/work/index_base.html (pre-patch index.html,
+= ba39461) — rerun it after editing; it also re-embeds the 4 baked wall-kit backgrounds that gained doors.
+
+## Cafeteria — "Lunch Duty" (modified: no Alley Cat in Ch1)
+- New rooms: Walk-in Cooler (cf_cooler), Loading Dock (cf_dock), Dish Room (cf_dish), Bakery (cf_bakery).
+  Doors: kitchen.gW<->cooler.gE, kitchen.gN (custom x 700-830, the fridge blocks the usual spot)<->dish.gS,
+  cooler.gN<->dock.gS, dock.gE<->dish.gW, staff.gN<->bakery.gS. Map viewBox widened, "/8 rooms seen".
+- CAF_CRATES = cooler, dock, bakery (line/kitchen/staff crates removed). Chute is still the Kitchen.
+- One ROOM GUARD per crate room (CAF_GRD, bully3/bully4), quest-only: stands at his post next to the crate and turns
+  between west/east on a fixed beat (GRD_T: hold 3.0 s, turn 0.7 s, always through the back wall). Sight = the normal
+  seeK/susStep (the v6.5.30 override), with his own notice q.N at SIGHT23 numbers (rk 1, core 35, side .55); props are
+  blocks so losClear makes them cover. Carrying: reach x1.25, notice time x0.5. Spotted -> "?" "!" chase -> touch fight
+  (fight + crate home = existing cafBack). Flee: search, then 'ret' (findPath back to the post) and the beat resumes.
+  Win: S.f['g'+room] -> never again. Crate dumped (cr==2) -> no guard. Cone = one .wgcone element per guard, rotated by
+  a CSS transition only when a turn starts (no per-frame DOM writes); scaled when carrying, red while "?".
+- No roamers in Cooler/Dock/Bakery before the clear (R.after: only once dgRefilled('cafe')). Dish Room: never.
+  Lunch Line + Kitchen keep their live roamers (judgment call).
+## Storehouse — "Lane fee's due" (no runner chase)
+- New rooms: Equipment Cage (sf_cage), Showers (sf_showers), Trainer's Room (sf_trainer), Timing Booth (sf_booth).
+  Doors: bay.gW<->cage.gE, lockers.gW<->showers.gE, lockers.gE<->trainer.gW, trainer.gS<->coach.gN,
+  track.gE (gate in the east fence, clear of the wall kit)<->booth.gW. Track plan moved up; map viewBox taller.
+- FLD_HURDLES = cage, showers, trainer (bay/lockers/coach hurdles removed).
+- Lane fee: fldPlace checks Bando's oval angle vs the mark (fldFeeOk, >= 100 deg away = far side). Too close -> fldKick:
+  hurdle flies (one-shot .fkick CSS, removed on a timer), S.kick[id]=1, it now lives in the Cage (hk_<id> spot/prop,
+  fldHome); first kick plays FLD_SC.kick, later ones a comment. Slot rings (.fslotring ok/no) show only while carrying,
+  updated inside the existing lap block.
+- Timing Booth lever (one use): S.e.lever + slowArm; the next track pop sets lap.slowTo=1 and .fslow; fldFrame scales
+  the existing lap rate (0.38 * 0.45) until lap.t reaches 1. No new loop.
+## Supplies (Erik t547u)
+- SUP_PAIRS 9, SUP_PIN lib 3 / art 1 / gym 1 / caf 2 / fld 2. 8 new WKIT_TABLE back-wall boxes (cloned cf_kitchen entry).
+  Caf and Fld: 8 boxes each (7 wall + safe kit), 4 pieces -> 4 empty. SUP_RISK: at least one piece in cf_cooler/
+  cf_dock/cf_bakery (guarded) and sf_bay/sf_lockers (patrolled) — supRoll swaps a piece in if the roll missed.
+## Old saves (Erik: fresh playthrough, no migration)
+- No supLay v2 / crate / hurdle remap. carryRecover drops a carry key that is no longer a crate/hurdle room. Tested: loads, no errors.
+## Art
+- tools/baseexp/paint_rooms.py + rooms.json: 8 rooms painted in-engine from existing room shells (walls/thresholds/kit
+  sprites cut from cf_kitchen / cf_line / sf_lockers / sf_coach / sf_bay) + procedural cel floors and outlined props.
+  `--existing` adds the new doors / track gate to cf_kitchen, cf_staff, sf_bay, sf_lockers, sf_coach, sf_track
+  (world files; originals kept in /workspace/baseexp/work/orig) and the baked wkitbg PNGs re-embedded by patch_code.py.
+## Tools
+- tools/baseexp/test_baseexp.py (SECT=DGRLSCO), shoot_baseexp.py (contact strips), perf_baseexp.py (live vs branch),
+  vis_sim.py (guard sight preview), smoke.py, dbg.py.
+
 # v6566-lockeramb — Storehouse bay arrival: two bullies, no locker (Erik t536/t537/t538)
 Branch v6566-lockeramb off c1a3b8c (live v6.5.64). Worktree /workspace/lockeramb/wt. Not pushed. No version bump.
 
