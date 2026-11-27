@@ -12,10 +12,10 @@ async def one(p, tree, port, thr):
     global PORT, root
     root, PORT = tree, port; h = serve(tree, port)
     b, ctx, pg, errs = await boot(p); cdp = await ctx.new_cdp_session(pg); await cdp.send('Performance.enable')
-    await ev(pg, CLR); await ev(pg, SETUP); await go_nurse(pg); await ev(pg, "qDoneNow()"); await ev(pg, CLR)
+    await ev(pg, CLR); await ev(pg, SETUP); await go_nurse(pg)
     if thr > 1: await cdp.send('Emulation.setCPUThrottlingRate', {'rate': thr})
     res = {}
-    for name, js in [('room_idle', 'W.dlg=false'), ('room_cabinet', "root.FFF_FAST_KIT=1; n9Cabinet(); root.FFF_FAST_KIT=0")]:
+    for name, js in [('room_empty', 'W.dlg=false'), ('room_idle', 'qDoneNow(); W.dlg=false'), ('room_cabinet', "root.FFF_FAST_KIT=1; n9Cabinet(); root.FFF_FAST_KIT=0")]:
         await ev(pg, js); await pg.wait_for_timeout(1500)
         m0 = {x['name']: x['value'] for x in (await cdp.send('Performance.getMetrics'))['metrics']}; t0 = time.time()
         await pg.evaluate(SAMPLER); await pg.wait_for_timeout(8000); ft = await pg.evaluate("()=>{window.__run=false;return window.__ft}")
