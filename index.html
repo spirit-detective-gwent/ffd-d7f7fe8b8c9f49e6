@@ -37962,7 +37962,7 @@ var GINKO = (function () {
       var gifted = potGiveFirstLeaf();
       var h = potHeldNow();
       if (h.leaf && h.ginger) {
-        var line = gifted ? potGiftLine(h) : 'Mugwort and ginger. That is the pair. Hand them over and we brew.';
+        var line = gifted ? potGiftLine(h) : 'Mugwort and ginger. That is the pair. Hand them over and I will teach you.';
         dialog('<b>Dr. Tsukikage</b><p class="q">\u201c' + line + '\u201d</p>',
           [['Not yet', null], ['Teach me', function () { potHandIn(); }, 'hot'],
             ['Seeds', function () { setTimeout(c2MugShop, 0); }]], 'tsukikage_fig'); /* v6565-herbalist: 'Teach me' hands over the pair */
