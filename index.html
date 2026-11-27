@@ -12479,13 +12479,13 @@ function snapMap(cv, dpr) {
   g.save(); g.beginPath(); g.rect(vr.left, vr.top, vr.width, vr.height); g.clip();
   var mr = map.getBoundingClientRect(), lo = swImg(W.inside ? INT[W.inside.id].src + '?v=' + BUILD : IMG.map_lo); /* v4.12: the interior picture indoors */ if (ok(lo)) { g.drawImage(lo, mr.left, mr.top, mr.width, mr.height); if (typeof nsignOn === 'function' && nsignOn()) { var nsI = swImg(NSIGN.src), nsK = mr.width / INT.hall.w, nsB = NSIGN.box; if (ok(nsI)) g.drawImage(nsI, mr.left + nsB[0] * nsK, mr.top + nsB[1] * nsK, nsB[2] * nsK, nsB[3] * nsK); } } /* v6.5.42: the nurse sign patch in the swirl snapshot too */
   Object.keys(W.tiles || {}).forEach(function (k) { var im = W.tiles[k]; if (!ok(im)) return; var r = im.getBoundingClientRect(); if (r.right < vr.left || r.left > vr.right || r.bottom < vr.top || r.top > vr.bottom) return; g.drawImage(im, r.left, r.top, r.width, r.height); });
-  var sps = [].slice.call(layer.querySelectorAll('.wsp')).filter(function (e) { return e.offsetWidth && getComputedStyle(e).display !== 'none'; });
+  var sps = [].slice.call(layer.querySelectorAll('.wsp')).filter(function (e) { if (!e.offsetWidth) return false; var cs = getComputedStyle(e); return cs.display !== 'none' && cs.visibility !== 'hidden'; }); /* v6.5.65: a hidden sprite (the Alley Catted man under his lie-down) is not in the picture */
   sps.sort(function (a, b) { return (+a.style.zIndex || 0) - (+b.style.zIndex || 0); });
   sps.forEach(function (e) { var m = /url\(["']?(.*?)["']?\)$/.exec(e.style.backgroundImage || ''); if (!m) return; var im = swImg(m[1]); if (!ok(im)) return;
     var r = e.getBoundingClientRect(), lw = e.offsetWidth, lh = e.offsetHeight, nw = im.naturalWidth, nh = im.naturalHeight, sx = 0, sy = 0, sw, sh;
-    if (e.classList.contains('walker') || e.dataset.bw) { var bp = (e.style.backgroundPosition || '0px 0px').split(' ').map(parseFloat), bz = (e.style.backgroundSize || '').split(' ').map(parseFloat), bw_ = bz[0] || lw * 4, bh_ = bz[1] || lh * 4; sw = lw / bw_ * nw; sh = lh / bh_ * nh; sx = -(bp[0] || 0) / bw_ * nw; sy = -(bp[1] || 0) / bh_ * nh; } // v4.26: from the sheet's own size (8-frame sheets with gutters)
+    var lie = e.classList.contains('wlie'), mir = lie && /scaleX\(-1\)/.test(e.style.transform || ''); if (e.classList.contains('walker') || e.dataset.bw || lie) { /* v6.5.65: the lie-down cel too (its own frame, mirrored when he fell the other way) */ var bp = (e.style.backgroundPosition || '0px 0px').split(' ').map(parseFloat), bz = (e.style.backgroundSize || '').split(' ').map(parseFloat), bw_ = bz[0] || lw * 4, bh_ = bz[1] || lh * 4; sw = lw / bw_ * nw; sh = lh / bh_ * nh; sx = -(bp[0] || 0) / bw_ * nw; sy = -(bp[1] || 0) / bh_ * nh; } // v4.26: from the sheet's own size (8-frame sheets with gutters)
     else { sh = nh; sw = Math.min(nw, lw * nh / lh); }
-    try { g.drawImage(im, sx, sy, sw, sh, r.left, r.top, r.width, r.height); } catch (x) {} });
+    try { if (mir) { g.save(); g.translate(r.left + r.width, r.top); g.scale(-1, 1); g.drawImage(im, sx, sy, sw, sh, 0, 0, r.width, r.height); g.restore(); } else g.drawImage(im, sx, sy, sw, sh, r.left, r.top, r.width, r.height); } catch (x) {} });
   g.fillStyle = 'rgba(150,160,175,.16)'; g.fillRect(vr.left, vr.top, vr.width, vr.height); // the overcast haze
   g.restore(); g.setTransform(1, 0, 0, 1, 0, 0);
 }
