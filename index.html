@@ -3794,6 +3794,8 @@ body.fff-dlg-on #qnote{
 #wfxg{position:absolute;left:0;top:0;z-index:1;pointer-events:none}
 #wfxs{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
 #world.wfx1 #wrain{display:none}
+/* v6.5.64 post-fog: once the four relay bosses are down the Ch1 light warms (one pre-composited layer, opacity only) */
+#wwarm{position:absolute;inset:0;pointer-events:none;opacity:0;display:none;background:linear-gradient(180deg,rgba(255,206,142,.20),rgba(255,188,120,.09) 45%,rgba(150,92,52,.10))}
 #world:not(.wfx1) #wfxg,#world:not(.wfx1) #wfxs,#world.behind #wfxg,#world.behind #wfxs{display:none}
 #game.on.bfx1 .fhud,#game.on.bfx1 .fside .spirit{background:rgba(10,10,24,.5);border-radius:10px;box-shadow:0 0 0 6px rgba(10,10,24,.5)}
 #game.on.bfx1 #stage .topbar{background:rgba(10,10,24,.55)}
@@ -4090,6 +4092,7 @@ body.fff-dlg-on #qnote{
 <p>Ryo and Aoi on the title are the in-game stand and sheathed-sword cels. The school, gate, moon and sky are drawn for this screen in the same palette.</p>
 <h3>Music (streamed from `music/`)</h3>
 <ul>
+<li>Chapter One grounds once all four relay bosses are down and the path to Gouki is open (<code>map_post.mp3</code>): "Undaunted" Kevin MacLeod (incompetech.com) · CC BY 4.0. <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">http://creativecommons.org/licenses/by/4.0/</a> Source: <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400025" target="_blank" rel="noopener">https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1400025</a> Edited: 3:17 excerpt on bar lines (95 bpm), the head crossfaded with what follows the cut so it loops as a whole file; level-matched to the other grounds music.</li>
 <li>Chapter Two streets (<code>c2complex.mp3</code>, the Kitsune-Chūō overworld and the landmark rooms that share that street track): "The Complex" Kevin MacLeod (incompetech.com) · CC BY 4.0. <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">http://creativecommons.org/licenses/by/4.0/</a> Source: <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300025" target="_blank" rel="noopener">https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1300025</a> The street file is the phone stream. The end is crossfaded into the opening so the whole piece loops. The file name is not <code>c2night.mp3</code>: that name on the live host is the older street loop.</li>
 <li>Genji's gym after the boxing lesson (<code>c2descent.mp3</code>): "The Descent" Kevin MacLeod (incompetech.com) · CC BY 4.0. <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">http://creativecommons.org/licenses/by/4.0/</a> Source: <a href="https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1200094" target="_blank" rel="noopener">https://incompetech.com/music/royalty-free/index.html?isrc=USUAN1200094</a> The file is the original 320 kbps mp3. Before that lesson the gym keeps "The Complex".</li>
 <li>Chapter Two, Nails’ arcade while he is a target (<code>base_arcade.mp3</code>): "Griphop" Kevin MacLeod (incompetech.com) · CC BY 4.0. <a href="http://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">http://creativecommons.org/licenses/by/4.0/</a></li>
@@ -5057,9 +5060,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = E; else ro
 'use strict';
 var A = { ctx: null, master: null, fx: null, mus: null, vox: null, buf: {}, sfxOn: true, musicOn: true, musVol: 1, sfxVol: 1, ready: false, live: [], mono: {},
   track: null, want: null, src: null, sg: null, mbuf: {}, loading: {}, ducked: false };
-var MUSIC_DIR = 'music/', TRACKS = { c3harbor: 1, battle_hakuen: 1, title: 1, battle_ryo: 1, battle_aoi: 1, victory: 1, defeat: 1, map: 1, intro: 1, lib: 1, battle_mizuno: 1, art: 1, battle_mai: 1, cafe: 1, battle_kurata: 1, field: 1, battle_bando: 1, gym: 1, battle_gouki: 1, ck_surf: 1, ck_covert: 1, ck_backroom: 1, base_arcade: 1, base_game: 1, base_sento: 1, base_depot: 1, base_roof: 1, battle_nails: 1, battle_jin: 1, battle_goda: 1, battle_masa: 1, battle_kagero: 1, battle_kaneda: 1, battle_shigure: 1 }; // v6.5.64: Ch2 boss buildings (base_*) + Ch2 boss fights (battle_* below). v6.5.12: ck_backroom = tension and distress (back room + its fights). v4.62: gym=Island of Dr. Sinister (looping), battle_gouki=Time Running Out_Looping→mp3 (Safari). v4.60 Bando; v4.58 Kurata; v4.55 Mai. c2night is not warmed: that URL is the old street loop on the live host.
+var MUSIC_DIR = 'music/', TRACKS = { c3harbor: 1, battle_hakuen: 1, title: 1, battle_ryo: 1, battle_aoi: 1, victory: 1, defeat: 1, map: 1, map_post: 1, intro: 1, lib: 1, battle_mizuno: 1, art: 1, battle_mai: 1, cafe: 1, battle_kurata: 1, field: 1, battle_bando: 1, gym: 1, battle_gouki: 1, ck_surf: 1, ck_covert: 1, ck_backroom: 1, base_arcade: 1, base_game: 1, base_sento: 1, base_depot: 1, base_roof: 1, battle_nails: 1, battle_jin: 1, battle_goda: 1, battle_masa: 1, battle_kagero: 1, battle_kaneda: 1, battle_shigure: 1 }; // v6.5.64: Ch2 boss buildings (base_*) + Ch2 boss fights (battle_* below). v6.5.12: ck_backroom = tension and distress (back room + its fights). v4.62: gym=Island of Dr. Sinister (looping), battle_gouki=Time Running Out_Looping→mp3 (Safari). v4.60 Bando; v4.58 Kurata; v4.55 Mai. c2night is not warmed: that URL is the old street loop on the live host.
 /* loop: 1 = whole file, [start, end] = seamless loop region in seconds (bar boundaries, see tools/make_loop.py) */
-var LOOP = { c3harbor: [0.5, 42.2391], battle_hakuen: [0.5, 27.1667], c2complex: 1, c2descent: 1, title: 1, map: [80.6968, 181.7094], intro: [44.4724, 152.4725], battle_ryo: [11.9397, 121.6556], battle_aoi: [43.7136, 217.4279], lib: [5.9853, 22.4237], battle_mizuno: [0.9412, 32.9412], art: 1, battle_mai: 1, battle_kurata: 1, field: 1, battle_bando: 1, gym: 1, battle_gouki: 1, ck_surf: 1, ck_covert: 1, ck_backroom: 1, base_arcade: 1, base_game: 1, base_sento: 1, base_depot: 1, base_roof: 1, battle_nails: 1, battle_jin: 1, battle_goda: 1, battle_masa: 1, battle_kagero: 1, battle_kaneda: 1, battle_shigure: 1 }; // v6.5.64: Ch2 boss tracks are bar-cut, crossfaded whole-file loops. v6.5.12: ck_backroom whole-file loop. c2complex: whole-file loop of The Complex. c2descent: whole-file loop of The Descent (Genji's gym after the boxing lesson). Safari must get a real loopEnd (0 is an empty loop). cafe soft-replay. gym/battle_gouki Matyas looping. v4.62 Gouki; v4.60 Bando; v4.55 Mai; v4.30 find_loop.py
+var LOOP = { c3harbor: [0.5, 42.2391], battle_hakuen: [0.5, 27.1667], c2complex: 1, c2descent: 1, title: 1, map: [80.6968, 181.7094], map_post: 1, intro: [44.4724, 152.4725], battle_ryo: [11.9397, 121.6556], battle_aoi: [43.7136, 217.4279], lib: [5.9853, 22.4237], battle_mizuno: [0.9412, 32.9412], art: 1, battle_mai: 1, battle_kurata: 1, field: 1, battle_bando: 1, gym: 1, battle_gouki: 1, ck_surf: 1, ck_covert: 1, ck_backroom: 1, base_arcade: 1, base_game: 1, base_sento: 1, base_depot: 1, base_roof: 1, battle_nails: 1, battle_jin: 1, battle_goda: 1, battle_masa: 1, battle_kagero: 1, battle_kaneda: 1, battle_shigure: 1 }; // v6.5.64: Ch2 boss tracks are bar-cut, crossfaded whole-file loops. v6.5.12: ck_backroom whole-file loop. c2complex: whole-file loop of The Complex. c2descent: whole-file loop of The Descent (Genji's gym after the boxing lesson). Safari must get a real loopEnd (0 is an empty loop). cafe soft-replay. gym/battle_gouki Matyas looping. v4.62 Gouki; v4.60 Bando; v4.55 Mai; v4.30 find_loop.py
 var REPLAY = { cafe: 1 }; // v4.58: when file ends, soft-restart from top (Monster Stake Out is not labeled looping)
 var MUS_ON = 0.5, MUS_ON_HI = 0.58, MUS_DUCK = 0.14;
 function b64ToBuf(s) { var bin = atob(s.split(',').pop()); var u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; }
@@ -15788,7 +15791,10 @@ function tutFight(k) {
 }
 /* ---------- enter ---------- */
 /* v4.30 music: Hitman on the grounds, Tension Theme in the Library dungeon; walking in or out = slow fade-out, then slow fade-in */
-function wTrack() { var D = W.inside && INT[W.inside.id]; if (D && D.c2) return D.mus || 'map'; if (D && D.dg === 'lib') return 'lib'; if (D && D.dg === 'art') return 'art'; /* v4.55 Mai */ if (D && D.dg === 'cafe') return 'cafe'; /* v4.58 Kurata */ if (D && D.dg === 'field') return 'field'; /* v4.60 Bando: Wicked Dreams */ if (D && D.dg === 'gym') return 'gym'; /* v4.62 Gouki: Island of Dr. Sinister */ return 'map'; }
+function wTrack() { var D = W.inside && INT[W.inside.id]; if (D && D.c2) return D.mus || 'map'; if (D && D.dg === 'lib') return 'lib'; if (D && D.dg === 'art') return 'art'; /* v4.55 Mai */ if (D && D.dg === 'cafe') return 'cafe'; /* v4.58 Kurata */ if (D && D.dg === 'field') return 'field'; /* v4.60 Bando: Wicked Dreams */ if (D && D.dg === 'gym') return 'gym'; /* v4.62 Gouki: Island of Dr. Sinister */ return mapTrack(); }
+/* v6.5.64: once all four relay bosses are down (the path to Gouki is open) the Ch1 outdoor map plays its own track instead of Hitman. */
+var MAP_POST = 'map_post'; /* live: music/map_post.mp3 = "Undaunted" (Kevin MacLeod, CC BY 4.0), see MUS_CRED + credits */
+function mapTrack() { try { if (!W.inside && (SAVE.chapter | 0) <= 1 && typeof minisLeft === 'function' && minisLeft() === 0) return MAP_POST; } catch (e) {} return 'map'; }
 root.FFF_WTRACK = function () { return wTrack(); };
 function wMus() { var t = wTrack(); if (typeof ckSurfWall === 'function') ckSurfWall(false); if (!W.on || W.opMus || !t) return; if (AU.st.want === t && AU.st.track === t) return; if (AU.st.want === 'intro' && t === 'map') return; AU.music(t, { slow: AU.st.want && AU.st.want !== t ? 1 : 0 }); ev('world:music:' + t); }
 var built = false;
@@ -20838,7 +20844,7 @@ function c2FrameC(dt, k) { if (C2LM[k]) { c2Tense(dt); var b = W.c2n && W.c2n.bo
     else if (d <= reach && !W.dlg && !W.busy && !W.cut && !W.fading && (W.cool || 0) <= 0 && tagsLive() && (k !== 'roof' || c2S().e.roofMet)) { b.confHit = 1; if (k === 'roof') c2RoofCine(); else c2LmBoss(k); } } } }
 
 /* ---------- the dynamic music credit (whatever is playing, named) ---------- */
-var MUS_CRED = { c2complex: '\u201cThe Complex\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', c2night: '\u201cThe Complex\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', c2descent: '\u201cThe Descent\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', map: '\u201cHitman\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', intro: '\u201cCrypto\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0',
+var MUS_CRED = { c2complex: '\u201cThe Complex\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', c2night: '\u201cThe Complex\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', c2descent: '\u201cThe Descent\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', map: '\u201cHitman\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', map_post: '\u201cUndaunted\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', intro: '\u201cCrypto\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0',
   title: '\u201cFunk Game Loop\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', lib: '\u201cHunted by the Evil\u201d Umplix \u00b7 CC0', art: '\u201cBounce Light\u201d Eric Matyas (soundimage.org)', cafe: '\u201cMonster Stake Out\u201d Eric Matyas (soundimage.org)',
   field: '\u201cWicked Dreams\u201d Eric Matyas (soundimage.org)', gym: '\u201cThe Island of Dr. Sinister\u201d Eric Matyas (soundimage.org)', ck_backroom: '\u201ctension and distress\u201d allen yatsura \u00b7 CC0',
   base_arcade: '\u201cGriphop\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', base_game: '\u201cEthernight Club\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', base_sento: '\u201cGhost Story\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', base_depot: '\u201cIndustrial Cinematic\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', base_roof: '\u201cDarkness is Coming\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', battle_nails: '\u201cBet You Can\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', battle_jin: '\u201cShiny Tech II\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', battle_goda: '\u201cMountain Emperor\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', battle_masa: '\u201cHarmful or Fatal\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', battle_kagero: '\u201cClash Defiant\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', battle_kaneda: '\u201cStompDance\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0', battle_shigure: '\u201cVolatile Reaction\u201d Kevin MacLeod (incompetech.com) \u00b7 CC BY 4.0' }; /* v6.5.64 Ch2 bosses */
@@ -27144,13 +27150,14 @@ function wfxR(a, b) { return a + Math.random() * (b - a); }
 function wfxInit() {
   var g = document.createElement('canvas'); g.id = 'wfxg'; g.setAttribute('aria-hidden', 'true');
   var s = document.createElement('canvas'); s.id = 'wfxs'; s.setAttribute('aria-hidden', 'true');
-  map.insertBefore(g, $('#wsp')); $('#wsky').appendChild(s);
+  var wm = document.createElement('i'); wm.id = 'wwarm'; wm.setAttribute('aria-hidden', 'true');
+  map.insertBefore(g, $('#wsp')); $('#wsky').appendChild(wm); $('#wsky').appendChild(s);
   var fog = document.createElement('canvas'); fog.width = 256; fog.height = 96; var f = fog.getContext('2d'); // one soft bank, drawn once
   for (var i = 0; i < 14; i++) { var x = 30 + Math.random() * 196, y = 48 + wfxR(-14, 14), r = wfxR(22, 40), rg = f.createRadialGradient(x, y, 0, x, y, r);
     rg.addColorStop(0, 'rgba(238,242,247,.55)'); rg.addColorStop(1, 'rgba(238,242,247,0)'); f.fillStyle = rg; f.fillRect(x - r, y - r, r * 2, r * 2); }
   var pet = document.createElement('canvas'); pet.width = pet.height = 24; var q = pet.getContext('2d'); q.fillStyle = '#e8a8b8';
   q.beginPath(); q.moveTo(2, 12); q.bezierCurveTo(7, 3, 18, 4, 22, 10); q.lineTo(20, 12); q.lineTo(22, 14); q.bezierCurveTo(18, 20, 7, 21, 2, 12); q.fill();
-  WFX = { g: g, gx: g.getContext('2d'), s: s, sx: s.getContext('2d'), fog: fog, pet: pet, t: 0, last: 0, fogs: [], rip: [], rain: [], pets: [], ripT: 0, key: '' };
+  WFX = { g: g, gx: g.getContext('2d'), s: s, sx: s.getContext('2d'), fog: fog, pet: pet, t: 0, last: 0, fogs: [], rip: [], rain: [], pets: [], ripT: 0, key: '', wm: wm, cl: null, pd: 1, pdt: 0, mbr: null, gOff: false, wmA: -1 };
   return WFX;
 }
 function wfxView() { var S = W.S || 0.7; return { S: S, x: W.cam.x, y: W.cam.y, w: W.vw / S, h: W.vh / S }; }
@@ -27163,12 +27170,19 @@ function wfxTick() {
   var on = wfxOn(), wd = $('#world');
   var live = !!(on && wd && !wd.classList.contains('behind') && !(document.getElementById('game') && document.getElementById('game').classList.contains('on')));
   if (wd.classList.contains('wfx1') !== live) wd.classList.toggle('wfx1', live);
-  if (WFX) { WFX.g.style.display = WFX.s.style.display = live ? '' : 'none'; }
+  if (WFX) { WFX.g.style.display = live && !WFX.gOff ? '' : 'none'; WFX.s.style.display = live ? '' : 'none'; WFX.wm.style.display = live && WFX.wmA > 0 ? 'block' : 'none'; }
   if (!live) return;
   var X = WFX || wfxInit(), v = wfxView(), now = performance.now(), rm = wfxRM();
   /* v6.5.18: map weather at the display rate; still holds under menus */
   var dt = X.last ? Math.min(0.05, (now - X.last) / 1000) : 0; X.last = now;
   var hold = !!( $('#wpause').classList.contains('on') );
+  /* v6.5.64 post-fog: cl 0..1 is how far the Ch1 weather has cleared (all four relay bosses beaten). It eases over ~5 s of live map time
+   * after Bando falls, snaps on a load / new game (SAVE.mb is a new object) and when going back (new game). pd is the puddle life: it
+   * thins while the rain stops, then ripples keep slowing and fade out over ~45 s more. Everything off = nothing drawn but petals. */
+  var tgt = minisLeft() === 0 ? 1 : 0;
+  if (X.tg !== tgt) { var tg0 = X.tg; X.tg = tgt; if (tg0 != null) { try { wMus(); } catch (eM) {} } } /* the grounds track changes once, with the usual slow fade (Hitman -> map_post) */
+  if (X.cl == null || X.mbr !== SAVE.mb || tgt < X.cl) { X.cl = tgt; X.pdt = tgt ? 45 : 0; X.mbr = SAVE.mb; }
+  else if (X.cl < tgt) X.cl = Math.min(tgt, X.cl + dt / 5);
   if (hold) return; /* v6.5.19: pause weather under the menu only; keep rain moving during cutscenes and dialogue */
   var sim = hold || rm ? 0 : dt;
   /* sizes: the ground canvas covers the view plus a margin, in map units, inside the scaled map */
@@ -27176,32 +27190,39 @@ function wfxTick() {
   if (X.key !== key) { X.key = key; X.g.style.width = gw + 'px'; X.g.style.height = gh + 'px'; X.g.width = Math.ceil(gw * v.S * dpr); X.g.height = Math.ceil(gh * v.S * dpr);
     X.s.width = Math.ceil(W.vw * dpr); X.s.height = Math.ceil(W.vh * dpr); }
   var ox = Math.floor(v.x - M), oy = Math.floor(v.y - M); X.g.style.left = ox + 'px'; X.g.style.top = oy + 'px';
-  var nF = 6, nR = rm ? 0 : 110, nP = rm ? 0 : 18, i;
+  var cs = X.cl * X.cl * (3 - 2 * X.cl), clr = X.cl >= 1; /* smoothstep */
+  if (clr) X.pdt = Math.min(45, X.pdt + dt); X.pd = clr ? 0.6 * (1 - X.pdt / 45) : 1 - 0.4 * cs; if (X.pd < 0.02) X.pd = 0;
+  var wa = Math.round(cs * 1000) / 1000; if (wa !== X.wmA) { X.wmA = wa; X.wm.style.opacity = wa; X.wm.style.display = wa ? 'block' : 'none'; }
+  var nF = clr ? 0 : 6, nR = rm || clr ? 0 : Math.ceil(110 * (1 - cs)), nP = rm ? 0 : 18, i;
   /* a door, a fade or a long camera jump: everything restarts inside the new view */
   if (X.vx == null || Math.abs(v.x - X.vx) > v.w * 1.5 || Math.abs(v.y - X.vy) > v.h * 1.5) { X.fogs = []; X.pets = []; X.rip = []; }
   X.vx = v.x; X.vy = v.y;
-  while (X.fogs.length < nF) X.fogs.push(wfxFog({}, v, true));
+  while (X.fogs.length < nF) X.fogs.push(wfxFog({}, v, true)); if (X.fogs.length > nF) X.fogs.length = nF;
   while (X.pets.length < nP) X.pets.push(wfxPet({}, v, true));
   while (X.rain.length < nR) X.rain.push(wfxDrop({}, true)); if (X.rain.length > nR) X.rain.length = nR;
   X.t += sim;
   /* ---- ground layer (map units) ---- */
-  var c = X.gx, k = v.S * dpr; c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, X.g.width, X.g.height); c.setTransform(k, 0, 0, k, -ox * k, -oy * k);
+  var gOff = !X.fogs.length && !X.pd && !X.rip.length; /* nothing left on the ground: hide and skip the whole layer */
+  if (gOff !== X.gOff) { X.gOff = gOff; X.g.style.display = gOff ? 'none' : ''; }
+  var c = X.gx, k = v.S * dpr, fa = 1 - cs;
+  if (!gOff) { c.setTransform(1, 0, 0, 1, 0, 0); c.clearRect(0, 0, X.g.width, X.g.height); c.setTransform(k, 0, 0, k, -ox * k, -oy * k);
   for (i = 0; i < X.fogs.length; i++) { var f = X.fogs[i]; f.x += f.vx * sim;
     if (f.x + f.w < v.x - M || f.x > v.x + v.w + 400 || f.y > v.y + v.h + M || f.y + f.h < v.y - M) wfxFog(f, v, false);
-    c.globalAlpha = f.a * (0.8 + 0.2 * Math.sin(X.t * 0.3 + i)); c.drawImage(X.fog, f.x, f.y, f.w, f.h); }
-  if (!rm) { X.ripT -= sim; if (X.ripT <= 0 && sim > 0) { X.ripT = wfxR(0.12, 0.28);
-      for (var tr = 0; tr < 6; tr++) { var rx = v.x + Math.random() * v.w, ry = v.y + Math.random() * v.h; if (walkableAt(rx, ry) && X.rip.length < 22) { X.rip.push({ x: rx, y: ry, t: 0, m: wfxR(14, 22) }); break; } } }
+    c.globalAlpha = f.a * fa * (0.8 + 0.2 * Math.sin(X.t * 0.3 + i)); c.drawImage(X.fog, f.x, f.y, f.w, f.h); }
+  if (!rm) { X.ripT -= sim; if (X.ripT <= 0 && sim > 0 && X.pd) { X.ripT = wfxR(0.12, 0.28) / (0.15 + 0.85 * X.pd);
+      for (var tr = 0; tr < 6; tr++) { var rx = v.x + Math.random() * v.w, ry = v.y + Math.random() * v.h; if (walkableAt(rx, ry) && X.rip.length < 22) { X.rip.push({ x: rx, y: ry, t: 0, m: wfxR(14, 22), k: 0.4 + 0.6 * X.pd }); break; } } }
     c.lineWidth = 2.0 / v.S;
-    for (i = X.rip.length - 1; i >= 0; i--) { var p = X.rip[i]; p.t += sim; if (p.t > 1.4) { X.rip.splice(i, 1); continue; }
+    for (i = X.rip.length - 1; i >= 0; i--) { var p = X.rip[i]; p.t += sim * (p.k || 1); if (p.t > 1.4) { X.rip.splice(i, 1); continue; }
       for (var ring = 0; ring < 2; ring++) { var u = (p.t - ring * 0.28) / 1.1; if (u <= 0 || u >= 1) continue;
-        c.globalAlpha = 0.70 * (1 - u); c.strokeStyle = '#6e849c'; c.beginPath(); c.ellipse(p.x, p.y, 2 + p.m * u, (2 + p.m * u) * 0.45, 0, 0, 6.2832); c.stroke(); } } }
-  c.globalAlpha = 1;
+        c.globalAlpha = 0.70 * (1 - u) * X.pd; c.strokeStyle = '#6e849c'; c.beginPath(); c.ellipse(p.x, p.y, 2 + p.m * u, (2 + p.m * u) * 0.45, 0, 0, 6.2832); c.stroke(); } } }
+  c.globalAlpha = 1; }
+  else if (X.rip.length) X.rip.length = 0;
   /* ---- sky layer (screen px): light rain + world-anchored petals ---- */
   var sx = X.sx; sx.setTransform(dpr, 0, 0, dpr, 0, 0); sx.clearRect(0, 0, W.vw, W.vh);
   if (X.rain.length) { sx.strokeStyle = '#8a9bb0'; sx.lineWidth = 1.65; var tx = -0.21; // the old tiles leaned 12deg; same slant
     sx.beginPath(); var ra = 0, rn = 0;
     for (i = 0; i < X.rain.length; i++) { var d = X.rain[i]; d.y += d.v * sim; d.x += d.v * tx * sim; if (d.y > W.vh + 20 || d.x < -40) wfxDrop(d, false);
-      ra += d.a; rn++; sx.moveTo(d.x, d.y); sx.lineTo(d.x + d.l * 0.21, d.y - d.l); } sx.globalAlpha = rn ? ra / rn : 0.24; sx.stroke(); }
+      ra += d.a; rn++; sx.moveTo(d.x, d.y); sx.lineTo(d.x + d.l * 0.21, d.y - d.l); } sx.globalAlpha = (rn ? ra / rn : 0.24) * (1 - 0.6 * cs); sx.stroke(); }
   for (i = 0; i < X.pets.length; i++) { var pe = X.pets[i];
     pe.x += (pe.vx + 9 * Math.sin(X.t * 1.1 + pe.ph)) * sim; pe.y += pe.vy * sim; pe.rot += pe.vr * sim; pe.fl += pe.vf * sim;
     if (pe.y > v.y + v.h + 30 || pe.x < v.x - 40 || pe.x > v.x + v.w * 1.3) wfxPet(pe, v, false);
