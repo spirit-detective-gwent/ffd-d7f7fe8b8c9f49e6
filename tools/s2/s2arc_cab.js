@@ -140,7 +140,7 @@
     function kd(e) { keyEv(e, true); } function ku(e) { keyEv(e, false); }
     document.addEventListener('keydown', kd); document.addEventListener('keyup', ku);
     /* ---- meta screens (attract / continue / initials / board) ---- */
-    function startGame() { if (st !== 'attract') return; credits = []; runScore = 0; G.score = 0; G.start(); tone(988, now(), 0.12, 'square', 0.07); tone(1318, now() + 0.1, 0.18, 'square', 0.07); go('intro'); }
+    function startGame() { if (st !== 'attract') return; credits = []; runScore = 0; G.score = 0; var r0 = G.start(); tone(988, now(), 0.12, 'square', 0.07); tone(1318, now() + 0.1, 0.18, 'square', 0.07); go(r0 === 'select' ? 'play' : 'intro'); }
     function qualifies(sc) { if (sc <= 0) return false; var B = board(id, mine); return B.length < 10 || sc > B[B.length - 1].s; }
     function finishRun(score, cleared) {
       fin = { score: score, cleared: cleared };
@@ -211,6 +211,7 @@
         if (st === 'coin') { if (bl) otxt(q, 'INSERT COIN', SW / 2, SH - 24, 20, '#ffd860'); }
         else { txt(q, 'CREDIT 1', 50, SH - 24, 12, '#fff'); if (bl) otxt(q, 'PRESS START', SW / 2 + 30, SH - 24, 20, '#7aff9a'); }
         return; }
+      if (st === 'intro' && G.introDraw) { G.introDraw(q, stT); return; }
       if (st === 'intro') { q.fillStyle = 'rgba(0,0,0,' + clamp(1.2 - stT, 0, 0.7) + ')'; q.fillRect(0, 0, SW, SH); var Sg = (G.stages || [])[G.stage | 0] || {};
         rr(q, 20, 170, SW - 40, 130, 14, 'rgba(8,6,18,.85)', 3, C.col); txt(q, (G.stageWord || 'STAGE') + ' ' + ((G.stage | 0) + 1) + (G.stages ? ' / ' + G.stages.length : ''), SW / 2, 200, 15, C.col);
         otxt(q, Sg.n || '', SW / 2, 236, Sg.n && Sg.n.length > 16 ? 20 : 26, '#fff'); if (Sg.sub) txt(q, Sg.sub, SW / 2, 272, 12, '#e8e0f8', 'center', 700);
@@ -253,7 +254,7 @@
       if (st === 'coin' && stT > 0.9) { drum('k', now(), 0.3); tone(1568, now(), 0.08, 'square', 0.05); tone(2093, now() + 0.07, 0.12, 'square', 0.05); go('attract'); }
       else if (st === 'attract' && G.attract) G.attract(dt, stT);
       else if (st === 'intro') { if (G.introStep) G.introStep(dt); if (stT > 1.6) { go('play'); guard = 0.15; } }
-      else if (st === 'play') { var r = G.step(dt); if (r === 'clear') { G._tally = G.bonus ? G.bonus() : []; G._tally.forEach(function (b) { G.score += b[1] | 0; }); tone(784, now(), 0.15, 'square', 0.07); tone(1046, now() + 0.15, 0.15, 'square', 0.07); tone(1568, now() + 0.3, 0.3, 'square', 0.07); go('clear'); }
+      else if (st === 'play') { var r = G.step(dt); if (r === 'go') go('intro'); else if (r === 'clear') { G._tally = G.bonus ? G.bonus() : []; G._tally.forEach(function (b) { G.score += b[1] | 0; }); tone(784, now(), 0.15, 'square', 0.07); tone(1046, now() + 0.15, 0.15, 'square', 0.07); tone(1568, now() + 0.3, 0.3, 'square', 0.07); go('clear'); }
         else if (r === 'win') { G._tally = G.bonus ? G.bonus() : []; G._tally.forEach(function (b) { G.score += b[1] | 0; }); runScore = Math.max(runScore, G.score | 0); [523, 659, 784, 1046, 1318].forEach(function (f, i) { tone(f, now() + i * 0.12, 0.25, 'square', 0.06); }); go('win'); }
         else if (r === 'dead') { stickOff(); contN = 9; contT = 0; tone(220, now(), 0.3, 'sawtooth', 0.08); tone(110, now() + 0.25, 0.5, 'sawtooth', 0.08); go('cont'); } }
       else if (st === 'clear') { if (stT > 1.2 + (G._tally || []).length * 0.4) { G.next(); go('intro'); } }
