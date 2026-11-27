@@ -176,7 +176,7 @@
     function contNo() { credits.push(G.score | 0); runScore = Math.max(runScore, G.score | 0); go('over'); }
     function close(again) { kill(false); if (opts.onClose) opts.onClose(res || { id: id, score: 0, tier: 0, quit: true }, again); }
     function kill(quit) {
-      if (done) return; done = true; if (CUR && CUR.id === myId) { cancelAnimationFrame(CUR.raf); CUR = null; }
+      if (done) return; done = true; if (CUR && CUR.id === myId) { cancelAnimationFrame(CUR.raf); if (A._cab === CUR) A._cab = null; CUR = null; }
       document.removeEventListener('keydown', kd); document.removeEventListener('keyup', ku);
       cv.c.removeEventListener('pointerdown', onDown); cv.c.removeEventListener('pointermove', onMove); cv.c.removeEventListener('pointerup', onUp); cv.c.removeEventListener('pointercancel', onUp);
       try { if (G.dispose) G.dispose(); } catch (eD) {}
