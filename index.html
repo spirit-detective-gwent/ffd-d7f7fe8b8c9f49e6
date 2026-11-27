@@ -9615,7 +9615,7 @@ function pickKey(S, keys, from) { // which copy of a group an upgrade goes on: t
   return (from === 'spare' ? s[0] || d[0] : d[0] || s[0]);
 }
 /* v4.13: upgrade items buy potions (the special now grows with the Bond instead) */
-var POTION = { cost: 8 };
+var POTION = { cost: 6 };
 function buyPotion(S) { if (S.items < POTION.cost) return 'needs ' + YEN + POTION.cost + ' (you have ' + YEN + (S.items | 0) + ')'; var f = root.FFF_POTION; if (!f) return 'Potions are sold in the Training Room'; var e = f(S, POTION.cost); return e || null; }
 function potionRow(S) { var r = el('div', 'urow potion'); r.dataset.id = 'potion'; r.dataset.k = 'potion';
   r.appendChild(el('div', 'pimg', '\ud83e\uddea'));
@@ -19026,7 +19026,7 @@ var CAFG = {
     doors: { gS: { r: [581, 625, 694, 715], at: [637, 650], land: [637, 585, 3], to: 'line:gN' } },
     spots: [{ id: 'clue', r: [600, 160, 680, 220], at: [640, 410], face: 3 }, { id: 'search', r: [690, 155, 760, 230], at: [725, 410], face: 3 }], foes: [] } };
 var CAFP = { line: [{ id: 'eat1', at: [560, 470] }, { id: 'eat2', at: [740, 640] }], dining: [{ id: 'kurata', at: [640, 255], block: [612, 236, 668, 266] }] };
-var CAF_FOES = ['bully4', 'bully3'] /* v4.41 (Ernest): the red-haired boy + the girl with the bat, drawn from their cel walk/run sheets */, CAF_CRATES = ['line', 'kitchen', 'staff'], CAF_LUNCH = 12; /* the reopened counter: a hot lunch, \u00a512 (v6.5.66 prices, Erik t572u: was \u00a52), back to full HP */
+var CAF_FOES = ['bully4', 'bully3'] /* v4.41 (Ernest): the red-haired boy + the girl with the bat, drawn from their cel walk/run sheets */, CAF_CRATES = ['line', 'kitchen', 'staff'], CAF_LUNCH = 12; /* the reopened counter: a hot lunch, \u00a512 (v6.5.66 prices, Erik t572u: was \u00a52), once per playthrough (cafS().e.lunch), heals 50% HP, full HP on an eating-game win (Erik t575u) */, CAF_LUNCH_PCT = 0.5
 NM.cafe_stu = 'Taniguchi Haru'; PT.cafe_stu = 'cafe_stu_fig'; /* v4.72 #20: the Staff Room first-year (was a Yuto clone) */ NM.kurata = 'Kurata Tetsu'; PT.kurata = 'kurata_fig'; ARTK.mb_cafe = 'kurata';
 Object.keys(CAFG).forEach(function (k) { var R = CAFG[k], spots = [];
   Object.keys(R.doors).forEach(function (d) { var D = R.doors[d]; spots.push({ id: d, r: lr(R, D.r), at: lw(R, D.at), face: LIB_FACE[d] }); });
@@ -19163,10 +19163,10 @@ function cafAct(a) { var k = cafRoom(); if (!k) return; if (CAFG[k].doors[a]) { 
   if (a === 'crate') { cafLift(k); return; } if (a === 'chute') { cafDump(); return; } if (a === 'counter') { cafLunch(); return; }
   if (a === 'menu') { scene(null, CAF_SC.menu); return; } if (a === 'notes') { scene(null, CAF_SC.notes); return; }
   if (a === 'clue') { var S = cafS(); S.e.clue = 1; save(); ev('world:cafe:clue'); cafMaybeShiny(function () { scene(null, CAF_SC.clue, function () { if (beaten('mb_cafe') && qReady() && !S.e.port) { scene(null, CAF_SC.port, function () { cafPortAsk(); }); } else { W.dlg = false; } }); }); return; } if (typeof comment === 'function') comment(SAY.hint.nothing); else toast('Nothing useful.'); }
-/* the reopened counter (after Kurata): a hot lunch, back to full HP; the reason to come back */
-function cafLunch() { var h = MAXHP - SAVE.hp; ev('world:cafe:lunch:' + h);
-  dialog('<b>Lunch counter</b><p>The line is moving again. <strong>Hot lunch</strong> \u00b7 \u00a5' + CAF_LUNCH + ': back to full HP.</p><p class="vst"><span>HP: <b>' + SAVE.hp + '/' + MAXHP + '</b></span><span>Your yen: <b>\u00a5' + SAVE.items + '</b></span></p>',
-    [['Not now', null], [h <= 0 ? 'You\u2019re full' : SAVE.items < CAF_LUNCH ? 'Buy \u00b7 need \u00a5' + CAF_LUNCH : 'Buy \u00a5' + CAF_LUNCH, function () { if (h <= 0 || SAVE.items < CAF_LUNCH) return; var h0 = SAVE.hp; SAVE.items -= CAF_LUNCH; SAVE.hp = MAXHP; save(); hud(); bumpItems(); eatFx('\ud83c\udf71', 'Hot lunch', h0, 'Hot lunch. Full HP (' + MAXHP + ').'); ev('world:cafe:lunch:buy'); }]]); }
+/* the reopened counter (after Kurata): one hot lunch per playthrough (v6.5.66, Erik t575u): \u00a512, heals half your HP; win its eating game for full HP */
+function cafLunch() { var h = MAXHP - SAVE.hp, had = !!cafS().e.lunch; ev('world:cafe:lunch:' + h + (had ? ':had' : ''));
+  dialog('<b>Lunch counter</b><p>The line is moving again. ' + (had ? 'You already had your hot lunch. One per student.' : '<strong>Hot lunch</strong> \u00b7 \u00a5' + CAF_LUNCH + ': heals half your HP. Clean the plate for full HP. One per student.') + '</p><p class="vst"><span>HP: <b>' + SAVE.hp + '/' + MAXHP + '</b></span><span>Your yen: <b>\u00a5' + SAVE.items + '</b></span></p>',
+    [['Not now', null], [had ? 'Already eaten' : h <= 0 ? 'You\u2019re full' : SAVE.items < CAF_LUNCH ? 'Buy \u00b7 need \u00a5' + CAF_LUNCH : 'Buy \u00a5' + CAF_LUNCH, function () { var S = cafS(); if (S.e.lunch || h <= 0 || SAVE.items < CAF_LUNCH) return; var h0 = SAVE.hp, add = Math.ceil(MAXHP * CAF_LUNCH_PCT); S.e.lunch = 1; SAVE.items -= CAF_LUNCH; SAVE.hp = Math.min(MAXHP, h0 + add); save(); hud(); bumpItems(); eatFx('\ud83c\udf71', 'Hot lunch', h0, 'Hot lunch. +' + (SAVE.hp - h0) + ' HP.'); ev('world:cafe:lunch:buy'); }, 'hot buy', had || h <= 0 || SAVE.items < CAF_LUNCH]]); }
 function cafVmLeft(id) { var n = cafS().vm[id]; return n == null ? LIB_VM : n; }
 function cafVend(id) { var v = (CAFG.staff.vend || []).find(function (q) { return q[0] === id; }), n = cafVmLeft(id); if (!v) return; ev('world:cafe:vend:' + id + ':' + n);
   if (v[1] === 'soda') { var c = SODA.cost; dialog('<b>Soda machine</b><p><strong>Soda</strong> (surprise flavour) \u00b7 \u00a5' + c + '.</p><p class="vst"><span>In this machine: <b>' + (n ? n + ' left' : 'SOLD OUT') + '</b></span><span>Your yen: <b>\u00a5' + SAVE.items + '</b></span></p>',
@@ -19208,7 +19208,7 @@ var CAF_SC = {
   clue: [['', '<p class="dim">The serving window. Empty trays.{p} {slow}No note this time.{/slow}</p>'], ['aoi', '{slow}Nothing.{/slow}{p} {quiet}Every other one left us a lead.{/quiet}', { mood: 'neutral' }], ['ryo', '{quiet}So where now?{/quiet}', { mood: 'neutral' }],
     ['aoi', '{slow}Think about the gym.{/slow}{p} That energy, all of it leaning toward Gouki.', { mood: 'neutral' }], ['ryo', '{slow}Like something was pulling them in.{/slow}', { mood: 'neutral' }]],
   port: [['aoi', '{quiet}The nurse might see what we can’t.{/quiet}', { mood: 'neutral' }]],
-  talk_eat1: [['hina', 'I can taste food again. Real food. The counter\u2019s open, Kazan.', { mood: 'neutral' }]], talk_eat2: [['kenta', 'Hot lunch is twelve yen. Best twelve yen of my life.', { mood: 'neutral' }]] };
+  talk_eat1: [['hina', 'I can taste food again. Real food. The counter\u2019s open, Kazan.', { mood: 'neutral' }]], talk_eat2: [['kenta', 'Lunch lady makes each of us one hot plate. Twelve yen. Clean it and you walk out brand new.', { mood: 'neutral' }]] };
 function cafBossLines() {
   var L = (CAF_SC.boss || []).slice();
   if (typeof bondPathKey === 'function' && bondPathKey() === 'balanced') L = L.concat(CAF_SC.bossBalanced || []);
@@ -23183,7 +23183,7 @@ build = function () {
 };
 function phPrices() {
   return {
-    unchanged: false, /* v6.5.66 (Erik t572u): soda \u00a53, food \u00a57, hot lunch \u00a512, potion \u00a58 */
+    unchanged: false, /* v6.5.66 (Erik t572u): soda \u00a53, food \u00a57, hot lunch \u00a512, one-time hot lunch, half HP / full on a win (t575u) */
     soda: { yen: SODA.cost, effect: 'Not a heal. +5 Spirit on the map when you drink it, full Spirit on a chug win. No next-fight buff.' },
     food: { yen: FOOD.cost, heal: Math.round(FOOD.pct * 100) + '% HP eaten at the machine, not stored' },
     bandageMachine: { yen: AID.cost, heal: '20% stored bandage' },
@@ -23192,7 +23192,7 @@ function phPrices() {
     craftCh1: '1 Clean Gauze + 1 Medical Tape = 20% dressing. In Chapter 2, Hase, Machi Motors, and Ono sell both as kit materials. World-found and safe-room kits stay the cheap path.',
     craftCh2: '1 Mugwort Leaf + 1 Ginger Root = 35% potion. Ingredients already defined. Gated to Chapter 2.',
     income: 'Each bully rolls 50% of \u00a51 (expected \u00a50.5). A relay rolls 50% of \u00a52 (expected \u00a51). Gouki alone rolls 50% of \u00a53 (expected \u00a51.5), plus \u00a51 of that roll per joiner before the half.',
-    recommendation: 'v6.5.66: Chapter 1 food and drink now match Chapter 2 (about \u00a50.5 per HP). Soda \u00a53, machine food \u00a57 (30% HP), hot lunch \u00a512 (full HP), potion \u00a58 (35% stored). The harbor machines share the soda and food prices. The \u00a54 bandage machine, the nurse and candy are unchanged. Fight yen is unchanged.'
+    recommendation: 'v6.5.66: Chapter 1 food and drink now match Chapter 2 (about \u00a50.5 per HP). Soda \u00a53, machine food \u00a57 (30% HP), hot lunch \u00a512, once per playthrough (half HP, full HP on an eating-game win). Potion stays \u00a56. The harbor machines share the soda and food prices. The \u00a54 bandage machine, the nurse and candy are unchanged. Fight yen is unchanged.'
   };
 }
 function phSetUI() { return root.FFF_UI; }
@@ -23653,9 +23653,9 @@ function eatgRows(stat, add, half, mx) { var u = stat === 'hp' ? ' HP' : ' SP';
 var eatFx0 = eatFx;
 eatFx = function (ic, nm, h0, msg) {
   var id = EAT_GAME[nm], self = this, args = arguments; if (!id || !eatgOn(id)) return eatFx0.apply(self, args);
-  var h1 = SAVE.hp, add = Math.max(0, h1 - h0), half = Math.ceil(add / 2), tg = { win: MAXHP, close: h1, bad: Math.min(MAXHP, h0 + half) }, b0 = W.busy;
+  var h1 = SAVE.hp, add = Math.max(0, h1 - h0), half = id === 'lunch' ? add : Math.ceil(add / 2), /* v6.5.66 (Erik t575u): the one hot lunch is 50% HP unless you win (full); no bad-run halving */ tg = { win: MAXHP, close: h1, bad: Math.min(MAXHP, h0 + half) }, b0 = W.busy;
   eatgCloseBag(); W.busy = true; W.path = []; eatgHold(true); ev('world:eatg:open:' + id);
-  var ok = root.EATG.open({ item: id, who: eatgWho(), hp0: h0, sp0: SAVE.sp | 0, maxhp: MAXHP, spmax: SPMAX, rows: eatgRows('hp', add, half, MAXHP), bot: root.FFF_EATG_BOT,
+  var ok = root.EATG.open({ item: id, who: eatgWho(), hp0: h0, sp0: SAVE.sp | 0, maxhp: MAXHP, spmax: SPMAX, rows: (function (r) { if (id === 'lunch') r.bad = ['BAD RUN', '+' + add + ' HP', 'still half your HP']; return r; })(eatgRows('hp', add, half, MAXHP)), bot: root.FFF_EATG_BOT,
     target: function (r) { return { hp: tg[r] != null ? tg[r] : h1, sp: SAVE.sp | 0 }; },
     onEnd: function (res) { eatgHold(false); SAVE.hp = Math.min(MAXHP, tg[res] != null ? tg[res] : h1); save(); hud(); W.busy = b0; W.path = []; W.cool = Math.max(W.cool || 0, 0.5); eatFx0.call(self, ic, nm, h0, msg); ev('world:eatg:' + id + ':' + res); } });
   if (!ok) { eatgHold(false); W.busy = b0; return eatFx0.apply(self, args); }
