@@ -7326,6 +7326,7 @@ function startMatch(me, story) { ST._matchTok = (ST._matchTok | 0) + 1; ST._vcLe
   if (story && story.pst && story.pst.read) { var rd = (ST.b.grp || [ST.b.s[1]]).map(function (s) { var c = s.hand.find(function (x) { return x.u === s.shown; }); return c ? c.n : null; }).filter(Boolean); if (rd.length) { addLog('<b>Lampglass Earring</b> reads one enemy card: ' + rd.join(', ')); ev('gear:read:' + rd.length); } } // v6.5.36: one card per battle
   if (story && story.ctx && story.ctx.seal) { addLog('<b>Seal</b>: ' + story.ctx.seal); ev('match:seal:' + story.ctx.seal); }
   if (ST.b.freeOpen) { addLog('<b>Drop on them</b>: your first turn is free. They do not answer it.'); ev('match:freeOpen'); }
+  if (story && story.ctx && story.ctx.acDown && !story.tut && !story.boss && !story.mini && ST.b.grp) { try { acDownOpen(); } catch (eAD) { ev('match:alley:down:err:' + (eAD && eAD.message)); } }
   try { if (story && root.FFF_WAVE) root.FFF_WAVE.post(ST, story); } catch (eWv1) { ev('wave:post:err'); } /* v6.5.30 ROUND 1 / ROUND 2 */
   if (T) { ev('tut:start:' + T.step); } // the lesson starts ready to play; there is no keep-hand step and no free swap
 }
@@ -7567,7 +7568,7 @@ function renderSw() {
   w.innerHTML = '\u21c6 ' + CH[b.bench.ch].name.split(' ')[0].toUpperCase() + ' <i>' + (left > 0 ? left + ' left' : 'used') + '</i>';
   w.title = left > 0 ? 'Tag in ' + CH[b.bench.ch].name.split(' ')[0] + ' (uses your turn; shared health, no heal)' : 'No more switches this fight';
 }
-async function tapSwitch() {
+async function tapSwitch() { if (ST.acDown) acDownRise('tapSwitc');
   var b = ST.b; if (!b || !ST.story || b.over || b.turn !== 0 || ST.busy || ST.phase !== 'play') return;
   if (E.sbOpen(b)) { if (!ST.sbFxOn) sbTagGo(); return; } /* v6.5.16 Sync Break: the free tag */
   if (!E.canSwitch(b)) { AU.play('tap'); flash(b.dbl ? 'No switching on a double-move turn' : 'No more switches this fight'); ev('switch:no'); return; }
@@ -7626,7 +7627,7 @@ async function sbSwapFig(to) {
   $('#hand').dataset.key = ''; sd.classList.remove('swout'); sd.classList.add('swin'); AU.play(ST.me === 'aoi' ? 'pl_chg_aoi' : 'pl_chg_ryo', { gain: 0.6 });
   render(false); await sleep(ST.set.fast ? 140 : 280); sd.classList.remove('swin');
 }
-async function sbTagGo() {
+async function sbTagGo() { if (ST.acDown) acDownRise('sbTagG');
   var b = ST.b; if (!b || !E.sbOpen(b) || !b.sbWin.shown || ST.busy || ST.sbFxOn) return;
   ST.sel = null; ST.combo = []; if (ST.swapOpen) { ST.swapOpen = false; ST.mark = []; }
   var r = E.sbTag(b); if (!r) return; ST.busy = true; ST.view = null; AU.play('whoosh', { gain: 0.75 }); ev('sb:tag:' + r.out + ':' + r.in + ':' + (r.mid ? 'mid' : 'start') + ':' + r.bonus);
@@ -7703,7 +7704,7 @@ function renderRun() {
   if (sparDuel()) { r.classList.add('sparstop'); r.textContent = 'Stop Sparring'; return; }
   r.classList.remove('sparstop'); r.innerHTML = 'ESCAPE <i>' + Math.round(runChance() * 100) + '%</i>';
 }
-async function tapRun() {
+async function tapRun() { if (ST.acDown) acDownRise('tapRu');
   var b = ST.b; if (!b || !ST.story || b.over || b.turn !== 0 || ST.busy || ST.phase !== 'play' || b.sbHold || b.sbFreeNow) return;
   if (ST._leaveGuard && performance.now() < ST._leaveGuard) { ev('escape:guard'); return; } /* v6.5.64: ignore ghost clicks / the second tap after a wave banner */
   var ch = runChance(); if (!ch) return; ST.sel = null; ST.combo = [];
@@ -8345,6 +8346,7 @@ function tapDbl() {
   AU.play('rowsel'); ST.sel = null; ST.combo = []; ev('tap:dbl:' + E.dblKind(b)); b.lessonDone = 1; doDouble();
 }
 async function doDouble() {
+  if (ST.acDown) { ST.busy = true; await acDownWait('dbl'); }
   var b = ST.b; ST.busy = true; ST.ff = false; ST.anim = true; $('#btnDbl').hidden = true; if (root.BFX) try { root.BFX.flare(); } catch (e) {} /* v6.5.14 */
   var before = snap(b), gpre = ST.gs ? E.gSnap(b, 0) : null, useful = gpre ? E.gradeUseful(b.s[0], gpre.foe) : true, fx = E.dblMove(b); if (!fx) { ST.busy = false; ST.anim = false; afterTurn(); return; }
   ST.lastFx = fx; if (gpre) E.gTrack(ST.gs, gpre, E.gSnap(b, 0), fx, useful);
@@ -8369,6 +8371,7 @@ async function doDouble() {
   await wait(200); ST.shown = null; ST.view = null; ST.anim = false; ST.ff = false; ST.busy = false; afterTurn();
 }
 async function doPlay(si, mv) {
+  if (si === 0 && ST.acDown) { ST.busy = true; await acDownWait('play'); }
   var b = ST.b; ST.busy = true; ST.ff = false; ST.anim = true;
   var me = b.s[si], card = mv.sig ? (mv.alt && me.sig2 ? me.sig2 : me.sig) : me.hand.find(function (c) { return c.u === mv.u; }), chId = si === 0 ? ST.me : ST.foe;
   ev('play:' + si + ':' + card.id); if (si === 0 && card && (card.t === 'atk' || card.t === 'sig') && root.BFX) try { root.BFX.flare(); } catch (e) {} /* v6.5.14 */ if (si === 0 && ST.swapOpen) { ST.swapOpen = false; ST.mark = []; if (me && !me.mulled) me.mulled = true; ev('swap:closed:play'); } if (si === 0) rbl('cardPlay'); /* one short deep motor pulse. A quick release does not cut it, and holding the button does not repeat it. */
@@ -8849,6 +8852,23 @@ function paintedKo(lose, src, r, fig) {
   requestAnimationFrame(function () { seat(); el.classList.add('on'); shadow.classList.add('on'); });
   ev('fin:pose:down:painted:' + fig); return el;
 }
+/* v6.5.65 (Erik t497u) Alley Cat: the fight opens with the man you dropped still on the floor (his own painted lying pose, seated on
+ * his row like the KO pose, so the GGD-73 ground line holds); he gets up as you make your first move (a play, a Double, a tag, a run
+ * or a new target). No painted pose: his standing figure starts tipped over and rights itself. Nothing runs while he lies there. */
+function acDownSeat(A) { var row = $('#fE'), stand = $('#fE .fbody'); if (!A || !A.el || !row || !stand) return; var sr = stand.getBoundingClientRect(), rr = row.getBoundingClientRect(); if (!rr.height) return;
+  var hs = Math.max(64, sr.height || 120), k = hs * 0.94 / 192, floor = rr.bottom - 6, cx = rr.left + rr.width / 2; A.el.style.width = Math.round(248 * k) + 'px'; A.el.style.height = Math.round(224 * k) + 'px';
+  A.el.style.left = Math.round(cx - 124 * k) + 'px'; A.el.style.top = Math.round(floor - 186 * k) + 'px'; if (A.sh) { A.sh.style.left = Math.round(cx - 124 * k * 0.56) + 'px'; A.sh.style.top = Math.round(floor - 8) + 'px'; A.sh.style.width = Math.round(Math.max(72, 248 * k * 0.72)) + 'px'; } }
+function acDownOpen() { var id = ST.foe, fig = (CH[id] && CH[id].fig) || '', src = IMG[fig + '_down'], stand = $('#fE .fbody'); if (!stand || ST.acDown) return;
+  if (!src || poseHeld(fig, 'down')) { var ef = $('#eFig'); if (!ef) return; ef.classList.add('ac-down'); ST.acDown = { tip: 1 }; ev('match:alley:down:tip:' + fig); return; }
+  var r = stand.getBoundingClientRect(), el = paintedKo(1, src, r, fig); if (!el) return; var shs = document.querySelectorAll('.koshadow'), A = ST.acDown = { el: el, sh: shs[shs.length - 1] || null, fig: fig };
+  el.classList.add('acdown'); acDownSeat(A); requestAnimationFrame(function () { acDownSeat(A); }); [250, 700].forEach(function (ms) { setTimeout(function () { if (ST.acDown === A) acDownSeat(A); }, ms); }); /* the battle screen settles in */
+  ev('match:alley:down:' + fig); }
+function acDownRise(why) { var A = ST.acDown; if (!A) return 0; ST.acDown = null; ev('match:alley:up:' + why);
+  if (A.tip) { var ef = $('#eFig'); if (ef) { ef.classList.remove('ac-down'); ef.classList.add('ac-up'); setTimeout(function () { ef.classList.remove('ac-up'); }, 420); } return 380; }
+  var stand = $('#fE .fbody'), host = stand && stand.closest('.fighter'); if (host) delete host.dataset.down;
+  if (stand) { stand.style.opacity = ''; stand.style.transform = ''; try { stand.animate([{ opacity: 0, transform: 'translateY(16%) scaleY(0.7)', transformOrigin: '50% 100%' }, { opacity: 1, transform: 'translateY(5%) scaleY(0.9)', transformOrigin: '50% 100%', offset: 0.5 }, { opacity: 1, transform: 'none', transformOrigin: '50% 100%' }], { duration: 380, easing: 'ease-out' }); } catch (eA) {} }
+  if (A.el) { A.el.classList.add('out'); setTimeout(function () { A.el.remove(); }, 340); } if (A.sh) { A.sh.classList.remove('on'); setTimeout(function () { A.sh.remove(); }, 340); } return 380; }
+function acDownWait(why) { var ms = acDownRise(why); return ms ? new Promise(function (res) { setTimeout(res, ms - 80); }) : null; }
 function koPose(lose, key, pose, r, flip) {
   var id = lose === 1 ? ST.foe : ST.me, fig = (CH[id] && CH[id].fig) || '', painted = pose === 'down' ? IMG[fig + '_down'] : '';
   if (painted && !poseHeld(fig, 'down')) return paintedKo(lose, painted, r, fig);
@@ -8980,7 +9000,7 @@ async function finishSlow(lose) {
   if (!poses.length) { body.style.opacity = '0'; } // no art for this one: it just drops out of sight
   ev('fin:down'); // on the ground (or on a knee: Gouki)
 }
-function finUndo() { var g = $('#game'); g.classList.remove('vfinal'); if (ST.koAn) { try { ST.koAn.cancel(); } catch (x) {} ST.koAn = null; } document.querySelectorAll('.kopose,.koshadow').forEach(function (e) { e.remove(); }); ST.koP = null; document.querySelectorAll('#game .fighter').forEach(function (el) { delete el.dataset.down; }); document.querySelectorAll('#game .fbody').forEach(function (b) { b.style.opacity = ''; }); if (ST.figE) { ST.figE.poseT = 0; ST.figE.hit = 0; } if (ST.figP) { ST.figP.poseT = 0; ST.figP.hit = 0; } }
+function finUndo() { ST.acDown = null; var g = $('#game'); g.classList.remove('vfinal'); var ef0 = $('#eFig'); if (ef0) ef0.classList.remove('ac-down', 'ac-up'); if (ST.koAn) { try { ST.koAn.cancel(); } catch (x) {} ST.koAn = null; } document.querySelectorAll('.kopose,.koshadow').forEach(function (e) { e.remove(); }); ST.koP = null; document.querySelectorAll('#game .fighter').forEach(function (el) { delete el.dataset.down; }); document.querySelectorAll('#game .fbody').forEach(function (b) { b.style.opacity = ''; }); if (ST.figE) { ST.figE.poseT = 0; ST.figE.hit = 0; } if (ST.figP) { ST.figP.poseT = 0; ST.figP.hit = 0; } }
 async function finishBlow(lose, short) { // hit-stop -> sparks -> the enemy fades out
   if (!short) return finishSlow(lose); // v4.10: story wins (tutorial fights keep the short fade + VICTORY banner)
   var g = $('#game'), f = sideEl(lose), body = f.querySelector('.fbody') || f, r = body.getBoundingClientRect();
@@ -9109,7 +9129,7 @@ function renderFoeRow() {
   b.grp.forEach(function (s, i) { var c = foeChip(i); if (!c) return; var hp = ST.view && b.s[1] === s ? ST.view[1].hp : s.hp; c.querySelector('u').style.width = Math.max(0, hp) / s.max * 100 + '%'; c.classList.toggle('on', b.s[1] === s); c.classList.toggle('down', s.hp <= 0); });
 }
 function showFoe(i) { // put opponent i on the board (the player's target, or the bully taking its turn)
-  var b = ST.b; if (!b.grp || !b.grp[i]) return; E.setFoe(b, i); var id = b.grp[i].ch;
+  var b = ST.b; if (!b.grp || !b.grp[i]) return; if (ST.acDown && b.grp[i].ch !== ST.foe) acDownRise('swap'); E.setFoe(b, i); var id = b.grp[i].ch;
   if (ST.foe !== id || $('#eName').dataset.i !== '' + i) { ST.foe = id; $('#eName').textContent = foeName(id); $('#eName').dataset.i = i;
     var f = ST.figE, key = (CH[id] && CH[id].fig) || '';
     if (f) { f.im = CI.img(IMG[key] || ''); f.key = key; f.ch = id; f.hurtLock = 0; f.poseT = 0; f.hit = 0; f._ph = 0; f.anim = null; f._lbk = 0;
@@ -30208,7 +30228,7 @@ function opnGo(P, who, lv2, men) { var q = P.q, ok = false; W.busy = false; W.op
 function opnRoamFight(q) { var grp = noticedPack(q, ambList()); if (!grp || !grp.length) return false; W.roam = W.roam.filter(function (o) { return grp.indexOf(o) < 0; }); W.forced = null; grp.forEach(crowdGone);
   grp.forEach(function (o) { o.s.el.classList.remove('roam', 'emerge'); W.foes.push({ s: o.s, tx: null, ty: null }); }); W.fLv = grpLv(grp); fight(grp.map(function (o) { return o.id; }), false, { place: areaName(q.s.x, q.s.y) }); return true; }
 var opnFight0 = fight;
-fight = function (grp, boss, ctx) { if (W.opnPend) { var P = W.opnPend; W.opnPend = null; if (ctx && !boss && !(ctx.wave && ctx.wave.n !== 1) && !ctx.mini && !ctx.c2boss && !ctx.c2spar && !ctx.matspar) { ctx.opn = P; ev('world:opn:ctx:' + P.k + ':' + (grp || []).length); } } var via = W.opnAmbVia || (ctx && ctx.amb && ctx.amb.via) || ''; W.opnAmbVia = null; if (ctx && ctx.amb && ctx.amb.side === 'back' && !ctx.amb.ko && !boss && !(ctx.wave && ctx.wave.n !== 1) && typeof gskLive === 'function' && gskLive() && opnHas('alley') && via === 'sneak') { var aq = W.opnAmbQ && opnNow() - (W.opnAmbT || 0) < 15000 ? W.opnAmbQ : null, acN = aq ? opnCrewN(aq, grp) : (grp || []).length; ctx.opnAc = acN <= OPN.AC.free ? 1 : 0; W.opnAmbQ = null; ev('world:opn:alley:' + (ctx.opnAc ? 'free' : 'nofree') + ':' + acN); } else { if (ctx && ctx.amb) ev('world:opn:alley:plain:' + (ctx.amb.side || '') + ':' + via); W.opnAmbQ = null; } /* v6.5.51 t3067u: free first turn only from a Stealth Takedown hold (via === sneak). A plain tap is the normal back ambush. */
+fight = function (grp, boss, ctx) { if (W.opnPend) { var P = W.opnPend; W.opnPend = null; if (ctx && !boss && !(ctx.wave && ctx.wave.n !== 1) && !ctx.mini && !ctx.c2boss && !ctx.c2spar && !ctx.matspar) { ctx.opn = P; ev('world:opn:ctx:' + P.k + ':' + (grp || []).length); } } var via = W.opnAmbVia || (ctx && ctx.amb && ctx.amb.via) || ''; W.opnAmbVia = null; if (ctx && ctx.amb && ctx.amb.side === 'back' && !ctx.amb.ko && !boss && !(ctx.wave && ctx.wave.n !== 1) && typeof gskLive === 'function' && gskLive() && opnHas('alley') && via === 'sneak') { var aq = W.opnAmbQ && opnNow() - (W.opnAmbT || 0) < 15000 ? W.opnAmbQ : null, acN = aq ? opnCrewN(aq, grp) : (grp || []).length; ctx.opnAc = acN <= OPN.AC.free ? 1 : 0; ctx.acDown = 1; W.opnAmbQ = null; ev('world:opn:alley:' + (ctx.opnAc ? 'free' : 'nofree') + ':' + acN); } else { if (ctx && ctx.amb) ev('world:opn:alley:plain:' + (ctx.amb.side || '') + ':' + via); W.opnAmbQ = null; } /* v6.5.51 t3067u: free first turn only from a Stealth Takedown hold (via === sneak). A plain tap is the normal back ambush. */
   W.opnFighting = 1; return opnFight0.apply(this, arguments); };
 var opnTagsFrame0 = tagsFrame;
 tagsFrame = function (a, b, c) { var r = opnTagsFrame0.call(this, a, b, c); try { opnFrame(); } catch (e) { if (!W.opnErr) { W.opnErr = 1; ev('world:opn:err:frame:' + (e && e.message)); } } return r; };
@@ -30375,6 +30395,7 @@ function opnWalkUpK() { var k = (W.opnBlindT || 0) > opnNow() ? 0 : (typeof gskL
     '#world .wsp.opnbrk{visibility:hidden!important}' +
     '#world canvas.opnfx{position:absolute;left:0;top:0;pointer-events:none;z-index:15}.wsp.opnghost{opacity:.5;transition:opacity .28s linear;pointer-events:none;filter:brightness(1.6) saturate(.4)}.wsp.opnghost .wgear,.wsp.opnghost .wpose{display:none}' +
     '.float.neg.brn.spk,.neg.brn.spk{color:#ffe07a!important;text-shadow:0 0 6px rgba(255,200,60,.9),0 1px 1px #000!important}' +
+    '#fE canvas.fig.ac-down{transform:translateY(20%) rotate(-78deg);transform-origin:50% 96%}#fE canvas.fig.ac-up{animation:acUp .4s ease-out both;transform-origin:50% 96%}@keyframes acUp{0%{transform:translateY(20%) rotate(-78deg)}60%{transform:translateY(4%) rotate(-12deg)}100%{transform:none}}' +
     '#fE canvas.fig.opn-down{animation:opnDown 1.25s ease-out both;transform-origin:50% 96%}@keyframes opnDown{0%,28%{transform:translateY(20%) rotate(-78deg)}55%{transform:translateY(8%) rotate(-30deg)}78%{transform:translateY(2%) rotate(-6deg)}100%{transform:none}}' +
     '.tcard.opncx .th b small{font-weight:700;opacity:.8}';
   document.head.appendChild(st); } catch (e) {} })();
@@ -30583,7 +30604,8 @@ function opnTDPlay(r, T, who, flip, impact, done, vdir) { var KS = ambStingOK() 
     if (ko) { var I = W.inside, D = I && typeof INT !== 'undefined' ? INT[I.id] : null; /* turf KOs (dgAfter) skip ambDown's lie-down, so lay him down here */
       if (D && D.dg && typeof lieEl === 'function') { var lk = lieEl(q.id, s.x, s.y, s.k, s.x < r.x, 0); if (lk) { layer.appendChild(lk); if (s.el) s.el.style.visibility = 'hidden'; ev('world:opn:td:lie:' + q.id); setTimeout(function () { lk.lieFr(1); }, 120); setTimeout(function () { lk.classList.add('out'); setTimeout(function () { lk.remove(); }, 700); }, 1600); } }
       done(); return; } var le = typeof lieEl === 'function' ? lieEl(q.id, s.x, s.y, s.k, s.x < r.x, 0) : null; /* not out cold: he hits the floor, the fight starts as he gets up */
-    if (le) { layer.appendChild(le); s.el.classList.add('opnbrk'); setTimeout(function () { le.lieFr(1); }, 120); setTimeout(function () { le.remove(); if (s.el) s.el.classList.remove('opnbrk'); opnPoseEnd(r); done(); }, 300); } else { opnPoseEnd(r); done(); } } }
+    if (le) { layer.appendChild(le); s.el.classList.add('opnbrk'); setTimeout(function () { le.lieFr(1); }, 120); setTimeout(function () { opnPoseEnd(r); done(); }, 300);
+      var n = 0; (function off() { var g = document.getElementById('game'); if (++n < 60 && !(g && g.classList.contains('on'))) { setTimeout(off, 100); return; } setTimeout(function () { le.remove(); if (s.el) s.el.classList.remove('opnbrk'); }, 400); })(); } else { opnPoseEnd(r); done(); } } } /* v6.5.65 (Erik t497u): he stays down on the map until the fight screen covers it (it opens with him on the floor), no standing up in between */
 var opnOnTap0 = onTap;
 onTap = function (e) { if (W.snk) opnSnkEnd('tap'); return opnOnTap0.apply(this, arguments); };
 var opnFrame0c = opnFrame;
