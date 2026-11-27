@@ -38862,6 +38862,106 @@ var GINKO = (function () {
   }
 })(typeof window !== 'undefined' ? window : this);
 
+/* t438: after Genji's three lessons (and any ring spar return), the first
+ * visible gym frame must already be centered on Ryo, Aoi and Genji.
+ * Root cause: back() calls enter(true) while they are still in the ring, so
+ * the fight board lifts onto the left/center of the room. g38OutOfRing only
+ * places them at the east ropes and snaps the camera 300ms + 800ms later,
+ * after that left-edge start has already been seen. A leftover W.pan can
+ * also pin camera() at W.cam (0,0). */
+(function (root) {
+  function sparPrep() {
+    try {
+      if (typeof g38Gym !== 'function' || !g38Gym()) return false;
+      if (typeof G38 === 'undefined' || !G38.OUT) return false;
+      var r = W.ryo, a = W.aoi, g = (typeof g38G === 'function') ? g38G() : null;
+      if (!r) return false;
+      var inRing = !!(W.g38Ring || (typeof g38InRing === 'function' && g38InRing(r)));
+      if (inRing) {
+        if (typeof rdyOff === 'function') { rdyOff(r); if (a) rdyOff(a); }
+        if (typeof g38Put === 'function') {
+          g38Put(r, G38.OUT.r[0], G38.OUT.r[1], G38.OUT.r[2]);
+          if (a) g38Put(a, G38.OUT.a[0], G38.OUT.a[1], G38.OUT.a[2]);
+        } else {
+          r.x = G38.OUT.r[0]; r.y = G38.OUT.r[1];
+          if (a) { a.x = G38.OUT.a[0]; a.y = G38.OUT.a[1]; }
+        }
+        if (typeof g38Trail === 'function') g38Trail();
+        if (g) {
+          if (typeof g38Near !== 'function' || !g38Near(g, G38.REF, 30)) { g.x = G38.REF[0]; g.y = G38.REF[1]; }
+          if (typeof g38FaceNpc === 'function') g38FaceNpc(g, r.x, r.y + 40);
+          else if (typeof place === 'function') place(g, 0);
+        }
+        W.g38Ring = 0;
+        try { ev('world:t438:spar:place'); } catch (eP) {}
+      }
+      W.pan = null;
+      W.camFocus = [r, a, g].filter(Boolean);
+      if (typeof root.FFF_G38_CINE_CAM === 'function') root.FFF_G38_CINE_CAM('spar-return');
+      else if (typeof camera === 'function') camera(true);
+      try { ev('world:t438:cam:snap:' + Math.round((W.cam && W.cam.x) || 0) + ',' + Math.round((W.cam && W.cam.y) || 0)); } catch (eE) {}
+      return true;
+    } catch (e) {
+      try { ev('world:t438:cam:err:' + (e && e.message)); } catch (e2) {}
+      return false;
+    }
+  }
+  root.FFF_G38_SPAR_CAM = sparPrep;
+
+  if (typeof back === 'function' && !back._t438) {
+    var back0 = back;
+    back = function (win, st) {
+      try {
+        if (st && st.ctx && st.ctx.c2spar) sparPrep();
+      } catch (e) {}
+      return back0.apply(this, arguments);
+    };
+    back._t438 = 1;
+  }
+
+  /* Teach cine: if the world camera is still at a leftover left-edge view
+   * (often x=0), snap onto the marks instead of easing across the room. */
+  if (typeof teachCamTo === 'function' && !teachCamTo._t438) {
+    var camTo0 = teachCamTo;
+    teachCamTo = function (x, y, ms) {
+      try {
+        var b = (typeof camAt === 'function') ? camAt(x, y) : null;
+        if (b && W && W.cam && Math.abs((W.cam.x || 0) - b[0]) > 220) {
+          W.pan = null;
+          W.cam.x = b[0];
+          W.cam.y = b[1];
+          if (typeof camera === 'function') camera(true);
+          try { ev('world:t438:teach:snap:' + Math.round(b[0])); } catch (eT) {}
+          W.pan = { teach: 1, hold: 1, run: function () { W.cam.x = b[0]; W.cam.y = b[1]; } };
+          return;
+        }
+      } catch (e) {}
+      return camTo0.apply(this, arguments);
+    };
+    teachCamTo._t438 = 1;
+  }
+
+  /* Reload / re-enter: if the gym comes back with the camera still on the
+   * left wall while the pair is in the room, snap onto them (and Genji). */
+  if (typeof enter === 'function' && !enter._t438) {
+    var enter0 = enter;
+    enter = function (resume) {
+      var out = enter0.apply(this, arguments);
+      try {
+        if (typeof g38Gym === 'function' && g38Gym() && W && W.cam && W.ryo && W.ryo.x > 400 && W.cam.x < 80 && !W.g38Ring) {
+          W.pan = null;
+          var g = (typeof g38G === 'function') ? g38G() : null;
+          W.camFocus = [W.ryo, W.aoi, g].filter(Boolean);
+          if (typeof root.FFF_G38_CINE_CAM === 'function') root.FFF_G38_CINE_CAM('restore');
+          else if (typeof camera === 'function') camera(true);
+          try { ev('world:t438:cam:restore:' + Math.round(W.cam.x)); } catch (eR) {}
+        }
+      } catch (e) {}
+      return out;
+    };
+    enter._t438 = 1;
+  }
+})(typeof window !== 'undefined' ? window : this);
 
 /* SCAM_BEGIN v6561-cam */
 /* v6.5.61 story camera (FFF_SCAM): Triangle Strategy style. Heavy lines carry ln[2].cam = 'push' | 'pull' | 'hold' | 'shake' | 'bars' | 'frame'
