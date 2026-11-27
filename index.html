@@ -48795,7 +48795,19 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       { id: 'gp6', at: [402, 296] },
       { id: 'gp7', at: [194, 380] },
       { id: 'gp8', at: [298, 380] },
-      { id: 'gp9', at: [402, 380] }
+      { id: 'gp9', at: [402, 380] },
+      /* v6564-healstyle (Erik t419): ginger pots in the cot's old floor, bottom rows. Mugwort stays up top. */
+      { id: 'gg1', at: [194, 590], kind: 'ginger' },
+      { id: 'gg2', at: [298, 590], kind: 'ginger' },
+      { id: 'gg3', at: [402, 590], kind: 'ginger' },
+      { id: 'gg4', at: [194, 676], kind: 'ginger' },
+      { id: 'gg5', at: [298, 676], kind: 'ginger' },
+      { id: 'gg6', at: [402, 676], kind: 'ginger' }
+    ],
+    GINGER_INTRO: [
+      ['tsukikage', 'Top rows are mugwort. Bottom rows are ginger. Don\'t mix them.', { mood: 'neutral' }],
+      ['tsukikage', 'Mugwort wants lean, dry soil and sun. Ginger wants rich, wet soil and shade. One watering can\'t serve both.', { mood: 'neutral' }],
+      ['tsukikage', 'So mugwort seed goes up top, ginger seed down here. Ono sells the ginger seed now. I keep these damp while you\'re out.', { mood: 'neutral' }]
     ],
     /* aisle stand: east of the pot, feet on the boards */
     stand: function (p) { return [p.at[0] + 24, p.at[1] + 1]; },
@@ -48835,7 +48847,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       return SAVE.herbs;
     }
     var h = herbS();
-    h.seed = h.seed | 0;
+    h.seed = h.seed | 0; h.gseed = h.gseed | 0;
     return h;
   }
 
@@ -48862,7 +48874,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     var H = typeof C2HUB !== 'undefined' && C2HUB.clinic;
     if (!H) return;
     var blocks = (H.block || []).filter(function (b) {
-      return !(b[0] === 130 && b[1] === 150 && b[2] === 470 && b[3] === 300);
+      return !(b[0] === 130 && b[1] === 150 && b[2] === 470 && b[3] === 300) && !(b[0] === 140 && b[1] === 520 && b[2] === 430 && b[3] === 712); /* v6564-healstyle: the cot is gone */
     });
     /* sill + window wall, mini cabinet foot, per-pot footprints */
     blocks.push([132, 40, 464, 172]);
@@ -48872,7 +48884,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       blocks.push([x - 16, y - 20, x + 16, y + 4]);
     });
     H.block = blocks;
-    H.spots = (H.spots || []).filter(function (s) { return s.id !== 'drawers'; });
+    H.spots = (H.spots || []).filter(function (s) { return s.id !== 'drawers' && s.id !== 'cot'; });
     H.spots.push({ id: 'garden', r: [132, 172, 464, 428], at: [336, 400], face: 3, lab: 'Garden' });
     var I = typeof INT !== 'undefined' && INT.c2_clinic;
     if (I) { I.base = I.block = H.block; I.spots = H.spots; }
@@ -48897,7 +48909,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     } catch (e) {}
   }
 
-  function potSvg(st) {
+  function potSvg(st, kind) {
+    if (kind === 'ginger') return gingerPotSvg(st);
     /* tiny inline cel pot, matches the room painter */
     var plant = '', soil = '<ellipse cx="16" cy="9" rx="10" ry="5" fill="#3a2a1c" stroke="#1a1220" stroke-width="1.5"/>';
     if (st === 'planted') {
@@ -48911,6 +48924,19 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       '<path d="M8 16 L11 30" stroke="#e08a58" stroke-width="1.5"/>' +
       '<ellipse cx="16" cy="14" rx="12" ry="5" fill="#8a4a2c" stroke="#1a1220" stroke-width="1.6"/>' +
       soil + plant + '</svg>';
+    return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
+  }
+
+  /* v6564-healstyle: ginger pot. Deeper, dark-glazed (wet soil keeps), lance leaves and a knob of root at the rim when it blooms. */
+  function gingerPotSvg(st) {
+    var soil = '<ellipse cx="16" cy="9" rx="10" ry="5" fill="#2a1e14" stroke="#1a1220" stroke-width="1.5"/><path d="M9 9.5 q3 1.6 6 .6 M18 10.4 q3 .8 5-.6" stroke="#4a3a2a" stroke-width="1" fill="none"/>', plant = '';
+    if (st === 'planted') soil += '<path d="M15 8 q1-4 2.4-5" stroke="#7aa35a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M17.4 3 q2 .4 2.2 2" stroke="#7aa35a" stroke-width="1.2" fill="none"/>';
+    else if (st === 'bloomed') plant = '<path d="M16 9 C14 2 11 -2 9 -6 C12 -3 15 2 16 9Z M16 9 C17 1 19 -3 22 -7 C21 -2 18 3 16 9Z M16 9 C15 3 15 -1 16 -8 C17.5 -1 17 3 16 9Z" fill="#6f9a4c" stroke="#1a1220" stroke-width="1.1" stroke-linejoin="round" transform="translate(0 6)"/><path d="M10 10 c1-2.6 4.6-3 6-1.2 c1.6-2 5-1.6 5.6 .8 c1.6 .2 2 2 .6 2.6 H10.6 c-1.4-.2-1.6-1.6-.6-2.2z" fill="#d9a65a" stroke="#1a1220" stroke-width="1.1"/>';
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -6 32 42" width="32" height="42">' +
+      '<ellipse cx="16" cy="33" rx="11" ry="2.4" fill="rgba(40,40,50,.4)"/>' +
+      '<path d="M6 14 L26 14 L23.5 32 L8.5 32 Z" fill="#3e5560" stroke="#1a1220" stroke-width="1.6"/>' +
+      '<path d="M8.4 17 L10.4 30" stroke="#6f8c98" stroke-width="1.5"/><path d="M7 21 H25" stroke="#2c3e46" stroke-width="1.2"/>' +
+      '<ellipse cx="16" cy="14" rx="12" ry="5" fill="#2c3e46" stroke="#1a1220" stroke-width="1.6"/>' + soil + plant + '</svg>';
     return 'url("data:image/svg+xml,' + encodeURIComponent(svg) + '")';
   }
 
@@ -48932,8 +48958,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       e.style.top = (p.at[1] - 32) + 'px';
       e.style.width = '32px';
       e.style.height = '36px';
+      if (p.kind === 'ginger') { e.style.top = (p.at[1] - 38) + 'px'; e.style.height = '42px'; }
       e.style.zIndex = String(100 + p.at[1]); /* v6564-healstyle: same rule as place(): 100 + feet y */
-      e.style.backgroundImage = potSvg(st);
+      e.style.backgroundImage = potSvg(st, p.kind);
       if (spark && i === 0) {
         var sp = document.createElement('i');
         sp.className = 'g50sp';
@@ -49066,8 +49093,11 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     var st = potSt(o.p.id);
     if (kind === 'plant' && st.st !== 'empty') return false;
     if (kind === 'pick' && st.st !== 'bloomed') return false;
-    if (kind === 'plant' && (typeof herbN === 'function' ? herbN('seed') : herbSeed().seed) <= 0) {
-      try { if (typeof toast === 'function') toast('Need mugwort seeds.'); } catch (e) {}
+    var pk = o.p.kind === 'ginger' ? 'gseed' : 'seed', other = pk === 'seed' ? 'gseed' : 'seed';
+    if (kind === 'plant' && (typeof herbN === 'function' ? herbN(pk) : herbSeed()[pk] | 0) <= 0) {
+      var hasOther = (typeof herbN === 'function' ? herbN(other) : herbSeed()[other] | 0) > 0;
+      try { if (typeof toast === 'function') toast(hasOther ? (pk === 'gseed' ? 'Ginger pots. Mugwort seed goes in the top rows.' : 'Mugwort pots. Ginger seed goes in the bottom rows.') : (pk === 'gseed' ? 'Need ginger seeds. Ono Drugstore sells them.' : 'Need mugwort seeds.')); } catch (e) {}
+      ev('world:garden:wrongseed:' + o.p.id + ':' + (hasOther ? 1 : 0));
       return false;
     }
     o.busy = 1; W.path = []; W.arrive = null;
@@ -49080,8 +49110,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     var fin = 0, lifted = 0;
     function lift() {
       if (lifted) return; lifted = 1;
-      if (kind === 'pick') { st.st = 'empty'; o.el.style.backgroundImage = potSvg('empty'); }
-      if (kind === 'plant') { st.st = 'planted'; o.el.style.backgroundImage = potSvg('planted'); }
+      if (kind === 'pick') { st.st = 'empty'; o.el.style.backgroundImage = potSvg('empty', o.p.kind); }
+      if (kind === 'plant') { st.st = 'planted'; o.el.style.backgroundImage = potSvg('planted', o.p.kind); }
       ev('world:garden:' + kind + ':lift:' + o.p.id);
     }
     function done() {
@@ -49089,12 +49119,12 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       document.removeEventListener('pointerdown', skip, true);
       W.busy = false; o.busy = 0;
       if (kind === 'plant') {
-        if (typeof herbAdd === 'function') herbAdd('seed', -1);
-        else { var h = herbSeed(); h.seed = Math.max(0, (h.seed | 0) - 1); }
+        if (typeof herbAdd === 'function') herbAdd(pk, -1);
+        else { var h = herbSeed(); h[pk] = Math.max(0, (h[pk] | 0) - 1); }
         try { save(); } catch (e) {}
         ev('world:garden:planted:' + o.p.id);
       } else {
-        chanceGrant('leaf', o, o.p.id);
+        chanceGrant(o.p.kind === 'ginger' ? 'ginger' : 'leaf', o, o.p.id);
         try { AU.play('ginger_pick', { gain: 0.9 }); } catch (eA) {}
       }
     }
@@ -49126,8 +49156,13 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     return ''; /* planted: she is tending it; no interact */
   }
 
+  function gingerIntro(then) { /* v6564-healstyle: once, after the Kampo lesson, the first time a pot is tapped */
+    var S = S0();
+    if (!met() || !(SAVE.craft && SAVE.craft.potion) || (S.e && S.e.gingerIntro) || typeof scene !== 'function') { if (then) then(); return; }
+    scene(null, G.GINGER_INTRO, function () { S.e.gingerIntro = 1; try { save(); } catch (e) {} ev('world:garden:gingerintro'); if (then) then(); });
+  }
   function maybeIntro(then) {
-    if (!met() || introDone()) { if (then) then(); return; }
+    if (!met() || introDone()) { gingerIntro(then); return; }
     var S = S0();
     if (typeof scene !== 'function') { S.e.gardenIntro = 1; if (then) then(); return; }
     scene(null, G.INTRO, function () {
@@ -49384,6 +49419,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   function patchCopy() {
     try {
       if (typeof HERB !== 'undefined') {
+        HERB.gseed = HERB.gseed || { n: 'Ginger Seeds', d: 'Plant one per ginger pot (bottom rows) at the clinic. They sprout after the next quest.', w: 'Ono Drugstore sells them after Dr. Tsukikage teaches Kampo.' }; /* v6564-healstyle */
         HERB.seed = HERB.seed || { n: 'Mugwort Seeds', d: 'Plant one seed per pot at the clinic. The doctor waters them. They bloom after the next quest.', w: 'Dr. Tsukikage sells packets of 3 for ¥1, up to 3 packets per quest cycle.' };
         if (HERB.leaf) {
           HERB.leaf.d = 'Leaf + Ginger = Kampo Potion (+35% HP). Grown in the clinic garden, or found as a first gift.';
