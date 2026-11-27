@@ -76,3 +76,4 @@ Build: `cd /workspace/ffd && python3 tools/s2/build.py` (base patches: tools/s2/
 - Verified git log: all 6 buildings committed through ab7712b. Harness lives in /workspace/v6564-jin (h.py, t_*.py, chain.sh, regs.sh).
 - Plan: rebuild check, regs, chain, perf vs e1ba0d4, rooms_fps, shots_final + cabinet contact sheet.
 - Step A: shots_final building shots taken (1..6). Review found cabinet HUD overlaps: Fox Fire Fist foe pips/name under the score box; Midnight Chuo km/h under the score box. Fixed in s2arc.js (pips/names to y142/168, round y188; km/h to 312,144). Rebuilt.
+- Step B (on 9eac413): s2 167 pass, ngp 104/104, bond 109, ch_smoke 13, test_no_old_art full run PASS (superset of quick), verify_wired PASS. Cabinet 5-up re-shot: shots_final/7_game_center_cabinets_5up.png.
