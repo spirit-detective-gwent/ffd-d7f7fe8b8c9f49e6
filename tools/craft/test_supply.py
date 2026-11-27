@@ -134,7 +134,8 @@ async def main():
         print('ROOMS / PAIRS', json.dumps(info))
         R, P = info['rooms'], info['pairs']
         ok('room counts from code: Library 13, Art 7, Cafeteria 4, Storehouse 4, Gym 8', R == {'lib': 13, 'art': 7, 'caf': 4, 'fld': 4, 'gym': 8}, R)
-        ok('Library (most rooms) gets the most pairs; more rooms never means fewer pairs', all(P['lib'] > P[k] for k in P if k != 'lib') and all(P[a] >= P[b] for a in P for b in P if R[a] > R[b]), P)
+        ok('pinned split (Erik t521): Library 3, Gym 1, Art 1, Cafeteria 1, Storehouse 1 (Gym never 2)', P == {'lib': 3, 'gym': 1, 'art': 1, 'caf': 1, 'fld': 1}, P)
+        ok('Library (most rooms) gets the most pairs', all(P['lib'] > P[k] for k in P if k != 'lib'), P)
         ok('every facility gets at least one pair; pairs sum to SUP_PAIRS', all(v >= 1 for v in P.values()) and sum(P.values()) == info['budget'], P)
         roll = await ev(pg, """(function(){ return __T.quiet(function(){ var N=400, bad=[], seen={}, safeMiss=0, tot=0;
           for (var i=0;i<N;i++){ %s var F=%s, P=FFF_SUP.pairs(); var key=JSON.stringify(FFF_SUP.lay()); seen[key]=1;
@@ -186,8 +187,8 @@ async def main():
             pass
         res = await ev(pg, "(function(){var a=%s; var N=%d, sum=0, mn=1e9, mx=0, ds=0, per={}, hist={}; for (var i=0;i<N;i++){ var r=(%s)(a); sum+=r.mats; ds+=r.dress; mn=Math.min(mn,r.mats); mx=Math.max(mx,r.mats); hist[r.mats]=(hist[r.mats]||0)+1; for (var k in r.tot) per[k]=(per[k]||0)+r.tot[k]; } for (var k in per) per[k]=+(per[k]/N).toFixed(2); return {mean:+(sum/N).toFixed(2), dress:+(ds/N).toFixed(2), min:mn, max:mx, per:per, hist:hist}; })()" % (json.dumps({'foes': FOES, 'safe': safe_list, 'relays': 4}), RUNS, ONE))
         print('THOROUGH CH1 (%d street foes, %d runs):' % (FOES, RUNS), json.dumps(res))
-        ok('thorough Ch1: mean total materials ~18-22 (was 17.8; +4 from whole pairs per facility)', 17 <= res['mean'] <= 23, res)
-        ok('thorough Ch1: mean dressings craftable ~9-11 (= min(gauze,tape)); never fewer than half the mats rounded down', 8.5 <= res['dress'] <= 11.5 and res['dress'] * 2 >= res['mean'] - 0.6, res['dress'])
+        ok('thorough Ch1: mean total materials ~22-25 (was 17.8; +6 from whole pairs, Library 3)', 21 <= res['mean'] <= 25.5, res)
+        ok('thorough Ch1: mean dressings craftable ~10.5-12.5 (= min(gauze,tape)); never fewer than half the mats rounded down', 10 <= res['dress'] <= 12.5 and res['dress'] * 2 >= res['mean'] - 0.6, res['dress'])
         # ---------- popup ----------
         await free_world(pg)
         pop = await ev(pg, """(function(){ SAVE.chapter=1; __T.reset(); var f=document.getElementById('wmatpop'); if(f) f.remove(); W.matPopQ=[]; W.on=false; root.FFF_MAT_ROLL=0; root.FFF_MAT_KIND='gauze'; healDrops({foes:[1]},{}); root.FFF_MAT_ROLL=null; root.FFF_MAT_KIND=null; return {queued:(W.matPopQ||[]).length, shown:!!document.getElementById('wmatpop')&&document.querySelectorAll('#wmatpop .mp').length}; })()""")

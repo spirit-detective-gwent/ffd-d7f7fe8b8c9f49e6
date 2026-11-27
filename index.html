@@ -56527,7 +56527,10 @@ var WKIT_STOCK = { dl_hall: 'gauze', gy_weight: 'tape' };
  * they already took. SUP_PAIRS pairs are shared out by rooms (largest remainder, at least one pair per facility). Every safe-room kit
  * holds one piece; the rest go to random wall cabinets in that facility. Which cabinet holds gauze or tape is random, rolled once and
  * kept in SAVE.supLay so a reload never rerolls. Old saves: pieces already taken under the old layout count toward the pairs. */
-var SUP_PAIRS = 6;
+var SUP_PAIRS = 7;
+/* v6565-supplyrooms (Erik t521): pinned split. The Gym is the last boss and the player walks back to the nurse to craft, so the Gym
+ * keeps ONE pair and the extra pair goes to the Library (most rooms). Pinned so largest-remainder can never hand the Gym 2. */
+var SUP_PIN = { lib: 3, gym: 1, art: 1, caf: 1, fld: 1 };
 var SUP_FAC = [['lib', 'LIBG', ['dl_safeA', 'dl_safeB']], ['art', 'ARTG', ['am_kiln']], ['caf', 'CAFG', ['cf_staff']], ['fld', 'FLDG', ['sf_coach']], ['gym', 'GYMG', ['gy_annex']]];
 var SUP_KITID = { kitA: 'dl_safeA', kitB: 'dl_safeB', kitK: 'am_kiln', kitC: 'cf_staff', kitF: 'sf_coach', kitG: 'gy_annex' };
 var SUP_OLDSAFE = { dl_safeA: 'gauze', dl_safeB: 'tape', am_kiln: 'gauze', cf_staff: 'tape', sf_coach: 'gauze', gy_annex: 'tape' };
@@ -56537,6 +56540,7 @@ function supRooms() {
   return o;
 }
 function supPairs() {
+  if (SUP_PIN) { var pin = {}; SUP_FAC.forEach(function (f) { pin[f[0]] = SUP_PIN[f[0]] | 0; }); return pin; }
   var R = supRooms(), tot = 0, out = {}, rem = [], used = 0;
   SUP_FAC.forEach(function (f) { tot += R[f[0]]; });
   SUP_FAC.forEach(function (f) { var q = tot ? SUP_PAIRS * R[f[0]] / tot : 0, n = Math.max(1, Math.floor(q)); out[f[0]] = n; used += n; rem.push([q - Math.floor(q), f[0]]); });
