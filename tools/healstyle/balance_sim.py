@@ -41,3 +41,35 @@ for label,kw in [('engaged (plants every cycle, buys 6 ginger seed)',{}),
                  ('engaged, slow player 14 min/cycle',{'CYC_MIN':14})]:
     rs=[run(seed=i,**kw) for i in range(400)]
     print(f"{label:52s} kampo/12 cycles {st.mean(r[0] for r in rs):5.1f}  per hour {st.mean(r[1] for r in rs):5.1f}  yen {st.mean(r[2] for r in rs):4.0f}  short/cycle {st.mean(r[3] for r in rs):.2f}")
+
+# ---------- progress gate check (Erik t418: wild ginger regrows on takeover; it must never block progress) ----------
+# The only progress gate that needs ginger is Dr. Tsukikage's Kampo lesson: bring 1 mugwort (she gifts the first) + 1 ginger root.
+# Before the lesson the 9 dock sprigs regrow every quest cycle (hsHerbMark -> S.cyc); after it, once per seal ('s' + seals).
+# Ginger leaves the pouch only at (a) the lesson hand-in and (b) brewing at the bowl, which needs the lesson. So before the
+# lesson nothing can spend it, and after the lesson no story step asks for it. The sim below also walks a worst case:
+# a player who reaches the lesson with 0 ginger after the docks were stripped, whose only source is the wild regrow.
+import re, pathlib
+def gate_check(index=None):
+    src = pathlib.Path(index or pathlib.Path(__file__).resolve().parents[2] / 'index.html').read_text(encoding='utf-8')
+    sinks = re.findall(r"herbAdd\('ginger', -1\)|phMatAdd\(m\[0\], -m\[1\] \* got\.length\)", src)
+    mark = "function hsHerbMark(S) { return SAVE.craft && SAVE.craft.potion ? 's' + c2Seals() : S.cyc; }" in src
+    bowl_gated = "if (a === 'kettle' && k === 'clinic') { if (hsLearned()) hsStation('potion'); return true; }" in src
+    return len(sinks), mark, bowl_gated
+def gate_sim(trials=20000, seed=1):
+    """Random pre-lesson histories: each cycle the player picks k of the up sprigs (0..all); nothing pre-lesson spends ginger.
+    Blocked = at the lesson the player holds 0 ginger AND no sprig is up this cycle."""
+    R = random.Random(seed); blocked = 0
+    for _ in range(trials):
+        have = 0; cycles = R.randrange(1, 6)
+        for c in range(cycles):
+            up = 9                                         # regrown: a new quest cycle (S.cyc) before the lesson
+            k = R.randrange(0, up + 1); up -= k; have += k
+            if R.random() < 0.3: k2 = R.randrange(0, up + 1); up -= k2; have += k2
+        if have == 0 and up == 0: blocked += 1
+    return blocked
+if __name__ == '__main__':
+    n, mark, gated = gate_check(sys.argv[1] if len(sys.argv) > 1 else None)
+    blocked = gate_sim()
+    print(f"gate: ginger sinks in source {n} (lesson hand-in + bowl brew), pre-lesson regrow per quest cycle {mark}, bowl needs the lesson {gated}")
+    print(f"gate sim (20000 random pre-lesson histories): blocked {blocked} (a stripped dock always means ginger in the pouch)")
+    print('GATE ' + ('PASS' if n == 2 and mark and gated and blocked == 0 else 'FAIL'))
