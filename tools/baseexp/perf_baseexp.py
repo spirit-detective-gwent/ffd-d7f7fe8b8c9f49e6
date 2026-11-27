@@ -12,7 +12,7 @@ STUB = "(function(){ fight=function(){ ev('test:fight'); }; return 1; })()"
 FREE = "W.dgFight=null; W.dlg=false; W.busy=false; W.cool=0; W.libPend=null; W.pan=null; W.fading=false"
 FLDOK = "var S=fldS(); S.e.entry=1; S.f.fbay0=1; S.f.fbay1=1; S.e.surprise=1; S.e.bay=1; S.e.track=1; S.e.lockers=1; S.e.coach=1; S.e.cage=1; S.e.showers=1; S.e.trainer=1; S.e.booth=1"
 CAFOK = "var C=cafS(); ['line','kitchen','staff','cooler','dock','dish','bakery'].forEach(function(k){C.e[k]=1;})"
-def walk(x0, y0, x1, y1): return "W.ryo.x=%d; W.ryo.y=%d; place(W.ryo,0); setTimeout(function(){ walkTo(%d,%d,false,false); },200)" % (x0, y0, x1, y1)
+def walk(x0, y0, x1, y1): return "W.ryo.x=%d; W.ryo.y=%d; place(W.ryo,0); setTimeout(function(){ walkTo(%d,%d,true,false); },200)" % (x0, y0, x1, y1)
 SCENES = [  # name, live js, branch js
   ('caf_guard_room', "cafGo('kitchen')", "cafGo('cooler')"),
   ('caf_guard_walk', "cafGo('line'); " + walk(900, 450, 300, 450), "cafGo('dock'); " + walk(950, 700, 160, 700)),
