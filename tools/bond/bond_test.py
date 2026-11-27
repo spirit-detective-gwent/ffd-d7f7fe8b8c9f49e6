@@ -1,7 +1,9 @@
 #!/workspace/pwenv/bin/python3
 """Ch2 bond-moment tests: pay table, Grinder, Journal fixes, c2_goda scene (3 answers), consequences, perk. Review-only."""
-import sys, asyncio, json
+import sys, asyncio, json, os
 from pathlib import Path
+ROOT = Path(__file__).resolve().parents[2]
+os.environ.setdefault('FFD', str(ROOT))
 sys.path.insert(0, str(Path(__file__).parent))
 import bh
 from playwright.async_api import async_playwright
