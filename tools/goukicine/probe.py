@@ -21,9 +21,9 @@ SK = """()=>{var b=[...document.querySelectorAll('button')].filter(e=>/^Skip/.te
 HUSH = """(function(){try{close()}catch(e){}W.scGen=(W.scGen|0)+1;W.paused=false;W.dlg=false;W.cut=false;W.busy=false;W.path=[];W.runUp=false;try{while((W.scr|0)>0)sLock(0)}catch(e5){}var d=document.getElementById('wdlg');if(d){d.className='';d.innerHTML='';}var w=document.getElementById('wintro');if(w)w.remove();try{if(typeof FFF_SCAM!=='undefined'&&FFF_SCAM.clear)FFF_SCAM.clear()}catch(e7){}W.pan=null;W.scrCam=null;W.libCamHold=0;W.bossCamHold=0;return 1})()"""
 STATE = """(function(){var d=document.getElementById('wdlg'),r=W.ryo,a=W.aoi,g=W.gymGouki;
  function bp(s){return s&&s.el?s.el.style.backgroundPosition:null}
- return {t:performance.now(),r:r?[Math.round(r.x),Math.round(r.y),r.fr,bp(r),!!r.moving,Math.round(r.v||0)]:null,a:a?[Math.round(a.x),Math.round(a.y),a.fr,bp(a),!!a.moving]:null,
+ return {t:performance.now(),r:r?[Math.round(r.x),Math.round(r.y),r.fr,bp(r),!!r.moving,Math.round(r.v||0),!!r.run,r.actMove|0,r.el.style.backgroundImage.slice(0,40).length,(r.sheet||'')]:null,a:a?[Math.round(a.x),Math.round(a.y),a.fr,bp(a),!!a.moving,a.actMove|0]:null,
  g:g?[Math.round(g.x),Math.round(g.y)]:null,dlg:!!(d&&d.classList.contains('on')),intro:!!document.getElementById('wintro'),boss:!!(root.FFF_SCAM&&FFF_SCAM.st.boss),
- ru:!!W.runUp,busy:W.gymBossBusy|0,on:!!W.on,path:(W.path||[]).length,room:W.inside&&W.inside.id,fight:!!(document.querySelector('#battle.on, .bt-on, #bt.on'))||!W.on};})()"""
+ ru:!!W.runUp,cine:W.gkCine|0,scr:W.scr|0,busy:W.gymBossBusy|0,on:!!W.on,path:(W.path||[]).length,room:W.inside&&W.inside.id,fight:!!(document.querySelector('#battle.on, .bt-on, #bt.on'))||!W.on};})()"""
 async def main():
     from playwright.async_api import async_playwright
     serve()
@@ -34,7 +34,7 @@ async def main():
         pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
         await pg.goto(f"http://127.0.0.1:{PORT}/index.html", wait_until="domcontentloaded", timeout=90000)
         await pg.wait_for_timeout(3000); await pg.touchscreen.tap(195, 422); await pg.wait_for_timeout(200)
-        await ev(pg, "(function(){try{root.FFF_CRAWL_MS=1;ST.set.cam='on';ST.set.tips=false;ST.set.txt='fast';ST.set.rm=false;}catch(e){}return 1})()")
+        await ev(pg, "(function(){try{root.FFF_CRAWL_MS=1;root.FFF_CIN_K=1;ST.set.cam='on';ST.set.tips=false;ST.set.txt='fast';ST.set.rm=false;}catch(e){}return 1})()")
         await pg.evaluate("WORLD_API.enter(true)"); await pg.wait_for_timeout(2000)
         for i in range(14):
             c = await pg.evaluate(SK)
@@ -44,10 +44,11 @@ async def main():
         bent = "SAVE.bent={};" if MODE == "first" else "SAVE.bent={gouki:1};"
         ngp = "SAVE.ngp=1;" if MODE == "ngp" else "SAVE.ngp=0;"
         print(await ev(pg, "(function(){SAVE.intro=1;SAVE.chapter=1;SAVE.gouki=0;SAVE.ch1=0;" + ngp + bent + "SAVE.icard={ryo:1,aoi:1};var S=gymS();S.sl={lockers:1,weight:1,side:1};S.e.press=1;S.e.arena=1;gymGo('arena');return {r:[W.ryo.x,W.ryo.y],g:W.gymGouki&&[W.gymGouki.x,W.gymGouki.y]};})()"))
-        await pg.wait_for_timeout(1800)
-        await ev(pg, "(function(){var g=W.gymGouki;walkTo(g.x,g.y+70,true,true);return 1})()")
-        log = []; t0 = time.time(); last_adv = 0; shots = 0
-        while time.time() - t0 < 40:
+        log = []; t0 = time.time(); last_adv = 0; shots = 0; walked = False
+        while time.time() - t0 < 45:
+            if not walked and time.time() - t0 > 1.8:
+                walked = True
+                print("walk?", await ev(pg, "(function(){if(W.gymBossBusy||W.gkCine)return 'cine';var g=W.gymGouki;walkTo(g.x,g.y+70,true,true);return 'walk'})()"))
             s = await ev(pg, STATE); s["T"] = round(time.time() - t0, 2); log.append(s)
             if shots < 40 and int(s["T"] * 2) > shots:
                 await pg.screenshot(path=f"{OUT}_{shots:02d}.png"); shots += 1

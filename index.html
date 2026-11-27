@@ -19734,23 +19734,31 @@ function gymBoss() { /* v4.64: finale only on Main Court after seals */
  * both settle on a standing frame (never a frozen stride: the boss-arrival hold stops frame() mid-step otherwise), the camera frames all three,
  * the arrival / dialogue plays on the stopped poses (Aoi held in place: no trail-follow during the lines), then the run-up into the fight.
  * No new always-running loop: c2Walk ends on arrival. */
-var GK_CINE = { d: 150, sp: 150, side: 58, back: 24 };
+var GK_CINE = { d: 150, sp: 137, run: 230, far: 300, ease: 120, r: [-34, 150], a: [40, 162] };
 function gkCineSettle(s) { if (!s || !s.el) return; s.v = 0; s.moving = false; s.run = false; s.actMove = 0; try { if (s.walker) { animWalk(s, 0); animWalk(s, 0); } } catch (eS) {} place(s, 0); }
-function gkCineSpots(g) { var r = W.ryo, a = W.aoi, dx = r.x - g.x, dy = r.y - g.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d, D = Math.min(d, GK_CINE.d);
-  var rs = [g.x + ux * D, g.y + uy * D]; if (!okAt(rs[0], rs[1])) rs = [r.x, r.y];
-  var px = -uy, py = ux, sd = a ? (((a.x - r.x) * px + (a.y - r.y) * py) >= 0 ? 1 : -1) : 1, as = null;
-  if (a) { as = [rs[0] + px * sd * GK_CINE.side + ux * GK_CINE.back, rs[1] + py * sd * GK_CINE.side + uy * GK_CINE.back]; if (!okAt(as[0], as[1])) as = [rs[0] - px * sd * GK_CINE.side + ux * GK_CINE.back, rs[1] - py * sd * GK_CINE.side + uy * GK_CINE.back]; if (!okAt(as[0], as[1])) as = [a.x, a.y]; }
+function gkCineSpots(g) { var r = W.ryo, a = W.aoi; /* the court's own blocking: they face him from the south, the speaker framing (OTS) sits under the boss */
+  var rs = [g.x + GK_CINE.r[0], g.y + GK_CINE.r[1]], as = a ? [g.x + GK_CINE.a[0], g.y + GK_CINE.a[1]] : null;
+  if (!okAt(rs[0], rs[1]) || (as && !okAt(as[0], as[1]))) { var dx = r.x - g.x, dy = r.y - g.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d, D = Math.min(d, GK_CINE.d);
+    rs = [g.x + ux * D, g.y + uy * D]; if (!okAt(rs[0], rs[1])) rs = [r.x, r.y]; if (a) { as = [rs[0] - uy * 58 + ux * 20, rs[1] + ux * 58 + uy * 20]; if (!okAt(as[0], as[1])) as = [a.x, a.y]; } }
   return { r: rs, a: as }; }
+function gkCineWalk(s, to, k, done) { var d = Math.hypot(to[0] - s.x, to[1] - s.y), f = (d - GK_CINE.ease) / d, mid = [s.x + (to[0] - s.x) * f, s.y + (to[1] - s.y) * f];
+  function walk() { c2Walk(s, to[0], to[1], GK_CINE.sp / k, done); }
+  if (d <= GK_CINE.far) { walk(); return; } /* a long way in: run most of it (Ryo on the normal path mover, so the sprint sheet plays), then ease to a walk and stop */
+  if (s !== W.ryo) { c2Walk(s, mid[0], mid[1], GK_CINE.run / k, walk); return; }
+  W.run = true; if (walkTo(mid[0], mid[1], true, true) === false) { W.run = false; walk(); return; }
+  var t0 = performance.now(), lim = d / GK_CINE.run * 1000 / k + 1500;
+  (function wait() { if (!W.gkCine) return; if ((!W.path || !W.path.length) || performance.now() - t0 > lim) { W.path = []; W.run = false; walk(); return; } setTimeout(wait, 50); })(); }
 function gkCine(next) { var r = W.ryo, a = W.aoi && W.aoi.el && W.aoi.el.style.visibility !== 'hidden' ? W.aoi : null, g = W.gymGouki, cf0 = W.camFocus, done = 0;
   sLock(1, 'gkcine'); W.gkCine = 1; if (typeof stickEnd === 'function') stickEnd(); KEYS = {}; ev('world:gkcine:start');
   function free() { if (W.gkLock) { W.gkLock = 0; sLock(0, 'gkcine'); } } /* the arrival / dialogue holds input itself from here (bossEnt + scene) */
   function fin() { if (done++) return; free(); if (a) a.actMove = 0; W.camFocus = cf0; W.gkCine = 0; ev('world:gkcine:end'); }
   W.gkLock = 1; W.gkCineFin = fin; if (!g || !r) { free(); next(fin); return; }
   if (a) a.actMove = 1; W.camFocus = [r, a, g].filter(Boolean);
-  var P = gkCineSpots(g), k = Math.max(0.25, cinK()), L = [[r, P.r[0], P.r[1], GK_CINE.sp / k]]; if (a && P.a) L.push([a, P.a[0], P.a[1], GK_CINE.sp / k]);
-  c2WalkAll(L, function () { c2Face(r, g.x, g.y); if (a) c2Face(a, g.x, g.y); gkCineSettle(r); if (a) gkCineSettle(a); c2Face(r, g.x, g.y); if (a) { c2Face(a, g.x, g.y); a.actMove = 1; }
+  var P = gkCineSpots(g), k = Math.max(0.25, cinK()), n = a && P.a ? 2 : 1;
+  function arrived() { if (--n) return; c2Face(r, g.x, g.y); if (a) c2Face(a, g.x, g.y); gkCineSettle(r); if (a) gkCineSettle(a); c2Face(r, g.x, g.y); if (a) { c2Face(a, g.x, g.y); a.actMove = 1; }
     if (typeof resetTrail === 'function') resetTrail(r.x, r.y, r.dir); W.gkCineAt = [Math.round(r.x), Math.round(r.y)]; ev('world:gkcine:stop');
-    setTimeout(function () { if (!W.gkCine) return; free(); next(fin); }, Math.round(260 * k)); }); }
+    setTimeout(function () { if (!W.gkCine) return; free(); next(fin); }, Math.round(260 * k)); }
+  gkCineWalk(r, P.r, k, arrived); if (n > 1) gkCineWalk(a, P.a, k, arrived); }
 function gymPress() { var S = gymS(), n = gymDone(); if (n < 1) { if (typeof sayKey === 'function') sayKey('hint', 'seal_none'); else toast('No seals yet.'); return; }
   if (S.e.press && n >= 3) { if (typeof sayKey === 'function') sayKey('hint', 'seal_done'); else toast('All three seals are pressed. The arena gate is open.'); return; }
   AU.play('place', { gain: 0.7 }); ev('world:gym:press:' + n);
