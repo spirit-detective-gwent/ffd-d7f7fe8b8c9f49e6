@@ -195,11 +195,11 @@ async def main():
         r = await bh.ev(pg, """(function(){
           var st=c2S(); st.e=st.e||{}; st.e.jinFate=null; st.e.jinBook=0; st.e.jinSlip=0; st.e.seal_game=0;
           STORY.bond(SAVE).path='strategic'; STORY.bond(SAVE).picks={}; STORY.bond(SAVE).px=STORY.bond(SAVE).px||0; SAVE.act='ryo';
-          var talks=[], sealed=0, t0=talk, d0=FFF_S2P6.doTakeSeal;
-          talk=function(rows,cb){talks.push((rows||[]).map(function(r){return r[1]}).join(' // ')); if(cb)cb();};
+          var talks=[], sealed=0, t0=FFF_S2P6.talk, d0=FFF_S2P6.doTakeSeal;
+          FFF_S2P6.talk=function(rows,cb){talks.push((rows||[]).map(function(r){return r[1]}).join(' // ')); if(cb)cb();};
           FFF_S2P6.doTakeSeal=function(){sealed=1};
           root.FFF_BOND='strategic'; FFF_S2P6.askJinThenSeal(); root.FFF_BOND=null;
-          talk=t0; FFF_S2P6.doTakeSeal=d0;
+          FFF_S2P6.talk=t0; FFF_S2P6.doTakeSeal=d0;
           return {fate:st.e.jinFate, book:st.e.jinBook|0, slip:st.e.jinSlip|0, sealed:sealed, pick:STORY.bond(SAVE).picks.c2_jin_after, talks:talks};
         })()""")
         ok('Jin strategic: fate deal, jinBook, seal pry, pick recorded', r and r.get('fate')=='deal' and r.get('book')==1 and not r.get('slip') and r.get('sealed')==1 and r.get('pick')=='strategic', r)
@@ -207,20 +207,20 @@ async def main():
         r2 = await bh.ev(pg, """(function(){
           var st=c2S(); st.e.jinFate=null; st.e.jinBook=0; st.e.jinSlip=0; st.e.seal_game=0;
           STORY.bond(SAVE).path='fierce'; STORY.bond(SAVE).picks={}; SAVE.act='aoi';
-          var talks=[], sealed=0, t0=talk, d0=FFF_S2P6.doTakeSeal;
-          talk=function(rows,cb){talks.push({who:(rows[0]||[])[0], n:(rows||[]).length, t:(rows||[]).map(function(r){return r[0]+':'+r[1]}).join(' // ')}); if(cb)cb();};
+          var talks=[], sealed=0, t0=FFF_S2P6.talk, d0=FFF_S2P6.doTakeSeal;
+          FFF_S2P6.talk=function(rows,cb){talks.push({who:(rows[0]||[])[0], n:(rows||[]).length, t:(rows||[]).map(function(r){return r[0]+':'+r[1]}).join(' // ')}); if(cb)cb();};
           FFF_S2P6.doTakeSeal=function(){sealed=1};
           root.FFF_BOND='fierce'; FFF_S2P6.askJinThenSeal(); root.FFF_BOND=null;
-          talk=t0; FFF_S2P6.doTakeSeal=d0;
+          FFF_S2P6.talk=t0; FFF_S2P6.doTakeSeal=d0;
           return {fate:st.e.jinFate, slip:st.e.jinSlip|0, book:st.e.jinBook|0, sealed:sealed, pick:STORY.bond(SAVE).picks.c2_jin_after, lead:(talks[0]&&talks[0].t)||'', act:SAVE.act};
         })()""")
         ok('Jin fierce as Aoi lead: fate wipe, jinSlip, pick, Aoi speaks first on the pick', r2 and r2.get('fate')=='wipe' and r2.get('slip')==1 and r2.get('pick')=='fierce' and r2.get('act')=='aoi' and str(r2.get('lead') or '').startswith('aoi:'), r2)
         r3 = await bh.ev(pg, """(function(){
           var st=c2S(); st.e.jinFate=null; st.e.jinBook=0; st.e.jinSlip=0; st.e.seal_game=0;
           STORY.bond(SAVE).path='balanced'; STORY.bond(SAVE).picks={}; SAVE.act='ryo';
-          var t0=talk, d0=FFF_S2P6.doTakeSeal; talk=function(rows,cb){if(cb)cb()}; FFF_S2P6.doTakeSeal=function(){};
+          var t0=FFF_S2P6.talk, d0=FFF_S2P6.doTakeSeal; FFF_S2P6.talk=function(rows,cb){if(cb)cb()}; FFF_S2P6.doTakeSeal=function(){};
           root.FFF_BOND='balanced'; FFF_S2P6.askJinThenSeal(); root.FFF_BOND=null;
-          talk=t0; FFF_S2P6.doTakeSeal=d0;
+          FFF_S2P6.talk=t0; FFF_S2P6.doTakeSeal=d0;
           return {fate:st.e.jinFate, book:st.e.jinBook|0, slip:st.e.jinSlip|0};
         })()""")
         ok('Jin compassionate: fate help, no book or slip', r3 and r3.get('fate')=='help' and not r3.get('book') and not r3.get('slip'), r3)

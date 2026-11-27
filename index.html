@@ -50125,7 +50125,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   function nailsRun() { return on() && E().run_fac === 'arc'; }
   function busy() { return !!(W.dgFight || W.dlg || W.busy || W.cut || W.fading || W.paused); }
   function later(ms, fn) { setTimeout(function () { try { fn(); } catch (e) { ev('world:s2p6:err:later:' + (e && e.message)); } }, ms); }
-  function talk(lines, done) { W.dlg = true; scene(null, lines, function () { W.dlg = false; if (done) done(); }); }
+  function talk(lines, done) { if (P6.talk && P6.talk !== talk) return P6.talk(lines, done); W.dlg = true; scene(null, lines, function () { W.dlg = false; if (done) done(); }); }
   function lockIn(on1) { if (on1) { W.cut = true; W.path = []; if (W.ryo) W.ryo.v = 0; try { stickEnd(); } catch (e) {} } else W.cut = false; }
   function sv() { try { if (typeof c2QSync === 'function') c2QSync(); } catch (e) {} save(); }
   function path() { var p = 'balanced'; try { p = c2Path(); } catch (e) {} return p === 'fierce' || p === 'strategic' ? p : 'balanced'; }
@@ -51113,15 +51113,15 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     if (E().seal_game) { finishQuest(); return; }
     var ans = pickedJin();
     if (ans && !E().jinFate) stampJin(ans);
-    if (E().jinFate) { playJinFate(function () { doTakeSeal(); }); return; }
+    if (E().jinFate) { playJinFate(function () { (P6.doTakeSeal || doTakeSeal)(); }); return; }
     lockIn(1);
     try {
       bondAsk('c2_jin_after', function (L2) {
         stampJin(pickedJin() || path());
-        function next() { playJinFate(function () { doTakeSeal(); }); }
+        function next() { playJinFate(function () { (P6.doTakeSeal || doTakeSeal)(); }); }
         if (L2 && L2.length) talk(L2, next); else next();
       });
-    } catch (eB) { ev('world:s2p6:err:bond:' + (eB && eB.message)); lockIn(0); playJinFate(function () { doTakeSeal(); }); }
+    } catch (eB) { ev('world:s2p6:err:bond:' + (eB && eB.message)); lockIn(0); playJinFate(function () { (P6.doTakeSeal || doTakeSeal)(); }); }
   }
   P6.askJinThenSeal = askJinThenSeal;
 
