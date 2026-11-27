@@ -37946,9 +37946,10 @@ var GINKO = (function () {
         potGiveFirstLeaf();
         save(); ev('world:pot:gather');
         var h = potHeldNow();
-        scene(null, [['tsukikage', potGiftLine(h)]]);
+        scene(null, [['tsukikage', potGiftLine(h)]], function () { if (h.leaf && h.ginger) setTimeout(v630PotGatherTalk, 0); }); /* v6565-herbalist */
       }, 'hot']];
       if (SAVE.hp < MAXHP && !(window.FFF_TEA_OFF && window.FFF_TEA_OFF())) /* GGD-51 tea */ b.push(['Tea \u00b7 \u00a5' + (typeof C2_TEA !== 'undefined' ? C2_TEA : 26), function () { c2HealAsk(false); }]);
+      if (typeof c2S === 'function' && c2S().e.sumire && typeof c2MugShop === 'function') b.push(['Seeds', function () { setTimeout(c2MugShop, 0); }]); /* v6565-herbalist: seed shop stays */
       dialog('<b>Dr. Tsukikage</b><p class="q">\u201cI can teach the bitter one. Kampo. You fetch, I brew.\u201d</p>', b, 'tsukikage_fig');
     };
   }
@@ -37961,17 +37962,17 @@ var GINKO = (function () {
       var gifted = potGiveFirstLeaf();
       var h = potHeldNow();
       if (h.leaf && h.ginger) {
-        var line = gifted ? potGiftLine(h) : 'Mugwort and ginger. That is the pair. Hand them over and we brew.';
+        var line = gifted ? potGiftLine(h) : 'Mugwort and ginger. That is the pair. Hand them over and I will teach you.';
         dialog('<b>Dr. Tsukikage</b><p class="q">\u201c' + line + '\u201d</p>',
-          [['Not yet', null], ['Hand them over', function () { potHandIn(); }, 'hot'],
-            ['Buy herbs', function () { setTimeout(c2MugShop, 0); }]], 'tsukikage_fig');
+          [['Not yet', null], ['Teach me', function () { potHandIn(); }, 'hot'],
+            ['Seeds', function () { setTimeout(c2MugShop, 0); }]], 'tsukikage_fig'); /* v6565-herbalist: 'Teach me' hands over the pair */
         ev('world:pot:gather:talk:' + (gifted ? 'gift' : 'pair'));
         return;
       }
       /* drop the fetch / 'bring one of each' wording when the gift applies */
-      var ask = gifted ? potGiftLine(h) : potAskLines(h);
+      var ask = gifted ? potGiftLine(h) : 'I will still teach you the Kampo. ' + potAskLines(h); /* v6565-herbalist */
       dialog('<b>Dr. Tsukikage</b><p class="q">\u201c' + ask + '\u201d</p>',
-        [['I\u2019ll look', null], ['Buy herbs', function () { setTimeout(c2MugShop, 0); }]], 'tsukikage_fig');
+        [['I\u2019ll look', null], ['Teach me \u00b7 need ' + (h.leaf ? 'ginger' : h.ginger ? 'mugwort' : 'mugwort + ginger'), null, '', true], ['Seeds', function () { setTimeout(c2MugShop, 0); }]], 'tsukikage_fig');
       ev('world:pot:gather:talk:' + (gifted ? 'gift' : 'ask'));
     };
   }
@@ -50695,6 +50696,10 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       };
       c2SumireMenu = function () {
         if (!met()) return menu0.apply(this, arguments);
+        /* v6565-herbalist (Erik t493): until the Kampo recipe is learned, every
+         * visit goes back to her lesson (offer / what's still needed / hand-in),
+         * not straight to the seed menu. The seed shop stays a button there. */
+        if ((typeof chN !== 'function' || chN() === 2) && !(SAVE.craft && SAVE.craft.potion) && typeof v630PotOffer === 'function') { ev('world:pot:route'); return v630PotOffer(); }
         var S = cyc(), full = SAVE.hp >= (typeof MAXHP !== 'undefined' ? MAXHP : 55), tea = typeof C2_TEA !== 'undefined' ? C2_TEA : 26;
         var poor = (SAVE.items | 0) < tea, m = S.mugLeft | 0;
         /* GGD-51: Full Heal Tea is gone on every route. Seeds and herbs stay. */
