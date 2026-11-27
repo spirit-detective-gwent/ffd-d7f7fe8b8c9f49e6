@@ -11,17 +11,6 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
-### 2026-11-27 — executor (Grok Bot) — v6.5.65 (branch v6565-corners, unpublished) — street takeover redesign (Erik t492u)
-Versions: `window.FFF_BUILD="v6565"`, title `.vtag` and `#ver` read "v6.5.65". Not published; waiting on Erik's OK.
-
-- **FFF_QS module** (new IIFE in index.html right after the C2BT module, tag `v6.5.65`). The `/workspace/corners/qs/qs.js` file is an OLDER copy; index.html is the truth. It wraps gangPeace, g38tSpawn, g38tStart, c2TagsX, c2SigX, c2Back, c2Npc, questDetailHtml, phJournal, c2QT; all frame work rides c2Frame (1 s accumulator), no new rAF/interval.
-- After Four Corners is given, every quest street (udon block, Wagashi east X3, west side street X2, Hotel Row top, west wall, Kitsune-no-Yu door) purges roamers, c2ev scenes, clashes/standoff extras and c2Respawn of them; quest crews are held (gangPeace true) with a red pin over each foe; a "Take the corner" tag (R150) starts the fight via c2v2Go(lead,'tag'). Quest log carries a live count ("Beat the 3 rival crews · n/3"; men-based for lookouts and the door).
-- Post-win: 3.5 s touch immunity for c2 foes in a quest zone (QS.imm) so there is no instant pile-on; hot_<fac> cannot chase on quest streets. After the fights two friendly c2_punk NPCs are posted in that alley (13u keeps its own cornerOn pair at the udon block).
-- 13u: both rivals' lookouts stand on the udon block; the fight uses the c2_udon backdrop (c2bt room); `udonBeat` fires after the fought corner. `chainRepair()` (13u, NQ, S2) + `QS.repair()` fix the ambKO hole (live stays `look` with 0 lookouts) and mid-quest saves; repair runs on c2Pop, after ambKO, and every 3 s in the sweep.
-- Non-quest streets keep the Ch2-entry behaviour (greeting, no ambush). Not built (by Erik's call): udon cart and the skill-based ambush. Hooks for them: `qsTags` / `QS.held` in QS (header comment), and the 'Take the corner' tag is where an Alley Cat / gang-skill entry would plug in.
-- Not covered because the quests don't exist yet: seal 2-3 boss quests (runs, boat, garden, depot, Jin) and Hustler/Suit/Rider route-corner quests. Those fights were regression-tested only.
-- Notes/tests/shots: /workspace/corners/NOTES.md, /workspace/corners/shots/fix1..7_{before,after}.png, tests in /workspace/corners/tests.
-
 ### 2026-11-27 — executor (Grok Bot) — v6.5.64 (commit 2ee7cbf) — LIVE after Erik's OK
 Versions: `window.FFF_BUILD="v6564"`, title `.vtag` "v6.5.64", `#ver` text "v6.5.64" (bumped in aab258d).
 Approved by Erik (t475u). Fast-forward onto e1ba0d4 (v6.5.63). Published commit `2ee7cbf`; origin/main is `2ee7cbf` and the build strings read v6564 / v6.5.64.
