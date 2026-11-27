@@ -8,9 +8,9 @@ SP = r"""(function(who,id,X,Y,lock){ if(who==='aoi'&&SAVE.act!=='aoi') switchCha
  var q={key:'bo0',id:id,s:s,hx:X,hy:Y,tx:null,ty:null,wait:999,st:'walk',stun:0,fa:0,lv:playerLv()}; W.dgF=W.dgF||[]; W.dgF.push(q);
  var r=W.ryo; r.x=X-46; r.y=Y+2; r.dir=2; place(r,0); if(W.aoi){W.aoi.x=r.x-70; W.aoi.y=r.y; place(W.aoi,0);} try{camera(true)}catch(e){}
  window.__lk=setInterval(function(){ if(W.ambOn||W.opnOn||W.snk&&0||document.getElementById('game').classList.contains('on')){clearInterval(window.__lk);return} q.fa=0; q.st='walk'; q.sus=0; q.qm=0; },16);
- window.__q=q; window.__evb=[]; if(root.FFF_UI&&FFF_UI.ev&&!FFF_UI.__boW){var u0=FFF_UI.ev;FFF_UI.__boW=1;FFF_UI.ev=function(k){try{if(/^match:alley/.test(k))window.__evb.push(k+'@'+Math.round(performance.now()))}catch(e){};return u0.apply(this,arguments)}} var e0=ev; ev=function(k){try{if(/opn:td|amb2:(strike|fight|tap)|match:|alley/.test(k))window.__evb.push(k+'@'+Math.round(performance.now()))}catch(e){};return e0.apply(this,arguments)};
+ window.__q=q; window.__evb=[];window.__swOn=null;window.__swOff=null;window.__alT=[];(function(){var mo=new MutationObserver(function(){var sw=document.getElementById('wswirl');var t=Math.round(performance.now());if(sw&&window.__swOn==null)window.__swOn=t;if(!sw&&window.__swOn!=null&&window.__swOff==null)window.__swOff=t;});mo.observe(document.body,{childList:true});var seen=0,t0=performance.now(),iv=setInterval(function(){try{var S=root.FFF_UI&&root.FFF_UI.ST,E=S&&S.events||[];for(var i=0;i<E.length;i++){var e=E[i];if(/^match:alley:(up|down|auto|free)/.test(e)&&window.__alT.every(function(x){return x[0]!==e})){window.__alT.push([e,Math.round(performance.now())])}}}catch(e){}if(performance.now()-t0>25000){clearInterval(iv);mo.disconnect()}},5)})(); if(root.FFF_UI&&FFF_UI.ev&&!FFF_UI.__boW){var u0=FFF_UI.ev;FFF_UI.__boW=1;FFF_UI.ev=function(k){try{if(/^match:alley/.test(k))window.__evb.push(k+'@'+Math.round(performance.now()))}catch(e){};return u0.apply(this,arguments)}} var e0=ev; ev=function(k){try{if(/opn:td|amb2:(strike|fight|tap)|match:|alley/.test(k))window.__evb.push(k+'@'+Math.round(performance.now()))}catch(e){};return e0.apply(this,arguments)};
  return JSON.stringify({dbg:{tags:tagsLive(),cool:W.cool,intro:SAVE.intro,ambOn:!!W.ambOn,inside:W.inside&&W.inside.id,safe:nearSafe(W.ryo.x,W.ryo.y),bq:bossQuiet(W.ryo.x,W.ryo.y),c2:typeof c2Room==='function'?c2Room():null,xy:[W.ryo.x|0,W.ryo.y|0]},ctx:typeof ambCtxOk==='function'?ambCtxOk(q):null, inList:ambList().indexOf(q)>=0, okTap:ambOkTap(q), act:SAVE.act}); })"""
-STATE = "(()=>{var k=document.querySelector('.kopose.acdown'),eF=document.getElementById('eFig'),fb=document.querySelector('#fE .fbody'),fe=document.querySelector('#fE');var kb=k&&k.getBoundingClientRect(),rb=fe&&fe.getBoundingClientRect();return JSON.stringify({sw:!!document.getElementById('wswirl'),on:document.getElementById('game').classList.contains('on'),pose:!!k,poseBox:kb?[kb.x|0,kb.y|0,kb.width|0,kb.height|0]:null,row:rb?[rb.y|0,rb.bottom|0]:null,tip:!!(eF&&eF.classList.contains('ac-down')),standOp:fb?getComputedStyle(fb).opacity:null,down:fb&&fb.closest('.fighter')?fb.closest('.fighter').dataset.down||'':'',al:(typeof ST!=='undefined'&&ST.events?ST.events.filter(function(e){return /^match:alley:(up|down|auto)/.test(e)}):[])})})()"
+STATE = "(()=>{var k=document.querySelector('.kopose.acdown'),eF=document.getElementById('eFig'),fb=document.querySelector('#fE .fbody'),fe=document.querySelector('#fE');var kb=k&&k.getBoundingClientRect(),rb=fe&&fe.getBoundingClientRect();return JSON.stringify({sw:!!document.getElementById('wswirl'),on:document.getElementById('game').classList.contains('on'),pose:!!k,poseBox:kb?[kb.x|0,kb.y|0,kb.width|0,kb.height|0]:null,row:rb?[rb.y|0,rb.bottom|0]:null,tip:!!(eF&&eF.classList.contains('ac-down')),standOp:fb?getComputedStyle(fb).opacity:null,down:fb&&fb.closest('.fighter')?fb.closest('.fighter').dataset.down||'':'',al:(window.FFF_UI&&FFF_UI.ST&&FFF_UI.ST.events?FFF_UI.ST.events.filter(function(e){return /^match:alley:(up|down|auto)/.test(e)}):[])})})()"
 async def run(pg, evf, errs):
     print('SPAWN', await evf("(%s)('%s',%s,%s,%s,1)" % (SP, who, "'bully1'" if ch=='1' else "'c2_punk'", '420' if ch=='1' else 'W.ryo.x+60', '520' if ch=='1' else 'W.ryo.y')), flush=True)
     await pg.wait_for_timeout(250)
@@ -34,11 +34,11 @@ async def run(pg, evf, errs):
     print('LAST_SWIRL_FRAME', json.dumps(swst))
     for s in shots: print('AT', s[0], s[2])
     evs = json.loads(await evf("JSON.stringify(window.__evb)"))
-    up = []; upms = None
-    for sh in shots:
-        al = json.loads(sh[2]).get('al') or []
-        u = [e for e in al if e.startswith('match:alley:up:')]
-        if u and not up: up = u; upms = '<=%d' % sh[0]
+    pr = json.loads(await evf("JSON.stringify({on:window.__swOn,off:window.__swOff,al:window.__alT})"))
+    print('PROBE', json.dumps(pr))
+    up = [e for e,t in pr['al'] if e.startswith('match:alley:up:')]
+    upt = [t for e,t in pr['al'] if e.startswith('match:alley:up:')]
+    upms = (upt[0] - pr['off']) if (upt and pr['off']) else None
     print('SWIRL_FRAME_ALLEY_EV', (swst or {}).get('al'))
     flat = bool(swst and swst.get('pose') or swst and swst.get('tip'))
     s1 = json.loads(shots[2][2]); stood = (not s1['pose']) and (not s1['tip']) and str(s1['standOp']) in ('1', '1.0')
