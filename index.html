@@ -4977,8 +4977,14 @@ function dueJoin(b) {
  * here: Path Echo, Sync Break II, In Sync, Awakening. */
 var SB_TYPE = { c2_suit: 'G', c2_suitg: 'G', c2_boso: 'G', c2_bosog: 'G', bouncer: 'G', mb2_sento: 'G', mb2_depot: 'G', c2_boss: 'G', mb2_game: 'GA', chinpira1: 'A', chinpira1g: 'A', c2_punk: 'A', c2_punkg: 'A', c2_hustler: 'A', c2_hustlerg: 'A', mb2_arcade: 'A' };
 var SB_BOSS = { mb2_sento: 1, mb2_depot: 1, mb2_game: 1, mb2_arcade: 1, c2_boss: 1 };
+/* v6.5.65 (Erik) Sync Break in a New Game Plus Chapter One: the Ch1 cast gets its types too, only when the match is flagged
+ * b.sbC1 (NG+, chapter 1, Sync Break learned). Same rule as Ch2: a shield for the ones who wall up, a fist for the ones who only swing.
+ * Ch1 decks are swing-heavy, so most read as fists. Gouki (counter guard + strings) shows both, like Jin. Bosses break once a fight. */
+var SB_TYPE1 = { tut1: 'A', tut2: 'A', tut3: 'A', bully1: 'A', bully1g: 'A', bully2: 'G', bully2g: 'G', bully3: 'A', bully3g: 'A', bully4: 'A', bully4g: 'A', drum: 'A', drumg: 'A', paint: 'A', paintg: 'A', hall_mon: 'G', hall_mong: 'G', mb_field: 'A', mb_field_j: 'A', mb_cafe: 'G', mb_cafe_j: 'G', mb_art: 'A', mb_art_j: 'A', mb_lib: 'G', mb_lib_j: 'G', gouki: 'GA' };
+var SB_BOSS1 = { mb_field: 1, mb_cafe: 1, mb_art: 1, mb_lib: 1, mb_field_j: 1, mb_cafe_j: 1, mb_art_j: 1, mb_lib_j: 1, gouki: 1 };
+function sbBoss(b, ch) { return !!(SB_BOSS[ch] || (b && b.sbC1 && SB_BOSS1[ch])); }
 var SB = { lv8: 3, inSync: 5, echo: 0.2, echo10: 0.35, echoDg: 8, burn10: 3, heal10: 3, guard10: 3 };
-function sbType(b, s) { if (!s) return ''; var o = b && b.sbTypes && b.sbTypes[s.ch]; return o != null ? o : (SB_TYPE[s.ch] || ''); }
+function sbType(b, s) { if (!s) return ''; var o = b && b.sbTypes && b.sbTypes[s.ch]; return o != null ? o : (SB_TYPE[s.ch] || (b && b.sbC1 && SB_TYPE1[s.ch]) || ''); }
 function sbBench(b, n) { if (!b || !b.bench || !(n > 0)) return 0; var s0 = b.bench.spirit; b.bench.spirit = Math.min(R.spiritMax, b.bench.spirit + n); return b.bench.spirit - s0; }
 /* called at the end of finish(), before the turn flips. Opens a window when this play (or the enemy's attack) caused a break. */
 function sbCheck(b, si, me, fx) {
@@ -4988,9 +4994,9 @@ function sbCheck(b, si, me, fx) {
   else { var pl = b.s[0]; if (pl && pl.ch === 'aoi' && pl.hp > 0 && sbType(b, me).indexOf('A') >= 0 && fx.ev.some(function (e) { return e.t === 'counter' && e.side === 1 && e.n > 0; })) { foe = me; by = 'aoi'; } }
   if (!foe) return null;
   if (b.sbUsed === r) { fx.sbNo = 'turn'; return null; }
-  if (SB_BOSS[foe.ch] && foe.sbDone) { fx.sbNo = 'boss'; return null; }
+  if (sbBoss(b, foe.ch) && foe.sbDone) { fx.sbNo = 'boss'; return null; }
   if (b.bench.hp <= 0 && b.s[0].hp <= 0) return null;
-  b.sbUsed = r; if (SB_BOSS[foe.ch]) foe.sbDone = 1;
+  b.sbUsed = r; if (sbBoss(b, foe.ch)) foe.sbDone = 1;
   var gi = b.grp ? b.grp.indexOf(foe) : 0, sp = b.inSync ? sbBench(b, SB.inSync) : 0;
   b.sbWin = { by: by, foe: gi, ch: foe.ch, mid: si === 0, r: r, partner: b.bench.ch };
   b.sbN = (b.sbN | 0) + 1; b.sbLast = gi;
@@ -5078,7 +5084,7 @@ function guardTick(b) {
     cardScore._t37 = 1;
   }
 })();
-var E = { laneOn: laneOn, dueJoin: dueJoin, SB: SB, SB_TYPE: SB_TYPE, SB_BOSS: SB_BOSS, sbType: sbType, sbOpen: sbOpen, sbTag: sbTag, sbPass: sbPass, sbStay: sbStay, sbHoldLine: sbHoldLine, stunSkip: stunSkip, guardTick: guardTick, laneTick: laneTick, LANE: LANE, serveOn: serveOn, serveTick: serveTick, SERVE: SERVE, addBench: addBench, canSwitch: canSwitch, dblReady: dblReady, dblMove: dblMove, dblKind: dblKind, DBL_NAME: DBL_NAME, DBL_KIND: DBL_KIND, switchIn: switchIn, SW_MAX: SW_MAX, applyPst: applyPst, SPV: SPV, pathStep: pathStep, GRADE: GRADE, gSnap: gSnap, gStart: gStart, gTrack: gTrack, grade: grade, gradeItems: gradeItems, gradeYenAdd: gradeYenAdd, gradeUseful: gradeUseful, deckDmg: deckDmg, expectedDmg: expectedDmg, vkey: vkey, fromRec: fromRec, recLevel: recLevel, pathMax: pathMax, cardGain: cardGain, comboGain: comboGain, comboNeed: comboNeed, comboPay: comboPay, energyCombo: energyCombo, comboNet: comboNet, comboMax: comboMax, comboGroups: comboGroups, tryEscape: tryEscape, comboShape: comboShape, canCombo: canCombo, comboCost: comboCost, comboBonus: comboBonus, comboMates: comboMates, comboCfg: comboCfg, aiTune: AIC, aiGuard: AIG, addGuard: addGuard, canDiscard: canDiscard, discard: discard, PATHS: PATHS, pathsOf: pathsOf, normPaths: normPaths, init: init, newBattle: newBattle, newSide: newSide, newGroup: newGroup, setFoe: setFoe, aliveFoes: aliveFoes, groupFix: groupFix, discardCost: discardCost, mulligan: mulligan, aiMulligan: aiMulligan, applyMove: applyMove, aiMove: aiMove, legal: legal, fury: fury, sigReady: sigReady,
+var E = { laneOn: laneOn, dueJoin: dueJoin, SB: SB, SB_TYPE: SB_TYPE, SB_BOSS: SB_BOSS, SB_TYPE1: SB_TYPE1, SB_BOSS1: SB_BOSS1, sbBoss: sbBoss, sbType: sbType, sbOpen: sbOpen, sbTag: sbTag, sbPass: sbPass, sbStay: sbStay, sbHoldLine: sbHoldLine, stunSkip: stunSkip, guardTick: guardTick, laneTick: laneTick, LANE: LANE, serveOn: serveOn, serveTick: serveTick, SERVE: SERVE, addBench: addBench, canSwitch: canSwitch, dblReady: dblReady, dblMove: dblMove, dblKind: dblKind, DBL_NAME: DBL_NAME, DBL_KIND: DBL_KIND, switchIn: switchIn, SW_MAX: SW_MAX, applyPst: applyPst, SPV: SPV, pathStep: pathStep, GRADE: GRADE, gSnap: gSnap, gStart: gStart, gTrack: gTrack, grade: grade, gradeItems: gradeItems, gradeYenAdd: gradeYenAdd, gradeUseful: gradeUseful, deckDmg: deckDmg, expectedDmg: expectedDmg, vkey: vkey, fromRec: fromRec, recLevel: recLevel, pathMax: pathMax, cardGain: cardGain, comboGain: comboGain, comboNeed: comboNeed, comboPay: comboPay, energyCombo: energyCombo, comboNet: comboNet, comboMax: comboMax, comboGroups: comboGroups, tryEscape: tryEscape, comboShape: comboShape, canCombo: canCombo, comboCost: comboCost, comboBonus: comboBonus, comboMates: comboMates, comboCfg: comboCfg, aiTune: AIC, aiGuard: AIG, addGuard: addGuard, canDiscard: canDiscard, discard: discard, PATHS: PATHS, pathsOf: pathsOf, normPaths: normPaths, init: init, newBattle: newBattle, newSide: newSide, newGroup: newGroup, setFoe: setFoe, aliveFoes: aliveFoes, groupFix: groupFix, discardCost: discardCost, mulligan: mulligan, aiMulligan: aiMulligan, applyMove: applyMove, aiMove: aiMove, legal: legal, fury: fury, sigReady: sigReady,
   targetSide: targetSide, spiritOf: spiritOf, cardText: cardText, typeLabel: typeLabel, badge: badge, TYPEN: TYPEN, cardScore: cardScore, playBlock: playBlock, applyEnh: applyEnh,
   upgraded: upgraded, storyRules: function (o) { if (o) Object.assign(SU, o); return SU; },
   cards: function () { return CARDS; }, chars: function () { return CHARS; }, rules: function () { return R; }, setRng: function (f) { rnd = f; } };
@@ -7304,7 +7310,7 @@ function startMatch(me, story) { ST._matchTok = (ST._matchTok | 0) + 1; ST._vcLe
   if (story && story.ctx && story.ctx.enfDoom) ST.b.enfDoom = 1;
   if (story && story.ctx && story.ctx.enfThr && ST.b.s[1]) { ST.b.enfThr = story.ctx.enfThr; ST.b.enfX = story.ctx.enfX | 0; ST.b.enfTry = story.ctx.enfTry | 0; ST.b.s[1].floor = Math.max(1, Math.round(ST.b.s[1].max * story.ctx.enfThr)); ev('match:enf:floor:' + ST.b.s[1].floor + ':' + ST.b.s[1].max); } /* v6.5.41 Ban: hits land; at the floor he shrugs it off; v6.5.42 b13k: enfTry */
   if (story && story.ctx && story.ctx.freeOpen && !(story.boss || story.mini || (story.ctx.c2lm))) ST.b.freeOpen = 1;
-  if (story && story.assist && ST.b.bench) { ST.b.sync = 1; ev('match:sync:on'); try { AU.ensure('sb_break', function () {}); } catch (eS) {} if (story.ctx && story.ctx.c2lesson === 'assist' && story.foes && story.foes[0]) { ST.b.sbTypes = {}; ST.b.sbTypes[story.foes[0]] = me === 'ryo' ? 'G' : 'A'; } } /* v6.5.16 Sync Break (Genji); the lesson spar partner reads as a guarder for Ryo, an attacker for Aoi */
+  if (story && story.assist && ST.b.bench) { ST.b.sync = 1; if (story.sbC1) ST.b.sbC1 = 1; ev('match:sync:on' + (story.sbC1 ? ':c1' : '')); try { AU.ensure('sb_break', function () {}); } catch (eS) {} if (story.ctx && story.ctx.c2lesson === 'assist' && story.foes && story.foes[0]) { ST.b.sbTypes = {}; ST.b.sbTypes[story.foes[0]] = me === 'ryo' ? 'G' : 'A'; } } /* v6.5.16 Sync Break (Genji); the lesson spar partner reads as a guarder for Ryo, an attacker for Aoi */
   if (story) { var KL = 0, KP = null; try { var KS = root.WORLD_API.SAVE(); KP = root.STORY.bond(KS).path; KL = root.STORY.bondLv(KS); } catch (eK) {} /* v6.5.16 Bond Lv 7-10 */
     if (KP && KL >= 7) ST.b.echo = { k: KP, p: KL >= 10 ? E.SB.echo10 : E.SB.echo }; if (KL >= 8) ST.b.sbII = 1; if (KL >= 9 && ST.b.bench) ST.b.inSync = 1; if (KL >= 10 && ST.b.bench) ST.b.awaken = 1; if (KL >= 7) ev('match:bond:kit:' + KL); }
   if (story && story.ctx && story.ctx.cover) { ST.b.cover = 1; ev('match:cover:on'); }
@@ -7597,7 +7603,7 @@ function renderSync() {
   /* enemy type icons: the one on the board, and one per chip in the foe row */
   var fb = $('#fE .fbody'), cur = fb && fb.querySelector('.sbico:not(.gone)'), t = on && b.s[1] && b.s[1].hp > 0 ? sbFoeType(b.s[1]) : '';
   if (fb) { if (!t || ST.sbFxOn) { if (cur && !ST.sbFxOn) cur.remove(); } else if (!cur || cur.dataset.ch !== b.s[1].ch + ':' + (b.grp ? b.grp.indexOf(b.s[1]) : 0)) { if (cur) cur.remove(); var ic = sbIco(t, true); ic.dataset.ch = b.s[1].ch + ':' + (b.grp ? b.grp.indexOf(b.s[1]) : 0); fb.appendChild(ic); } }
-  var spent = function (s, i) { return !!(s && ((E.SB_BOSS[s.ch] && s.sbDone) || ((b.sbWin || b.sbAsk) && b.sbLast === i))); }; /* broken: dim and cracked while its window is open (a boss stays spent) */
+  var spent = function (s, i) { return !!(s && ((E.sbBoss(b, s.ch) && s.sbDone) || ((b.sbWin || b.sbAsk) && b.sbLast === i))); }; /* broken: dim and cracked while its window is open (a boss stays spent) */
   if (fb && !ST.sbFxOn) { var ci0 = fb.querySelector('.sbico'); if (ci0) ci0.classList.toggle('spent', spent(b.s[1], b.grp ? b.grp.indexOf(b.s[1]) : 0)); }
   if (b && b.grp && b.grp.length > 1) b.grp.forEach(function (s, i) { var c = foeChip(i); if (!c) return; var ci = c.querySelector('.sbico'), tt = on && s.hp > 0 ? sbFoeType(s) : ''; if (!tt) { if (ci) ci.remove(); return; } if (!ci) { ci = sbIco(tt, false); c.appendChild(ci); } ci.classList.toggle('spent', spent(s, i)); });
   /* the window: FREE tag + glowing bench portrait (after the FX), Pass for a mid-turn window */
@@ -12437,7 +12443,7 @@ ST.inWorld = false; ev('world:fight:' + SAVE.act + ':' + foes.join(','));
   var foeNm = {}; foes.forEach(function (id) { var lab = heavyLabel(id, ctx); if (lab) foeNm[id] = lab; });
   var pst0 = gearPst({ combo: true, hp: SAVE.hp, max: MAXHP > ((CD.rules && CD.rules.hp) || 46) ? MAXHP : 0 /* v6.5.16 Conditioning */, spirit: SAVE.sp, deck: lo.deck, sig: lo.sig, sig2: lo.sig2, disc: boss || ctx.mini ? 2 : 1 /* v4.4 discards this fight */, cmax: lo.cmax, ctrPlus: lo.ctrPlus | 0, dgPlus: lo.dgPlus | 0, rebCap: lo.rebCap | 0, soda: sodaFx });
   fightVsOpen(fightVsId(boss, ctx, grp), function () { swirl(function () { UI.startMatch(SAVE.act, { foes: foes, foeNm: foeNm, hp: ctx.toughHp || (n === 3 ? GROUP3_HP : 0), boss: boss, drop: yb + ye, soda: ye, sodaLeft: SAVE.sodaOn, mini: ctx.mini || null, koLine: ctx.mini ? koLine(ctx.mini) : '', partner: CNAME[other(SAVE.act)], pst: pst0 /* v4.18 gear */,
-    esc: (ctx.ckDoom || ctx.enfDoom) ? 0 : ((ctx.c2spar || ctx.matspar) ? 1 : escChance(boss, ctx.mini)), grp: grp, ctx: ctx, bench: benchOf(boss, ctx), assist: typeof c2AssistOn === 'function' && c2AssistOn(ctx) ? 1 : 0, /* v4.24 tag-in; v4.56 dbl gated; v6.5.16: 'assist' = Sync Break learned (the save key stays c2les.assist). Every Ryo vs Aoi fight is a spar: Stop Sparring always ends it. */
+    esc: (ctx.ckDoom || ctx.enfDoom) ? 0 : ((ctx.c2spar || ctx.matspar) ? 1 : escChance(boss, ctx.mini)), grp: grp, ctx: ctx, bench: benchOf(boss, ctx), assist: typeof c2AssistOn === 'function' && c2AssistOn(ctx) ? 1 : 0, sbC1: typeof c2AssistOn === 'function' && c2AssistOn(ctx) && SAVE.ngp && (SAVE.chapter | 0) <= 1 && !c2On() ? 1 : 0 /* v6.5.65 Ch1 Sync Break types, NG+ only */, /* v4.24 tag-in; v4.56 dbl gated; v6.5.16: 'assist' = Sync Break learned (the save key stays c2les.assist). Every Ryo vs Aoi fight is a spar: Stop Sparring always ends it. */
     settle: function (win, st) { return settle(win, st); }, onEnd: function (win, st) { back(win, st); } }); }); });
 }
 /* v4.24 tag-in: once the courtyard choice has bound the two of them, the partner waits on the bench in every fight with their
