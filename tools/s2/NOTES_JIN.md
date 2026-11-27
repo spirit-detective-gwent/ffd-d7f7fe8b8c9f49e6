@@ -100,3 +100,10 @@ Build: `cd /workspace/ffd && python3 tools/s2/build.py` (base patches: tools/s2/
 - Prior tests on this tree (post_bond, after the FFD mix-up except bond): s2 167/167, ngp 104/104, ch_smoke PASS, no_old_art PASS, verify_wired PASS, t_gc errs [].
 - Prior perf_check e1ba0d4 vs ed1efa1 OVERALL PASS on fps, but 4x cpu_busy was +6 to +10 on several spots (busy box). Remeasuring 88588dd vs live e1ba0d4 (v6.5.63) interleaved, on a quiet box (wait while 1-min load > 6). rooms_fps already: 1x all 59.3–60; 4x rooms 55.8–59.8, cab_play 51.5 (arcade branch owns cabinets; this branch did not edit s2arc.js).
 - Pipeline: /workspace/v6564-jin/finish_ggd52.sh (shots, full tests, perf_check --runs 2, rooms_fps). Do not push or publish.
+
+## Final gates (GGD-52 wrap-up, 2026-11-27, tip after 6a5e344)
+- Shot review: tools/s2/shots_final/8_jin_bond.png (6a5e344) read again. Fierce ("He is already laughing. Do not make this another man you have to carry.") and Strategic ("He keeps a book. Thursday envelopes, prize slips, the lot.") frames show the full line, none mid-typewriter. No recapture needed.
+- World perf vs live e1ba0d4, perf_check --only world --runs 3 --throttle 4 on a quiet box: all fps gates PASS (60.0 at every key spot, walks 59.9). 4x heat is lower than live at every spot (e.g. genji gym 74.3 vs 82.8, town centre 66.8 vs 75.0). Frame time med/p95 equal to live. Memory (Ch1 heap after GC) 49.6 vs 49.4 MB.
+- Soak (perf_check e1ba0d4 6a5e344 --only soak, load <= 1.5): heap slope new 0.061 vs live 0.064 MB/battle, DOM 553 flat, canvases 9 flat, listener delta 0. PASS. (The earlier OVERALL FAIL was only the empty soak row from --only world.)
+- rooms_fps 4x on the branch, 3 passes (live has no FFF_S2P6 rooms, so the live pass errors by design): all rooms 56.8-60.0, median every room >= 58; heap 116-123 MB, errs [].
+- Tests: s2 167, ngp 104, bond 109, ch_smoke, no_old_art, verify_wired, t_gc, t_tea all pass.
