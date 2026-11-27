@@ -88,3 +88,13 @@ Build: `cd /workspace/ffd && python3 tools/s2/build.py` (base patches: tools/s2/
   - Gōda Fierce/Fierce partner “Gently?” → “Keep it clean. I will be right behind you.”
 - Step E (Erik t444): Ogata’s boss fight (hhall2) no longer uses the 7F hallway backdrop. New handmade still B.hdeal “Hotel Chuo · 707” (deal room: night city windows, felt table, fox-stamped sheets, brass lamps). Wave fight keeps B.hhall. No new loops. Shot pending: tools/s2/shots_final/9_ogata_deal_room.png. Jin choice shot pending: tools/s2/shots_final/8_jin_bond.png.
 - Tests for D/E not run yet: waiting for the in-flight perf_check (e1ba0d4 vs ed1efa1) to finish, then s2, bond, ngp, ch_smoke, verify_wired, t_gc, shots. Did not start Playwright while that perf was on the box.
+
+
+## Takeover (executor 3, 2026-11-27 00:12 ET)
+- Tip 88588dd (banter text committed). Untracked: 8_jin_bond.png, 9_ogata_deal_room.png (left untracked), plus __pycache__ and tools/ngp/shots (not added).
+- Shot review: 9_ogata_deal_room.png is the Hotel Chuo 707 deal room (brass lamps, felt table, fox-stamped sheets, Ogata 48/48). 8_jin_bond.png is the prize-room bond moment (choice + Fierce/Strategic/Compassionate openers) but Fierce and Strategic frames were captured mid-typewriter ("He is already laughing. D" / "He keeps a book. Thu"). Fixed shot_bond_ogata.py to tap only the .tw box and wait for .done before shooting; will regenerate.
+- Jin fight background confirmed as the gcback prize room: startFight('gcback', ['mb2_game'], { bt: 'gcback', ... }); P6.BT.gcback name "Neon Game Center · prize room". Explore shot g08_jin_battle.png shows the prize-wall "INSERT COIN" / "JIN 999990" backdrop with “High-Score” Jin.
+- Earlier bond_jin.log failures (missing PAY/BANTER/BCALL_NAME, recycled Gōda/Masa lines, crash in askJinThenSeal) were from a 03:13 run against /workspace/ffd-bond, before 9070149 defaulted FFD to this repo. Will rerun with FFD=/workspace/ffd BOND_PORT=8997.
+- Prior tests on this tree (post_bond, after the FFD mix-up except bond): s2 167/167, ngp 104/104, ch_smoke PASS, no_old_art PASS, verify_wired PASS, t_gc errs [].
+- Prior perf_check e1ba0d4 vs ed1efa1 OVERALL PASS on fps, but 4x cpu_busy was +6 to +10 on several spots (busy box). Remeasuring 88588dd vs live e1ba0d4 (v6.5.63) interleaved, on a quiet box (wait while 1-min load > 6). rooms_fps already: 1x all 59.3–60; 4x rooms 55.8–59.8, cab_play 51.5 (arcade branch owns cabinets; this branch did not edit s2arc.js).
+- Pipeline: /workspace/v6564-jin/finish_ggd52.sh (shots, full tests, perf_check --runs 2, rooms_fps). Do not push or publish.
