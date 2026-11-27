@@ -25504,6 +25504,7 @@ function v640NgStart(o) {
   try { localStorage.setItem(NGP_BAK, JSON.stringify(SAVE)); localStorage.setItem(NGP_BAK + '_t', String(Date.now())); } catch (e3) {}
   if (SAVE.act && SAVE.act !== 'ryo' && typeof switchChar === 'function') { try { switchChar('ryo'); } catch (e4) {} }
   var N = ngBuild(SAVE, o);
+  try { if (typeof root.FFF_QDONE_RESET === 'function') root.FFF_QDONE_RESET('ngp'); } catch (eQd) {} /* v6.5.65: a new run's quest completes ring again */
   /* leave the world the way Reset story / Leave chapter do, then become the new save in place */
   W.scGen = (W.scGen | 0) + 1; try { if (typeof scKill === 'function') scKill(); } catch (eK) {}
   W.opMus = 0; W.opMapOn = 0; W.opFade = 0; W.scr = 0;
@@ -39361,11 +39362,16 @@ var GINKO = (function () {
         complete sound only on a real, first completion of that title.
      ======================================================================== */
   var playedDone = {};
+  /* v6.5.65 (Erik, NG+): the once-guard lives as long as the page, so a New Game Plus started in the same session as the run
+   * that already completed a quest swallowed that quest's QUEST COMPLETE banner and its sound for the whole new run. A first
+   * playthrough keys by title exactly as before; an NG+ run keys by its NG+ number, and starting NG+ clears the guard. */
+  function qdKey(title) { var n = 0; try { n = (typeof SAVE !== 'undefined' && SAVE && SAVE.ngp) | 0; } catch (eK) {} return (n > 0 ? 'ngp' + n + '|' : '') + String(title || ''); }
+  root.FFF_QDONE_RESET = function (why) { playedDone = {}; ev('world:v6552:qdone:reset:' + (why || '')); };
   if (typeof qBanner === 'function' && !qBanner._v6552once) {
     var qb0 = qBanner;
     qBanner = function (kind, title, sub) {
       if (kind === 'QUEST COMPLETE') {
-        var key = String(title || '');
+        var key = qdKey(title);
         if (playedDone[key]) {
           ev('world:v6552:qdone:skip:' + key);
           return;
