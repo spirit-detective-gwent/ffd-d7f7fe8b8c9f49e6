@@ -60089,7 +60089,7 @@ function biteTap() {
 }
 function biteUpdate(dt) {
   S.idle += dt;
-  if (S.ph === 'play') { if (S.p > BITE_FLOOR) S.p = Math.max(BITE_FLOOR, S.p - (S.C.drain || 0) * (S.p - BITE_FLOOR) * dt); S.pg = Math.max(S.p, S.pg - 0.3 * dt); } /* GGD-90: the leak, and a red ghost that shows what leaked */
+  if (S.ph === 'play') { if (S.p > BITE_FLOOR) S.p = Math.max(BITE_FLOOR, S.p - (S.C.drain || 0) * (S.p - BITE_FLOOR) * dt); S.pg = Math.max(S.p, S.pg - 0.1 * dt); } /* GGD-90: the leak, and a red ghost that shows what leaked */
   setMood(S.idle < 0.4 ? 'happy' : ((RUN_T - S.pt) < 2.2 && S.p < 0.7 ? 'angry' : 'neutral'));
   if (S.pt >= RUN_T && S.ph === 'play') endRun(S.p >= 0.7 ? 'close' : 'bad', S.p >= 0.7 ? '' : 'choke');
 }
@@ -61236,15 +61236,16 @@ function zoneCol(v) { return v < 0.6 ? '#5ed46a' : v < 0.85 ? '#ffcf40' : '#ff4a
 /* GGD-90: the quick-bite gauge is the eat meter. Green while it climbs, orange with a red ghost while it leaks
  * (the ghost is what you just lost), 70% CLOSE line and the gold WIN edge. Drawn only inside the EATG frame. */
 function drawBiteGauge(v, gx, gy, gw, gh) {
-  var gv = clamp(S.pg || 0, 0, 1), leak = S.ph === 'play' && gv - v > 0.004, iw = gw - 4;
+  var gv = clamp(S.pg || 0, 0, 1), leak = S.ph === 'play' && S.idle > 0.22 && v > BITE_FLOOR + 0.01, iw = gw - 4;
   ltext('EAT', gx + 2, gy - 17, 12, '#fff6ec', INK, 4, 'left', LAT);
   if (leak) ltext('\u25bc LEAKING \u00b7 TAP FASTER', gx + gw, gy - 17, 12, '#ff7a5a', INK, 4, 'right', LAT);
   else ltext('\u3082\u3050  keep tapping, it leaks', gx + gw, gy - 17, 12, '#fff6ec', INK, 4, 'right', JPF);
   box(gx, gy, gw, gh, '#2a2438', 14, 4);
   ctx.save(); rr(gx + 2, gy + 2, gw - 4, gh - 4, 12); ctx.clip();
-  ctx.globalAlpha = 0.22; ctx.fillStyle = '#ff4a2a'; ctx.fillRect(gx + 2, gy, iw * 0.7, gh); ctx.fillStyle = '#ffcf40'; ctx.fillRect(gx + 2 + iw * 0.7, gy, iw * 0.3, gh);
+  ctx.globalAlpha = 0.16; ctx.fillStyle = '#5ed46a'; ctx.fillRect(gx + 2 + iw * 0.7, gy, iw * 0.3, gh);
   ctx.globalAlpha = 1;
-  if (gv > v) { ctx.fillStyle = 'rgba(255,58,42,.85)'; ctx.fillRect(gx + 2 + iw * v, gy, iw * (gv - v), gh); }
+  if (gv > v) { var lx = gx + 2 + iw * v, lw = iw * (gv - v), k; ctx.fillStyle = '#ff3a2a'; ctx.fillRect(lx, gy, lw, gh); ctx.fillStyle = 'rgba(255,230,210,.55)';
+    for (k = Math.floor((lx - gx) / 10) * 10 + gx - (S.t * 40 % 10); k < lx + lw; k += 10) ctx.fillRect(Math.max(lx, k), gy, Math.max(0, Math.min(3, lx + lw - k)), gh); }
   ctx.fillStyle = leak ? '#ff9a3a' : v >= 0.7 ? '#5ed46a' : '#ffcf40'; ctx.fillRect(gx + 2, gy, iw * v, gh);
   ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillRect(gx + 2, gy + 3, iw * v, 5);
   ctx.restore();
