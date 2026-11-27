@@ -234,6 +234,9 @@
       var cx = SW / 2 + Math.sin(t * 1.3) * 120, cy = 400 + Math.cos(t * 1.7) * 30; g.lineWidth = 2.5; g.strokeStyle = '#ff4a5a'; g.beginPath(); g.arc(cx, cy, 16, 0, 7); g.moveTo(cx - 24, cy); g.lineTo(cx + 24, cy); g.moveTo(cx, cy - 24); g.lineTo(cx, cy + 24); g.stroke();
     };
     G.dispose = function () { layers = null; TT = null; };
+    G._tg = function () { /* test/clip hook: live targets in screen coords */ var o = []; thrown.forEach(function (T) { if (!T.dead) o.push([T.x, T.y, 't']); });
+      if (boss && !boss.ko) o.push([boss.x + boss.wp[0] * boss.sc, boss.y + boss.wp[1] * boss.sc, 'b']);
+      en.forEach(function (E) { if (E.ko || E.rise < 0.5 || E.type === 'hostage') return; var by = E.foot + (1 - E.rise) * 120 * E.sc - 10 * E.sc; o.push([E.x, by - 114 * E.sc, 'e']); }); return { t: o, ammo: ammo, cover: cover, reload: reloadT > 0 }; };
     G.dbg = function (o) { o = o || {}; if (o.lives) lives = o.lives; if (o.boss) { area = 2; startBoss(); } return { lives: lives, ammo: ammo, phase: phase, area: area, en: en.length, boss: boss && boss.hp }; };
     return G;
   };
