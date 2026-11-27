@@ -21202,7 +21202,8 @@ function c2TransSky(sh, w, h) { var K = w + 'x' + h; if (sh._sky && sh._sky.k ==
   var sg = (C2TRANS_SG || []).map(function (q) { var fs = Math.round(h * 0.03), m = document.createElement('canvas').getContext('2d'); m.font = '900 ' + fs + 'px system-ui'; var tw2 = m.measureText(q[0]).width; if (tw2 > w * 0.42) { fs = Math.max(8, Math.floor(fs * w * 0.42 / tw2)); m.font = '900 ' + fs + 'px system-ui'; tw2 = m.measureText(q[0]).width; }
     var pad = Math.ceil(h * 0.05), mk = function (bl) { var k2 = document.createElement('canvas'); k2.width = Math.ceil(tw2 + pad * 2); k2.height = Math.ceil(fs * 1.4 + pad * 2); var g2 = k2.getContext('2d'); g2.font = '900 ' + fs + 'px system-ui'; g2.textAlign = 'left'; g2.shadowColor = q[1]; g2.shadowBlur = bl; g2.fillStyle = q[1]; g2.fillText(q[0], pad, pad + fs * 1.05); return k2; };
     return { on: mk(h * 0.03), dim: mk(h * 0.009), x: w * q[2] - pad, y: -h * (0.02 + q[3] * 0.05) - pad - fs * 1.05 }; });
-  sh._sky = { k: K, cv: cv, y0: y0, sg: sg }; return sh._sky; }
+  var gt = document.createElement('canvas'), gx2 = gt.getContext('2d'), GF = 120; gx2.font = '900 ' + GF + 'px system-ui'; gt.width = Math.ceil(gx2.measureText(C2TRANS_GATE || '').width + 4); gt.height = Math.ceil(GF * 1.3); gx2 = gt.getContext('2d'); gx2.font = '900 ' + GF + 'px system-ui'; gx2.fillStyle = '#f4ecd8'; gx2.textAlign = 'left'; gx2.fillText(C2TRANS_GATE || '', 2, GF * 1.02); gt.fs = GF; gt.base = GF * 1.02;
+  sh._sky = { k: K, cv: cv, y0: y0, sg: sg, gate: gt }; return sh._sky; }
 function c2TransDraw(c, w, h, u, t, sh) { var e = function (x) { return x < 0 ? 0 : x > 1 ? 1 : x * x * (3 - 2 * x); }, cam = c2TransCam(u), crane = cam.crane, zc = cam.zc, f = h * C2T_F, hz = h * (C2T_HZ0 + (C2T_HZ1 - C2T_HZ0) * crane), cx0 = w / 2;
   var PX = function (x, d) { return cx0 + f * x / d; }, PY = function (y, d) { return hz + f * (C2T_CH - y) / d; }, ZN = 0.9;
   c.save(); var g = c.createLinearGradient(0, 0, 0, h); g.addColorStop(0, '#0b0820'); g.addColorStop(0.55, crane > 0.3 ? '#2a1640' : '#1a1430'); g.addColorStop(1, '#3a1e3a'); c.fillStyle = g; c.fillRect(0, 0, w, Math.min(h, hz + 2));
@@ -21226,14 +21227,14 @@ function c2TransDraw(c, w, h, u, t, sh) { var e = function (x) { return x < 0 ? 
   var fade = 1 - e((u - 0.9) / 0.1) * 0.25, lw = Math.max(1, h * 0.003);
   items.forEach(function (it) { var d = it[0] - zc; if (d < ZN + 0.2) return; var fog = Math.max(0.25, Math.min(1, 1.25 - d / 110));
     if (it[1] === 'L') { var x = PX(it[2], d), y0 = PY(0, d), y1 = PY(4.2, d), pw2 = Math.max(1, f * 0.13 / d);
-      if (d < 60) { c.globalAlpha = fog * Math.min(1, Math.max(0, (d - 3) / 4)); c.fillStyle = 'rgba(255,190,120,.09)'; c.beginPath(); c.ellipse(PX(it[2] * 0.7, d), y0, f * 1.9 / d, f * 0.45 / d, 0, 0, 7); c.fill(); }
+      if (d < 60 && d > 5) { c.globalAlpha = fog * Math.min(1, (d - 5) / 4); c.fillStyle = 'rgba(255,190,120,.09)'; c.beginPath(); c.ellipse(PX(it[2] * 0.7, d), y0, f * 1.9 / d, f * 0.45 / d, 0, 0, 7); c.fill(); }
       c.globalAlpha = fog; c.fillStyle = '#14110d'; c.fillRect(x - pw2 / 2, y1, pw2, y0 - y1); c.fillRect(x - (it[2] < 0 ? 0 : f * 0.8 / d), y1, f * 0.8 / d, pw2);
-      var hx = PX(it[2] * 0.85, d); c.fillStyle = 'rgba(255,214,140,.95)'; c.beginPath(); c.arc(hx, y1 + pw2, Math.max(1.2, f * 0.22 / d), 0, 7); c.fill(); if (d > 4) { c.globalAlpha = fog * Math.min(1, (d - 4) / 3); c.fillStyle = 'rgba(255,214,140,.12)'; c.beginPath(); c.arc(hx, y1 + f * 0.5 / d, f * 1.25 / d, 0, 7); c.fill(); } c.globalAlpha = 1; return; }
+      var hx = PX(it[2] * 0.85, d); c.fillStyle = 'rgba(255,214,140,.95)'; c.beginPath(); c.arc(hx, y1 + pw2, Math.max(1.2, f * 0.22 / d), 0, 7); c.fill(); if (d > 6) { c.globalAlpha = fog * Math.min(1, (d - 6) / 4); c.fillStyle = 'rgba(255,214,140,.13)'; c.beginPath(); c.arc(hx, y1 + f * 0.4 / d, f * 1.0 / d, 0, 7); c.fill(); } c.globalAlpha = 1; return; }
     if (it[1] === 'G') { var gy0 = PY(0, d), gy1 = PY(4.4, d), pw = f * 0.38 / d, xa = PX(-3.3, d), xb = PX(3.3, d), lh = f * 0.38 / d; c.globalAlpha = fog; c.fillStyle = '#7a1e22'; c.strokeStyle = '#14110d'; c.lineWidth = lw;
       [xa, xb].forEach(function (gx) { c.fillRect(gx - pw / 2, gy1, pw, gy0 - gy1); c.strokeRect(gx - pw / 2, gy1, pw, gy0 - gy1); });
       c.fillRect(PX(-3.9, d), gy1 - lh, PX(3.9, d) - PX(-3.9, d), lh); c.strokeRect(PX(-3.9, d), gy1 - lh, PX(3.9, d) - PX(-3.9, d), lh); c.fillRect(PX(-3.6, d), gy1 + lh * 0.9, PX(3.6, d) - PX(-3.6, d), lh * 0.55); c.strokeRect(PX(-3.6, d), gy1 + lh * 0.9, PX(3.6, d) - PX(-3.6, d), lh * 0.55);
-      var fs = Math.max(6, Math.round(f * 0.42 / d)); c.font = '900 ' + fs + 'px system-ui'; var tw2 = c.measureText(C2TRANS_GATE).width, mx = Math.min(xb - xa, w * 0.86); if (tw2 > mx) { fs = Math.max(5, Math.floor(fs * mx / tw2)); c.font = '900 ' + fs + 'px system-ui'; }
-      c.fillStyle = '#f4ecd8'; c.textAlign = 'center'; c.fillText(C2TRANS_GATE, cx0, gy1 - lh - fs * 0.35); c.globalAlpha = 1; return; }
+      var GL = SK.gate, fs = Math.max(6, f * 0.42 / d), gw = GL.width * fs / GL.fs, mx = Math.min(xb - xa, w * 0.86); if (gw > mx) { fs *= mx / gw; gw = mx; } var gh = GL.height * fs / GL.fs; /* the gate name: painted once, scaled */
+      c.drawImage(GL, cx0 - gw / 2, gy1 - lh - fs * 0.35 - GL.base * fs / GL.fs, gw, gh); c.globalAlpha = 1; return; }
     /* Ryo (left) and Aoi (right) from behind: their real jog cycles, row 3 = facing away (up the screen) */
     var q = sh[it[3]]; if (!q || !q.im.complete || !q.im.naturalWidth) return; var cols = SHC[q.sh] || 8, fr = Math.floor(t * 11 + it[3] * 3) % cols, ph = f * 1.9 / d, pw3 = ph * 192 / 256, bob = Math.abs(Math.sin(t * 11 * Math.PI / 2 + it[3])) * ph * 0.012,
       px = PX(it[2] + Math.sin(t * 1.3 + it[3] * 2) * 0.12, d), fy = PY(0, d);
