@@ -48335,6 +48335,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     return o;
   }
   function haseItems() {
+    if (root.FFF_HS && FFF_HS.learned && FFF_HS.learned()) return []; /* v6564-healstyle: medical stock went to the clinic after the Kampo lesson */
     var base = (root.FFF_S2P2 && FFF_S2P2.MENU && FFF_S2P2.MENU.length) ? FFF_S2P2.MENU.slice() : HASE_FALLBACK.slice();
     return base.map(function (it) { return decorateHase(it); });
   }
@@ -49571,6 +49572,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
 
   root.FFF_S2GARDEN = {
     G: G,
+    doPot: doPot, /* v6564-healstyle: tests */
     potsS: potsS,
     potSt: potSt,
     pop: gardenPop,
@@ -53563,6 +53565,7 @@ function hsVendors() {
   if (ono && HS_V0.ono) { put(ono.items, on ? HS_ONO : HS_V0.ono); ono.hi = on ? 'Ginger seed came in. The doctor said you\u2019d come.' : HS_V0.onoHi; }
   if (mot && HS_V0.mot) { put(mot.items, on ? HS_V0.mot.filter(med) : HS_V0.mot); mot.hi = on ? 'Cold cans. The bike stuff\u2019s not for kids.' : HS_V0.motHi; }
   if (P2M && HS_V0.hase) { put(P2M, on ? HS_V0.hase.filter(med) : HS_V0.hase); if (hase) hase.hi = on ? 'Medical stock went to the clinic. Bikes only.' : HS_V0.haseHi; }
+  try { if (root.FFF_S2MENUS && FFF_S2MENUS.syncShops) FFF_S2MENUS.syncShops(); } catch (eS) {}
   if (root.FFF_S2MENUS && FFF_S2MENUS.SHOPS && FFF_S2MENUS.SHOPS.s2_hase && FFF_S2MENUS.SHOPS.s2_hase.hi) { var H = FFF_S2MENUS.SHOPS.s2_hase; if (!H._hi0) H._hi0 = H.hi; H.hi = on ? { fierce: 'Medical stock went to the clinic. Bikes only.', strategic: 'Medical stock went to the clinic. Bikes only.', balanced: 'Gauze went to the doctor. Bikes only now.' } : H._hi0; }
   return on;
 }
