@@ -56,8 +56,31 @@
     + '#j6arc .ab:active{transform:translateY(2px);box-shadow:0 2px 0 #1a1220}'
     + '#j6arc .ab.x{right:8px;top:8px;background:#f2e6ff;font-size:12px;padding:5px 9px;z-index:4}';
   function css() { if (document.getElementById('j6cab-css')) return; var s = document.createElement('style'); s.id = 'j6cab-css'; s.textContent = CSS; (document.head || document.documentElement).appendChild(s); }
-  function openOv() { css(); if (A.closeOv) A.closeOv(); var el = document.createElement('div'); el.id = 'j6arc'; (document.body || document.documentElement).appendChild(el); try { if (root.W) W.paused = true; } catch (e) {} A._cabEl = el; return el; }
-  function closeCab() { var el = A._cabEl; if (el && el.parentNode) el.parentNode.removeChild(el); A._cabEl = null; try { if (A.closeOv) A.closeOv(); else if (root.W) W.paused = false; } catch (e) {} try { if (root.W) W.paused = false; } catch (e2) {} }
+  /* The Game Center room leaves large canvases in the tree (c2bake, j6Room_gc,
+     nqRoom, c2amb, the 1280x900 wimap). W.paused already stops the world loop to a
+     100 ms keepalive, but those layers still composite under the opaque overlay.
+     At dpr 3 / 4x throttle that alone dropped every cabinet below 55 fps; hiding
+     them for the play held gun/fighter/street/shooter at 58-60 fps. Ember still
+     needed its own tile bake (in s2arc_ember.js). Restored on close. */
+  function worldFreeze(on) {
+    var skip = document.getElementById('j6arc');
+    if (on) {
+      var hid = [];
+      function hide(e) {
+        if (!e || e === skip || (skip && skip.contains(e))) return;
+        hid.push([e, e.style.visibility]);
+        e.style.visibility = 'hidden';
+      }
+      ['world', 'wv', 'wimap', 'wmap', 'wsky', 'wrain', 'wisp'].forEach(function (id) { hide(document.getElementById(id)); });
+      [].forEach.call(document.querySelectorAll('canvas'), hide);
+      A._worldHid = hid;
+    } else if (A._worldHid) {
+      A._worldHid.forEach(function (p) { try { p[0].style.visibility = p[1]; } catch (eH) {} });
+      A._worldHid = null;
+    }
+  }
+  function openOv() { css(); if (A.closeOv) A.closeOv(); var el = document.createElement('div'); el.id = 'j6arc'; (document.body || document.documentElement).appendChild(el); try { if (root.W) W.paused = true; } catch (e) {} try { worldFreeze(true); } catch (eF) {} A._cabEl = el; return el; }
+  function closeCab() { try { worldFreeze(false); } catch (eF) {} var el = A._cabEl; if (el && el.parentNode) el.parentNode.removeChild(el); A._cabEl = null; try { if (A.closeOv) A.closeOv(); else if (root.W) W.paused = false; } catch (e) {} try { if (root.W) W.paused = false; } catch (e2) {} }
   function canvasIn(el) { var c = document.createElement('canvas'), d = 1, w = el.clientWidth || innerWidth, h = el.clientHeight || innerHeight; c.width = Math.round(w * d); c.height = Math.round(h * d); el.appendChild(c); var g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.setTransform(d, 0, 0, d, 0, 0); return { c: c, g: g, w: w, h: h, d: d }; }
   function btnEl(el, cls, label, fn, st) { var b = document.createElement('button'); b.className = 'ab ' + (cls || ''); b.innerHTML = label; if (st) b.style.cssText += st; b.addEventListener('click', function (e) { e.stopPropagation(); try { fn(); } catch (er) { ev('world:s2arc:err:btn:' + (er && er.message)); } }); el.appendChild(b); return b; }
 
