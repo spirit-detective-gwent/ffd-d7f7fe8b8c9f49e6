@@ -54441,7 +54441,7 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
   /* the quest streets: rect (town px), the quest that plays there, "won" test, and the two Punks posted after it */
   var ZONES = [
     { id: 'udon', n: 'Kitsune Udon corner', r: [700, 3250, 1220, 3420], won: function () { return !!E().n13corner; }, posts: null /* the 13u lookout corner keeps its own pair */ },
-    { id: 'waga', n: 'Wagashi Row', r: [2380, 3080, 3000, 3300], won: function () { var n = E().nq; return !!(n && n.won && n.won.x3); }, posts: [[2640, 3205], [2705, 3212]] },
+    { id: 'waga', n: 'Wagashi Row', r: [2380, 3080, 3000, 3300], won: function () { var n = E().nq; return !!(n && n.won && n.won.x3); }, posts: [[2640, 3190], [2700, 3192]] },
     { id: 'west', n: 'West side street', r: [1640, 1980, 1940, 2600], won: q9('cq2_nq_west'), posts: [[1735, 2225], [1840, 2232]] },
     { id: 'hotel', n: 'Hotel Row', r: [1600, 740, 2160, 1010], won: q9('cq2_nq_cold'), posts: [[1690, 965], [1985, 965]] },
     { id: 'wall', n: 'The west wall', r: [140, 850, 700, 1500], won: q9('cq2_nq_paint'), posts: [[255, 1130], [255, 1290]] },
@@ -54476,8 +54476,14 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
   var sp0 = g38tSpawn;
   g38tSpawn = function (c) { var f = sp0.apply(this, arguments); try { if (f && c && QCREW.test(c.k) && act()) mark(f, c.k); } catch (e) {} return f; };
   QS.held = function (ck) { return (W.dgF || []).some(function (o) { return o.qsHold && o.qsCrew === ck && !o.gone; }); };
-  /* the quest pins for the scripted NPC foes (west clash, door crew) */
-  if (typeof c2Npc === 'function') { var cn0 = c2Npc; c2Npc = function (id, x, y) { var s = cn0.apply(this, arguments); try { if ((id === 'c2_hustler' || id === 'c2_boso' || id === 'c2_doorman') && act() && zoneAt(x, y) && s && s.el && !(W.dgF || []).some(function (o) { return o.s === s; })) { if (s.el.dataset && (s.el.dataset.npc || '').length) pin(s); } } catch (e) {} return s; }; }
+  /* the quest pins for the scripted NPC foes: the west street clash (3 Hustlers) and the door crew (Kaneda + 2) */
+  function npcFoe(id, x, y) {
+    if (!(id === 'c2_hustler' || id === 'c2_doorman') || !act()) return false; var z = zoneAt(x, y); if (!z) return false;
+    if (z.id === 'west') { var N = root.FFF_NQ; return !!(N && N.stg && qOpenId('cq2_nq_west') && N.stg('west') === 'clash' && id === 'c2_hustler'); }
+    if (z.id === 'door' || z.id === 'wall') return qOpenId('cq2_nq_door') && x > 250 && x < 410 && y > 870 && y < 930;
+    return false;
+  }
+  if (typeof c2Npc === 'function') { var cn0 = c2Npc; c2Npc = function (id, x, y) { var s = cn0.apply(this, arguments); try { if (npcFoe(id, x, y)) pin(s); } catch (e) {} return s; }; }
   var gp0 = gangPeace;
   gangPeace = function (f) { try { if (f && typeof f === 'object' && f.c2) { if (f.qsHold) return true; if (QS.imm && now() < QS.imm) return true; } } catch (e) {} return gp0.apply(this, arguments); };
   /* the border clash does not start inside a quest street */
