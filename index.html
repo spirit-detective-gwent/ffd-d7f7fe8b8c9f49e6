@@ -19026,7 +19026,7 @@ var CAFG = {
     doors: { gS: { r: [581, 625, 694, 715], at: [637, 650], land: [637, 585, 3], to: 'line:gN' } },
     spots: [{ id: 'clue', r: [600, 160, 680, 220], at: [640, 410], face: 3 }, { id: 'search', r: [690, 155, 760, 230], at: [725, 410], face: 3 }], foes: [] } };
 var CAFP = { line: [{ id: 'eat1', at: [560, 470] }, { id: 'eat2', at: [740, 640] }], dining: [{ id: 'kurata', at: [640, 255], block: [612, 236, 668, 266] }] };
-var CAF_FOES = ['bully4', 'bully3'] /* v4.41 (Ernest): the red-haired boy + the girl with the bat, drawn from their cel walk/run sheets */, CAF_CRATES = ['line', 'kitchen', 'staff'], CAF_LUNCH = 12; /* the reopened counter: a hot lunch, \u00a512 (v6.5.66 prices, Erik t572u: was \u00a52), once per playthrough (cafS().e.lunch), heals 50% HP, full HP on an eating-game win (Erik t575u) */, CAF_LUNCH_PCT = 0.5
+var CAF_FOES = ['bully4', 'bully3'] /* v4.41 (Ernest): the red-haired boy + the girl with the bat, drawn from their cel walk/run sheets */, CAF_CRATES = ['line', 'kitchen', 'staff'], CAF_LUNCH = 12; /* the reopened counter: a hot lunch, \u00a512 (v6.5.66 prices, Erik t572u: was \u00a52), once per playthrough (cafS().e.lunch), heals 50% HP, full HP on an eating-game win (Erik t575u) */ var CAF_LUNCH_PCT = 0.5;
 NM.cafe_stu = 'Taniguchi Haru'; PT.cafe_stu = 'cafe_stu_fig'; /* v4.72 #20: the Staff Room first-year (was a Yuto clone) */ NM.kurata = 'Kurata Tetsu'; PT.kurata = 'kurata_fig'; ARTK.mb_cafe = 'kurata';
 Object.keys(CAFG).forEach(function (k) { var R = CAFG[k], spots = [];
   Object.keys(R.doors).forEach(function (d) { var D = R.doors[d]; spots.push({ id: d, r: lr(R, D.r), at: lw(R, D.at), face: LIB_FACE[d] }); });
