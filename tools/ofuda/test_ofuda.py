@@ -21,7 +21,7 @@ LOSE = "(function(){var b=FFF_UI.ST.b;b.s[0].hp=0;b.over=true;b.winner=1;FFF_UI.
 INPLAY = "!!(FFF_UI.ST.inGame&&FFF_UI.ST.b&&!FFF_UI.ST.b.over&&FFF_UI.ST.phase==='play')"
 CTX = "JSON.stringify(FFF_UI.ST.story&&FFF_UI.ST.story.ctx||null)"
 EVS = "FFF_UI.ST.events.slice()"
-ADV = """()=>{var d=document.getElementById('wdlg');if(!d||!d.classList.contains('on'))return 0;var b=[...d.querySelectorAll('button')].find(x=>/^\W*(Next|OK|Nice|Continue|Got it|Let)/.test((x.textContent||'').trim())&&x.offsetParent);if(b){b.click();return 1}return 0}"""
+ADV = """()=>{var d=document.getElementById('wdlg');if(!d||!d.classList.contains('on'))return 0;var b=[...d.querySelectorAll('button')].find(x=>/^\\W*(Next|OK|Nice|Continue|Got it|Let)/.test((x.textContent||'').trim())&&x.offsetParent);if(b){b.click();return 1}return 0}"""
 async def adv(pg, n=3):
     for i in range(n):
         if not await pg.evaluate(ADV): break
