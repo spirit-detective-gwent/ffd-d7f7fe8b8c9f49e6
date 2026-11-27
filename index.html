@@ -9615,7 +9615,7 @@ function pickKey(S, keys, from) { // which copy of a group an upgrade goes on: t
   return (from === 'spare' ? s[0] || d[0] : d[0] || s[0]);
 }
 /* v4.13: upgrade items buy potions (the special now grows with the Bond instead) */
-var POTION = { cost: 6 };
+var POTION = { cost: 8 };
 function buyPotion(S) { if (S.items < POTION.cost) return 'needs ' + YEN + POTION.cost + ' (you have ' + YEN + (S.items | 0) + ')'; var f = root.FFF_POTION; if (!f) return 'Potions are sold in the Training Room'; var e = f(S, POTION.cost); return e || null; }
 function potionRow(S) { var r = el('div', 'urow potion'); r.dataset.id = 'potion'; r.dataset.k = 'potion';
   r.appendChild(el('div', 'pimg', '\ud83e\uddea'));
@@ -10285,7 +10285,7 @@ var CELL = WD.cell, GW = WD.gw, GH = WD.gh, MW = WD.w, MH = WD.h;
 var GRID = new Uint8Array(GW * GH); WD.grid.forEach(function (row, y) { for (var x = 0; x < GW; x++) GRID[y * GW + x] = row.charAt(x) === '#' ? 1 : 0; });
 var RUN_LEAN = 16, AOI_LEAN = 8, SPH = 86, SPW = SPH * 96 / 128, SPEED = 137; // v4.10: walk ~35% slower (was 210); sprite height (world px), walk speed (world px / s)
 var ACC = 3400, DEC = 5200, STRIDE = 22, RUN = 230, RSTRIDE = 30; // v4.10: run = ~1.1x the old walk (was 336), jog sheet while running; v4.2 snappy walk: accel / decel (px/s^2), px per anim frame; double-tap run speed (bully chase is 185)
-var STORY = root.STORY, HEAL = (STORY && STORY.SD.heal) || { full: 1, freePct: 0.25, freeCd: 90 }, SODA = { cost: 2, stock: 2, fights: 1 }; /* v4.7 sodas (replace the v4.5 Energy Drink) */ // v4.2 (v4.2.1: flat 1-item full heal)
+var STORY = root.STORY, HEAL = (STORY && STORY.SD.heal) || { full: 1, freePct: 0.25, freeCd: 90 }, SODA = { cost: 3, stock: 2, fights: 1 }; /* v4.7 sodas (replace the v4.5 Energy Drink) */ // v4.2 (v4.2.1: flat 1-item full heal)
 var CD = root.CARD_DATA || {}, MAXHP = (CD.chars && CD.chars.ryo && CD.chars.ryo.hp) || (CD.rules && CD.rules.hp) || 46, SPMAX = (CD.rules && CD.rules.spiritMax) || 40;
 var LOSS_COIN_PCT = 0.05, LOSS_COIN_CAP = 50; // v6.3.4: 5% of yen, rounded up, never more than ¥50. Chapter 2 pays nothing until Sneak Attack, Sync Break and Cover Up are all done. Raw dressing materials go; crafted kits stay.
 var WAKE_HP = Math.ceil(MAXHP * 0.3), REST_S = 3; // after a loss Ryo wakes with at least 30% HP; the infirmary rest takes 3 s (v4.2: costs items)
@@ -13131,7 +13131,7 @@ Object.assign(HELP, {
   fielddg: ['Sports Storehouse', '<p><b>Bando</b> laps a crack on the Outdoor Track. Lift three <b>hurdles</b>, set them on lane marks. Do not chase him.</p>'],
   gymdg: ['Gouki\u2019s Gym', '<p>Eight cel rooms. Collect three <b>Council Seals</b>, press them in the Annex. Arena opens. Gouki waits on the Main Court.</p>'],
   freeroam: ['Free roam', '<p>The vending machines and the nurse are still open. <b>New Game Plus</b> is in the menu.</p>'],
-  soda: ['Sodas', '<p>Tap \ud83e\udd64 on the map bar to drink one. Every flavour restores <b>5 Spirit</b> on the spot. \u00a52. No yen boost and nothing saved for the next fight.</p>'],
+  soda: ['Sodas', '<p>Tap \ud83e\udd64 on the map bar to drink one. Every flavour restores <b>5 Spirit</b> on the spot. \u00a53. No yen boost and nothing saved for the next fight.</p>'],
   sodabtn: ['Quick drink', '<p>The \ud83e\udd64 button on the top bar drinks one in a single tap.</p>'],
   money: ['Yen and Essence', '<p><b>Yen</b> buys food, drinks and potions. <b>Spirit Essence</b> comes from fights and side quests. Enhance cards with Aoi on the training mat. Nothing is broken down.</p>'],
   heal: ['Healing', '<p>The nurse will bandage you for +12 HP, free, once every 90 seconds.</p>'] });
@@ -13417,7 +13417,7 @@ function toast(t) { if (typeof commentHide === 'function') commentHide(); var f 
       vmLast = now;
       comment((root.SAY && SAY.soda) || [
         ['aoi', 'Same unmarked cans as the other corners.'],
-        ['ryo', "Two yen. We'll grab some."],
+        ['ryo', "Three yen. We'll grab some."],
         ['aoi', "One per fight. Don't just drink it."]
       ]);
     } catch (e) {}
@@ -13468,7 +13468,7 @@ function toast(t) { if (typeof commentHide === 'function') commentHide(); var f 
   var SAY = {
     soda: [
       A('Same unmarked cans as the other corners.'),
-      R("Two yen. We'll grab some."),
+      R("Three yen. We'll grab some."),
       A("One per fight. Don't just drink it.")
     ],
 
@@ -15980,7 +15980,7 @@ var HOWTO = [
   ['Fight grade', 'A story win is graded <b>C, B, A or S</b>. The speed par is your deck\u2019s own average damage, never below 4. S also needs you to finish on at least 70% of the HP you started with. Each regular enemy may drop 1 Spirit Essence: C 25%, B 50%, A 75%, S always. Sub-bosses, Gouki, rematches, side quests and the opening lessons keep their set amounts. An S win also restores 6 HP, unless that fight ends the chapter.'],
   ['Enhancement', 'Cards train with <b>Spirit Essence</b>. Defeated enemies release it, along with yen. Nothing is broken down: the collection is permanent. On the training mat, choose Train with Aoi, then Enhance cards. Common copies have 1 slot. Other tiers have 2. Each of a card\'s choices can be taken once. Slots carry through evolution. Evolution itself is not taught in Chapter 1. In Chapter 2, enhancing stays on the training mat. Genji\u2019s Evolve copies opens Evolve Your Moves. A Guardian Seal unlocks that technique once. Further practice costs Spirit Essence. Other trainers go further. Signature moves are not evolved.'],
   ['Health', 'HP carries over between fights. The nurse bandages for about +12 HP when you are hurt. Dressings and other heals are in <b>Menu \u2192 Bag</b>. Lose a fight and you wake at the nurse\u2019s office in Chapter 1 (she patches you up to full) or at Genji\u2019s gym in Chapter 2 (you wake on low HP). A loss costs the fight\u2019s rewards, up to ' + Math.round(LOSS_COIN_PCT * 100) + '% of your yen (never more than \u00a5' + LOSS_COIN_CAP + ') and any raw gauze and tape. Cards, upgrades and crafted kits are never lost.'],
-  ['Sodas', 'Every flavour is <b>\u00a52</b> and restores <b>+5 Spirit</b> on the map, the moment you drink it. No next-fight buff. Most machines stock 2. The training-room machine does not run out. Drink one from <b>Menu \u2192 Bag</b> or the \ud83e\udd64 on the top bar.'],
+  ['Sodas', 'Every flavour is <b>\u00a53</b> and restores <b>+5 Spirit</b> on the map, the moment you drink it. No next-fight buff. Most machines stock 2. The training-room machine does not run out. Drink one from <b>Menu \u2192 Bag</b> or the \ud83e\udd64 on the top bar.'],
   ['Switch + menu', 'The <b>\u21c4</b> button beside the menu swaps Ryo and Aoi in one tap. The menu (\u2630) has Map, Journal, Player (Status, Deck, Equipment, Items), Codex, Saves and Settings.']];
 var CXD = {
   gouki: { k: 'Boss', img: 'gouki', a: 'Student-council enforcer. Runs the gym like a fortress. Very hard: 46 HP, hits for 5\u20138 and plays combos. Any relay still standing follows him into the fight at full strength.',
@@ -15998,7 +15998,7 @@ var CXD = {
   infirmary: { k: 'Place', n: 'Nurse\u2019s Office', a: 'South, by the pool, under the glowing red cross. Talk to her when you are hurt and she bandages for about +12 HP. There is no paid full heal in that talk. Knocked out, you wake here and she patches you up to full. No fights right at the door.' },
   hall: { k: 'Place', n: 'Training Room', a: 'Behind the Training door in the nurse\u2019s hallway. The exit to the grounds stays on the back wall. Tap the <b>mat</b>: Train with Aoi, then Enhance cards, or change the deck. Defeated enemies leave ' + essName() + ' and yen. Cards are not broken down.' },
   gym: { k: 'Place', n: 'The Gym', a: 'North. Energy pours off the gym. It pulls students in. It overwhelms Ryo and Aoi if they walk it too early.' },
-  vend: { k: 'Place', n: 'Vending Machines', a: 'Campus machines sell soda for \u00a52. Every flavour restores +5 Spirit on the map. No next-fight buff. Most machines stock 2. The training-room machine does not run out. Food from a machine is eaten on the spot.' },
+  vend: { k: 'Place', n: 'Vending Machines', a: 'Campus machines sell soda for \u00a53. Every flavour restores +5 Spirit on the map. No next-fight buff. Most machines stock 2. The training-room machine does not run out. Food from a machine is eaten on the spot.' },
   oldwing: { k: 'Place', n: 'The Old Wing', a: 'Locked tight. Something cold seeps out from under the door. The shrine sits beside it.' },
   library: { k: 'Place', n: 'Library', a: 'A light flickers on the second floor. Mizuno holds the Archive at the back of a maze of rooms: foyer, reading hall, stacks, carrels, office, copy room, the compact-stacks gallery and two safe rooms. Find the keys, free the students, then knock on the Archive door.' },
   science: { k: 'Place', n: 'Science Building', a: 'Locked. The greenhouse lights are on, and the plants all lean toward the old wing.' },
@@ -17574,8 +17574,8 @@ function dgFrame(dt) { var I = W.inside; if (!I || !INT[I.id].dg || !W.dgF) retu
 function dgAfter(win, st) { var c = st && st.ctx; if (!c || !c.dg) return; var ks = c.dgks || [c.dgk], fs = (W.dgF || []).filter(function (q) { return ks.indexOf(q.key) >= 0; }); W.dgFight = null;
   if (win && !st.escaped) { ks.forEach(function (k) { if (typeof dgRefilled === 'function' && dgRefilled(c.dg) && typeof dgRfDown === 'function') dgRfDown(c.dg, k); else dgS(c.dg).f[k] = 1; }); save(); fs.forEach(function (f) { f.s.el.classList.add('out'); setTimeout(function () { f.s.el.remove(); }, 600); W.dgF.splice(W.dgF.indexOf(f), 1); }); ks.forEach(function (k) { ev('world:dg:down:' + c.dg + ':' + k); }); if (typeof sqAfterFight === 'function') sqAfterFight(win, st); }
   else fs.forEach(function (f) { f.stun = 3; f.st = 'scan'; f.wait = AW.lookT; f.lk0 = f.fa || 0; f.sus = 0; }); } // v4.22 / v4.66 refill visit flags + side-quest kills
-/* the indoor soda + food machines (two per building: soda + food). Food: \u00a54, heals 30% at once, 3 per machine, 4 foods */
-var FOODS = { melon: { n: 'Melon bread', ic: '\ud83c\udf48' }, onigiri: { n: 'Onigiri', ic: '\ud83c\udf59' }, yakisoba: { n: 'Yakisoba bread', ic: '\ud83e\udd56' }, pudding: { n: 'Custard pudding', ic: '\ud83c\udf6e' } }, FOOD = { cost: 4, pct: 0.3, uses: 3 }, DSODA = 2;
+/* the indoor soda + food machines (two per building: soda + food). Food: \u00a57, heals 30% at once, 3 per machine, 4 foods */
+var FOODS = { melon: { n: 'Melon bread', ic: '\ud83c\udf48' }, onigiri: { n: 'Onigiri', ic: '\ud83c\udf59' }, yakisoba: { n: 'Yakisoba bread', ic: '\ud83e\udd56' }, pudding: { n: 'Custard pudding', ic: '\ud83c\udf6e' } }, FOOD = { cost: 7, pct: 0.3, uses: 3 }, DSODA = 2;
 function dgVendAct(a) { var k = INT[W.inside.id].dg, S0 = dgS(k);
   if (a === 'vsoda') { var n = S0.soda == null ? DSODA : S0.soda, c = SODA.cost; ev('world:dg:vend:' + k);
     dialog('<b>Soda machine</b><p><strong>Soda</strong> \u00b7 \u00a5' + c + '. Restores 5 Spirit when you drink it. In this machine: <b>' + (n ? n + ' left' : 'SOLD OUT') + '</b>. Your yen: <b>\u00a5' + SAVE.items + '</b>.</p>',
@@ -17602,13 +17602,13 @@ function trainVendAct(a) { var it = SAVE.items;
   var c2 = FOOD.cost, h = Math.ceil(MAXHP * FOOD.pct); ev('world:train:food');
   dialog('<b>Food machine</b><p>\u00a5' + c2 + ' each, eaten on the spot: <b>+' + h + ' HP</b> (30%). This machine never runs out. Your yen: <b>\u00a5' + it + '</b>.</p>',
     [['Not now', null]].concat(Object.keys(FOODS).map(function (f) { return [FOODS[f].ic + ' ' + FOODS[f].n, function () { eatFood('train', f); }, 'hot food', it < c2 || SAVE.hp >= MAXHP]; }))); }
-/* v4.34 (Ernest, t857u): the nurse's office machines (moved from the training room). Right: sodas (\u00a52).
+/* v4.34 (Ernest, t857u): the nurse's office machines (moved from the training room). Right: sodas (\u00a53).
  * left: FIRST AID cabinet (visual). It does not sell ready-made bandages; dressings are crafted from gauze + tape in the Bag. */
 var AID = { cost: 4 };
 function roomVend() { var D = INT.room; [['naid', ' aid'], ['nsoda', '']].forEach(function (v) { var sp = D.spots.find(function (s) { return s.id === v[0]; }), e = document.createElement('i');
   e.className = 'wvend in tvend' + v[1]; e.dataset.tv = v[0]; e.style.backgroundImage = 'url(' + IMG.vend + ')'; e.style.left = ((sp.r[0] + sp.r[2]) / 2) + 'px'; e.style.top = (sp.r[3] - 6) + 'px'; e.style.zIndex = 100 + sp.r[3]; layer.appendChild(e); W.ints.push({ el: e }); }); }
 function roomVendAct(a) { var it = SAVE.items;
-  if (a === 'nsoda') { trainVendAct('tsoda'); return; } /* the soda machine: \u00a52 like every soda machine, never runs out */
+  if (a === 'nsoda') { trainVendAct('tsoda'); return; } /* the soda machine: \u00a53 like every soda machine, never runs out */
   ev('world:room:aid');
   dialog('<b>First Aid machine</b><p>It doesn\u2019t sell bandages. Wrap a 20% dressing from gauze and tape at the nurse\u2019s cart.</p>', [['Close', null]]); }
 function buyBandage() { ev('world:aid:buy:blocked'); return false; }
@@ -17968,7 +17968,7 @@ function hSlots() { return HSLOTS0 + Math.min(BAGUP.length, (typeof SAVE !== 'un
 function bagBuy() { var n = SAVE.bagUp | 0, c = BAGUP[n]; if (c == null) return; if ((SAVE.ess | 0) < c) { toast('Needs ' + c + ' ' + essName() + '.'); return; } SAVE.ess -= c; SAVE.bagUp = n + 1; save(); ev('world:bag:up:' + hSlots() + ':' + SAVE.ess); toast('Bigger bag: ' + hSlots() + ' health slots.'); hud(); }
 function itemsPane() { var sl = Object.keys(SODAS).filter(function (k) { return (SAVE.soda[k] | 0) > 0; });
   return '<div class="pbag"><h4>\ud83e\udd64 Sodas</h4>' + (sl.length ? '<ul class="psd">' + sl.map(function (k) { return '<li>' + SODAS[k] + ' <b>\u00d7' + SAVE.soda[k] + '</b><button class="use" data-a="drink" data-k="' + k + '"' + (SAVE.sodaOn ? ' disabled' : '') + '>Drink</button></li>'; }).join('') + '</ul>' : '<p class="dim">No sodas. Buy one at a vending machine.</p>') +
-    (sl.length ? '<p class="dim">A soda restores +5 Spirit on the map. \u00a52. No next-fight buff.</p>' : '') +
+    (sl.length ? '<p class="dim">A soda restores +5 Spirit on the map. \u00a53. No next-fight buff.</p>' : '') +
     '<h4>\u271a Health items <small>' + SAVE.heal.length + '/' + hSlots() + '</small></h4>' + (BAGUP[SAVE.bagUp | 0] != null ? '<p class="pbup"><button class="use" data-a="bagup"' + ((SAVE.ess | 0) < BAGUP[SAVE.bagUp | 0] ? ' disabled' : '') + '>Bigger bag (+1 slot) \u00b7 ' + BAGUP[SAVE.bagUp | 0] + ' ' + essName() + '</button></p>' : '<p class="dim">Bag fully upgraded.</p>') + (SAVE.heal.length ? '<ul class="phl">' + SAVE.heal.map(function (k, i) { return '<li>' + HITEM[k].ic + ' ' + HITEM[k].n + ' <small>+' + Math.round(HITEM[k].pct * 100) + '% HP</small><button class="use" data-a="heal" data-i="' + i + '"' + (SAVE.hp >= MAXHP ? ' disabled' : '') + '>Use</button></li>'; }).join('') + '</ul>' : '<p class="dim">None yet. Beaten bullies sometimes drop candy bars and bandages; potions are sold in the Training Room.</p>') +
     '<h4>\ud83d\udcb4 Yen and ' + essName() + '</h4><ul class="pcur"><li><b class="yen">' + yenTxt(SAVE.items) + '</b> yen <small>food, drinks and potions; the nurse bandages for +12 HP, free, every 90 seconds</small></li><li><b class="ess">' + essTxt(SAVE.ess) + '</b> ' + essName() + ' <small>enhancement on the training mat. Fights release it. Cards stay.</small></li></ul>' + (typeof c2ItemsX === 'function' ? c2ItemsX() : '') /* v5.3 Skill Books + the herb pouch */ + '<p class="dim">Headwear and accessories: Player \u203a a fighter \u203a Gear.</p></div>'; }
 function gearPane(inPl) { var g = gearS(), ch = W.gch === 'aoi' || W.gch === 'ryo' ? W.gch : SAVE.act, sel = W.gsl === 'head' || W.gsl === 'acc' || W.gsl === 'tm' ? W.gsl : 'acc', own = Object.keys(GEAR).filter(function (id) { return g.own[id]; });
@@ -19026,7 +19026,7 @@ var CAFG = {
     doors: { gS: { r: [581, 625, 694, 715], at: [637, 650], land: [637, 585, 3], to: 'line:gN' } },
     spots: [{ id: 'clue', r: [600, 160, 680, 220], at: [640, 410], face: 3 }, { id: 'search', r: [690, 155, 760, 230], at: [725, 410], face: 3 }], foes: [] } };
 var CAFP = { line: [{ id: 'eat1', at: [560, 470] }, { id: 'eat2', at: [740, 640] }], dining: [{ id: 'kurata', at: [640, 255], block: [612, 236, 668, 266] }] };
-var CAF_FOES = ['bully4', 'bully3'] /* v4.41 (Ernest): the red-haired boy + the girl with the bat, drawn from their cel walk/run sheets */, CAF_CRATES = ['line', 'kitchen', 'staff'], CAF_LUNCH = 2; /* the reopened counter: a hot lunch, \u00a52, back to full HP */
+var CAF_FOES = ['bully4', 'bully3'] /* v4.41 (Ernest): the red-haired boy + the girl with the bat, drawn from their cel walk/run sheets */, CAF_CRATES = ['line', 'kitchen', 'staff'], CAF_LUNCH = 12; /* the reopened counter: a hot lunch, \u00a512 (v6.5.66 prices, Erik t572u: was \u00a52), back to full HP */
 NM.cafe_stu = 'Taniguchi Haru'; PT.cafe_stu = 'cafe_stu_fig'; /* v4.72 #20: the Staff Room first-year (was a Yuto clone) */ NM.kurata = 'Kurata Tetsu'; PT.kurata = 'kurata_fig'; ARTK.mb_cafe = 'kurata';
 Object.keys(CAFG).forEach(function (k) { var R = CAFG[k], spots = [];
   Object.keys(R.doors).forEach(function (d) { var D = R.doors[d]; spots.push({ id: d, r: lr(R, D.r), at: lw(R, D.at), face: LIB_FACE[d] }); });
@@ -19208,7 +19208,7 @@ var CAF_SC = {
   clue: [['', '<p class="dim">The serving window. Empty trays.{p} {slow}No note this time.{/slow}</p>'], ['aoi', '{slow}Nothing.{/slow}{p} {quiet}Every other one left us a lead.{/quiet}', { mood: 'neutral' }], ['ryo', '{quiet}So where now?{/quiet}', { mood: 'neutral' }],
     ['aoi', '{slow}Think about the gym.{/slow}{p} That energy, all of it leaning toward Gouki.', { mood: 'neutral' }], ['ryo', '{slow}Like something was pulling them in.{/slow}', { mood: 'neutral' }]],
   port: [['aoi', '{quiet}The nurse might see what we can’t.{/quiet}', { mood: 'neutral' }]],
-  talk_eat1: [['hina', 'I can taste food again. Real food. The counter\u2019s open, Kazan.', { mood: 'neutral' }]], talk_eat2: [['kenta', 'Hot lunch is two yen. Best two yen of my life.', { mood: 'neutral' }]] };
+  talk_eat1: [['hina', 'I can taste food again. Real food. The counter\u2019s open, Kazan.', { mood: 'neutral' }]], talk_eat2: [['kenta', 'Hot lunch is twelve yen. Best twelve yen of my life.', { mood: 'neutral' }]] };
 function cafBossLines() {
   var L = (CAF_SC.boss || []).slice();
   if (typeof bondPathKey === 'function' && bondPathKey() === 'balanced') L = L.concat(CAF_SC.bossBalanced || []);
@@ -22301,7 +22301,7 @@ function c3HerbDrop() { var r = Math.random(); return r < 0.45 ? 'kelp' : r < 0.
 var C3SHOPS = {
   shop_surplus: { n: 'Mio\u2019s Sailor Surplus', who: 'npc3_stall', at: null, loc: 'North Quay (in front of the net shed)', hi: 'Navy surplus, fresh off the boat. Fits a fox and a swordswoman.',
     items: [{ id: 'of_peacoat', k: 'outfit', of: 'peacoat', cost: 24, stock: 1 }, { id: 'of_oilskin', k: 'outfit', of: 'oilskin', cost: 34, stock: 1, unlock: function () { return c2Seals() >= 1; }, why: 'Clear one corner first' },
-      { id: 's3_soda', k: 'soda', n: 'Ramune (cold box)', cost: 2, stock: 3, d: 'A soda: more yen from your next fights.' }, { id: 's3_ging', k: 'herb', hb: 'ginger', n: 'Ginger Root', cost: 1, stock: 3, d: 'Pot ingredient: Ginger + Bonito = Ginger Dashi.' }] },
+      { id: 's3_soda', k: 'soda', n: 'Ramune (cold box)', cost: 2, stock: 3, d: 'A soda: +5 Spirit on the map, full Spirit on a chug win.' }, { id: 's3_ging', k: 'herb', hb: 'ginger', n: 'Ginger Root', cost: 1, stock: 3, d: 'Pot ingredient: Ginger + Bonito = Ginger Dashi.' }] },
   fence_pier: { n: 'Pier Fence \u00b7 Kujira', who: 'npc3_fence', at: [1060, 2020], loc: 'Dock Road (by Pier 4)', hi: 'Kujira. Things fall off boats. I catch them.',
     items: [{ id: 'p3_intel', k: 'intel', n: 'Harbor Intel: the ice-hook man', cost: 4, stock: 1, lines: 'market' },
       { id: 'p3_card', k: 'card', rar: 'common', n: 'Sealed card pack (Common)', cost: 10, stock: 2 },
@@ -22988,7 +22988,7 @@ function phItems() {
   });
   Object.keys(SODAS).forEach(function (k) {
     if (!(SAVE.soda[k] > 0)) return;
-    h += '<button type="button" class="item' + (W.phSel === 'soda:' + k ? ' on' : '') + '" data-a="isel" data-k="soda:' + k + '"><span><b>\ud83e\udd64 ' + phEsc(SODAS[k]) + '</b><small>+5 Spirit. \u00a52. Drunk on the map.</small></span><em class="ct">x' + (SAVE.soda[k] | 0) + '</em></button>';
+    h += '<button type="button" class="item' + (W.phSel === 'soda:' + k ? ' on' : '') + '" data-a="isel" data-k="soda:' + k + '"><span><b>\ud83e\udd64 ' + phEsc(SODAS[k]) + '</b><small>+5 Spirit. \u00a53. Drunk on the map.</small></span><em class="ct">x' + (SAVE.soda[k] | 0) + '</em></button>';
   });
   h += phUseBar();
   var g = gearS(), own = Object.keys(GEAR).filter(function (id) { return g.own[id]; });
@@ -23183,16 +23183,16 @@ build = function () {
 };
 function phPrices() {
   return {
-    unchanged: true,
-    soda: { yen: SODA.cost, effect: 'Not a heal. Fizz +5 Energy, Cola +1 Guard, Orange first redraw costs 0 Spirit. One per fight.' },
+    unchanged: false, /* v6.5.66 (Erik t572u): soda \u00a53, food \u00a57, hot lunch \u00a512, potion \u00a58 */
+    soda: { yen: SODA.cost, effect: 'Not a heal. +5 Spirit on the map when you drink it, full Spirit on a chug win. No next-fight buff.' },
     food: { yen: FOOD.cost, heal: Math.round(FOOD.pct * 100) + '% HP eaten at the machine, not stored' },
     bandageMachine: { yen: AID.cost, heal: '20% stored bandage' },
-    potionShop: { yen: (STORY && STORY.POTION && STORY.POTION.cost) || 3, heal: '35% stored potion' },
+    potionShop: { yen: (STORY && STORY.POTION && STORY.POTION.cost) || 8, heal: '35% stored potion' },
     nurseFull: { yen: (typeof HEAL !== 'undefined' && HEAL.full) || 1, heal: 'full HP' },
     craftCh1: '1 Clean Gauze + 1 Medical Tape = 20% dressing. In Chapter 2, Hase, Machi Motors, and Ono sell both as kit materials. World-found and safe-room kits stay the cheap path.',
     craftCh2: '1 Mugwort Leaf + 1 Ginger Root = 35% potion. Ingredients already defined. Gated to Chapter 2.',
     income: 'Each bully rolls 50% of \u00a51 (expected \u00a50.5). A relay rolls 50% of \u00a52 (expected \u00a51). Gouki alone rolls 50% of \u00a53 (expected \u00a51.5), plus \u00a51 of that roll per joiner before the half.',
-    recommendation: 'Leave the numbers. A \u00a54 stored 20% bandage and a \u00a53 stored 35% potion undercut crafting, and \u00a54 food heals 30% immediately. Crafters do not yet save yen for Chapter 2. Raising those prices needs Ernest\u2019s call. Nurse kits were not given a new restock number.'
+    recommendation: 'v6.5.66: Chapter 1 food and drink now match Chapter 2 (about \u00a50.5 per HP). Soda \u00a53, machine food \u00a57 (30% HP), hot lunch \u00a512 (full HP), potion \u00a58 (35% stored). The harbor machines share the soda and food prices. The \u00a54 bandage machine, the nurse and candy are unchanged. Fight yen is unchanged.'
   };
 }
 function phSetUI() { return root.FFF_UI; }
@@ -23773,7 +23773,7 @@ function n9CxList(cat) {
   if (cat === 'food') {
     var out = [];
     Object.keys(FOODS).forEach(function (k) { out.push({ id: 'food_' + k, lab: FOODS[k].n, sub: '\u00a5' + FOOD.cost + ' \u00b7 eaten on the spot \u00b7 +30% HP, full HP on a mini-game win', ok: 1, food: k }); }); /* v6.5.63-eat */
-    out.push({ id: 'soda', lab: 'Soda', sub: '\u00a52 \u00b7 +5 Spirit on the map, full on a shake-and-chug win', ok: 1, soda: 1 });
+    out.push({ id: 'soda', lab: 'Soda', sub: '\u00a53 \u00b7 +5 Spirit on the map, full on a shake-and-chug win', ok: 1, soda: 1 });
     Object.keys(HITEM).forEach(function (k) { var H = HITEM[k]; out.push({ id: 'heal_' + k, lab: H.n, sub: 'Carryable \u00b7 +' + Math.round(H.pct * 100) + '% HP', ok: 1, heal: k }); });
     return out;
   }
@@ -24125,7 +24125,7 @@ codexPane = function () {
   if (sel) W.cxSel = sel.id;
   var info = '';
   if (sel && sel.bond) info = n9BondArticle();
-  else if (sel && sel.soda) info = '<div class="cxart"><h4>SODAS</h4><p>Every flavour is \u00a52 and restores a flat 5 Spirit on the map. No random effect, no next-fight buff, no yen boost. Most machines stock 2. The training-room machine does not run out.</p></div>';
+  else if (sel && sel.soda) info = '<div class="cxart"><h4>SODAS</h4><p>Every flavour is \u00a53 and restores a flat 5 Spirit on the map. No random effect, no next-fight buff, no yen boost. Most machines stock 2. The training-room machine does not run out.</p></div>';
   else if (sel && typeof cxCatInfo === 'function') info = cxCatInfo(W.cxCat === 'food' ? 'food' : W.cxCat, sel);
   return '<button type="button" class="cxback" data-a="cxhome">All sections</button><input class="cxq" placeholder="Search" oninput="n9CxQ(this.value)">' +
     '<div class="cxlist">' + list.map(function (x) { return '<button type="button" data-a="cx" data-id="' + x.id + '"' + (sel && x.id === sel.id ? ' class="on"' : '') + '><b>' + x.lab + '</b><small>' + (x.sub || '') + '</small></button>'; }).join('') + '</div>' + info;
@@ -24624,7 +24624,7 @@ function v630Items() {
   add('heal_dress', 'Heals', craft.dress ? 'Healing Dressing' : 'Bandage', craft.dress ? '20% HP. Gauze + tape, from the nurse\u2019s lesson.' : 'A carried heal.', !!(craft.dress || v630Has('dress') || (SAVE.heal || []).indexOf('dress') >= 0));
   if (ch >= 2) add('heal_potion', 'Heals', 'Kampo Potion', '25% HP, a Fine brew 35%. Mugwort + ginger, brewed at the clinic\u2019s big bowl.', !!craft.potion);
   Object.keys(FOODS || {}).forEach(function (k) { add('food_' + k, 'Food and sodas', FOODS[k].n, '\u00a5' + FOOD.cost + ' \u00b7 eaten on the spot \u00b7 +30% HP', !!(SAVE.cxFood && SAVE.cxFood[k])); });
-  add('soda', 'Food and sodas', 'Soda', '\u00a52 \u00b7 +5 Spirit on the map', !!(SAVE.cxItem && SAVE.cxItem.soda) || Object.keys(SAVE.soda || {}).some(function (k) { return SAVE.soda[k] > 0; }));
+  add('soda', 'Food and sodas', 'Soda', '\u00a53 \u00b7 +5 Spirit on the map', !!(SAVE.cxItem && SAVE.cxItem.soda) || Object.keys(SAVE.soda || {}).some(function (k) { return SAVE.soda[k] > 0; }));
   [['gauze', 'Clean Gauze'], ['tape', 'Medical Tape']].forEach(function (m) { add('mat_' + m[0], 'Crafting materials', m[1], (HERB[m[0]] && HERB[m[0]].d) || '', v630Has(m[0]) || (typeof phMatN === 'function' && phMatN(m[0]) > 0)); });
   if (ch >= 2) [['leaf', 'Mugwort Leaf'], ['ginger', 'Ginger Root']].forEach(function (m) { add('mat_' + m[0], 'Crafting materials', m[1], (HERB[m[0]] && HERB[m[0]].d) || '', v630Has(m[0]) || (typeof phMatN === 'function' && phMatN(m[0]) > 0)); });
   return out;
@@ -24633,7 +24633,7 @@ function v630Article(cat, sel) {
   if (!sel || !sel.ok) return '<div class="cxart"><p>???</p><p class="dim">' + (sel && sel.sub ? sel.sub : '') + '</p></div>';
   if (sel.id === 'mb_lib' && cxLv('quietlamp') > 0 && CXD.quietlamp) return '<div class="cxart"><p>' + (CXD.mb_lib.a || '') + '</p><p>' + (CXD.mb_lib.b || '') + '</p><h4>QUIET LAMP</h4><p>' + CXD.quietlamp.a + '</p></div>';
   if (cat === 'bond' || sel.id === 'bond') return n9BondArticle();
-  if (sel.id === 'soda') return '<div class="cxart"><h4>SODA</h4><p>Every flavour is \u00a52 and restores 5 Spirit on the map. No next-fight buff. Most machines stock 2. The training-room machine does not run out.</p></div>';
+  if (sel.id === 'soda') return '<div class="cxart"><h4>SODA</h4><p>Every flavour is \u00a53 and restores 5 Spirit on the map. No next-fight buff. Most machines stock 2. The training-room machine does not run out.</p></div>';
   if (sel.id === 'heal_dress') return '<div class="cxart"><p>A 20% heal. Nurse Shiraishi teaches it: 1 Clean Gauze + 1 Medical Tape.</p></div>';
   if (sel.id === 'heal_potion') return '<div class="cxart"><p>A 25% heal, 35% for a Fine brew. Dr. Tsukikage teaches it. Brew mugwort and ginger at the big bowl in her clinic. Ginger grows wild at the docks, or from Ono\u2019s seeds.</p></div>';
   if (sel.id === 'nurse' && CXD.nurse) return '<div class="cxart"><p>' + CXD.nurse.a + '</p><p>When you are hurt she bandages for about +12 HP. There is no paid full heal in that talk. After the lesson she has taught the dressing.</p></div>';
