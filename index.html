@@ -54452,19 +54452,21 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
   QS.zoneAt = zoneAt;
   /* ---- the live count: quest id -> the flags that make it ---- */
   function K(p, n) { var o = []; for (var i = 0; i < n; i++) o.push(p + '_' + i); return o; }
+  /* groups = one array of flags per crew; several crews -> counted in crews, one crew -> counted in men */
   var SPEC = [
-    { qid: 'cq2_n_look', noun: 'lookouts', keys: K('n13_look', 3) },
-    { qid: 'cq2_nq_west', noun: 'Hustlers', keys: K('nq_w1', 2).concat(K('nq_w2', 3), K('nq_x', 3)) },
-    { qid: 'cq2_nq_cold', noun: 'Hustlers at the door', keys: K('nq_c0', 2).concat(K('nq_c1', 2), K('nq_c2', 2)) },
-    { qid: 'cq2_nq_paint', noun: 'Hustler taggers', keys: K('nq_p0', 2).concat(K('nq_p1', 2), K('nq_p2', 2)) },
-    { qid: 'cq2_nq_door', noun: 'door crew', keys: K('nq_d', 3) },
-    { qid: 'cq2_s2_waga', noun: 'Riders', keys: K('s2_w1', 2).concat(K('s2_w2', 3), K('s2_x', 3)) }
+    { qid: 'cq2_n_look', noun: 'lookouts', groups: [K('n13_look', 3)] },
+    { qid: 'cq2_nq_west', noun: 'crews', groups: [K('nq_w1', 2), K('nq_w2', 3), K('nq_x', 3)] },
+    { qid: 'cq2_nq_cold', noun: 'crews', groups: [K('nq_c0', 2), K('nq_c1', 2), K('nq_c2', 2)] },
+    { qid: 'cq2_nq_paint', noun: 'crews', groups: [K('nq_p0', 2), K('nq_p1', 2), K('nq_p2', 2)] },
+    { qid: 'cq2_nq_door', noun: 'door men', groups: [K('nq_d', 3)] },
+    { qid: 'cq2_s2_waga', noun: 'crews', groups: [K('s2_w1', 2), K('s2_w2', 3), K('s2_x', 3)] }
   ];
   function specOf(qid) { for (var i = 0; i < SPEC.length; i++) if (SPEC[i].qid === qid) return SPEC[i]; return null; }
   function count(qid) {
-    var sp = specOf(qid); if (!sp || !act() || !qOpenId(qid)) return null; var f = S().f || {}, n = 0;
-    sp.keys.forEach(function (k) { if (f[k]) n++; });
-    return { n: n, t: sp.keys.length, noun: sp.noun, txt: 'Beat the ' + sp.keys.length + ' rival ' + sp.noun + ' \u00b7 ' + n + '/' + sp.keys.length };
+    var sp = specOf(qid); if (!sp || !act() || !qOpenId(qid)) return null; var f = S().f || {}, n = 0, t;
+    if (sp.groups.length > 1) { t = sp.groups.length; sp.groups.forEach(function (g) { if (g.every(function (k) { return f[k]; })) n++; }); }
+    else { t = sp.groups[0].length; sp.groups[0].forEach(function (k) { if (f[k]) n++; }); }
+    return { n: n, t: t, noun: sp.noun, txt: 'Beat the ' + t + ' rival ' + sp.noun + ' \u00b7 ' + n + '/' + t };
   }
   QS.count = count;
   function activeCount() { for (var i = 0; i < SPEC.length; i++) { var c = count(SPEC[i].qid); if (c) { c.qid = SPEC[i].qid; return c; } } return null; }
