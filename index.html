@@ -51440,7 +51440,12 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   var K = A.K = { INK: INK, clamp: clamp, rnd: rnd, tone: tone, drum: drum, now: now, rr: rr, txt: txt, otxt: otxt, mono: mono, glow: glow, hexRgb: hexRgb, pad: pad, SW: 362, SH: 500 };
   K.ell = function (g, x, y, rx, ry, f, lw) { g.beginPath(); g.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), 0, 0, 7); if (f) { g.fillStyle = f; g.fill(); } if (lw) { g.lineWidth = lw; g.strokeStyle = INK; g.stroke(); } };
   K.poly = function (g, pts, f, lw) { g.beginPath(); g.moveTo(pts[0], pts[1]); for (var i = 2; i < pts.length; i += 2) g.lineTo(pts[i], pts[i + 1]); g.closePath(); if (f) { g.fillStyle = f; g.fill(); } if (lw) { g.lineWidth = lw; g.strokeStyle = INK; g.stroke(); } };
-  K.layer = function (w, h, fn) { var c = document.createElement('canvas'), d = Math.min(2, root.devicePixelRatio || 1); c.width = Math.ceil(w * d); c.height = Math.ceil(h * d); var g = c.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); fn(g); c.lw = w; c.lh = h; return c; };
+  /* Never size cabinet / layer canvases off devicePixelRatio. At dpr 3 the old
+     Math.min(2, dpr) path rasterized the 362x500 screen at 724x1000 and missed
+     the 55 fps gate at 4x throttle (23-35 fps, CPU pegged). Design 1x is the
+     same path that already cleared 55 fps at dpr 1; phones are dpr 3, so this
+     is the release raster size. */
+  K.layer = function (w, h, fn) { var c = document.createElement('canvas'); c.width = Math.ceil(w); c.height = Math.ceil(h); var g = c.getContext('2d'); fn(g); c.lw = w; c.lh = h; return c; };
   K.blit = function (g, c, x, y) { g.drawImage(c, x, y, c.lw, c.lh); };
 
   /* ---------------- cabinets ---------------- */
@@ -51467,7 +51472,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   function css() { if (document.getElementById('j6cab-css')) return; var s = document.createElement('style'); s.id = 'j6cab-css'; s.textContent = CSS; (document.head || document.documentElement).appendChild(s); }
   function openOv() { css(); if (A.closeOv) A.closeOv(); var el = document.createElement('div'); el.id = 'j6arc'; (document.body || document.documentElement).appendChild(el); try { if (root.W) W.paused = true; } catch (e) {} A._cabEl = el; return el; }
   function closeCab() { var el = A._cabEl; if (el && el.parentNode) el.parentNode.removeChild(el); A._cabEl = null; try { if (A.closeOv) A.closeOv(); else if (root.W) W.paused = false; } catch (e) {} try { if (root.W) W.paused = false; } catch (e2) {} }
-  function canvasIn(el) { var c = document.createElement('canvas'), d = Math.min(2, root.devicePixelRatio || 1), w = el.clientWidth || innerWidth, h = el.clientHeight || innerHeight; c.width = Math.round(w * d); c.height = Math.round(h * d); el.appendChild(c); var g = c.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0); return { c: c, g: g, w: w, h: h, d: d }; }
+  function canvasIn(el) { var c = document.createElement('canvas'), d = 1, w = el.clientWidth || innerWidth, h = el.clientHeight || innerHeight; c.width = Math.round(w * d); c.height = Math.round(h * d); el.appendChild(c); var g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.setTransform(d, 0, 0, d, 0, 0); return { c: c, g: g, w: w, h: h, d: d }; }
   function btnEl(el, cls, label, fn, st) { var b = document.createElement('button'); b.className = 'ab ' + (cls || ''); b.innerHTML = label; if (st) b.style.cssText += st; b.addEventListener('click', function (e) { e.stopPropagation(); try { fn(); } catch (er) { ev('world:s2arc:err:btn:' + (er && er.message)); } }); el.appendChild(b); return b; }
 
   var SX = 14, SY = 92, SW = 362, SH = 500, PY = 604; /* screen rect + control panel top (design units, 390x844) */
@@ -51522,6 +51527,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     while (ini.length < 3) ini.push('A');
     var plate = document.createElement('canvas'); plate.width = cv.c.width; plate.height = cv.c.height; var p = plate.getContext('2d'); p.setTransform(cv.d * s, 0, 0, cv.d * s, ox * cv.d, 0);
     paintCab(p, C, Hd);
+    /* Fixed 1x game buffer (design SW x SH). Games always paint here; one nearest-neighbor blit goes to the display each frame. */
+    var scr = document.createElement('canvas'); scr.width = SW; scr.height = SH; var sg = scr.getContext('2d');
     G.in = G.in || {}; var PN = G.panel || { btns: [] };
     ev('world:s2arc:cab:open:' + id);
     var stopB = btnEl(el, 'x', 'Leave', function () { kill(true); });
@@ -51594,7 +51601,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       document.removeEventListener('keydown', kd); document.removeEventListener('keyup', ku);
       cv.c.removeEventListener('pointerdown', onDown); cv.c.removeEventListener('pointermove', onMove); cv.c.removeEventListener('pointerup', onUp); cv.c.removeEventListener('pointercancel', onUp);
       try { if (G.dispose) G.dispose(); } catch (eD) {}
-      plate.width = plate.height = 0; cv.c.width = cv.c.height = 0;
+      plate.width = plate.height = 0; scr.width = scr.height = 0; cv.c.width = cv.c.height = 0;
       if (quit) { ev('world:s2arc:cab:end:' + id + ':0:0:quit'); closeCab(); if (!res && opts.onClose) opts.onClose({ id: id, score: 0, tier: 0, quit: true }, false); return; }
       closeCab();
     }
@@ -51675,12 +51682,14 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       else if (st === 'cont') { contT += dt; if (contT >= 1) { contT = 0; contN--; tone(440, now(), 0.06, 'square', 0.04); if (contN < 0) contNo(); } }
       else if (st === 'over') { if (stT > 1.8) { runScore = Math.max(runScore, G.score | 0); finishRun(runScore, false); } }
       else if (st === 'win') { if (stT > 4) finishRun(runScore, true); }
-      /* draw */
+      /* draw: cached plate + one scaled blit of the 1x game buffer, then the live control deck */
       g.setTransform(cv.d, 0, 0, cv.d, 0, 0); g.drawImage(plate, 0, 0, W0, H0);
+      sg.setTransform(1, 0, 0, 1, 0, 0); sg.fillStyle = '#000'; sg.fillRect(0, 0, SW, SH);
+      if (st === 'play' || st === 'intro' || st === 'clear' || st === 'cont' || st === 'over' || st === 'win') { G.draw(sg, t); if (G.hud !== false) hud(sg); }
+      drawMeta(sg); K.blit(sg, crt(), 0, 0);
       g.setTransform(cv.d * s, 0, 0, cv.d * s, (ox + SX * s) * cv.d, SY * s * cv.d);
-      g.save(); g.beginPath(); g.rect(0, 0, SW, SH); g.clip();
-      if (st === 'play' || st === 'intro' || st === 'clear' || st === 'cont' || st === 'over' || st === 'win') { G.draw(g, t); if (G.hud !== false) hud(g); }
-      drawMeta(g); K.blit(g, crt(), 0, 0); g.restore();
+      g.imageSmoothingEnabled = false;
+      g.drawImage(scr, 0, 0, SW, SH);
       g.setTransform(cv.d * s, 0, 0, cv.d * s, ox * cv.d, 0);
       if (st !== 'board') drawPanel(g);
       if (st === 'attract' && ((t * 2) | 0) % 2) { K.ell(g, 50, Hd - 25, 14, 14, '#7aff9a', 3); txt(g, '1P', 50, Hd - 25, 10, INK); }
