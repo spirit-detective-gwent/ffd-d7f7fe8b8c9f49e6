@@ -135,7 +135,7 @@ async def main():
         c = await ev(pg, """(function(){ return __T.quiet(function(){ SAVE.chapter=1; SAVE.craft={dress:1,potion:1}; var o={}; __T.reset(); SAVE.herbs={gauze:20,tape:20,leaf:3,ginger:3};
           var need=craftNeedOf('dress'); o.max0=phCraftMax(need);
           SAVE.heal=['dress','dress','dress','dress','dress']; o.max5=phCraftMax(need); var before=SAVE.heal.length; W.phQty={dress:1,potion:1}; phDoCraft('dress'); o.after=SAVE.heal.length; o.mats=[phMatN('gauze'),phMatN('tape')];
-          o.potion=phCraftMax(craftNeedOf('potion')); o.html=phCraft().indexOf('Dressing bag is full')>=0;
+          o.potion=phCraftMax(craftNeedOf('potion')); o.html=(function(){ if(window.FFF_HS&&FFF_HS.station){ FFF_HS.station('dress'); var e=document.getElementById('hsst'), h=e?e.innerHTML:''; FFF_HS.stClose(); return h.indexOf('Dressing bag is full')>=0; } return phCraft().indexOf('Dressing bag is full')>=0; })(); /* v6564-healstyle: the cap message lives on the Dressing Cart station */
           SAVE.heal=['dress','dress','dress','dress','dress','dress','dress']; o.max7=phCraftMax(need); o.keep7=SAVE.heal.length;
           SAVE.heal=['dress','dress','dress','dress']; o.max4=phCraftMax(need);
           SAVE.heal=[]; o.maxEmpty=phCraftMax(need); return o; }); })()""")

@@ -17100,7 +17100,7 @@ function roomVend() { var D = INT.room; [['naid', ' aid'], ['nsoda', '']].forEac
 function roomVendAct(a) { var it = SAVE.items;
   if (a === 'nsoda') { trainVendAct('tsoda'); return; } /* the soda machine: \u00a52 like every soda machine, never runs out */
   ev('world:room:aid');
-  dialog('<b>First Aid machine</b><p>It doesn\u2019t sell bandages. Craft a 20% dressing from gauze and tape in your Bag.</p>', [['Close', null]]); }
+  dialog('<b>First Aid machine</b><p>It doesn\u2019t sell bandages. Wrap a 20% dressing from gauze and tape at the nurse\u2019s cart.</p>', [['Close', null]]); }
 function buyBandage() { ev('world:aid:buy:blocked'); return false; }
 function buyTrainSoda(q) { q = q === 2 ? 2 : 1; if (SAVE.items < SODA.cost * q) return false;
   SAVE.items -= SODA.cost * q; SAVE.soda.ramune = (SAVE.soda.ramune | 0) + q; save(); hud(); bumpItems(); AU.play('place'); vendFx();
@@ -21011,7 +21011,7 @@ function herbSvg(k) { return k === 'leaf' ? '<svg class="hbsvg" viewBox="0 0 40 
   : k === 'tape' ? '<svg class="hbsvg" viewBox="0 0 40 40" aria-hidden="true"><circle cx="18" cy="20" r="12" fill="#f4f1ea" stroke="#14110d" stroke-width="2"/><circle cx="18" cy="20" r="5" fill="#1a2744" stroke="#14110d" stroke-width="2"/><path d="M28 14 h8 v12 h-8" fill="#f4f1ea" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/><path d="M18 8 v24 M8 20 h20" stroke="#7ecfc6" stroke-width="1.4" opacity=".85"/></svg>'
   : '<svg class="hbsvg" viewBox="0 0 40 40" aria-hidden="true"><rect x="7" y="12" width="22" height="18" rx="9" fill="#f4f1ea" stroke="#14110d" stroke-width="2"/><ellipse cx="29" cy="21" rx="5" ry="9" fill="#e4dfd2" stroke="#14110d" stroke-width="2"/><ellipse cx="29" cy="21" rx="2" ry="3.5" fill="#b9b2a2"/><path d="M29 30 L36 33 L34 36 L27 32" fill="#f4f1ea" stroke="#14110d" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 13 V29" stroke="#4f86c6" stroke-width="2"/></svg>'; }
 function bookSvg(k) { var c = k === 'uncommon' ? '#3e8f5a' : '#3f6fae', c2 = k === 'uncommon' ? '#2a6a40' : '#2c5288'; return '<svg class="hbsvg" viewBox="0 0 40 40" aria-hidden="true"><path d="M8 8 h20 a4 4 0 0 1 4 4 v22 h-20 a4 4 0 0 1 -4 -4z" fill="' + c + '" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/><path d="M8 30 a4 4 0 0 0 4 4 h20 v-4 h-20 a4 4 0 0 0 -4 0z" fill="#f4ecd8" stroke="#14110d" stroke-width="1.6"/><path d="M12 8 v22" stroke="' + c2 + '" stroke-width="2"/><circle cx="21" cy="18" r="5" fill="none" stroke="#ffd25a" stroke-width="2"/><path d="M21 13 v10 M16 18 h10" stroke="#ffd25a" stroke-width="1.4"/>' + (k === 'uncommon' ? '<path d="M30 6 l2 4 4 .6 -3 2.8 .8 4 -3.8 -2 -3.8 2 .8 -4 -3 -2.8 4 -.6z" fill="#ffd25a" stroke="#14110d" stroke-width="1"/>' : '') + '</svg>'; }
-var KET_N = 'Brass Kettle', KET_Q = 'Leaf plus one more thing. Simmer it. Don\u2019t rush it.', C2_BOOK_NOTE = '', C2_HERB_NOTE = 'Craft them from your Bag: Gauze + Tape = 20% Healing Dressing, Mugwort + Ginger = Kampo Potion.'; /* v6.0: swapped per chapter */
+var KET_N = 'Brass Kettle', KET_Q = 'Leaf plus one more thing. Simmer it. Don\u2019t rush it.', C2_BOOK_NOTE = '', C2_HERB_NOTE = 'Dr. Tsukikage teaches the Kampo Potion. Brew it at the big bowl in her clinic: 1 Mugwort + 1 Ginger.'; /* v6.0: swapped per chapter */
 function c2HerbDrop() { return Math.random() < 0.7 ? 'ginger' : 'leaf'; }
 var KET_SVG = '<svg viewBox="0 0 64 56" aria-hidden="true"><path d="M14 22 Q32 10 50 22 L54 44 Q32 54 10 44Z" fill="#c9a24a" stroke="#14110d" stroke-width="2.6" stroke-linejoin="round"/><path d="M50 26 Q62 24 60 14" fill="none" stroke="#14110d" stroke-width="3.4"/><path d="M50 26 Q62 24 60 14" fill="none" stroke="#e8c870" stroke-width="1.6"/><path d="M22 16 Q32 4 42 16" fill="none" stroke="#14110d" stroke-width="3"/><ellipse cx="32" cy="18" rx="6" ry="2.6" fill="#8a6a2a" stroke="#14110d" stroke-width="1.6"/><path d="M16 30 Q32 36 48 30" stroke="#f6e3a0" stroke-width="2" fill="none"/></svg>';
 
@@ -21024,7 +21024,7 @@ function kPlan(R, q) { var have = R.need.every(function (k) { return herbN(k) >=
   if (q <= op) return { mode: 'bag', lab: 'Brew \u00d7' + q + ' \u2192 Add to Bag' };
   if (full) return { off: 1, lab: 'Bag & HP Full' };
   return { mode: 'now', lab: 'Bag Full \u00b7 ' + (R.verb === 'Apply' ? 'Apply Now' : 'Drink Now') + ' (+' + Math.round(R.pct * q * 100) + '% HP)' }; }
-function c2Kettle() { ev('world:c2:kettle:retired'); dialog('<b>' + KET_N + '</b><p>The kettle is for tea. Craft dressings and potions from your Bag.</p>', [['Close', null]]); }
+function c2Kettle() { ev('world:c2:kettle:retired'); dialog('<b>' + KET_N + '</b><p>A big brass bowl on the stove. Dr. Tsukikage brews Kampo in it.</p>', [['Close', null]]); }
 function kPaint(drw) { var m = $('#wkettle'); if (!m) return;
   var h = '<div class="kbox" role="dialog" aria-label="' + KET_N + '"><div class="khd"><i class="kic">' + KET_SVG + '</i><div><b>' + KET_N + '</b><p>\u201c' + KET_Q + '\u201d</p></div><span class="kst"><span>HP <b>' + SAVE.hp + '/' + MAXHP + '</b></span><span>Bag <b class="kbag">' + SAVE.heal.length + '/' + hSlots() + '</b></span></span></div>';
   h += '<div class="kpouch">' + Object.keys(HERB).map(function (k) { return '<button class="kchip' + (drw === k ? ' on' : '') + '" data-a="kchip" data-k="' + k + '">' + herbSvg(k) + '<span>' + HERB[k].n + '</span><b>' + herbN(k) + '</b></button>'; }).join('') + '</div>';
@@ -21061,7 +21061,7 @@ C2SC.reveal = []; /* v6.5.29: jab/cross plays with no covering narration; scene(
 var C2_GENJI_TAPE = ['Hold still. You bleed like a faucet.', 'One roll of tape. Don\u2019t make me regret it.', 'There. Now stop leading with your face.'];
 var C2_GENJI_DRILL = ['Again. Snap it back. Again.', 'Hips, not shoulders. Better.', 'That one I felt. Read the book, then hit like it.'];
 function c2GenjiFirst() { var S = c2S(); scene(null, C2SC.genjiMeet, function () { S.e.genji = 1; save(); if (c2QA() === CQ.arrive) { c2QDone(CQ.arrive); setTimeout(function () { c2QStart(CQ.hq); }, 1600); }
-    helpTip('c2hq', { t: 'Kurogane Boxing Gym', h: '<p>Your Chapter Two <b>HQ</b>: Genji\u2019s quests, and a patch for +12 HP every 90 seconds. Talk to Genji to evolve your basic moves. The ring is where you spar and train with Aoi. The bags are for practice.</p><p>Real healing: the west end of <b>Lantern Alley</b>, Dr. Tsukikage\u2019s apothecary (tea and mugwort), and dressings crafted from your Bag.</p>' }); }); }
+    helpTip('c2hq', { t: 'Kurogane Boxing Gym', h: '<p>Your Chapter Two <b>HQ</b>: Genji\u2019s quests, and a patch for +12 HP every 90 seconds. Talk to Genji to evolve your basic moves. The ring is where you spar and train with Aoi. The bags are for practice.</p><p>Real healing: the west end of <b>Lantern Alley</b>, Dr. Tsukikage\u2019s apothecary (tea and mugwort), and the Kampo she teaches you to brew.</p>' }); }); }
 /* first arrival: Genji tests Ryo before a word is said (kurogane_spar + the Kazan guard on <who>_gym row 0) */
 function c2GenjiReveal() { var S = c2S(), g = W.c2n && W.c2n.genji, r = W.ryo, a = W.aoi; if (S.e.genji || S.e.reveal || !g || !r) { if (!S.e.genji) c2GenjiFirst(); return; }
   S.e.reveal = 1; save(); W.g5busy = 1; W.cut = true; W.path = []; r.v = 0; ev('world:c2:reveal:start');
@@ -23918,7 +23918,7 @@ CXD.bully3.n = CXD.bully3.n || 'Sukeban Rika';
 CXD.bully4.n = CXD.bully4.n || 'Masked Shun';
 var V630_PLACES = {
   c2_gym: { n: 'Kurogane Boxing Gym', a: 'Genji\u2019s gym on Gym Lane. Quests, the bench, and the ring. No full heal here.' },
-  c2_clinic: { n: 'Tsukikage Herbal Apothecary', a: 'West end of Lantern Alley. Dr. Tsukikage\u2019s tea is a full heal. Craft potions from your Bag.' },
+  c2_clinic: { n: 'Tsukikage Herbal Apothecary', a: 'West end of Lantern Alley. Dr. Tsukikage\u2019s tea is a full heal. Brew Kampo at the big bowl.' },
   c2_arcade: { n: 'Ginko Sh\u014dtengai Arcade', a: 'The covered arcade off the market street.' },
   c2_game: { n: 'Neon Game Center', a: 'Cabinets and a prize counter on the Neon Strip.' },
   c2_sento: { n: 'Kitsune-no-Yu', a: 'The bathhouse on Lantern Alley.' },
@@ -24029,7 +24029,7 @@ function v630Items() {
   }
   add('heal_candy', 'Heals', 'Candy bar', 'Carryable +10% HP', v630Has('candy') || (SAVE.heal || []).indexOf('candy') >= 0);
   add('heal_dress', 'Heals', craft.dress ? 'Healing Dressing' : 'Bandage', craft.dress ? '20% HP. Gauze + tape, from the nurse\u2019s lesson.' : 'A carried heal.', !!(craft.dress || v630Has('dress') || (SAVE.heal || []).indexOf('dress') >= 0));
-  if (ch >= 2) add('heal_potion', 'Heals', 'Kampo Potion', '35% HP. Mugwort + ginger, crafted from your Bag. Ginger is foraged.', !!craft.potion);
+  if (ch >= 2) add('heal_potion', 'Heals', 'Kampo Potion', '25% HP, a Fine brew 35%. Mugwort + ginger, brewed at the clinic\u2019s big bowl.', !!craft.potion);
   Object.keys(FOODS || {}).forEach(function (k) { add('food_' + k, 'Food and sodas', FOODS[k].n, '\u00a5' + FOOD.cost + ' \u00b7 eaten on the spot \u00b7 +30% HP', !!(SAVE.cxFood && SAVE.cxFood[k])); });
   add('soda', 'Food and sodas', 'Soda', '\u00a52 \u00b7 +5 Spirit on the map', !!(SAVE.cxItem && SAVE.cxItem.soda) || Object.keys(SAVE.soda || {}).some(function (k) { return SAVE.soda[k] > 0; }));
   [['gauze', 'Clean Gauze'], ['tape', 'Medical Tape']].forEach(function (m) { add('mat_' + m[0], 'Crafting materials', m[1], (HERB[m[0]] && HERB[m[0]].d) || '', v630Has(m[0]) || (typeof phMatN === 'function' && phMatN(m[0]) > 0)); });
@@ -24042,7 +24042,7 @@ function v630Article(cat, sel) {
   if (cat === 'bond' || sel.id === 'bond') return n9BondArticle();
   if (sel.id === 'soda') return '<div class="cxart"><h4>SODA</h4><p>Every flavour is \u00a52 and restores 5 Spirit on the map. No next-fight buff. Most machines stock 2. The training-room machine does not run out.</p></div>';
   if (sel.id === 'heal_dress') return '<div class="cxart"><p>A 20% heal. Nurse Shiraishi teaches it: 1 Clean Gauze + 1 Medical Tape.</p></div>';
-  if (sel.id === 'heal_potion') return '<div class="cxart"><p>A 35% heal. Dr. Tsukikage teaches it. Craft mugwort and ginger from your Bag. Ginger is foraged, never sold. Her tea is still a full heal.</p></div>';
+  if (sel.id === 'heal_potion') return '<div class="cxart"><p>A 25% heal, 35% for a Fine brew. Dr. Tsukikage teaches it. Brew mugwort and ginger at the big bowl in her clinic. Ginger grows wild at the docks, or from Ono\u2019s seeds. Her tea is still a full heal.</p></div>';
   if (sel.id === 'nurse' && CXD.nurse) return '<div class="cxart"><p>' + CXD.nurse.a + '</p><p>When you are hurt she bandages for about +12 HP. There is no paid full heal in that talk. After the lesson she has taught the dressing.</p></div>';
   if (sel.id === 'genji') {
     var L = SAVE.c2les || {}, names = [];
@@ -30928,7 +30928,7 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
         setTimeout(function () { if (st.q[CQ.hq] == null && (st.q[CQ.scout] == null)) c2QStart(CQ.scout); c2lScoutSync(); }, 1600);
       }
       try {
-        helpTip('c2hq', { t: 'Kurogane Boxing Gym', h: '<p>Your Chapter Two <b>HQ</b>: Genji\u2019s quests, and a patch for +12 HP every 90 seconds. Talk to Genji to evolve your basic moves. The ring is where you spar and train with Aoi. The bags are for practice.</p><p>Real healing: the west end of <b>Lantern Alley</b>, Dr. Tsukikage\u2019s apothecary (tea and mugwort), and dressings crafted from your Bag.</p>' });
+        helpTip('c2hq', { t: 'Kurogane Boxing Gym', h: '<p>Your Chapter Two <b>HQ</b>: Genji\u2019s quests, and a patch for +12 HP every 90 seconds. Talk to Genji to evolve your basic moves. The ring is where you spar and train with Aoi. The bags are for practice.</p><p>Real healing: the west end of <b>Lantern Alley</b>, Dr. Tsukikage\u2019s apothecary (tea and mugwort), and the Kampo she teaches you to brew.</p>' });
       } catch (eT) {}
     });
   };
@@ -49441,7 +49441,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       if (typeof C2_HERB_NOTE !== 'undefined') {
         /* assigned as a var; reassign on the root if needed */
       }
-      try { C2_HERB_NOTE = 'Buy mugwort seeds at the clinic (¥1 a packet of 3), plant them, and pick leaves after the next quest. Ginger grows at the waterfront. Craft from your Bag: Gauze + Tape = 20% Healing Dressing, Mugwort + Ginger = Kampo Potion.'; } catch (eN) {}
+      try { C2_HERB_NOTE = 'Buy mugwort seeds at the clinic (¥1 a packet of 3), plant them, and pick leaves after the next quest. Ginger grows at the waterfront, and from Ono Drugstore\u2019s seeds in the bottom rows. Brew Kampo at the big bowl: 1 Mugwort + 1 Ginger.'; } catch (eN) {}
       if (typeof herbSvg === 'function' && !G.svg) {
         G.svg = 1;
         var svg0 = herbSvg;
@@ -53255,7 +53255,7 @@ function hsStation(k, opt) {
     '<div class="rc">' + hsSvg(k, 'hsbig') + '<div><b>' + R.n + '</b><p>Heals ' + np + '% max HP (+' + hsHp(HS_PCT[k]) + ') \u00b7 <i>Fine ' + fp + '% (+' + hsHp(HS_PCT[HS_FINE[k]]) + ')</i></p><p>One tap per ' + (k === 'potion' ? 'brew' : 'wrap') + '. Hit the gold for a Fine one.</p></div></div>' +
     '<div class="mats">' + mats + '</div>' +
     (opt.lesson ? '<div class="nt">Your first one. Watch the gauge.</div>' : '<div class="qty"><button type="button" class="t" data-a="min"' + (q > 1 ? '' : ' disabled') + '>Min</button><button type="button" data-a="dn"' + (q > 1 ? '' : ' disabled') + '>\u2212</button><b>' + q + '</b><button type="button" data-a="up"' + (q < mx ? '' : ' disabled') + '>+</button><button type="button" class="t" data-a="max"' + (q < mx ? '' : ' disabled') + '>Max</button></div>' +
-    '<div class="nt">' + (room < 1 ? 'You can carry ' + HS_CAP + '. Use one first.' : 'Room for ' + room + ' more' + (can ? ' \u00b7 after: ' + (have + q) + '/' + HS_CAP : '')) + '</div>') +
+    '<div class="nt">' + (room < 1 ? (k === 'dress' ? 'Dressing bag is full (' + HS_CAP + '). Use one first. Your gauze and tape keep.' : 'You can carry ' + HS_CAP + '. Use one first.') : 'Room for ' + room + ' more' + (can ? ' \u00b7 after: ' + (have + q) + '/' + HS_CAP : '')) + '</div>') +
     '<div class="go">' + (opt.lesson ? '' : '<button type="button" class="lv" data-a="x">Leave</button>') + '<button type="button" class="cr" data-a="go"' + (can ? '' : ' disabled') + '>' + lab + '</button></div></div>';
   o.onpointerdown = function (e) { e.stopPropagation(); };
   o.onclick = function (e) {
@@ -53318,8 +53318,20 @@ function hsCraftDone(k, got, opt) {
   save(); hud(); ev('world:hs:craft:' + k + ':' + norm + ':' + fine);
   hsResult(k, norm, fine, function () {
     W.dlg = false;
-    if (opt.lesson) { W.v630Lesson = ''; SAVE.sc = SAVE.sc || {}; SAVE.sc.dress = 'learned'; save(); hud(); try { v630Learned('dress'); } catch (e) {} }
+    if (opt.lesson) { W.v630Lesson = ''; SAVE.sc = SAVE.sc || {}; SAVE.sc.dress = 'learned'; save(); hud(); try { hsDressLearned(); } catch (e) { try { v630Learned('dress'); } catch (e2) {} } }
   });
+}
+/* the dressing lesson's close: the learned card (with how to use it) and Shiraishi's how-to lines (Erik: lessons explain using a remedy) */
+var HS_DRESS_USE = [
+  ['nurse', 'When it stings, tap that slot under your health. Press the tape down when the ring closes on the wrap. Miss it, you still get the whole dressing.', { mood: 'neutral' }],
+  ['nurse', 'The Fine ones go first. Unless a plain one covers the scrape. Don\u2019t waste good work on a scratch.', { mood: 'neutral' }],
+  ['nurse', 'Take that one. The first is on me.']
+];
+function hsDressLearned() {
+  var o = document.getElementById('wpause'); if (o) o.className = ''; W.paused = false; hsCss(); hsCss2();
+  dialog('<div class="hscard"><h4>New remedy learned</h4>' + hsSvg('dress', 'hsbig') + '<b class="nm">Healing Dressing</b><p>Heals ' + Math.round(HS_PCT.dress * 100) + '% max HP.<br>A Fine wrap heals ' + Math.round(HS_PCT[HS_FINE.dress] * 100) + '%.</p><div class="hsl"><div><span>Recipe</span><span>1 Clean Gauze + 1 Medical Tape</span></div><div><span>Wrap at</span><span>the cart, here</span></div><div><span>Carry</span><span>up to ' + HS_CAP + '</span></div><div><span>Use</span><span>Tap the slot \u00b7 Fine first</span></div></div></div>', [['OK', function () { scene(null, HS_DRESS_USE); }, 'hot']]);
+  try { AU.play('pl_heal', { gain: 0.5 }); } catch (e) {}
+  ev('world:recipe:dress');
 }
 function hsResult(k, norm, fine, then) {
   var R = HS_REM[k], host = document.getElementById('world') || document.body, o = document.createElement('div');
@@ -53494,11 +53506,14 @@ var HS_LESSON = function () { return [
   hsStage('win', 520),
   ['tsukikage', 'So stop using those. Hand me what\u2019s left. From now on, you drink this.', { mood: 'neutral' }],
   ['ryo', 'It smells like a gym bag.'],
-  ['tsukikage', 'Then hold your nose. You brew your own at that bowl. One mugwort, one ginger. Come back a quarter dead.', { mood: 'neutral' }]
+  ['tsukikage', 'Then hold your nose. You brew your own at that bowl. One mugwort, one ginger. Come back a quarter dead.', { mood: 'neutral' }],
+  ['tsukikage', 'When you need one, tap the slot under your health. Drink as the ring meets the bottle and it works a little harder. Miss it and you still get all of it.', { mood: 'neutral' }],
+  ['aoi', 'And the good ones?'],
+  ['tsukikage', 'Fine brews go first. Unless a plain one already covers what you\u2019ve lost. I don\u2019t waste good medicine on a scratch.', { mood: 'neutral' }]
 ]; };
 function hsLearnedCard(then) {
   W.paused = false;
-  dialog('<div class="hscard"><h4>New remedy learned</h4>' + hsSvg('potion', 'hsbig') + '<b class="nm">Kampo Potion</b><p>Heals ' + HS_REM.potion.heal() + '.<br>A Fine brew heals ' + HS_REM.potion.perf() + '.</p><div class="hsl"><div><span>Recipe</span><span>1 Mugwort Leaf + 1 Ginger Root</span></div><div><span>Brew at</span><span>the big bowl, here</span></div><div><span>Carry</span><span>up to ' + HS_CAP + '</span></div><div><span>Remedy slot</span><span>Dressing <i>\u2192</i> Kampo</span></div></div></div>', [['Next \u25b8', then, 'hot']]);
+  dialog('<div class="hscard"><h4>New remedy learned</h4>' + hsSvg('potion', 'hsbig') + '<b class="nm">Kampo Potion</b><p>Heals ' + HS_REM.potion.heal() + '.<br>A Fine brew heals ' + HS_REM.potion.perf() + '.</p><div class="hsl"><div><span>Recipe</span><span>1 Mugwort Leaf + 1 Ginger Root</span></div><div><span>Brew at</span><span>the big bowl, here</span></div><div><span>Carry</span><span>up to ' + HS_CAP + '</span></div><div><span>Remedy slot</span><span>Dressing <i>\u2192</i> Kampo</span></div><div><span>Use</span><span>Tap the slot \u00b7 Fine first</span></div></div></div>', [['Next \u25b8', then, 'hot']]);
   try { AU.play('pl_heal', { gain: 0.5 }); } catch (e) {}
 }
 function hsSwapCard(o, then) {
