@@ -3,16 +3,26 @@
 import sys, json, asyncio, random
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent)); import harness as H
+import os
+INSTR_ON=os.environ.get('INSTR')=='1'
 ROOT=sys.argv[1]; PORT=int(sys.argv[2]); SECS=int(sys.argv[3]); SEED=int(sys.argv[4]) if len(sys.argv)>4 else 1
 random.seed(SEED)
 ST = """(function(){var f=W.forced;return {t:+(W.t||0).toFixed(1),ig:!!FFF_UI.ST.inGame,on:W.on,live:tagsLive(),forced:f?(f.id+':'+f.st+':'+(+(f.ft||0).toFixed(1))+':'+(W.roam.indexOf(f)>=0)):null,busy:W.busy,dlg:W.dlg,cut:W.cut,runUp:W.runUp,pan:!!W.pan,paused:W.paused,fading:W.fading,lying:W.lying,scr:W.scr,ambOn:!!W.ambOn,opnOn:!!W.opnOn,snk:!!W.snk,ambT:!!W.ambT,c1eGo:W.c1eGo,dgFight:!!W.dgFight,cool:+(W.cool||0).toFixed(1),inside:W.inside&&W.inside.id,roam:W.roam.length,x:Math.round(W.ryo.x),y:Math.round(W.ryo.y),
  btn:(function(){var r=document.getElementById('btnRun');return r?(r.hidden?'h':r.disabled?'d':'e'):null})(),ph:FFF_UI.ST.phase,fbusy:FFF_UI.ST.busy,res:document.getElementById('result').classList.contains('on'),wdlg:document.getElementById('wdlg').className}})()"""
+INSTR = """(function(){window.__L=[];var fv=W.forced;function lg(m){window.__L.push(Math.round(performance.now())+' '+m+' | on='+W.on+' busy='+W.busy+' ig='+FFF_UI.ST.inGame);if(window.__L.length>60)window.__L.shift()}
+Object.defineProperty(W,'forced',{configurable:true,get:function(){return fv},set:function(v){var st=(new Error()).stack.split('\\n').slice(2,5).map(function(x){return x.trim().replace(/http:[^ ]*index.html:/,'L')}).join(' < ');lg('forced='+(v?(v.id+':'+v.st+' inRoam='+(W.roam.indexOf(v)>=0)):'null')+' '+st);fv=v}});
+var e0=engage;engage=function(q){lg('engage '+q.id+' st='+q.st);return e0.apply(this,arguments)};
+var s0=escaped;escaped=function(st){lg('escaped foes='+W.foes.length+' roam='+W.roam.length+' forced='+(fv?fv.id:null));var r=s0.apply(this,arguments);lg('escaped done roam='+W.roam.length+' forced='+(fv?fv.id+':'+fv.st+':'+(W.roam.indexOf(fv)>=0):null));return r};
+var d0=dropPack;dropPack=function(q){if(q===fv)lg('dropPack of forced '+q.id);return d0.apply(this,arguments)};
+var c0=crowdGone;crowdGone=function(o){if(o===fv)lg('crowdGone of forced '+o.id);return c0.apply(this,arguments)};
+return 1})()"""
 async def main():
     H.serve(ROOT, PORT)
     async with H.async_playwright() as p:
         b, ctx, pg, errs = await H.boot(p, PORT)
         await H.ch1_ready(pg, 1440, 3300)
         await H.ev(pg, "window.FFF_ESC_ROLL=0; SAVE.hp=MAXHP; SAVE.sp=SPMAX")
+        if INSTR_ON: await H.ev(pg, INSTR)
         loop = asyncio.get_event_loop(); t0=loop.time(); nfights=0; nesc=0; lockedSince=None; lastWalk=0; log=[]
         wasFight=False
         while loop.time()-t0 < SECS:
@@ -43,7 +53,9 @@ async def main():
                 lockedSince = lockedSince or loop.time()
             else: lockedSince=None
             if lockedSince and loop.time()-lockedSince>8:
-                print('!!! LOCKED', json.dumps(s), flush=True); log.append(s); lockedSince=loop.time()+30
+                print('!!! LOCKED', json.dumps(s), flush=True)
+                if INSTR_ON: print('\n'.join(await H.ev(pg, 'window.__L.slice(-25)')), flush=True)
+                log.append(s); lockedSince=loop.time()+30
             # walk toward a roaming bully or a random spot
             if loop.time()-lastWalk>4 and s.get('live'):
                 lastWalk=loop.time()

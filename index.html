@@ -11720,6 +11720,7 @@ function roam(dt) {
   if (root.FFF_ROAM === false) { if (W.roam.length) clearRoam(); return; }
   if (SAVE.gouki && !root.FFF_ROAM_AFTER) { if (W.roam.length) { clearRoam(); ev('world:roam:cleared'); } return; } // v4.13: Gouki beaten: the courtyard empties (NG+ resets it)
   trailRec(dt);
+  if (W.forced && (W.roam.indexOf(W.forced) < 0 || W.forced.ft > 6)) { if (W.forced.st === 'force') W.forced.st = 'wander'; W.forced = null; ev('world:forced:stale'); } /* v6.5.64: the never-leave-the-input-locked net that lived in ambCheck (a no-op since v6.5.62) */
   var _aiN = performance.now(), tickAI = !roam._aiT || (_aiN - roam._aiT >= 80); if (tickAI) roam._aiT = _aiN; /* v6.5.18: NPC AI at ~12 Hz */
   var r = W.ryo, calm = W.busy || W.dlg || W.cool > 0, qb = bossQuiet(r.x, r.y), ns = nearSafe(r.x, r.y), can = !calm && !qb && !ns && !W.cut && SAVE.intro && openAway(r.x, r.y);
   W.roamT -= dt; if (W.roamT <= 0 && !W.busy) { var ambK2 = gpAmbK(), gap = SP.roamEvery[0] + Math.random() * (SP.roamEvery[1] - SP.roamEvery[0]); W.roamT = ambK2 === 1 ? gap : gap / ambK2; if (!(typeof packsLive === 'function' && packsLive()) && W.roam.filter(function (q) { return !q.ring; }).length < SP.roamMax) spawnRoamer(); }
@@ -12424,7 +12425,7 @@ function keepPartnerSp(st) { if (!st || st.partnerSpirit == null) return; var o 
  * they stood (calm for a few seconds so you can walk off), mini-bosses / Gouki / vending guards stay at their posts. */
 function escaped(st) {
   var keep = !st.boss && !st.mini && !st.vend ? W.foes.slice() : []; if (keep.length) W.foes = W.foes.filter(function (f) { return keep.indexOf(f) < 0; });
-  clearFoes(); W.busy = false; W.cool = 0; W.rollAcc = 0; // v4.22: no global grace; the ones you got away from are dazed for a moment instead
+  clearFoes(); W.busy = false; W.cool = 0; W.rollAcc = 0; W.forced = null; /* v6.5.64: back() clears it on a win/loss; the escape path returned early and left a bully who was running you down (now a new roam object) as W.forced = input locked for good */ // v4.22: no global grace; the ones you got away from are dazed for a moment instead
   if (st.endHp != null) { SAVE.hp = Math.max(1, Math.min(MAXHP, st.endHp)); SAVE.sp = Math.max(0, Math.min(SPMAX, st.endSpirit | 0)); } keepPartnerSp(st); // v4.24.1
   keep.forEach(function (f, i) { if (W.roam.length >= SP.roamMax) { f.s.el.remove(); return; } var id = (st.grp && st.grp[i]) || BULLIES[0]; f.s.el.classList.add('foe', 'roam'); W.roam.push({ id: id, s: f.s, hx: f.s.x, hy: f.s.y, path: [], wait: 2 + Math.random(), st: 'wander', door: null, t: 1, dazed: SP.daze }); });
   save(); enter(true); syncVend(); ev('world:back:escape');
