@@ -129,6 +129,37 @@
     glowAt(x, 360, 110, 320, 'rgba(255,200,90,.2)'); neonLine(x, [[0, H0 - 34], [WD, H0 - 34]], '#ffd860', 5);
     C.floor(x, { far: '#3a2410', near: '#120a04', kind: 'tile', line: 'rgba(216,176,96,.22)', n: 8, rows: 10 });
     C.vign(x, 0.55); };
-  S2P.p6Battle = function (k, x) { var fn = B[k]; var C = hb(); if (!fn || !C) { x.fillStyle = '#1a1410'; x.fillRect(0, 0, 720, 1280); return; } x.save(); try { fn(x); } finally { x.restore(); } };
+  B.hdeal = function (x) { var C = hb(), WD = 720, H0 = C.H0;
+    /* 707: a high-roller deal room, not the hallway. Night city in the glass, a felt table, fox-stamped sheets. */
+    var wg = x.createLinearGradient(0, 0, 0, H0); wg.addColorStop(0, '#12081a'); wg.addColorStop(0.45, '#2a1430'); wg.addColorStop(1, '#1a0c18'); x.fillStyle = wg; x.fillRect(0, 0, WD, H0);
+    /* window wall */
+    box(x, 40, 20, 640, 180, '#0a0610', 3, 0);
+    for (var r = 0; r < 4; r++) for (var c = 0; c < 8; c++) {
+      var wx = 52 + c * 78, wy = 30 + r * 42, lit = (c + r) % 3 !== 0;
+      box(x, wx, wy, 70, 36, lit ? '#3a2a18' : '#141018', 1.5, 0);
+      if (lit) { x.fillStyle = 'rgba(255,200,110,' + (0.18 + (c % 3) * 0.06) + ')'; x.fillRect(wx + 2, wy + 2, 66, 32); }
+    }
+    glowAt(x, 200, 90, 160, 'rgba(255,190,110,.22)'); glowAt(x, 520, 80, 140, 'rgba(255,176,64,.18)');
+    neonTx(x, '707', 360, 28, 22, '#fff4c8', '#ffb040');
+    /* felt table + deal sheets */
+    box(x, 160, 210, 400, 90, '#0e3a24', 3, 8);
+    x.strokeStyle = '#d8b060'; x.lineWidth = 2; x.strokeRect(168, 216, 384, 78);
+    [[200, 230], [300, 238], [400, 228], [500, 236]].forEach(function (p, i) {
+      box(x, p[0] - 28, p[1], 56, 36, '#efe6d0', 1.6, 2);
+      x.fillStyle = '#b01a1a'; x.beginPath(); x.arc(p[0] + 14, p[1] + 10, 6, 0, 7); x.fill();
+      x.fillStyle = '#f2e6c8'; x.font = '900 8px sans-serif'; x.textAlign = 'center'; x.fillText('\u72d0', p[0] + 14, p[1] + 13);
+    });
+    /* brass lamps + glasses */
+    [[120, 200], [600, 200]].forEach(function (p) {
+      box(x, p[0] - 8, p[1] - 70, 16, 50, '#3a2410', 2, 2); ell(x, p[0], p[1] - 78, 22, 10, '#d8b060', 2);
+      glowAt(x, p[0], p[1] - 40, 90, 'rgba(255,200,110,.35)');
+    });
+    [[250, 268], [470, 268]].forEach(function (p) { box(x, p[0] - 7, p[1], 14, 16, 'rgba(220,230,240,.35)', 1.4, 3); ell(x, p[0], p[1], 8, 3, 'rgba(200,140,40,.45)', 0); });
+    /* velvet chairs, cropped at the wall line */
+    box(x, 80, H0 - 70, 80, 50, '#4a1230', 3, 8); box(x, 560, H0 - 70, 80, 50, '#4a1230', 3, 8);
+    box(x, 0, H0 - 28, WD, 28, '#2a1810', 0, 0);
+    C.floor(x, { far: '#3a2418', near: '#140c0a', kind: 'board', line: 'rgba(216,176,96,.18)', n: 8, rows: 10 });
+    C.vign(x, 0.5); };
+    S2P.p6Battle = function (k, x) { var fn = B[k]; var C = hb(); if (!fn || !C) { x.fillStyle = '#1a1410'; x.fillRect(0, 0, 720, 1280); return; } x.save(); try { fn(x); } finally { x.restore(); } };
   S2P.p6B = B;
 })(typeof window !== 'undefined' ? window : this);

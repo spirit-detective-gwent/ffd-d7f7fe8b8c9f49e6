@@ -543,6 +543,7 @@
   P6.PKEY.hhall = function () { return at('hotel') ? 'clear' : 'deal'; };
   P6.OPEN.hchuo = function () { return true; };
   P6.BT.hhall = { name: 'Hotel Chuo \u00b7 7F', lights: [[180, 100, '255,74,176', 90, 0.3, 'neon'], [540, 100, '74,200,255', 90, 0.3, 'neon']] };
+  P6.BT.hdeal = { name: 'Hotel Chuo \u00b7 707', lights: [[200, 90, '255,200,110', 110, 0.32, 'lamp'], [520, 90, '255,176,64', 100, 0.28, 'lamp']], mood: 'room' };
   P6.innerBack.hhall = function () { lift('hchuo', [1080, 300, 0], '\u25bc 1F'); };
 
   VO.hIn = V3([['', '<p class="dim">Velvet, brass and slow purple light. A wall of glowing room photos. Nobody at the desk but a pair of hands behind frosted glass.</p>']], {
@@ -598,7 +599,7 @@
   function dealer() {
     lockIn(1);
     var lines = pv(VO.hMid);
-    function go() { lockIn(0); startFight('hhall2', ['c2_suit'], { bt: 'hhall', ctx: { toughHp: 48, flv: 7, j6nm: 'Ogata' } }); }
+    function go() { lockIn(0); startFight('hhall2', ['c2_suit'], { bt: 'hdeal', ctx: { toughHp: 48, flv: 7, j6nm: 'Ogata' } }); }
     try { if (typeof bossEnt === 'function' && H_CAST.o) { bossEnt('j6_dealer', lines, go, { spr: H_CAST.o }); return; } } catch (eB) { ev('world:s2p6:err:bent3:' + (eB && eB.message)); }
     talk(lines, go);
   }
@@ -884,7 +885,7 @@
     var k = room();
     if (k !== 'gc') { ['j', 'p', 'r'].forEach(function (q) { if (G_CAST[q]) { kill(G_CAST[q]); G_CAST[q] = null; } }); }
     if (k !== 'gcback' && G_CAST.jb) { kill(G_CAST.jb); G_CAST.jb = null; }
-    if (k === 'gcback' && !(qOn() && (stg() === 'met' || stg() === 'won'))) { if (G_CAST.jb) { kill(G_CAST.jb); G_CAST.jb = null; } sweepJin(); }
+    if (k === 'gcback' && !(qOn() && (stg() === 'met' || stg() === 'won' || (E().jinFate === 'help' && E().seal_game)))) { if (G_CAST.jb) { kill(G_CAST.jb); G_CAST.jb = null; } if (E().jinFate !== 'wipe') sweepJin(); }
     function alive(s) { return s && s.el && s.el.parentNode; }
     if (k === 'gc') {
       if (!alive(G_CAST.p)) { G_CAST.p = npc('j6_prize', 225, 540, Math.PI / 2); }
@@ -892,7 +893,7 @@
       if (qOn() && stg() === 'izak' && !alive(G_CAST.j)) { G_CAST.j = npc('j6_jin', 170, 300, -Math.PI / 2); }
       if (!(qOn() && stg() === 'izak') && G_CAST.j) { kill(G_CAST.j); G_CAST.j = null; }
     }
-    if (k === 'gcback' && qOn() && stg() === 'met' && !alive(G_CAST.jb)) { G_CAST.jb = npc('j6_jin', 500, 420, Math.PI / 2); try { waddle(G_CAST.jb, 0, Math.PI / 2); } catch (e) {} }
+    if (k === 'gcback' && qOn() && !alive(G_CAST.jb) && E().jinFate !== 'wipe' && (stg() === 'met' || (stg() === 'won' && !E().seal_game) || (E().jinFate === 'help' && E().seal_game))) { G_CAST.jb = npc('j6_jin', 500, 420, Math.PI / 2); try { waddle(G_CAST.jb, 0, Math.PI / 2); } catch (e) {} }
   }
   function sweepJin() { try { [].forEach.call(document.querySelectorAll('[data-npc="j6_jin"]'), function (el) { if (!G_CAST.j || el !== G_CAST.j.el) el.remove(); }); } catch (e) {} }
   P6.popGc = popGc; P6.G_CAST = G_CAST;
@@ -903,8 +904,124 @@
     var lines = pv(VO.gcBack); function go() { lockIn(0); startFight('gcback', ['mb2_game'], { bt: 'gcback', ctx: { flv: 8, mini: 'mb2_game', j6nm: '\u201cHigh-Score\u201d Jin' } }); }
     try { if (typeof bossEnt === 'function' && G_CAST.jb) { bossEnt('mb2_game', lines, go, { spr: G_CAST.jb }); return; } } catch (eB) { ev('world:s2p6:err:bent6:' + (eB && eB.message)); }
     talk(lines, go); }); }
-  FIGHT.gcback = { win: function () { setStg('won'); qStep(7); sv(); lockIn(1); talk(pv(VO.gcWon), function () { lockIn(0); if (G_CAST.jb) { kill(G_CAST.jb); G_CAST.jb = null; } sweepJin(); toastS('Journal: take Jin\u2019s seal off the prize safe.'); }); }, lose: function () { } };
-  function takeSeal() {
+  FIGHT.gcback = { win: function () { setStg('won'); qStep(7); sv(); lockIn(1); talk(pv(VO.gcWon), function () { lockIn(0); toastS('Journal: take Jin\u2019s seal off the prize safe.'); }); }, lose: function () { } };
+  /* ---------------- M3: Jin at the prize safe (add-only; karaoke duet unchanged) ---------------- */
+  if (typeof BOND_Q === 'object' && typeof BOND_TXT === 'object' && typeof BOND_MID === 'object') {
+    BOND_Q.c2_jin_after = { q: '<b>Aoi asks</b><p>He is still at the board. The seal is on the prize safe. What do we do with him?</p>',
+      o: { fierce: ['Wipe his name off the board', 'Fierce'], strategic: ['Deal for the Thursday book', 'Strategic'], balanced: ['Help him up. The board can stay his', 'Compassionate'] } };
+    BOND_MID.c2_jin_after = 'strategic';
+    BOND_TXT.c2_jin_after = { _mx: 1, _noReact: 1,
+      fierce: {
+        fierce: [['{LEAD}', '{shout}Wipe it. His name comes off.{/shout}', { hype: 1 }], ['{PARTNER}', 'You always go for the board first.'], ['{LEAD}', 'The strip already paid for that score.'], ['{PARTNER}', 'I will stand with you. I am not going to like the sound it makes.']],
+        strategic: [['{LEAD}', '{brisk}Wait. The book first. Then the seal.{/brisk}'], ['{PARTNER}', 'A deal, from you, in his prize room.'], ['{LEAD}', 'His envelopes are worth more than his initials.'], ['{PARTNER}', 'Then keep him talking. I will watch the safe.']],
+        balanced: [['{LEAD}', 'Up. The board can stay his. We came for the seal.'], ['{PARTNER}', '{quiet}You would let him keep the high score.{/quiet}'], ['{LEAD}', 'I would let him keep breathing. The seal is enough.'], ['{PARTNER}', 'Then I stay close. If he reaches for the safe, I am there.']] },
+      strategic: {
+        fierce: [['{LEAD}', 'No book. Wipe the name. We are done talking.'], ['{PARTNER}', 'We had a cleaner read than that.'], ['{LEAD}', 'His name on that glass is the read.'], ['{PARTNER}', 'Then I cover the safe while you do it. We still leave together.']],
+        strategic: [['{LEAD}', '{brisk}Sit. Your score can stay. We want the Thursday book.{/brisk}'], ['{PARTNER}', 'The envelopes, the drops, who collects.'], ['{LEAD}', 'He names them, we take the seal, nobody else gets squeezed.'], ['{PARTNER}', 'I will take the book. You take the safe. Same plan.']],
+        balanced: [['{LEAD}', 'Help him stand. Keep the board. We still need the book.'], ['{PARTNER}', 'Mercy and the ledger. I can run both.'], ['{LEAD}', 'He talks easier if he is on his feet.'], ['{PARTNER}', 'Then I get the names. You get him standing.']] },
+      balanced: {
+        fierce: [['{LEAD}', 'I am sorry. The name comes off.'], ['{PARTNER}', '{quiet}You do not have to sound sorry while you do it.{/quiet}'], ['{LEAD}', 'I will not hit him twice. The board is enough.'], ['{PARTNER}', 'I will watch him. You watch the glass.']],
+        strategic: [['{LEAD}', 'Hear us out. The book for your board.'], ['{PARTNER}', 'Let him keep the initials if the envelopes stop.'], ['{LEAD}', 'That is the deal. He can still be first on the glass.'], ['{PARTNER}', 'I will hold the safe. You hold the offer.']],
+        balanced: [['{LEAD}', '{slow}Come on. Up.{/slow} The board stays yours. We only came for the seal.'], ['{PARTNER}', 'After everything he did to this street.'], ['{LEAD}', 'I stand in front of him anyway. That is the point.'], ['{PARTNER}', '{quiet}I still think he has not earned it.{/quiet} I will help you lift him.']] } };
+  }
+  if (typeof BANTER === 'object') {
+    BANTER.c2_jin_after = {
+      fierce: [
+        ['aoi', 'He is already laughing. Do not make this another man you have to carry.'],
+        ['ryo', '{fast}He squeezed every shop on this strip. I am not leaving his name up there.{/fast}', { hype: 1 }],
+        ['aoi', 'That is not what I said. I said think for one second before you wreck the board.'],
+        ['ryo', 'I am thinking. About the envelopes. About Ponta.'],
+        ['aoi', 'Then we do this as a pair. Not you charging the cabinet alone.'],
+        ['ryo', 'As a pair. I am still not going soft.']],
+      strategic: [
+        ['aoi', '{brisk}He keeps a book. Thursday envelopes, prize slips, the lot.{/brisk}'],
+        ['ryo', 'And a score he cannot stand leaving at 999,990.'],
+        ['aoi', 'So we do not smash the board. We make him use it.'],
+        ['ryo', '{brisk}He talks, we take the seal. You watch the safe.{/brisk}'],
+        ['aoi', 'Already on it. You keep him talking.'],
+        ['ryo', 'That was my next line.']],
+      balanced: [
+        ['ryo', 'He is down. I am not putting him through that cabinet.'],
+        ['aoi', 'He stamped every shop on this strip, Ryo.'],
+        ['ryo', 'I know. That is why I stand in front. Not why I kick him while he is down.'],
+        ['aoi', 'You are protecting him. After all of that.'],
+        ['ryo', 'I am protecting us from turning into him.'],
+        ['aoi', '{quiet}I do not like how easy you make that sound.{/quiet} I am still here.']]
+    };
+  }
+  try {
+    if (STORY && STORY.BOND && STORY.BOND.PAY && !STORY.BOND.PAY.c2_jin_after) STORY.BOND.PAY.c2_jin_after = { best: 790, mid: 395, clash: 158 };
+    if (typeof BCALL_NAME === 'object') BCALL_NAME.c2_jin_after = 'Jin at the prize safe';
+    if (root.FFF_CH2BOND && FFF_CH2BOND.ids && FFF_CH2BOND.ids.indexOf('c2_jin_after') < 0) FFF_CH2BOND.ids.push('c2_jin_after');
+  } catch (ePay) { ev('world:s2p6:err:jinpay:' + (ePay && ePay.message)); }
+
+  VO.jinWipe = V3(
+    [['', '<p class="dim">Ryo drags a sleeve across the gold cabinet. The initials smear. A Thursday slip falls from the coin lip.</p>'],
+     ['j6_jin', 'Tch. You even take a man\u2019s score.']],
+    { fierce: [['ryo', 'The shops already paid that debt.']], strategic: [['aoi', 'The slip is enough. We are done here.']], balanced: [['ryo', 'I will not hit you again. The board is enough.']] },
+    [['aoi', 'We have the slip. The seal is next.']]
+  );
+  VO.jinDeal = V3(
+    [['j6_jin', 'Thursday. Back office first. Tetsu counts. I only ran the floor.'],
+     ['j6_jin', 'The book is in the safe, under the plush. Don\u2019t crease it.']],
+    { fierce: [['ryo', 'I have the book.']], strategic: [['aoi', 'We will hold you to every name in it.']], balanced: [['ryo', 'Your initials can stay. The book cannot.']] },
+    []
+  );
+  VO.jinHelp = V3(
+    [['ryo', 'Up. The board stays yours.'],
+     ['j6_jin', '\u2026Ha. Nobody offers the loser his initials back.'],
+     ['j6_jin', 'Safe\u2019s yours. Leave the 990. I\u2019ll get it later.']],
+    { fierce: [['aoi', 'Keep that promise.']], strategic: [['aoi', 'The envelopes stop too. That was not free.']], balanced: [['aoi', 'We will be back if that 990 starts climbing on anyone else.']] },
+    []
+  );
+
+  function fateOfJin(ans) { return ans === 'fierce' ? 'wipe' : ans === 'strategic' ? 'deal' : 'help'; }
+  function pickedJin() { try { return ((STORY.bond(SAVE) || {}).picks || {}).c2_jin_after; } catch (e) { return ''; } }
+  function applyJinFate(f) {
+    if (f === 'wipe') {
+      if (G_CAST.jb) { try { kill(G_CAST.jb); } catch (eK) {} G_CAST.jb = null; }
+      try {
+        if (typeof lieEl === 'function' && !document.querySelector('[data-npc="j6_jin"].c2lie')) {
+          var le = lieEl('j6_jin', 500, 420, (typeof C2K === 'object' && C2K.mb2_game) || 1);
+          if (le) { le.classList.add('c2lie'); le.dataset.npc = 'j6_jin'; (typeof layer !== 'undefined' ? layer : document.getElementById('world')).appendChild(le); if (W.ints) W.ints.push({ el: le }); if (!W.c2n) W.c2n = {}; W.c2n.s2jinLie = le; }
+        }
+      } catch (eL) { ev('world:s2p6:err:lie:' + (eL && eL.message)); }
+    } else if (f === 'deal') {
+      if (G_CAST.jb) { try { kill(G_CAST.jb); } catch (eK) {} G_CAST.jb = null; }
+    }
+    /* help: leave him standing; popGc will keep him after the seal */
+  }
+  function playJinFate(done) {
+    var f = E().jinFate || 'help';
+    applyJinFate(f);
+    var vo = f === 'wipe' ? VO.jinWipe : f === 'deal' ? VO.jinDeal : VO.jinHelp;
+    lockIn(1);
+    talk(pv(vo), function () { lockIn(0); if (done) done(); });
+  }
+  function stampJin(pk) {
+    E().jinFate = fateOfJin(pk);
+    if (pk === 'strategic') E().jinBook = 1;
+    if (pk === 'fierce') E().jinSlip = 1;
+    sv();
+    ev('world:s2p6:bond:' + E().jinFate);
+  }
+  function askJinThenSeal() {
+    if (E().seal_game) { finishQuest(); return; }
+    var ans = pickedJin();
+    if (ans && !E().jinFate) stampJin(ans);
+    if (E().jinFate) { playJinFate(function () { doTakeSeal(); }); return; }
+    lockIn(1);
+    try {
+      bondAsk('c2_jin_after', function (L2) {
+        stampJin(pickedJin() || path());
+        function next() { playJinFate(function () { doTakeSeal(); }); }
+        if (L2 && L2.length) talk(L2, next); else next();
+      });
+    } catch (eB) { ev('world:s2p6:err:bond:' + (eB && eB.message)); lockIn(0); playJinFate(function () { doTakeSeal(); }); }
+  }
+  P6.askJinThenSeal = askJinThenSeal;
+
+  function doTakeSeal() {
     if (busy() || dlgUp() || E().seal_game) return; var e = E(); lockIn(1);
     try { AU.play('place', { gain: 0.8 }); } catch (eA) {} try { AU.play('fire_whoosh', { gain: 0.6 }); } catch (eA2) {}
     e.seal_game = 1; var n = (typeof c2Seals === 'function') ? c2Seals() : 0;
@@ -919,7 +1036,7 @@
     if (!own && f) { try { L2.push(['ryo', 'The ' + (typeof c2sFacName === 'function' ? c2sFacName(f) : 'Syndicate') + ' stand down now.']); } catch (eN) {} }
     talk(L2, function () { lockIn(0); if (last) { try { if (typeof sayKey === 'function') sayKey('c2', 'elevator_live'); } catch (eK) {} } try { if (typeof c2SqRefresh === 'function') c2SqRefresh(); } catch (eQ) {} finishQuest(); });
   }
-  P6.takeSeal = takeSeal;
+  P6.takeSeal = askJinThenSeal; P6.doTakeSeal = doTakeSeal;
   function flipStrip() { var n = NS(); n.won = n.won || {}; n.won.strip = 1; E().stripPunk = 1; /* Club Kitsune flies the Punks' colours now; shop prices are unchanged (no Nails discount on the strip) */
     try { if (root.FFF_NQ && root.FFF_NQ.BLK && !root.FFF_NQ.BLK.strip) root.FFF_NQ.BLK.strip = { n: 'NEON STRIP', r: [2100, 1400, 3800, 1800] }; } catch (eB) {} sv(); ev('world:s2p6:strip:flip'); }
   function finishQuest() { if (!E().seal_game) return; if (!qDone()) { setStg('done'); qClose(); } flipStrip(); ev('world:s2p6:done'); }
@@ -933,7 +1050,7 @@
     var L = (X && X.CAB_ORDER || []).map(function (k) { return X.CABS[k].n + ': ' + (a.best[k] | 0) + ' \u00b7 ' + TN[a.tier[k] | 0]; }).join('<br>');
     lockIn(1); talk([['', '<p class="dim">HIGH SCORES<br>' + L + '</p>']], function () { lockIn(0); }); return true; };
   ACT.j6_gc_staff = function () { if (busy()) return true; if (at('met')) { enterRoom('gcback'); return true; } lockIn(1); talk(VO.gcStaff0, function () { lockIn(0); }); return true; };
-  ACT.j6_gc_seal = function () { if (busy()) return true; if (at('won') && !E().seal_game) { takeSeal(); return true; } if (stg() === 'met') { gcBackArrive(); return true; } lockIn(1); talk(E().seal_game ? VO.sealDone : VO.gcStaff0, function () { lockIn(0); }); return true; };
+  ACT.j6_gc_seal = function () { if (busy()) return true; if (at('won') && !E().seal_game) { askJinThenSeal(); return true; } if (stg() === 'met') { gcBackArrive(); return true; } lockIn(1); talk(E().seal_game ? VO.sealDone : VO.gcStaff0, function () { lockIn(0); }); return true; };
   ACT.j6_gc_jincab = function () { if (busy()) return true; lockIn(1); talk(VO.jinCab, function () { lockIn(0); }); return true; };
   ARRIVE.gc = gcArrive; ARRIVE.gcback = gcBackArrive; POP.push(popGc);
   PIN.izak = function () { return { room: 'town', x: GC_DOOR.at[0], y: GC_DOOR.at[1] - 60, lab: 'Game Center', loc: 'High Score \u00b7 Neon Game Center' }; };
