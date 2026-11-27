@@ -30124,7 +30124,8 @@ function opnPose(s, who, flip, hb) { var url = hb ? (who === 'ryo' && OPN_HB.src
   var c = document.createElement('i'); c.className = 'wamb opnp'; c.style.backgroundImage = 'url(' + sh + ')'; if (url) c.style.backgroundSize = hb ? '500% 100%' : '500% 200%';
   var a = s.amb = { row: 0, fr: 0, flip: flip, n: 5, sh: 'opn', el: c, vert: false, hit: 9, opn: 1, map: url ? null : (who === 'ryo' ? [0, 2, 3, 3, 4] : null), bi: s.el.style.backgroundImage };
   s.el.appendChild(c); s.el.style.backgroundImage = 'none'; s.el.classList.add('ambing'); s.el.dataset.amb = who + ':opn'; return a; }
-function opnFr(s, i) { var a = s.amb; if (!a || !a.opn) return; a.fr = a.map ? a.map[i] : i; place(s, 0); s.el.dataset.afr = 'opn:' + i; }
+var OPN_VFOOT = {aoi: [[0, 0, 0, 10.5, 9.2], [0, 0, 0, 18.8, 16.5]], ryo: [[0, 0, 0, 15.8, 12.9], [0, 0, 2.2, 19.9, 16.3]]}; /* v6.5.65 (Erik t497u): <who>_ambv crouch/strike cels (front-facing rows 0/1) are drawn higher in the cell than the stand; % of the cel to drop so the feet stay on his shadow in the takedown */
+function opnFr(s, i) { var a = s.amb; if (!a || !a.opn) return; a.fr = a.map ? a.map[i] : i; if (a.vert && a.el) { var t = OPN_VFOOT[a.who], d = t && t[a.row] && t[a.row][a.fr] || 0; a.el.style.translate = d ? '0px ' + d + '%' : ''; } place(s, 0); s.el.dataset.afr = 'opn:' + i; }
 function opnPoseEnd(s) { var a = s.amb; if (!a || !a.opn) return; s.amb = null; s.el.classList.remove('ambing'); delete s.el.dataset.amb; delete s.el.dataset.afr; if (a.el) a.el.remove(); s.el.style.backgroundImage = a.bi; s.sheet = null; place(s, 0); }
 /* frame px -> world px (the .wamb box: 200 % x 125 % of the walk box, left -25 %, feet on the walk box floor) */
 function opnFramePt(s, fx, fy, flip) { var k = s.k || 1, w = SPW * k, h = SPH * k, x = s.x - 0.75 * w + fx * (2 * w / 384), y = s.y + 4 - (320 - fy) / 320 * 1.25 * h; if (flip) x = 2 * (s.x + 0.25 * w) - x; /* .wamb is mirrored about its own centre (left -25 %, width 200 %), not about s.x */ return [x, y]; }
@@ -30529,7 +30530,7 @@ function opnFoePose(id, kind, row) { var k0 = id + ':' + kind + ':' + row, C = O
 function opnFoePrep(q) { if (!q || !q.id) return; ['fold', 'kneel'].forEach(function (k) { opnFoePose(q.id, k, 1); opnFoePose(q.id, k, 2); }); if (root.FFF_ACV !== false) ['foldv', 'kneelv'].forEach(function (k) { opnFoePose(q.id, k, 0); opnFoePose(q.id, k, 3); }); }
 /* v6.5.65: the lead's vertical strike cel (<who>_ambv: rows 0 down_front, 1 down_back, 2 up_front, 3 up_back; 5 frames) as a takedown pose */
 function opnPoseV(s, who, row) { var sh = IMG[who + '_ambv']; if (!sh || !s || !s.el) return null; var c = document.createElement('i'); c.className = 'wamb wambv opnp'; c.style.backgroundImage = 'url(' + sh + ')';
-  var a = s.amb = { row: row, fr: 0, flip: false, n: 5, sh: 'opn', el: c, vert: true, vdir: null, hit: 9, opn: 1, map: null, bi: s.el.style.backgroundImage };
+  var a = s.amb = { row: row, fr: 0, flip: false, n: 5, sh: 'opn', el: c, who: who, vert: true, vdir: null, hit: 9, opn: 1, map: null, bi: s.el.style.backgroundImage };
   s.el.appendChild(c); s.el.style.backgroundImage = 'none'; s.el.classList.add('ambing'); s.el.dataset.amb = who + ':opnv'; return a; }
 function opnFoeShow(q, kind, row, lift) { var s = q.s, u = opnFoePose(q.id, kind, row); if (!u || !s || !s.el) return false; var key = 'opnfp_' + q.id + '_' + kind + '_' + row; IMG[key] = u;
   if (!s._fp) s._fp = { bi: s.el.style.backgroundImage, bs: s.el.style.backgroundSize, bp: s.el.style.backgroundPosition }; s.hurtA = { fp: 1 }; s._wkitPose = key;
