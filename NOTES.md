@@ -66,3 +66,13 @@ Classified from 901 NPC lines (tools/lines.py -> lines.json; picks.txt = line in
 
 Calm lines kept neutral: Genji lessons/briefings, Nurse directions, Tsukikage herb/shop talk, quest-givers (Mina, Attendant, Courier, Tetsuo, Kenta, Aya, Riku, Yuto), beaten/defeated lines, boss backstory/calm lines.
 
+### Tests (after slam commit 957ba4b)
+Reran /workspace/angry/run_tests.sh from the worktree; verify_wired from /workspace/v6560-review/portraits. All green:
+- verify_wired: PASS (every checked Ch2 speaker has a painted portrait)
+- ngp: 104/104
+- s2: 167/167
+- bond: 109/109
+- yk no_old_art: PASS
+- yk ch_smoke: PASS
+Did not add tools/ngp/shots/.
+
