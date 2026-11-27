@@ -12822,7 +12822,7 @@ function qStart(id) { SAVE.qs = SAVE.qs || {}; SAVE.saved = SAVE.saved || []; SA
 function qBossOpen(qid) { var id = qid && qid.indexOf('q_') === 0 ? qid.slice(2) : ''; if (!id) return false; if (id === 'gouki') return !(SAVE.gouki || (typeof goukiDown === 'function' && goukiDown())); return !!(typeof MINIS !== 'undefined' && MINIS.some(function (m) { return m.id === id; }) && !beaten(id)); }
 function qStep(id, st) { var q = qCur(); if (!q || q.id !== id || q.st >= st) return; var last = q.d && q.d.steps.length > 1 && st >= q.d.steps.length - 1; if (last && qBossOpen(id)) return; SAVE.qs[id] = st; save(); qBanner('QUEST UPDATED', q.d.n, q.d.steps[st]); qMark(); ev('world:quest:step:' + id + ':' + st); }
 function qBeat(id) { qEnsure(); if (SAVE.saved && SAVE.saved.indexOf(id) < 0 && id !== 'gouki') { SAVE.saved.push(id); save(); ev('world:saved:' + id); } if (!qOn()) return;
-  var q = qCur(); if (q && q.id === 'q_' + id) { if (q.d.steps.length > 1) qStep(q.id, q.d.steps.length - 1); else { SAVE.qs[q.id] = 9; SAVE.qa = ''; save(); qBanner('QUEST COMPLETE', q.d.n, ''); ev('world:quest:done:' + q.id); } }
+  var q = qCur(); if (q && q.id === 'q_' + id) { if (q.d.steps.length > 1) qStep(q.id, q.d.steps.length - 1); else { SAVE.qs[q.id] = 9; SAVE.qa = ''; save(); qBanner('QUEST COMPLETE', q.d.n, ''); ev('world:quest:done:' + q.id); if (typeof cabQuestDone === 'function') cabQuestDone(q.id); } }
   else if (SAVE.qs && SAVE.qs['q_' + id] == null && id !== 'gouki') { SAVE.qs['q_' + id] = 9; save(); } }
 function qReward() { var n = 0, y = 0; for (var i = 0; i < QREW.band; i++) { if (SAVE.heal.length < hSlots()) { SAVE.heal.push('bandage'); n++; } else y += AID.cost; } if (y) SAVE.items += y;
   var xp = STORY && STORY.BOND && STORY.BOND.XP.QUEST | 0, g = xp && STORY.bondGain && STORY.bond(SAVE).path ? STORY.bondGain(SAVE, xp, 'quest') : null; save(); hud(); ev('world:quest:reward:' + n + ':' + y + ':' + xp);
@@ -13030,7 +13030,7 @@ function qTurnIn(done) { var q = qCur(); if (!q || !qReady() || W.qBusy) { if (d
   var out = []; L.forEach(function (l) { if (l[0] === '@mz') { (function () { var path = (STORY && STORY.bond(SAVE).path) || 'balanced', ans = SAVE.sc.mz || 'balanced', block = (QTALK_MZ[path] && QTALK_MZ[path][ans]) || (QTALK_MZ.balanced && QTALK_MZ.balanced[ans]) || []; block.forEach(function (z) { if (z[2] && z[2].dest && beaten('mb_art')) return; out.push(z); }); (QTALK_MZ_TAIL[path] || QTALK_MZ_TAIL.balanced || []).forEach(function (z) { out.push(z); }); })(); /* wing already clear: drop dest lines only; route tail always plays, no bond, no relay */ ev('world:quest:mz:' + (SAVE.sc.mz || 'old')); return; } if (l[0] === '@done') out.push(['@quest', 'done']); else if (l[0] === '@next') { var m = q.id === 'q_mb_lib' && !beaten('mb_art') ? MINIS.find(function (z) { return z.id === 'mb_art'; }) : nextRelay(); out.push(['nurse', m ? QNEXT[m.id] || NNEXT[m.id] : 'That\u2019s all four. Gouki\u2019s alone at the gym now.']); out.push(['@quest', 'next']); } else out.push(l); });
   W.qSid = id; /* v4.37 (Ernest): the saved students stay after the scene, roam the office and can be talked to (STU_NPC) */
   scene('quest_' + id, out, function () { W.qBusy = 0; W.dlg = false; stuWalkOut(id, function () { ev('world:quest:turnin:end:' + q.id); if (done) done(); }); }); }
-function qDoneNow() { var q = qCur(); if (!q) return; SAVE.qs[q.id] = 9; SAVE.qa = ''; save(); var r = qReward(); qBanner('QUEST COMPLETE', q.d.n, r); qMark(); ev('world:quest:done:' + q.id); }
+function qDoneNow() { var q = qCur(); if (!q) return; SAVE.qs[q.id] = 9; SAVE.qa = ''; save(); var r = qReward(); qBanner('QUEST COMPLETE', q.d.n, r); qMark(); ev('world:quest:done:' + q.id); if (typeof cabQuestDone === 'function') cabQuestDone(q.id); }
 function qNextNow() { var q0 = qCur(); if (q0 && qBossOpen(q0.id)) return; var m = q0 && q0.id === 'q_mb_lib' && !beaten('mb_art') ? MINIS.find(function (z) { return z.id === 'mb_art'; }) : nextRelay(); qStart(m ? 'q_' + m.id : 'q_gouki'); }
 /* v4.35 played-out beats for the nurse's office (acted instead of narrated; FFF_CIN_K scales the timing) */
 function cineQ(kind, done) { var k = cinK(), r = W.ryo, a = W.aoi, n = W.intNurse, wo = $('#world'), T = function (ms) { return Math.round(ms * k); };
@@ -23460,12 +23460,38 @@ load = function () {
   return r;
 };
 
+/* v6565-nursecab (Erik pt506u): the white cabinet restocks once after each Ch1 MAIN quest completes (q_mb_* relays and q_gouki;
+ * side quests and Ch2/Ch3 main quests do not count). No timer. One restock is exactly one Dressing Cart recipe: 1 Clean Gauze +
+ * 1 Medical Tape. It waits in the cabinet until taken; several completions before a visit do not stack (SAVE.cabR is 0/1).
+ * The old 60 s SAVE.cabT key is ignored. NG+ starts cabR fresh and restocks again on its own main quests. */
+var CAB_RESTOCK = [['gauze', 1], ['tape', 1]], CAB_AMT = '1 Clean Gauze + 1 Medical Tape';
+function cabQuestDone(id) {
+  if (!/^q_(mb_[a-z]+|gouki)$/.test(id || '')) return;
+  if (SAVE.cabR) { ev('world:cabinet:stocked:keep:' + id); return; }
+  SAVE.cabR = 1; save(); ev('world:cabinet:stocked:' + id);
+}
+function cabTake() {
+  if (!SAVE.cabR) return;
+  SAVE.cabR = 0;
+  var list = [];
+  CAB_RESTOCK.forEach(function (r) { for (var i = 0; i < r[1]; i++) list.push(r[0]); });
+  if (typeof koQuietMats === 'function') koQuietMats(list, 'cabinet'); else list.forEach(function (k) { phMatAdd(k, 1); });
+  list.forEach(function (k) { try { v630SeeMat(k); } catch (e) {} });
+  save(); ev('world:cabinet:restock');
+}
 function n9Cabinet() {
-  /* v6564-craft: the white cabinet no longer restocks gauze and tape. It is the nurse's own shelf (the one-time dressing lesson still
-   * fetches from it, through v630DressFetch). The free +12 HP bandage every 90 seconds is untouched. */
-  var body = '<b>White cabinet</b><p>The nurse\'s own supplies. Clean linen, a few spare dressings. She is not handing them out.</p>';
-  dialog(body, [['Close', null]], (typeof nursePtUrl === 'function' && nursePtUrl()) || 'nurse_fig'); /* v6564-nurse painted bust */
-  ev('world:cabinet:closed');
+  /* v6564-craft took the timed restock out; v6565-nursecab brings back a small one, per main quest (see cabQuestDone).
+   * The dressing lesson fetch still goes through v630DressFetch. The free +12 HP bandage every 90 seconds is untouched. */
+  var b = [['Close', null]], body;
+  if (SAVE.cabR) {
+    body = '<b>White cabinet</b><p>Fresh supplies are in: <b>' + CAB_AMT + '</b>. Enough for one dressing at the Dressing Cart.</p><p class="dim">Restocks after you finish a main quest.</p>';
+    b.push(['Take gauze and tape', function () { cabTake(); }, 'hot']);
+    ev('world:cabinet:open');
+  } else {
+    body = '<b>White cabinet</b><p>The nurse\'s own supplies. Nothing set out for you right now.</p><p class="dim">Restocks after you finish a main quest: ' + CAB_AMT + '.</p>';
+    ev('world:cabinet:closed');
+  }
+  dialog(body, b, (typeof nursePtUrl === 'function' && nursePtUrl()) || 'nurse_fig'); /* v6564-nurse painted bust */
 }
 
 function n9Slam(step, need) {
@@ -56872,7 +56898,7 @@ function wkitInRange(def, x, y) {
   return dFix <= standToFix + 10;
 }
 function wkitNurseIsEmpty() {
-  try { return !!(SAVE.cabT && Date.now() - SAVE.cabT < 60000); } catch (e) { return false; }
+  try { return !(SAVE.cabR || (SAVE.sc && SAVE.sc.dress === 'fetch')); } catch (e) { return false; } /* v6565-nursecab: no timer */
 }
 
 function wkitStartAnim(def, empty) {
@@ -57205,7 +57231,7 @@ function wkitWrapKitFns() {
     var n9Cabinet32 = n9Cabinet;
     n9Cabinet = function () {
       if (W._wkitGranting || (root && root.FFF_FAST_KIT)) return n9Cabinet32();
-      if (W.inside && W.inside.id === 'room' && SAVE.sc && SAVE.sc.dress === 'fetch') { wkitBegin(false); return; } /* v6564-craft: the reach animation plays only for the dressing lesson */
+      if (W.inside && W.inside.id === 'room' && ((SAVE.sc && SAVE.sc.dress === 'fetch') || SAVE.cabR)) { wkitBegin(false); return; } /* v6564-craft: the reach animation plays for the dressing lesson; v6565-nursecab: and for a waiting quest restock */
       return n9Cabinet32();
     };
   }
