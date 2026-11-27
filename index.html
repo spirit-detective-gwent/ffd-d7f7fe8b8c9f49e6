@@ -22035,7 +22035,7 @@ phCraftMax = function (need) { var m = phCraftMax0(need); if (need && need[0] &&
 function matPopShow(list) {
   var host = document.getElementById('world') || document.body, box = document.getElementById('wmatpop');
   if (!box) { box = document.createElement('div'); box.id = 'wmatpop'; host.appendChild(box); }
-  list.forEach(function (k) { var e = document.createElement('i'); e.className = 'mp ' + k; e.textContent = '+1 ' + (MAT_LAB[k] || k); box.appendChild(e); setTimeout(function () { if (e.parentNode) e.remove(); }, 2300); });
+  list.slice(0, 4).forEach(function (k) { var e = document.createElement('i'); e.className = 'mp ' + k; e.textContent = '+1 ' + (MAT_LAB[k] || k); box.appendChild(e); setTimeout(function () { if (e.parentNode) e.remove(); }, 2300); });
   try { AU.play('place', { gain: 0.35 }); } catch (eA) {}
   ev('world:mat:pop:' + list.join(','));
 }
