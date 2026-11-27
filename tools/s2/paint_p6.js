@@ -65,7 +65,7 @@
     /* marquee */
     var mg = g.createLinearGradient(0, y + 4, 0, y + 28); mg.addColorStop(0, shade(trim, 0.35)); mg.addColorStop(1, trim); box(g, x + 4, y + 4, 92, 24, mg, 2, 3);
     glowAt(g, x + 50, y + 14, 60, 'rgba(255,255,255,.18)');
-    tx(g, label, x + 50, y + 13, label.length > 8 ? 10 : 12, '#1a1220', 900); if (jpl) tx(g, jpl, x + 50, y + 24, 7, 'rgba(26,18,32,.8)', 900);
+    tx(g, label, x + 50, y + 13, label.length > 12 ? 8 : label.length > 8 ? 10 : 12, '#1a1220', 900); if (jpl) tx(g, jpl, x + 50, y + 24, 7, 'rgba(26,18,32,.8)', 900);
     /* bezel + screen */
     box(g, x + 5, y + 31, 90, 64, '#0a0a10', 2, 4); g.strokeStyle = shade(trim, -0.2); g.lineWidth = 1.5; g.strokeRect(x + 8, y + 34, 84, 58);
     box(g, x + 10, y + 34 + 1, 80, 56, '#101828', 0, 3);
@@ -366,9 +366,9 @@
     box(g, 90, 0, RW - 180, 230, '#0c0a18', 0); for (var i = 90; i < RW - 90; i += 60) { g.fillStyle = (i / 60) % 2 ? '#120e22' : '#0e0c1c'; g.fillRect(i, 0, 58, 230); }
     neonLine(g, [[90, 220], [RW - 90, 220]], '#5ad8ff', 4); neonLine(g, [[90, 10], [RW - 90, 10]], '#ff5ac8', 3);
     neonTx(g, 'NEON GAME CENTER', 490, 25, 16, '#e8f8ff', '#5ad8ff'); 
-    var CABX = { shooter: 170, fighter: 330, ember: 490, gun: 650, street: 810 }, COL = { shooter: '#ff5ac8', fighter: '#ff9a3a', ember: '#ffd860', gun: '#ff4a5a', street: '#7aff9a' }, LAB = { shooter: 'BLASTER', fighter: 'FOX FIST II', ember: 'EMBER RUN', gun: 'CHUO CRISIS', street: 'MIDNIGHT' };
+    var CABX = { shooter: 170, fighter: 330, ember: 490, gun: 650, street: 810 }, COL = { shooter: '#ff5ac8', fighter: '#ff9a3a', ember: '#ffd860', gun: '#ff4a5a', street: '#7aff9a' }, LAB = { shooter: 'BLASTER', fighter: 'SH\u014cNEN SHOWDOWN', ember: 'EMBER RUN', gun: 'CHUO CRISIS', street: 'MIDNIGHT' };
     var gold = (st && st.j && st.j.arc && st.j.arc.g) || {};
-    var JPL = { shooter: '\u72d0\u30d6\u30e9\u30b9\u30bf\u30fc', fighter: '\u72d0\u706b\u62f3 II', ember: '\u706b\u306e\u7c89\u30e9\u30f3', gun: '\u4e2d\u592e\u30af\u30e9\u30a4\u30b7\u30b9', street: '\u771f\u591c\u4e2d\u592e\u7dda' };
+    var JPL = { shooter: '\u72d0\u30d6\u30e9\u30b9\u30bf\u30fc', fighter: '\u5c11\u5e74\u5bfe\u6c7a', ember: '\u706b\u306e\u7c89\u30e9\u30f3', gun: '\u4e2d\u592e\u30af\u30e9\u30a4\u30b7\u30b9', street: '\u771f\u591c\u4e2d\u592e\u7dda' };
     Object.keys(CABX).forEach(function (k) { var x = CABX[k] - 50; uprightCab(g, x, 42, k, COL[k], LAB[k], JPL[k]); scrArt(g, x, 45, k); g.fillStyle = 'rgba(255,255,255,.12)'; g.fillRect(x + 12, 45 + 34, 30, 3); glowAt(g, x + 50, 84, 70, 'rgba(' + parseInt(COL[k].slice(1, 3), 16) + ',' + parseInt(COL[k].slice(3, 5), 16) + ',' + parseInt(COL[k].slice(5, 7), 16) + ',.16)');
       if (gold[k]) { ell(g, x + 92, 46, 10, 10, '#ffd860', 2); tx(g, '\u2605', x + 92, 46, 12, '#7a4a00', 900); } });
     /* staff door */
