@@ -8859,10 +8859,16 @@ function acDownSeat(A) { var row = $('#fE'), stand = $('#fE .fbody'); if (!A || 
   var hs = Math.max(64, sr.height || 120), k = hs * 0.94 / 192, floor = rr.bottom - 6, cx = rr.left + rr.width / 2; A.el.style.width = Math.round(248 * k) + 'px'; A.el.style.height = Math.round(224 * k) + 'px';
   A.el.style.left = Math.round(cx - 124 * k) + 'px'; A.el.style.top = Math.round(floor - 186 * k) + 'px'; if (A.sh) { A.sh.style.left = Math.round(cx - 124 * k * 0.56) + 'px'; A.sh.style.top = Math.round(floor - 8) + 'px'; A.sh.style.width = Math.round(Math.max(72, 248 * k * 0.72)) + 'px'; } }
 function acDownOpen() { var id = ST.foe, fig = (CH[id] && CH[id].fig) || '', src = IMG[fig + '_down'], stand = $('#fE .fbody'); if (!stand || ST.acDown) return;
-  if (!src || src === IMG[fig] || poseHeld(fig, 'down')) { var ef = $('#eFig'); /* no lying painting (or only his standing figure stands in for it) */ if (!ef) return; ef.classList.add('ac-down'); ST.acDown = { tip: 1 }; ev('match:alley:down:tip:' + fig); return; }
+  if (!src || src === IMG[fig] || poseHeld(fig, 'down')) { var ef = $('#eFig'); /* no lying painting (or only his standing figure stands in for it) */ if (!ef) return; ef.classList.add('ac-down'); ST.acDown = { tip: 1 }; ev('match:alley:down:tip:' + fig); acDownAuto(ST.acDown); return; }
   var r = stand.getBoundingClientRect(), el = paintedKo(1, src, r, fig); if (!el) return; var shs = document.querySelectorAll('.koshadow'), A = ST.acDown = { el: el, sh: shs[shs.length - 1] || null, fig: fig };
   el.classList.add('acdown'); acDownSeat(A); requestAnimationFrame(function () { acDownSeat(A); }); [250, 700].forEach(function (ms) { setTimeout(function () { if (ST.acDown === A) acDownSeat(A); }, ms); }); /* the battle screen settles in */
-  ev('match:alley:down:' + fig); }
+  ev('match:alley:down:' + fig); acDownAuto(A); }
+/* v6.5.65 (Erik t527): he lies there only through the swirl; once the swirl is gone and the battle screen has settled (150 ms) he gets up on his own
+ * (acDownRise('start'), the 0.38 s rise), so he is standing before you can act. A bounded one-shot check (every 60 ms, gives up after 8 s), not a loop.
+ * The old triggers (first play, Double, tag, run, swap) stay and are no-ops once he is up. root.FFF_AC_UPSTART === false = the old wait-for-your-move behaviour. */
+function acDownAuto(A) { if (!A || root.FFF_AC_UPSTART === false) return; var t0 = Date.now(), seen = 0;
+  (function chk() { if (ST.acDown !== A) return; var sw = document.getElementById('wswirl'); if (sw) seen = 1;
+    if (sw && Date.now() - t0 < 8000) { setTimeout(chk, 60); return; } setTimeout(function () { if (ST.acDown === A) acDownRise('start'); }, 150); ev('match:alley:auto:' + (seen ? 'swirl' : 'noswirl')); })(); }
 function acDownRise(why) { var A = ST.acDown; if (!A) return 0; ST.acDown = null; ev('match:alley:up:' + why);
   if (A.tip) { var ef = $('#eFig'); if (ef) { ef.classList.remove('ac-down'); ef.classList.add('ac-up'); setTimeout(function () { ef.classList.remove('ac-up'); }, 420); } return 380; }
   var stand = $('#fE .fbody'), host = stand && stand.closest('.fighter'); if (host) delete host.dataset.down;
