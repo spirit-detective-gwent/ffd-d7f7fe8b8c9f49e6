@@ -37,3 +37,13 @@ Jin branch rooms (read-only on 4dff155): j6ramen, j6karaV, j6hhall, j6hdeal (Oga
 Kagero's roof fight is room '0' (no painted backdrop).
 Test: `/workspace/pwenv/bin/python3 tools/ground/test_ground.py [index.html]` -> 148/148 here, 172/172 on a trial merge with ch2ov + jin; on live 108/148 (40 fail).
 When a new backdrop is added: give it a FLOOR entry in the test (floor top screen px + foe groups). The default ground line (60) already applies at runtime.
+
+## Perf (battle, 390x844, dsf 3, 4x CPU throttle, live e1ba0d4 vs branch, interleaved 3 rounds, medians; box load ~6)
+| room | fps live/branch | heat (CPU busy %) live/branch | delta |
+|---|---|---|---|
+| lantern_alley | 59.3 / 58.9 | 63.8 / 66.6 | +2.8 |
+| depot | 59.3 / 58.8 | 64.5 / 61.6 | -2.9 |
+| club | 57.3 / 59.9 | 80.1 / 66.9 | -13.2 |
+| street (control, same code both) | 58.9 / 59.5 | 59.5 / 58.3 | -1.2 |
+JS heap 53.5-57.7 MB on both, flat. Raw: /workspace/ground/perf2.log, perf2.json.
+Sheets: /workspace/ground/before_after.png, before_after_2.png (13 fixed stages x every foe), before_after_recent_ban_kagero_jin.png, already_fine.png.
