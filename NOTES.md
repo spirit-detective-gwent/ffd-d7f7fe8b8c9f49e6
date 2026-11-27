@@ -18,6 +18,15 @@ Scratch: /workspace/angry (ref/ = neutral PNGs, raw/ = generated 864x1152, out/ 
 
 ## Log
 
+### Slam gate (v6.5.64)
+`scene()` still paints the angry bust whenever `ptMoodOf` returns angry/rage (tagged line, table hit, or scene rule). `ptSlam` now fires only when the line itself is explicitly angry or shouted: `ln[2].mood === 'angry'`, `ln[2].shout`, `{shout}` in the raw text, or mood is `rage`. Table-only angry lines (including an explicit `{mood:'neutral'|'calm'}` that the table overrules) swap the face with no slam.
+
+Verified 10/10 in /workspace/angry/tools/slam_check.py (hook on ptSlam, one evaluate per line):
+- no slam: chinpira table toll, nurse "Try losing less.", Genji scold with `{mood:'neutral'}` overruled by the table, c2_boso opener, Genji "Sit tight." stays neutral, Gōda `{mood:'calm'}`.
+- slam: explicit `{mood:'angry'}`, `{shout}` in text, `{shout:1}`, explicit `{mood:'rage'}` (kind rage).
+- All expected faces and moods matched; no page errors.
+
+
 ## Angry lines (v6564-angry)
 
 Mechanism: `ptMoodOf(who, opt, txt, sceneId)` -> angry when the line is tagged {mood:'angry'} / {shout} (as before), OR its text matches `PT_ANGRY_LN[paintId]` (substring), OR `PT_ANGRY_SC[sceneId]` lists the speaker (empty for now; hook for per-scene rules). An explicit {mood:'neutral'|'calm'} is overruled only by the table; sad/happy/beaten/rage tags win. Ryo/Aoi never. Versus boxes (dialog opt.versus) default to the angry bust unless the ally is in `PT_VS_CALM` (Genji, Nurse, Tsukikage). Missing file -> calm -> neutral fallback (ptPaintUrl).
