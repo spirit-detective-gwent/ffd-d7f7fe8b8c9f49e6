@@ -107,3 +107,19 @@ Fix (no always-running loop):
 - `ptSetBust` assigns `background-image` only after `decode()` (decode off the frame). Scene and versus/choice faces use this when the bust is still cold. Already-warm busts still paint immediately. Slam waits for the attach when the face is cold.
 - One-shot idle chain `ptWarmOpeners` after `intGo` (and `ptWarmFoes` at `runUp` / `fight`) decodes the chapter's likely fight-opener angry busts, one URL per idle callback.
 
+Reran verify_wired (PASS) and s2 (167/167) after the change.
+
+Focused interleaved rerun vs live (2 reps, opener + versus + battle, 1x and 4x):
+
+1x fps / heat (live → branch, Δheat):
+- opener:  59.45 / 23.2 → 60.0 / 23.2  (0)   both branch runs 60.0, worst 16.8
+- versus:  60.0 / 20.5 → 60.0 / 20.35  (−0.15)
+- battle:  59.25 / 25.3 → 60.0 / 23.95  (−1.35)
+
+4x fps / heat (live → branch, Δheat):
+- opener:  58.7 / 75.85 → 58.3 / 78.9  (+3.05)  runs 59.6 and 57.0 (meets the 58 average gate; live's second run was 57.8)
+- versus:  59.5 / 70.1 → 58.8 / 72.0  (+1.9)
+- battle:  57.7 / 88.15 → 57.9 / 90.0  (+1.85)
+
+Heat within +5. Memory flat (heap_delta 0.0).
+
