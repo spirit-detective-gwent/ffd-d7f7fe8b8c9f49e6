@@ -30031,7 +30031,7 @@ var OPN = {
   KEYS: ['hanabi', 'finale', 'kamikaze', 'redline', 'alley', 'cheap', 'house', 'ace'], UP: { finale: 'hanabi', redline: 'kamikaze', cheap: 'alley', ace: 'house' },
   PUNCH: { X: 178, Y0: 147, Y1: 168, D: 26 }, /* row 1 (v6.5.41 Kamikaze finish, three straights): [X, Y0, Y1, D, body shift] lead / rear cross / lead long, cut in the sleeve so cuff + fist travel whole */
   PUNCH3: [[178, 147, 168, 34, 4], [174, 169, 186, 36, 3], [178, 147, 168, 44, 7]], FIST: { ryo: [226, 157], aoi: [292, 206] },
-  HB: { arm: [174, 146, 166, 40], rear: [170, 166, 184, 33, 7], cutU: 206, cutL: 229, T: 14, k: 1.2, dx: 34, dy: 22, tip: { ryo: [272, 178], aoi: [292, 205] }, rec: 6, set: 4, lunge: 20, fist: [250, 178] } /* v6.5.65 (Erik t497u): the takedown straight is a normal-length arm (lunge 54 -> 20 frame px, the fist point moves with it), so Ryo steps in closer */ /* v6.5.41 Hanabi redo: planted stance (frame 1's wide legs under frame 0's lowered torso, both arms out, rear hand on the lead wrist); [X, Y0, Y1, D(, lift)] */
+  HB: { arm: [174, 146, 166, 40], rear: [170, 166, 184, 33, 7], cutU: 206, cutL: 229, T: 14, k: 1.2, dx: 34, dy: 22, tip: { ryo: [272, 178], aoi: [292, 205] }, rec: 6, set: 4, lunge: 54, fist: [284, 178] } /* v6.5.41 Hanabi redo: planted stance (frame 1's wide legs under frame 0's lowered torso, both arms out, rear hand on the lead wrist); [X, Y0, Y1, D(, lift)] */
 };
 function opnHas(k) { return !!(typeof SAVE !== 'undefined' && SAVE && SAVE.gsk && typeof SAVE.gsk === 'object' && SAVE.gsk[k]); }
 function opnOwnedN() { var g = typeof SAVE !== 'undefined' && SAVE && SAVE.gsk; if (!g || typeof g !== 'object') return 0; var n = 0; for (var i = 0; i < OPN.KEYS.length; i++) if (g[OPN.KEYS[i]]) n++; return n; } /* per frame: no allocation */
@@ -30125,8 +30125,7 @@ function opnPose(s, who, flip, hb) { var url = hb ? (who === 'ryo' && OPN_HB.src
   var c = document.createElement('i'); c.className = 'wamb opnp'; c.style.backgroundImage = 'url(' + sh + ')'; if (url) c.style.backgroundSize = hb ? '500% 100%' : '500% 200%';
   var a = s.amb = { row: 0, fr: 0, flip: flip, n: 5, sh: 'opn', el: c, vert: false, hit: 9, opn: 1, map: url ? null : (who === 'ryo' ? [0, 2, 3, 3, 4] : null), bi: s.el.style.backgroundImage };
   s.el.appendChild(c); s.el.style.backgroundImage = 'none'; s.el.classList.add('ambing'); s.el.dataset.amb = who + ':opn'; return a; }
-var OPN_VFOOT = {aoi: [[0, 0, 0, 10.5, 9.2], [0, 0, 0, 18.8, 16.5]], ryo: [[0, 0, 0, 15.8, 12.9], [0, 0, 2.2, 19.9, 16.3]]}; /* v6.5.65 (Erik t497u): <who>_ambv crouch/strike cels (front-facing rows 0/1) are drawn higher in the cell than the stand; % of the cel to drop so the feet stay on his shadow in the takedown */
-function opnFr(s, i) { var a = s.amb; if (!a || !a.opn) return; a.fr = a.map ? a.map[i] : i; if (a.vert && a.el) { var t = OPN_VFOOT[a.who], d = t && t[a.row] && t[a.row][a.fr] || 0; a.el.style.translate = d ? '0px ' + d + '%' : ''; } place(s, 0); s.el.dataset.afr = 'opn:' + i; }
+function opnFr(s, i) { var a = s.amb; if (!a || !a.opn) return; a.fr = a.map ? a.map[i] : i; place(s, 0); s.el.dataset.afr = 'opn:' + i; }
 function opnPoseEnd(s) { var a = s.amb; if (!a || !a.opn) return; s.amb = null; s.el.classList.remove('ambing'); delete s.el.dataset.amb; delete s.el.dataset.afr; if (a.el) a.el.remove(); s.el.style.backgroundImage = a.bi; s.sheet = null; place(s, 0); }
 /* frame px -> world px (the .wamb box: 200 % x 125 % of the walk box, left -25 %, feet on the walk box floor) */
 function opnFramePt(s, fx, fy, flip) { var k = s.k || 1, w = SPW * k, h = SPH * k, x = s.x - 0.75 * w + fx * (2 * w / 384), y = s.y + 4 - (320 - fy) / 320 * 1.25 * h; if (flip) x = 2 * (s.x + 0.25 * w) - x; /* .wamb is mirrored about its own centre (left -25 %, width 200 %), not about s.x */ return [x, y]; }
@@ -30415,6 +30414,9 @@ root.FFF_OPN = { grant: opnGrant, revoke: opnRevoke, has: opnHas, n: opnOwnedN, 
    Rewards: always a strike from BEHIND. Cheap Shot owned and unused on his crew (or he's alone) -> the quiet drop (no fight, the crew
    turns round). Otherwise the fight starts at the back-strike HP cut with Alley Cat's free first turn on a crew of 3 or fewer. A big
    level gap knocks him out as any back strike does. Never on bosses, sub-bosses or lieutenants. Ch1 grounds, dungeons, Ch2 town.
+   v6.5.65 (Erik t497u/t518u): ONE button - once owned, a TAP from behind on a man who never saw you is the Stealth Takedown (no hold).
+   The strike is the standing punch only (Ryo: OPN_SH row 1, the Nails-lesson straight; Aoi: her upright knee sweep + hilt), side / front / back.
+   Ryo's takedown no longer borrows Hanabi's planted wide-stance sheet (OPN_HB, Hanabi only).
    ============================================================================================================================ */
 var SNK2 = { HOLD: 360, MOVE: 12, BEH: 46, SIDE: 72, MAX: 15, RP: 0.25, ARR: 70 };
 var SNK2P = { /* v6.5.41 (Ernest 09:52) stealth walks, cut from their own walk frames: H hip, K knee, F feet, neck; s leg height (bent knees), KX knee push, ang forward lean, tuck/tx head down into the shoulders; map = walk column per frame, bob = px down per frame
@@ -30489,7 +30491,7 @@ function opnHoldFire(H) { var q = H.q, k = opnHoldKind(q); ev('world:opn:hold:fi
 /* ---------- the sneak ---------- */
 function opnSnkStart(H) { var q = H.q, r = W.ryo; W.opnHold = null; if (!opnSnkFoe(q) || !opnSnkCtx() || opnSnkNoticed(q)) { opnRingOff(); if (H.st) { W.ambT = H.st; W.ambRp = 0; W.run = true; } ev('world:opn:sneak:refused:' + q.id); return; }
   if (W.stk) stickEnd(); W.lastTap = null; W.ambT = null; W.path = []; W.arrive = null; W.run = false;
-  W.snk = { q: q, t0: opnNow(), rp: 0, last: opnNow() }; opnSnkSheet(opnSnkKey(r)); if (opnWho() === 'ryo') { opnRyoSheet(); opnHbSheet(); } opnFoePrep(q); opnSnkPose(r, 1); opnRing(q, 'on'); try { AU.play('tap', { gain: 0.35 }); } catch (e) {}
+  W.snk = { q: q, t0: opnNow(), rp: 0, last: opnNow() }; opnSnkSheet(opnSnkKey(r)); if (opnWho() === 'ryo') opnRyoSheet(); opnFoePrep(q); opnSnkPose(r, 1); opnRing(q, 'on'); try { AU.play('tap', { gain: 0.35 }); } catch (e) {}
   ev('world:opn:sneak:start:' + opnWho() + ':' + q.id + ':d' + Math.round(Math.hypot(q.s.x - r.x, q.s.y - r.y))); }
 function opnSnkEnd(why) { var S = W.snk; if (!S) return; W.snk = null; opnSnkPose(W.ryo, 0); opnRingOff(); if (why !== 'td') { W.path = []; W.arrive = null; } ev('world:opn:sneak:end:' + why); }
 function opnSnkStep() { var S = W.snk, r = W.ryo; if (!S) { if (r && r.snk) opnSnkPose(r, 0); return; } var q = S.q, now = opnNow(), dt = Math.min(0.1, (now - S.last) / 1000); S.last = now;
@@ -30563,7 +30565,7 @@ function opnTDPlay(r, T, who, flip, impact, done, vdir) { var KS = ambStingOK() 
   function rowTo() { return vdir === 'down' ? 3 : 0; } /* his row turned toward the lead */
   function ryoGoV() { var up = vdir === 'up', a = opnPoseV(r, 'ryo', up ? 2 : 0); if (a) opnFr(r, 0); try { AU.play('tap', { gain: 0.55 }); } catch (e) {} ev('world:opn:td:tap');
     setTimeout(function () { turn(); setTimeout(function () { if (a) opnFr(r, 1); ev('world:opn:td:set'); try { AU.play('whoosh_c', { gain: 0.7 }); } catch (e) {}
-      setTimeout(function () { if (a) opnFr(r, up ? 2 : 3); var y0 = r.y, dy = up ? -4 : 5; tween(Math.round(70 * KS), function (k) { r.y = y0 + dy * (1 - (1 - k) * (1 - k)); place(r, 0); }, function () { if (a && up) opnFr(r, 3); hitV(a); }); }, Math.round(130 * KS)); }, Math.round(310 * KS)); }, 170); }
+      setTimeout(function () { if (a) opnFr(r, up ? 2 : 1); var y0 = r.y, dy = up ? -4 : 6; /* t518u: from the front he stays on his feet: a step in on the guard frame (his fist lands behind the man) */ tween(Math.round(70 * KS), function (k) { r.y = y0 + dy * (1 - (1 - k) * (1 - k)); place(r, 0); }, function () { if (a && up) opnFr(r, 3); hitV(a); }); }, Math.round(130 * KS)); }, Math.round(310 * KS)); }, 170); }
   function hitV(a) { var F = F0(), up = vdir === 'up', P = [s.x + (up ? -2 : 0), s.y - SPH * (up ? 0.56 : 0.5)], dir = up ? -Math.PI / 2 : Math.PI / 2, back = [P[0], P[1] + (up ? -8 : 8)];
     opnDirect('opn_punch', 0.85); if (W.opnBoom) thud([['boom', 0, W.opnBoom]]); impact(); opnRumble('ambRyoBack'); ev('world:opn:td:hit');
     opnFoeShow(q, 'foldv', rowTo(), 2) || (function () { try { hurtPlay(s, q.id, rowTo(), 2); } catch (e) {} })();
@@ -30574,20 +30576,20 @@ function opnTDPlay(r, T, who, flip, impact, done, vdir) { var KS = ambStingOK() 
     s.el.style.filter = 'brightness(1.8)'; setTimeout(function () { if (s.el) s.el.style.filter = ''; }, 80); clearTimeout(W.opnPopT); W.opnPopT = setTimeout(function () { if (!W.opnOn) opnFxStop(); }, 1500);
     setTimeout(function () { if (a) opnFr(r, up ? 4 : 4); }, 260);
     setTimeout(function () { opnFoeUnshow(q); if (a) opnFr(r, 0); T.gone = 1; fin(); setTimeout(function () { opnPoseEnd(r); }, 260); }, 900); }
-  function aoiGoV() { var up = vdir === 'up', a = opnPoseV(r, 'aoi', up ? 3 : 1); r.el.style.translate = '0px 4px'; if (a) opnFr(r, 1); ev('world:opn:td:low'); ambStingZ1(s, r); thud([['slash', 0, 0.4]]);
+  function aoiGoV() { var up = vdir === 'up', a = opnPoseV(r, 'aoi', up ? 3 : 1); /* t518u: no crouch for the attacker */ if (a) opnFr(r, 1); ev('world:opn:td:low'); ambStingZ1(s, r); thud([['slash', 0, 0.4]]);
     setTimeout(function () { var F = F0(), kn = [s.x, s.y - SPH * 0.26]; if (F) F.lines.push({ x0: kn[0] - 20, y0: kn[1] + 3, x1: kn[0] + 20, y1: kn[1] - 2, l: 0.16, l0: 0.16 }); thud([['whoosh_c', 0, 0.95], ['opn_blunt', 40, 1]]); ev('world:opn:td:sweep'); /* the back of the blade across the back of his knees */
       setTimeout(function () { opnFoeShow(q, 'kneelv', rowAway(), 0) || (function () { try { hurtPlay(s, q.id, rowAway(), 1); } catch (e) {} })(); try { AU.play('fin_p2', { gain: 0.5 }); } catch (e) {} ev('world:opn:td:kneel'); }, 60);
       setTimeout(function () { r.el.style.translate = ''; if (a) opnFr(r, 2); try { AU.play('whoosh_b', { gain: 0.35 }); } catch (e) {} ev('world:opn:td:raise'); /* the hilt goes up */
-        setTimeout(function () { if (a) opnFr(r, up ? 4 : 3); var hd = [s.x, s.y - SPH * 0.6]; opnPop(hd[0], hd[1], 1); thud(W.opnBlunt || [['opn_blunt', 0, 0.9, 0.92]]); impact(); opnFoeShow(q, 'kneelv', rowAway(), 0); /* the hilt cracks down on his head */
+        setTimeout(function () { if (a) opnFr(r, up ? 4 : 2); if (!up) { var yh = r.y; tween(60, function (k) { r.y = yh + 4 * k; place(r, 0); }, function () { r.y = yh; place(r, 0); }); } var hd = [s.x, s.y - SPH * 0.6]; /* t518u: from the front the hilt comes down from her raised guard, standing */ opnPop(hd[0], hd[1], 1); thud(W.opnBlunt || [['opn_blunt', 0, 0.9, 0.92]]); impact(); opnFoeShow(q, 'kneelv', rowAway(), 0); /* the hilt cracks down on his head */
           s.el.style.filter = 'brightness(1.8)'; setTimeout(function () { if (s.el) s.el.style.filter = ''; }, 70); ev('world:opn:td:hit');
           setTimeout(function () { opnFoeUnshow(q); T.gone = 1; fin(); setTimeout(function () { if (a) opnFr(r, 0); setTimeout(function () { opnPoseEnd(r); }, 140); }, 110); }, 250); }, Math.round(150 * KS)); }, Math.round(260 * KS)); }, Math.round(120 * KS)); }
   function ryoGo() { var a = opnPose(r, 'ryo', flip), steps = [[1, 170, 'tap'], [0, Math.round(90 * KS), 'turn'], [0, Math.round(220 * KS), 0]], i = 0;
     (function st() { if (i >= steps.length) { lunge(); return; } var S = steps[i]; if (a) { a.row = a.map ? 0 : 1; opnFr(r, S[0]); } if (S[2] === 'tap') { try { AU.play('tap', { gain: 0.55 }); } catch (e) {} ev('world:opn:td:tap'); } else if (S[2] === 'turn') turn(); setTimeout(function () { i++; st(); }, S[1]); })(); }
-  function lunge() { opnPoseEnd(r); var STD = !!T.stand, a = opnPose(r, 'ryo', flip, STD ? 0 : 1), hb = !STD && a && !a.map; if (a) { if (STD) a.row = a.map ? 0 : 1; opnFr(r, 0); } /* v6.5.64: T.stand = the upright straight (his guard-frame lead long straight), no planted crouch */ ev('world:opn:td:set'); try { AU.play('whoosh_c', { gain: 0.7 }); } catch (e) {} /* (Ernest 11:41) fuller wind-up */
-    setTimeout(function () { if (a) { if (STD) { a.row = a.map ? 0 : 1; opnFr(r, 3); } else if (hb) opnFr(r, 2); else { a.row = 0; opnFr(r, 2); } }
-      var fx = STD ? OPN.FIST.ryo : OPN.HB.fist, fist = opnFramePt(r, fx[0], fx[1], flip), want = s.x + (flip ? (STD ? 11 : 8) : (STD ? -11 : -8)), dx = want - fist[0], x0 = r.x; /* lunge in until the fist meets his stomach */
+  function lunge() { opnPoseEnd(r); var a = opnPose(r, 'ryo', flip, 0); if (a) { a.row = a.map ? 0 : 1; opnFr(r, 0); } /* v6.5.65 (Erik t518u): Alley Cat on the map = the standing punch (step in, lead arm planted straight), the same as the Nails lesson; no planted wide stance */ /* v6.5.64: T.stand = the upright straight (his guard-frame lead long straight), no planted crouch */ ev('world:opn:td:set'); try { AU.play('whoosh_c', { gain: 0.7 }); } catch (e) {} /* (Ernest 11:41) fuller wind-up */
+    setTimeout(function () { if (a) { a.row = a.map ? 0 : 1; opnFr(r, 3); }
+      var fx = OPN.FIST.ryo, fist = opnFramePt(r, fx[0], fx[1], flip), want = s.x + (flip ? 11 : -11), dx = want - fist[0], x0 = r.x; /* lunge in until the fist meets his stomach */
       tween(Math.round(70 * KS), function (k) { r.x = x0 + dx * (1 - (1 - k) * (1 - k)); place(r, 0); }, function () { hitR(a); }); }, Math.round(130 * KS)); }
-  function hitR(a) { var F = F0(), FP = T.stand ? OPN.FIST.ryo : OPN.HB.fist, P = opnFramePt(r, FP[0], FP[1], flip), dir = flip ? Math.PI : 0, back = [s.x + (flip ? -10 : 10), P[1] - 4];
+  function hitR(a) { var F = F0(), FP = OPN.FIST.ryo, P = opnFramePt(r, FP[0], FP[1], flip), dir = flip ? Math.PI : 0, back = [s.x + (flip ? -10 : 10), P[1] - 4];
     opnDirect('opn_punch', 0.85); if (W.opnBoom) thud([['boom', 0, W.opnBoom]]); /* (Ernest 12:07/12:24) punch_06 exactly as his pick: straight to the output, no sfx-bus EQ / room send / speaker limiter, rate 1, full length */ impact(); opnRumble('ambRyoBack'); ev('world:opn:td:hit');
     opnFoeShow(q, 'fold', rowOf(), 4) || (function () { try { hurtPlay(s, q.id, rowOf(), 2); } catch (e) {} })(); /* after impact(): his own hurt flinch would repaint the sprite */
     if (F) { F.rings.push({ x: P[0], y: P[1], r0: 3, r1: 22, t: 0, dur: 0.18, col: '255,250,235', w: 3 });
@@ -30597,7 +30599,7 @@ function opnTDPlay(r, T, who, flip, impact, done, vdir) { var KS = ambStingOK() 
     s.el.style.filter = 'brightness(1.8)'; setTimeout(function () { if (s.el) s.el.style.filter = ''; }, 80); clearTimeout(W.opnPopT); W.opnPopT = setTimeout(function () { if (!W.opnOn) opnFxStop(); }, 1500);
     setTimeout(function () { if (F) for (var j = 0; j < 8; j++) { var aj = j / 8 * 6.283 + 0.3; F.tr.push({ x: P[0], y: P[1], a: aj, v: 120, len: 8, life: 0.14, t: 0, w: 1.2, c: '255,236,180' }); } }, 380); /* a second shock pulse while he hangs on the fist */
     setTimeout(function () { opnFoeUnshow(q); opnPoseEnd(r); a = opnPose(r, 'ryo', flip); if (a) { a.row = a.map ? 0 : 1; opnFr(r, 0); } T.gone = 1; fin(); setTimeout(function () { opnPoseEnd(r); }, 260); }, 1000); } /* ~1 s on the fist, then down */
-  function aoiGo() { var a = opnPose(r, 'aoi', flip); r.el.style.translate = '0px 6px'; if (a) { a.row = 0; opnFr(r, 1); } ev('world:opn:td:low'); ambStingZ1(s, r); thud([['slash', 0, 0.4]]); /* (Ernest 11:33) quick blade-draw swish as she pulls the sword */
+  function aoiGo() { var a = opnPose(r, 'aoi', flip); /* t518u: no crouch for the attacker */ if (a) { a.row = 0; opnFr(r, 1); } ev('world:opn:td:low'); ambStingZ1(s, r); thud([['slash', 0, 0.4]]); /* (Ernest 11:33) quick blade-draw swish as she pulls the sword */
     setTimeout(function () { if (a) opnFr(r, 2); var F = F0(), kn = [s.x + (flip ? 6 : -6), s.y - SPH * 0.26]; /* the back of the blade across the back of his knees */
       if (F) F.lines.push({ x0: kn[0] + (flip ? 22 : -22), y0: kn[1] + 3, x1: kn[0] - (flip ? 18 : -18), y1: kn[1] - 2, l: 0.16, l0: 0.16 }); thud([['whoosh_c', 0, 0.95], ['opn_blunt', 40, 1]]); ev('world:opn:td:sweep'); /* fuller, louder swoosh on the knee sweep; hit 1 of 2: his pick blunt_02 (trimmed), Ernest 12:07 */
       setTimeout(function () { opnFoeShow(q, 'kneel', s.x < r.x ? 1 : 2, 0) || (function () { try { hurtPlay(s, q.id, s.x < r.x ? 1 : 2, 1); } catch (e) {} })(); try { AU.play('fin_p2', { gain: 0.5 }); } catch (e) {} ev('world:opn:td:kneel'); }, 60); /* his knees hit the ground */
