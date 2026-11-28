@@ -434,7 +434,7 @@
     };
     G.dispose = function () { bgL = {}; TT = null; };
     G.dbg = function (o) { o = o || {}; if (phase === 'select') { if (o.sel != null) sel = o.sel; confirmSel(); phase = 'pre'; } if (o.lives) { P.max = P.hp = 9999; } if (o.foeHp != null) E.hp = o.foeHp; if (o.meter) P.meter = 100; return { phase: phase, p: P && P.hp, e: E && E.hp, foe: E && E.id, me: P && P.id, wins: wins, rnd: rnd }; };
-    G.phase = function () { return phase; }; G._pe = function () { return [P, E]; };
+    G.phase = function () { return phase; }; G._pe = function () { return [P, E]; }; G._pj = function () { return proj.length; };
     /* v6566-handheld: one still figure for the menu cards / LCD (no loop) */
     G.figure = function (q, id, x, y, sc, pose) { var c = CH[id]; if (!c) return; drawFighter(q, { c: c, pose: POSE[pose || 'win'] || POSE.idle, face: 1, flash: 0, x: x, y: y, st: 'idle' }, 0, sc || 1); };
     G.wins = function () { return wins ? wins.slice() : [0, 0]; };
