@@ -40656,36 +40656,36 @@ function camPan(to, o, done) {
     box(g, 4, 66, 30, 16, '#f4ead2', 2, 2); jp(g, '\u55b6\u696d\u4e2d', 19, 74, 8, '#b8332a');
     g.strokeStyle = INK; g.lineWidth = 3; g.strokeRect(1.5, 1.5, 217, 101); return c; }
   function openFront() { if (!inTown() || !NS().udon) return; OPENF = OPENF || openFrontCanvas(); propEl(OPENF, 852, 3180, 3199); }
-  function shutterOn() { if (!inTown()) return; if (NS().udon && !UB) { openFront(); return; } if (NS().udon) return; OPENF = OPENF || openFrontCanvas(); propEl(OPENF, 852, 3180, 3199); SHUT = SHUT || shutterCanvas(); propEl(SHUT, 852, 3180, 3200); SHUT.style.transformOrigin = '50% 0'; SHUT.style.transition = ''; SHUT.style.transform = 'scaleY(1)'; }
+  function shutterOn() { if (!inTown()) return; if (NS().udon && !UDB) { openFront(); return; } if (NS().udon) return; OPENF = OPENF || openFrontCanvas(); propEl(OPENF, 852, 3180, 3199); SHUT = SHUT || shutterCanvas(); propEl(SHUT, 852, 3180, 3200); SHUT.style.transformOrigin = '50% 0'; SHUT.style.transition = ''; SHUT.style.transform = 'scaleY(1)'; }
   function shutterUp() { if (!SHUT || !SHUT.parentNode) { openFront(); return; } if (!OPENF || !OPENF.parentNode) openFront(); SHUT.style.transition = 'transform 1.1s cubic-bezier(.5,.0,.3,1)'; SHUT.style.transform = 'scaleY(0.06)'; sfx('rumble'); later(1200, function () { if (SHUT && SHUT.parentNode) SHUT.remove(); }); }
   /* Q1 → the udon owner rolls the shutter up; Machi Motors opens; Flip sends the next job.
    * v6.5.66 (t612u): every step is guarded so the beat can never strand the player: a failed spawn / walk still goes on, the
-   * walk has its own timeout, NQ.UB tracks the step for the unstick watchdog (frame, below), and a reload mid-beat replays the
+   * walk has its own timeout, NQ.UDB tracks the step for the unstick watchdog (frame, below), and a reload mid-beat replays the
    * rest from Oda-san's lines (udonFin marks the end). Same flow on Fierce / Strategic / Balanced (VO tables resolve per path). */
-  var UB = null;
+  var UDB = null;
   function udonBeat() {
     var e = NS(); if (e.udon) return; e.udon = 1; e.udonTry = 1; sv(); lockIn(true); ev('world:nq:udon:open');
-    UB = { t0: performance.now(), step: 'walk', own: null }; NQ.UB = UB;
+    UDB = { t0: performance.now(), step: 'walk', own: null }; NQ.UDB = UDB;
     var own = null, r = W.ryo, a = W.aoi, went = false;
-    try { own = UB.own = npc('nq_udon', 960, 3306, Math.PI / 2); } catch (eN) { ev('world:nq:err:udon:npc:' + (eN && eN.message)); }
-    function go() { if (went || !UB) return; went = true;
+    try { own = UDB.own = npc('nq_udon', 960, 3306, Math.PI / 2); } catch (eN) { ev('world:nq:err:udon:npc:' + (eN && eN.message)); }
+    function go() { if (went || !UDB) return; went = true;
       try { if (own) { c2Face(r, own.x, own.y); if (a && a.el) c2Face(a, own.x, own.y); } } catch (eF) {}
       try { shutterUp(); } catch (eS) { ev('world:nq:err:udon:shut:' + (eS && eS.message)); }
       later(900, function () { udonTalk(own); }); }
     try { c2WalkAll([[r, 930, 3372, 140], [a, 990, 3378, 140]].filter(function (q) { return q[0] && q[0].el; }), go); } catch (e1) { go(); }
     later(6000, go); /* the walk never holds the beat */
   }
-  function udonTalk(own) { if (UB) UB.step = 'talk'; lockIn(false);
-    talk(VO.udon, function () { if (UB) UB.step = 'sting'; sting('udon', function () { kill(own); flipText(); }); }); }
-  function flipText() { if (UB) UB.step = 'flip';
+  function udonTalk(own) { if (UDB) UDB.step = 'talk'; lockIn(false);
+    talk(VO.udon, function () { if (UDB) UDB.step = 'sting'; sting('udon', function () { kill(own); flipText(); }); }); }
+  function flipText() { if (UDB) UDB.step = 'flip';
     talk(VO.flip, function () { setStg('west', 'w1'); qOpen('west'); crewSync(); udonFin(); try { qBanner('NEW JOB', Q.west.n, Q.west.giver); } catch (e) {} }); }
-  function udonFin() { var n = NS(); n.udonFin = 1; sv(); if (UB && UB.own) kill(UB.own); UB = NQ.UB = null; ev('world:nq:udon:fin'); openFront(); }
+  function udonFin() { var n = NS(); n.udonFin = 1; sv(); if (UDB && UDB.own) kill(UDB.own); UDB = NQ.UDB = null; ev('world:nq:udon:fin'); openFront(); }
   /* a reload (or an app close) mid-beat: the shop is already open (e.udon); Oda-san steps out again and the beat finishes from his lines */
-  function udonResume() { var n = NS(); if (!nailsRun() || !n.udon || n.udonFin || UB) return;
+  function udonResume() { var n = NS(); if (!nailsRun() || !n.udon || n.udonFin || UDB) return;
     if (qOn('west') || qDone('west') || (n.udonTry | 0) >= 3) { n.udonFin = 1; sv(); return; } /* already handed off (older saves) */
     n.udonTry = (n.udonTry | 0) + 1; sv();
-    whenFree(function () { if (UB || NS().udonFin || !inTown()) return; UB = NQ.UB = { t0: performance.now(), step: 'talk', own: null, resumed: 1 }; ev('world:nq:udon:resume');
-      var own = null; try { own = UB.own = npc('nq_udon', 960, 3306, Math.PI / 2); face(own, W.ryo.x, W.ryo.y); c2Face(W.ryo, own.x, own.y); } catch (eN) {}
+    whenFree(function () { if (UDB || NS().udonFin || !inTown()) return; UDB = NQ.UDB = { t0: performance.now(), step: 'talk', own: null, resumed: 1 }; ev('world:nq:udon:resume');
+      var own = null; try { own = UDB.own = npc('nq_udon', 960, 3306, Math.PI / 2); face(own, W.ryo.x, W.ryo.y); c2Face(W.ryo, own.x, own.y); } catch (eN) {}
       udonTalk(own); }); }
   NQ.udonResume = udonResume; NQ.udonFin = udonFin; NQ.openFront = openFront;
   /* the unstick watchdog (v6.5.66, t612u): rides the existing c2Frame, checks twice a second. If input is held (cut / dlg / scene lock)
@@ -40702,10 +40702,10 @@ function camPan(to, o, done) {
   function unstick() { var t = performance.now(); if (t - UST.at < 500) return; UST.at = t;
     var held = !!(W.cut || W.dlg || (W.scr | 0) > 0); if (!held || heldUp()) { UST.since = 0; return; }
     if (!UST.since) { UST.since = t; return; }
-    if (t - UST.since < (UB ? 3500 : 12000)) return;
-    UST.since = 0; ev('world:nq:unstick:' + (UB ? UB.step : 'idle') + ':' + (W.cut ? 'c' : '') + (W.dlg ? 'd' : '') + ((W.scr | 0) ? 's' : ''));
+    if (t - UST.since < (UDB ? 3500 : 12000)) return;
+    UST.since = 0; ev('world:nq:unstick:' + (UDB ? UDB.step : 'idle') + ':' + (W.cut ? 'c' : '') + (W.dlg ? 'd' : '') + ((W.scr | 0) ? 's' : ''));
     W.cut = false; W.dlg = false; W.scr = 0; W.path = [];
-    if (UB) { var st = UB.step; if (st === 'walk') udonTalk(UB.own); else if (st === 'talk' || st === 'sting') { kill(UB.own); flipText(); } else { if (!qOn('west') && !qDone('west')) { setStg('west', 'w1'); qOpen('west'); crewSync(); } udonFin(); } } }
+    if (UDB) { var st = UDB.step; if (st === 'walk') udonTalk(UDB.own); else if (st === 'talk' || st === 'sting') { kill(UDB.own); flipText(); } else { if (!qOn('west') && !qDone('west')) { setStg('west', 'w1'); qOpen('west'); crewSync(); } udonFin(); } } }
   NQ.unstick = unstick;
   NQ.udonBeat = udonBeat;
   /* the fight hooks */
