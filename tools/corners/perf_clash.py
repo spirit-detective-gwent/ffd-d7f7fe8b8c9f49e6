@@ -9,12 +9,12 @@ LIVE = os.environ.get('LIVE_INDEX', '/workspace/herbcine/live/index.html')
 NEW = os.environ.get('FFD_INDEX', '/workspace/nailsalley/wt/index.html')
 THR = float(os.environ.get('THR', '4'))
 DPR = int(os.environ.get('DPR', '3'))
-RUNS = int(os.environ.get('RUNS', '3'))
+RUNS = int(os.environ.get('RUNS', '2'))
 SECS = float(os.environ.get('SECS', '8'))
 OUT = Path('/workspace/nailsalley/shots/perf_clash.json')
 
 PW = float(os.environ.get('PW', '0.8'))  # pre square-off is ~1 s
-CW = float(os.environ.get('CW', '3.0'))  # post cine is ~3.4 s
+CW = float(os.environ.get('CW', '3.0'))  # window right after the win
 
 async def one(index, label):
     g = h.Game(out='/workspace/nailsalley/shots', index=index, throttle=THR)
@@ -44,7 +44,7 @@ async def one(index, label):
         await g.wait(400)
         out['battle'] = await P.window(g.pg, cdp, SECS); out['battle']['foes'] = st.get('foes'); out['battle']['side'] = st.get('side'); out['battle']['ig'] = st.get('ig')
         await T.win(g)
-        st = await T.to_post(g)  # new: post cine up; live: Flip's line on the street
+        st = await g.ev(T.SNAP)  # the win: new = white flash + Hustlers down + the Punks line; live = the stock quip on the street
         out['post'] = await P.window(g.pg, cdp, CW); out['post']['xc'] = st.get('xc')
         out['label'] = label
         return out

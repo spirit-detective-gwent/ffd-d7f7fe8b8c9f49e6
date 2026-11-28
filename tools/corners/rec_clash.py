@@ -4,7 +4,7 @@ import asyncio, os, sys, time, subprocess, shutil
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import h, t13_clash as T
-FR = Path('/workspace/nailsalley/rec/flipfight'); OUTV = '/workspace/nailsalley/shots/flipfight_cine.mp4'
+FR = Path('/workspace/nailsalley/rec/flipfight2'); OUTV = '/workspace/nailsalley/shots/flipfight_cine_v2.mp4'
 REC = {'on': False, 'n': 0, 't': []}
 async def grab(g):
     while True:
