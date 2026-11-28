@@ -9,8 +9,11 @@ LIVE, BR, OUT = Path(A[0]), Path(A[1]), A[2]; REPS = int(A[3]) if len(A) > 3 els
 SAMPLER = """()=>{window.__ft=[];var l=performance.now();window.__run=true;(function f(t){if(!window.__run)return;window.__ft.push(t-l);l=t;requestAnimationFrame(f)})(l);}"""
 STUB = "(function(){ fight=function(){ ev('test:fight'); }; return 1; })()"
 FREE = "W.dgFight=null; W.dlg=false; W.busy=false; W.cool=0; W.pan=null; W.fading=false"
-SCENES = [('vend_room', "cafGo('staff')", None), ('vend_walk', "cafGo('staff')", "W.ryo.x=900; W.ryo.y=450; place(W.ryo,0); setTimeout(function(){ walkTo(300,450,true,false); },200)"),
-          ('vend_prompt', "cafGo('staff')", "SAVE.items=30; SAVE.hp=20; cafVend('c2')")]
+SC1 = [('vend_room', "cafGo('staff')", None), ('vend_walk', "cafGo('staff')", "W.ryo.x=900; W.ryo.y=450; place(W.ryo,0); setTimeout(function(){ walkTo(300,450,true,false); },200)"),
+       ('vend_prompt', "cafGo('staff')", "SAVE.items=30; SAVE.hp=20; cafVend('c2')")]
+SC2 = [('line_room', "cafGo('line')", "W.ryo.x=520; W.ryo.y=560; place(W.ryo,0)"), ('line_walk', "cafGo('line')", "W.ryo.x=900; W.ryo.y=600; place(W.ryo,0); setTimeout(function(){ walkTo(250,450,true,false); },200)"),
+       ('ch2_shop_fumi', "cafGo('line')", "SAVE.items=30; SAVE.shops=SAVE.shops||{}; delete SAVE.shops.nq_gk1; c2Shop('nq_gk1')")]
+SCENES = SC2 if os.environ.get('SET') == '2' else SC1
 def fps(ft):
     ft = ft[2:]; return round(1000 * len(ft) / sum(ft), 1) if ft else 0
 def p5(ft):
@@ -31,7 +34,7 @@ async def one(p, tree, port, thr):
         ft = await pg.evaluate("()=>{window.__run=false;return window.__ft}")
         m1 = {x['name']: x['value'] for x in (await cdp.send('Performance.getMetrics'))['metrics']}; wall = time.time() - t0
         res[name] = {'fps': fps(ft), 'p95fps': p5(ft), 'heat': round(100 * (m1['TaskDuration'] - m0['TaskDuration']) / wall, 1), 'heap_mb': round(m1['JSHeapUsedSize'] / 1e6, 1), 'at': await ev(pg, "(W.inside||{}).id")}
-        await ev(pg, CLR + "; 1")
+        await ev(pg, CLR + "; try{ var m=document.getElementById('wshop'); if(m) m.className=''; }catch(e){} 1")
     res['errs'] = errs; await b.close(); h.shutdown(); return res
 async def main():
     out = []
