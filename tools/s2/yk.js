@@ -721,8 +721,8 @@
     punkA: { base: 'punk', glove: 1, pal: { 4: tri('#5b2a86'), 6: tri('#e6e1d3'), 7: tri('#2a2430') }, coat: '#5b2a86', coatLen: 0.7, emb: '#f0c040', lining: '#d63a3a', bag: 9, shirt: 'sarashi', hair: 'pomp', hairCol: '#1e1a24' },
     /* Punk B "Leopard": Nails' crew. Short black tanran jacket, leopard shirt, purple bontan, brown punch perm, shades */
     punkB: { base: 'punk', glove: 1, pal: { 3: tri('#5a3a26'), 4: tri('#23202a'), 6: tri('#4b2f6e'), 7: tri('#c9b48a') }, bag: 10, shirt: 'leopard', hair: 'perm', hairCol: '#5a3a26', shades: 1 },
-    /* Punk C "Hachimaki": indigo long coat, red headband, sarashi, khaki bontan, bleached pompadour */
-    punkC: { base: 'punk', glove: 1, pal: { 3: tri('#e8cf7a'), 4: tri('#2b3a6e'), 6: tri('#b9a27a'), 7: tri('#efe9dc') }, coat: '#2b3a6e', coatLen: 0.6, emb: '#e8e2d0', lining: '#c8a040', bag: 8, shirt: 'sarashi', hair: 'pomp', hairCol: '#e8cf7a', band: '#d8382e' },
+    /* Punk C "Hachimaki": same Murasaki purple tokkōfuku as Punk A (red lining, gold 天上天下, sarashi, white bontan), bleached pompadour, red headband */
+    punkC: { base: 'punk', glove: 1, pal: { 3: tri('#e8cf7a'), 4: tri('#5b2a86'), 6: tri('#e6e1d3'), 7: tri('#2a2430') }, coat: '#5b2a86', coatLen: 0.7, emb: '#f0c040', lining: '#d63a3a', bag: 9, shirt: 'sarashi', hair: 'pomp', hairCol: '#e8cf7a', band: '#d8382e' },
     /* Flip, Nails' lieutenant: built big. White long coat, leopard lining, gold kanji, blond pompadour, shades, black bontan */
     flip: { base: 'punk', glove: 1, bulk: 0.72, bagSide: 0.5, pal: { 3: tri('#f0d060'), 4: tri('#efece4'), 6: tri('#302b3a'), 7: tri('#f2efe6') }, coat: '#efece4', coatLen: 0.76, emb: '#d9a520', lining: '#d6a046', bag: 12, shirt: 'leopard', leoSc: 1.1, hair: 'pomp', hairCol: '#f0d060', shades: 1 },
     /* Ryo: black tokkōfuku with fire-orange 天上天下, orange lining, sarashi, white hachimaki with a red sun, charcoal bontan */
