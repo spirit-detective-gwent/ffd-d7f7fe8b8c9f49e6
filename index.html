@@ -50750,12 +50750,11 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     NEAR: 12,
     REACH: 26,
     /* v6.5.66 (Erik t608): pots are forgiving. A tap anywhere on the pot (box) or within TAP_R2 of it picks it; Ryo may stand on its east,
-     * west or south side and acts from within REACH2 of that stand (about one tile); a Plant / Pick tag shows within TAG_R of a pot. */
-    TAP_R2: 34,
+     * west or south side and acts from within REACH2 of that stand (about one tile); a tap anywhere on the pot, its plant or a little around it counts. */
+    TAP_R2: 46,
     REACH2: 34,
     NEAR2: 30,
-    TAG_R: 46,
-    SKIP_GUARD: 400,
+        SKIP_GUARD: 400,
     /* 3x3 pot feet in the clinic nook (paint_garden.py pot_feet) */
     POTS: [
       { id: 'gp1', at: [194, 218] },
@@ -50957,7 +50956,6 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       W.g50p.push(o);
     });
     ev('world:garden:pots:' + W.g50p.length);
-    W.tagSig = null; /* rebuild tags: the Plant / Pick prompts follow the pots */
   }
 
   function bloomPots() {
@@ -51097,7 +51095,6 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       if (lifted) return; lifted = 1;
       if (kind === 'pick') { st.st = 'empty'; o.el.style.backgroundImage = potSvg('empty', o.p.kind); }
       if (kind === 'plant') { st.st = 'planted'; o.el.style.backgroundImage = potSvg('planted', o.p.kind); }
-      W.tagSig = null;
       ev('world:garden:' + kind + ':lift:' + o.p.id);
     }
     function done() {
@@ -51130,7 +51127,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     (W.g50p || []).forEach(function (o) {
       if (!o.el || !o.el.isConnected || o.busy) return;
       var d = Math.hypot(x - o.x, y - o.y), dc = Math.hypot(x - o.x, y - (o.y - 14));
-      var inBox = Math.abs(x - o.x) <= 24 && y >= o.y - 48 && y <= o.y + 14;
+      var inBox = Math.abs(x - o.x) <= 36 && y >= o.y - 58 && y <= o.y + 22;
       if (!(d <= G.TAP_R || inBox || dc <= G.TAP_R2)) return;
       var sc = Math.min(d, dc);
       if (!best || sc < best.d) best = { o: o, d: sc };
@@ -51484,39 +51481,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
            * spot for taps (intSpotAt) but do not paint a highlight. */
           if (t && t.key && /:garden$/.test(t.key)) { t.obj = null; t.lab = ''; t.silent = 1; }
         });
-        try {
-          if (typeof c2Room === 'function' && c2Room() === 'clinic') (W.g50p || []).forEach(function (o) {
-            var k = potKind(o); if (!k || !o.el || !o.el.isConnected) return;
-            out.push({ key: 'c2_clinic:pot:' + o.p.id, lab: k === 'pick' ? 'Pick' : 'Plant', x: o.x, y: o.y - 50, below: false, ax: o.x, ay: o.y + 8, R: G.TAG_R, vm: false, pot: 1,
-              fn: function () { potGo(o); } });
-          });
-        } catch (eT) {}
         return out;
-      };
-    }
-    if (typeof tagsFrame === 'function' && !G.tfWrap) {
-      G.tfWrap = 1;
-      var tf0 = tagsFrame;
-      tagsFrame = function () {
-        var r = tf0.apply(this, arguments);
-        try {
-          var L = W.tagL, ry = W.ryo;
-          if (L && L.length && ry && W.g50p && W.g50p.length) for (var i = 0; i < L.length; i++) {
-            var t = L[i]; if (!t.pot || !t.el) continue;
-            var near = Math.hypot(ry.x - t.ax, ry.y - t.ay) < t.R + 6;
-            if (t._pn !== near) { t._pn = near; t.el.style.visibility = near ? '' : 'hidden'; }
-          }
-        } catch (eF) {}
-        return r;
-      };
-    }
-    if (typeof tagTap === 'function' && !G.ttWrap) {
-      G.ttWrap = 1;
-      var tt0 = tagTap;
-      /* a pot tag is drawn over the pot's top; tapping it from anywhere in view walks to the stand and acts (never 'Move closer') */
-      tagTap = function (t) {
-        if (t && t.pot && typeof t.fn === 'function' && !W.busy && !W.dlg && !W.cut && !W.scr) { ev('world:tag:pot:' + t.key); t.fn(); return true; }
-        return tt0.apply(this, arguments);
       };
     }
     if (typeof intSpotAt === 'function' && !G.spotWrap) {
@@ -59147,7 +59112,7 @@ function hsStage(stage, ms) { return ['@fn', function (next) { hsCmpCard(stage);
  * Props are DOM in the sprite layer (world px, z = 100 + feet y), WAAPI / CSS animations of fixed length, finite c2Walk and camera moves.
  * A tap during a staged beat fast-forwards it; every timer / animation / walk checks HS.g, so a Reset / NG+ / slot load / room change
  * (scene generation) or the end of the scene drops the whole thing with nothing left behind. ---------- */
-var HSC = { K: [611, 421], SU: [678, 450], RYO: [598, 612], AOI: [532, 624], HAND: [622, 606], VIA: [668, 522], GRIP: [676, 400], BP: [24, 38], BC: [35, 32], RH: [41, 49] };
+var HSC = { K: [611, 421], SU: [678, 450], RYO: [598, 612], AOI: [532, 624], HAND: [622, 606], VIA: [668, 522], GRIP: [676, 400], BP: [24, 38], BC: [35, 45], RH: [41, 49] };
 var HS = { g: 0, on: false, ph: false, skip: false, t0: 0, timers: [], anims: [], walk: null, home: null, bound: false, sg: 0 };
 function hsLayer() { return document.getElementById('wisp') || (typeof layer !== 'undefined' ? layer : null); }
 function hsProp(id, x, y, w, h, html, z) { var L = hsLayer(); if (!L) return null; var e = document.getElementById(id); if (!e) { e = document.createElement('i'); e.id = id; e.className = 'hsprop'; L.appendChild(e); }
@@ -59163,7 +59128,7 @@ function hsCineCss() { if (document.getElementById('hscine')) return; var s = do
     '@keyframes hspuff{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:.95}100%{opacity:0;transform:translate(6px,-34px) scale(1.9)}}' +
     '#hsladle{transform-origin:27px 10px;will-change:transform}#hsladle svg{overflow:visible}' +
     '#hsstream{background:linear-gradient(#a9692f,#7a4520);border-radius:0 0 2px 2px;transform-origin:50% 0;transform:scaleY(0);opacity:.95}' +
-    '.hsbc{position:absolute;width:18px;height:18px;pointer-events:none;z-index:4;display:block}.hsbc svg{display:block;overflow:visible}.hsbc .hslq{transition:none}' +
+    '.hsbc{position:absolute;width:18px;height:18px;pointer-events:none;z-index:4;display:block}.hsbc svg{display:block;overflow:visible}.hsbc .hslq{transition:none}.hsbc .hsh{display:none;position:absolute;left:-7px;top:8px;overflow:visible}.hsbc.carry .hsh{display:block}' +
     '@media (prefers-reduced-motion:reduce){#hssteam b{animation-duration:2.4s;animation-iteration-count:1}}';
   document.head.appendChild(s); }
 function hsSu() { return W.c2n && W.c2n.sumire; }
@@ -59189,8 +59154,10 @@ function hsSkipBind() { if (HS.bound) return; HS.bound = true; var w = document.
 function hsPhase(fn) { return function (next) { HS.ph = true; HS.skip = false; HS.t0 = performance.now(); var done = false;
   fn(function () { if (done) return; done = true; HS.ph = false; HS.skip = false; next(); }); }; }
 /* the bottle belongs to whoever holds it: a child of that sprite, positioned by its centre in the sprite's own box */
+/* two hands under the bottle's shoulders, the cuffs of her sleeves behind them (same dark line and flat fill as the bottle); shown only while she carries it low at her waist */
+function hsHandsSvg() { return '<svg class="hsh" viewBox="0 0 32 14" width="32" height="14" aria-hidden="true"><g stroke="#14110d" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><rect x="-1" y="1" width="5.5" height="9" rx="2.2" fill="#3c4f93"/><rect x="27.5" y="1" width="5.5" height="9" rx="2.2" fill="#3c4f93"/><path d="M3.6 3.2c2.6-.8 4.8.2 5.6 2.6.6 2-.4 4-2.4 4.6-2.2.6-4.2-.4-4.6-2.6z" fill="#f0d1b4"/><path d="M28.4 3.2c-2.6-.8-4.8.2-5.6 2.6-.6 2 .4 4 2.4 4.6 2.2.6 4.2-.4 4.6-2.6z" fill="#f0d1b4"/></g><path d="M6.4 6.2c1 .1 1.9.5 2.4 1.2M25.6 6.2c-1 .1-1.9.5-2.4 1.2" stroke="#b98a6a" stroke-width=".9" fill="none" stroke-linecap="round"/></svg>'; }
 function hsBottleIn(parent, cx, cy, fill) { var b = document.getElementById('hsbot'); if (b && b.parentNode !== parent) { b.remove(); b = null; }
-  if (!b) { b = document.createElement('i'); b.id = 'hsbot'; b.className = 'hsbc'; b.setAttribute('aria-hidden', 'true'); b.innerHTML = hsBottleSvg(fill || 0); parent.appendChild(b); }
+  if (!b) { b = document.createElement('i'); b.id = 'hsbot'; b.className = 'hsbc'; b.setAttribute('aria-hidden', 'true'); b.innerHTML = hsBottleSvg(fill || 0) + hsHandsSvg(); parent.appendChild(b); }
   b.style.left = (cx - 9) + 'px'; b.style.top = (cy - 9) + 'px'; return b; }
 function hsLiq(b, from, to, ms, done) { var q = b && b.querySelector('.hslq'); if (!q) { if (done) hsWait(ms, done); return; }
   hsAnim(q, [{ transform: 'translateY(' + (30 * (1 - from)).toFixed(1) + 'px)' }, { transform: 'translateY(' + (30 * (1 - to)).toFixed(1) + 'px)' }], ms, done, 'ease-in-out'); }
@@ -59201,9 +59168,9 @@ function hsCineSetup(next) { hsCineCss(); HS.g++; HS.on = true; HS.skip = false;
   try { document.body.classList.add('hscine'); } catch (eB) {} var su = hsSu(), L = [], g = HS.g; HS.home = su ? [su.x, su.y] : null;
   if (W.ryo) L.push([W.ryo, HSC.RYO[0], HSC.RYO[1], 90]); if (W.aoi && W.aoi.el && W.aoi.el.parentNode) L.push([W.aoi, HSC.AOI[0], HSC.AOI[1], 90]);
   if (su && su.el) { try { if (typeof celLoopOff === 'function') celLoopOff(su); } catch (e) {} L.push([su, HSC.SU[0], HSC.SU[1], 70]); }
-  var a = hsProp('hsanchor', 646, 454, 2, 60, '');
+  var a = hsProp('hsanchor', HSC.K[0], HSC.K[1] + 30, 2, 60, ''); /* live framing (e4139c5): same anchor, zoom and ease */
   L.forEach(function (q) { q[3] = root.FFF_HS_FAST ? q[3] * 10 : q[3]; });
-  try { if (root.FFF_SCAM && a) FFF_SCAM.shot({ el: a }, { z: 1.8, ms: 2200, f: 0.4 }); } catch (e2) {}
+  try { if (root.FFF_SCAM && a) FFF_SCAM.shot({ el: a }, { z: 1.32, ms: 2200, f: 0.42 }); } catch (e2) {}
   c2WalkAll(L, function () { if (!hsAlive(g)) return; if (W.ryo) { W.ryo.dir = 3; place(W.ryo, 0); } if (W.aoi && W.aoi.el) { W.aoi.dir = 3; place(W.aoi, 0); }
     if (su && su.el) { su.fa = Math.PI; try { waddle(su, 0, su.fa); } catch (e3) {} place(su, 0); }
     ev('world:hs:cine:setup'); hsWait(1300, next); }); }
@@ -59246,12 +59213,11 @@ function hsCineBrew(next) { var su = hsSu(), g = HS.g; if (!su || !su.el) { hsWa
 /* hand-off: she walks down with the bottle in her hands, stops facing Ryo, holds it out; he takes it hand to hand */
 function hsCineHand(next) { var su = hsSu(), b = document.getElementById('hsbot'), ry = W.ryo, g = HS.g, BC = HSC.BC;
   if (!su || !su.el || !ry) { hsWait(500, next); return; }
-  try { var a = document.getElementById('hsanchor'); if (a && root.FFF_SCAM) { a.style.top = (520 - 60) + 'px'; a.style.left = (640) + 'px'; FFF_SCAM.shot({ el: a }, { z: 1.45, ms: 1500, f: 0.5 }); } } catch (e) {}
+  if (b) b.classList.add('carry'); /* held low at her waist between both hands for the walk */
   hsSeq([
     function (n) { hsWalk(su, HSC.VIA[0], HSC.VIA[1], 62, n); },
     function (n) { hsWalk(su, HSC.HAND[0], HSC.HAND[1], 62, n); },
     function (n) { su.fa = Math.PI; try { waddle(su, 0, su.fa); } catch (e) {} place(su, 0); ry.dir = 2; place(ry, 0); if (W.aoi && W.aoi.el) { W.aoi.dir = 2; place(W.aoi, 0); }
-      try { var a2 = document.getElementById('hsanchor'); if (a2 && root.FFF_SCAM) { a2.style.top = (590 - 60) + 'px'; a2.style.left = (618) + 'px'; FFF_SCAM.shot({ el: a2 }, { z: 1.6, ms: 900, f: 0.56 }); } } catch (e) {}
       hsWait(450, n); },
     function (n) { /* she holds it out toward him, lowering it to where his hand is */
       var o = hsBoxO(ry); HS.offer = [ry.x + 13, ry.y - 34]; HS.offerD = [HS.offer[0] - (su.x - 34 + BC[0]), HS.offer[1] - (su.y - 87 + BC[1])];
