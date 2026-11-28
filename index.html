@@ -40675,6 +40675,7 @@ function camPan(to, o, done) {
       talk(VO.paintFin, function () {
         qClose('paint'); won().wall = 1; sv(); wallPaint(); sting('wall', function () { ginko('Q4', 'used-book'); qOpen('door'); try { qBanner('NEW JOB', Q.door.n, Q.door.giver); } catch (e) {} }); }); }
   function nqBack(win, c) {
+    if (c && c.nqAlly) brawlOff();
     var s = S(); if (!win) { if (c.nqk === 'nq_d' || c.nqk === 'nq_x') whenFree(function () { beatReset(true); }); return; } (c.dgks || []).forEach(function (k) { if (/^nq_/.test(k)) s.f[k] = 1; }); sv();
     var k = c.nqk; ev('world:nq:won:' + k);
     if (k === 'nq_w1' && crewDown(k)) whenFree(function () { setStg('west', 'w2'); crewSync(); say([['aoi', 'Second push coming up the street. Three this time.']]); });
@@ -40689,6 +40690,118 @@ function camPan(to, o, done) {
     if (k === 'nq_x') whenFree(clashWon);
     if (k === 'nq_d') whenFree(doorWon);
   }
+  /* v6.5.66 t615u: in the south-end clash battle only, two Nails allies each take a Hustler.
+   * Walk-in, stealth, and approach are unchanged. Player (Ryo, plus the usual partner) fights one.
+   * Side pairs are handmade in-engine poses on #nqxside; one rAF only while the fight screen is up. */
+  var brawlTo = 0, brawlLive = 0;
+  function brawlOff() {
+    brawlLive = 0;
+    if (brawlTo) { try { clearTimeout(brawlTo); } catch (e) {} brawlTo = 0; }
+    var el = document.getElementById('nqxside');
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+    try { ev('world:nq:allybrawl:off'); } catch (e2) {}
+  }
+  function brawlFig(g, pose, kind) {
+    var skin = '#e0b090', ink = '#2a211c';
+    var jacket = kind === 'punk' ? '#5c2a7a' : '#e07020';
+    var trim = kind === 'punk' ? '#d4a84b' : '#3a2418';
+    var pants = kind === 'punk' ? '#1a1520' : '#3a2a22';
+    var hair = kind === 'punk' ? '#1a1218' : '#3b2418';
+    g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(0, 26, 16, 5, 0, 0, 7); g.fill();
+    if (pose === 4) {
+      g.save(); g.translate(0, 10); g.rotate(1.15);
+      g.fillStyle = pants; g.fillRect(-7, 6, 10, 18); g.fillRect(0, 6, 10, 16);
+      g.fillStyle = jacket; g.fillRect(-11, -10, 22, 20);
+      g.strokeStyle = trim; g.lineWidth = 2; g.beginPath(); g.moveTo(-9, -8); g.lineTo(9, -8); g.stroke();
+      g.fillStyle = skin; g.beginPath(); g.arc(0, -16, 8, 0, 7); g.fill();
+      g.fillStyle = hair; g.beginPath(); g.arc(-2, -19, 7, Math.PI, 0); g.fill();
+      g.restore(); return;
+    }
+    var lean = pose === 2 ? 0.18 : pose === 1 ? -0.1 : pose === 3 ? 0.08 : 0;
+    g.save(); g.rotate(lean);
+    g.fillStyle = pants;
+    g.beginPath(); g.moveTo(-7, 8); g.lineTo(-11, 24); g.lineTo(-4, 24); g.lineTo(-1, 8); g.fill();
+    g.beginPath(); g.moveTo(2, 8); g.lineTo(-1, 24); g.lineTo(7, 24); g.lineTo(8, 8); g.fill();
+    g.fillStyle = jacket; g.beginPath(); g.moveTo(-12, -8); g.lineTo(12, -8); g.lineTo(10, 10); g.lineTo(-10, 10); g.closePath(); g.fill();
+    g.strokeStyle = trim; g.lineWidth = 2.2; g.beginPath(); g.moveTo(-10, -6); g.lineTo(10, -6); g.stroke();
+    if (kind === 'punk') { g.strokeStyle = '#d4a84b'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(-8, 2); g.lineTo(8, 2); g.stroke(); }
+    function arm(a, punch) {
+      g.save(); g.translate(punch ? 8 : -8, -4); g.rotate(a);
+      g.strokeStyle = jacket; g.lineWidth = 6; g.beginPath(); g.moveTo(0, 0); g.lineTo(0, 14); g.stroke();
+      g.strokeStyle = trim; g.lineWidth = 7; g.beginPath(); g.moveTo(0, 12); g.lineTo(0, 15); g.stroke();
+      g.fillStyle = skin; g.beginPath(); g.arc(0, 17, 4.2, 0, 7); g.fill();
+      g.restore();
+    }
+    var backA = pose === 2 ? -0.9 : pose === 1 ? 0.8 : pose === 3 ? -0.3 : 0.25;
+    var frontA = pose === 2 ? 1.35 : pose === 1 ? -0.7 : pose === 3 ? 0.55 : 0.45;
+    arm(backA, false); arm(frontA, true);
+    g.fillStyle = skin; g.beginPath(); g.arc(0, -16, 8, 0, 7); g.fill();
+    g.strokeStyle = ink; g.lineWidth = 1.4; g.beginPath(); g.arc(0, -16, 8, 0, 7); g.stroke();
+    g.fillStyle = hair; g.beginPath(); g.arc(-1, -19, 7.2, Math.PI, 0.15); g.fill();
+    if (kind === 'punk') { g.fillStyle = '#d4a84b'; g.beginPath(); g.arc(6, -14, 1.6, 0, 7); g.fill(); }
+    g.restore();
+  }
+  function brawlDrawOne(c, t, ph) {
+    var dpr = Math.min(2, root.devicePixelRatio || 1), w = c.clientWidth || 96, h = c.clientHeight || 140;
+    var W2 = Math.max(1, Math.round(w * dpr)), H2 = Math.max(1, Math.round(h * dpr));
+    if (c.width !== W2 || c.height !== H2) { c.width = W2; c.height = H2; }
+    var g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    var s = Math.max(0.95, Math.min(1.45, Math.min(w, h) / 110));
+    var beat = ((t / 1000) + ph) % 1.6, poseL, poseR, resolve = 0;
+    try { if (root.FFF_UI && FFF_UI.ST && FFF_UI.ST.b && FFF_UI.ST.b.over && FFF_UI.ST.b.winner === 0) resolve = 1; } catch (eR) {}
+    if (resolve) { poseL = 0; poseR = 4; }
+    else if (beat < 0.35) { poseL = 1; poseR = 0; }
+    else if (beat < 0.55) { poseL = 2; poseR = 3; }
+    else if (beat < 0.95) { poseL = 0; poseR = 1; }
+    else if (beat < 1.15) { poseL = 3; poseR = 2; }
+    else { poseL = 0; poseR = 0; }
+    g.save(); g.translate(w * 0.32, h * 0.58); g.scale(s, s); brawlFig(g, poseL, 'punk'); g.restore();
+    g.save(); g.translate(w * 0.68, h * 0.58); g.scale(-s, s); brawlFig(g, poseR, 'hustler'); g.restore();
+  }
+  function brawlOn() {
+    brawlOff();
+    var host = document.getElementById('stage') || document.getElementById('game');
+    if (!host) return;
+    var box = document.createElement('div');
+    box.id = 'nqxside'; box.setAttribute('aria-hidden', 'true');
+    box.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:3;';
+    function mk(side, top) {
+      var c = document.createElement('canvas');
+      c.style.cssText = 'position:absolute;' + side + ':4px;top:' + top + ';width:96px;height:140px;';
+      box.appendChild(c); return c;
+    }
+    var cL = mk('left', '30%'), cR = mk('right', '34%');
+    host.appendChild(box);
+    brawlLive = 1;
+    try { ev('world:nq:allybrawl:on'); } catch (e0) {}
+    var t0 = performance.now();
+    (function tick() {
+      if (!brawlLive || !box.parentNode) { brawlTo = 0; return; }
+      var now = performance.now();
+      try {
+        var st = root.FFF_UI && FFF_UI.ST;
+        if (st && !st.inGame && now - t0 > 900) { brawlOff(); return; }
+      } catch (e1) {}
+      try { brawlDrawOne(cL, now - t0, 0); brawlDrawOne(cR, now - t0, 0.7); } catch (e2) { ev('world:nq:err:brawl:' + (e2 && e2.message)); }
+      brawlTo = setTimeout(tick, 80);
+    })();
+  }
+  function hookAllyMatch() {
+    var UI = root.FFF_UI, fn = (UI && UI.startMatch) || (typeof startMatch === 'function' ? startMatch : null);
+    if (typeof fn !== 'function' || fn._nqAlly) return !!(fn && fn._nqAlly);
+    var smAlly = fn;
+    var wrapped = function (me, story) {
+      var r = smAlly.apply(this, arguments);
+      try { if (story && story.ctx && story.ctx.nqAlly) brawlOn(); else brawlOff(); } catch (e) {}
+      return r;
+    };
+    wrapped._nqAlly = 1;
+    if (UI) UI.startMatch = wrapped;
+    try { startMatch = wrapped; } catch (eW) {}
+    return true;
+  }
+  if (!hookAllyMatch()) later(0, hookAllyMatch);
+
   /* the clash at the south end of the west side street: Flip brings two */
   var CL = null;
   function clashBeat() {
@@ -40697,7 +40810,7 @@ function camPan(to, o, done) {
     NPC.clash.forEach(function (h) { face(h, r.x, r.y); });
     var n = 0, fin = function () { if (++n < 3) return; [CL.flip].concat(CL.pk).forEach(function (q) { face(q, 1790, 2550); }); lockIn(false);
       talk(VO.clash, function () {
-        var hs = NPC.clash; CL.f = 1; fight([H, H, H], false, { dg: 'c2', dgk: 'nq_x_0', dgks: ['nq_x_0', 'nq_x_1', 'nq_x_2'], nqk: 'nq_x', toughHp: typeof C2HP3 === 'number' ? C2HP3 : undefined, c2pos: hs.map(function (h) { return [H, h.x, h.y]; }) }); }); };
+        var hs = NPC.clash; CL.f = 1; var one = hs[1] || hs[0]; fight([H], false, { dg: 'c2', dgk: 'nq_x_0', dgks: ['nq_x_0', 'nq_x_1', 'nq_x_2'], nqk: 'nq_x', nqAlly: 1, c2pos: one ? [[H, one.x, one.y]] : undefined }); }); };
     move(CL.flip, [[r.x - 70, r.y + 10]], 210, fin); move(CL.pk[0], [[r.x - 120, r.y - 4]], 210, fin); move(CL.pk[1], [[r.x + 100, r.y + 4]], 210, fin);
   }
   function clashWon() {
@@ -40727,11 +40840,11 @@ function camPan(to, o, done) {
     talk(VO.doorWon, function () {
       move(DM.k, [[150, 930]], 100, function () { kill(DM.k); DM = null; }); qClose('door'); setStg('seal', 'open'); qOpen('seal'); try { qBanner('KITSUNE-NO-YU', 'The door is open.', Q.seal.n); } catch (e2) {} });
   }
-  NQ.clashBeat = clashBeat; NQ.doorBeat = doorBeat;
+  NQ.clashBeat = clashBeat; NQ.doorBeat = doorBeat; NQ.brawlOn = brawlOn; NQ.brawlOff = brawlOff;
   /* a beat cut short (a lost fight, a wake-up at the clinic, a reload mid-scene) never leaves the street stuck: the scene NPCs go and the beat can fire again */
   function beatReset(force) {
     if (DM && (force || !DM.f)) { kill(DM.k); (DM.g || []).forEach(kill); DM = null; try { var bg = window.c2DoorGuard && window.c2DoorGuard('sento'); if (bg && bg.el) bg.el.style.visibility = ''; } catch (e) {} }
-    if (CL && (force || !CL.f)) { kill(CL.flip); (CL.pk || []).forEach(kill); CL = null; }
+    if (CL && (force || !CL.f)) { kill(CL.flip); (CL.pk || []).forEach(kill); CL = null; brawlOff(); }
     try { lockIn(false); } catch (e2) {} }
   /* and the chain itself is re-derived on each town visit, so an interrupted hand-off (quest closed, next one not yet opened) heals */
   function chainRepair() { var n = NS(), w = won(), ch = 0;
