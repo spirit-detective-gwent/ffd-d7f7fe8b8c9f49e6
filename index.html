@@ -40810,7 +40810,7 @@ function camPan(to, o, done) {
     if (qOn('cold')) HOTEL.forEach(function (p, i) { if (s.f['nq_c' + i + '_0'] && s.f['nq_c' + i + '_1']) return; var g = npc(['npc_courier', 'npc_attendant', 'npc_clerk'][i], p[0], 978, -Math.PI / 2); g.nqGuest = i; NPC.guests.push(g); });
     /* the clash: three Hustlers waiting at the south end */
     NPC.clash.forEach(kill); NPC.clash = [];
-    if (qOn('west') && stg('west') === 'clash') for (var c = 0; c < 3; c++) NPC.clash.push(npc(H, 1740 + c * 46, 2550 + (c % 2) * 12, -Math.PI / 2));
+    if (qOn('west') && stg('west') === 'clash') { if (xDown()) { if (!XC.won) whenFree(clashWon); } else for (var c = 0; c < 3; c++) NPC.clash.push(npc(H, 1740 + c * 46, 2550 + (c % 2) * 12, -Math.PI / 2)); }
     wallPaint();
   }
   NQ.crewSync = crewSync;
@@ -40871,7 +40871,6 @@ function camPan(to, o, done) {
       talk(VO.paintFin, function () {
         qClose('paint'); won().wall = 1; sv(); wallPaint(); sting('wall', function () { ginko('Q4', 'used-book'); qOpen('door'); try { qBanner('NEW JOB', Q.door.n, Q.door.giver); } catch (e) {} }); }); }
   function nqBack(win, c) {
-    if (c && c.nqAlly) brawlOff();
     var s = S(); if (!win) { if (c.nqk === 'nq_d' || c.nqk === 'nq_x') whenFree(function () { beatReset(true); }); return; } (c.dgks || []).forEach(function (k) { if (/^nq_/.test(k)) s.f[k] = 1; }); sv();
     var k = c.nqk; ev('world:nq:won:' + k);
     if (k === 'nq_w1' && crewDown(k)) whenFree(function () { setStg('west', 'w2'); crewSync(); say([['aoi', 'Second push coming up the street. Three this time.']]); });
@@ -40886,117 +40885,104 @@ function camPan(to, o, done) {
     if (k === 'nq_x') whenFree(clashWon);
     if (k === 'nq_d') whenFree(doorWon);
   }
-  /* v6.5.66 t615u: in the south-end clash battle only, two Nails allies each take a Hustler.
-   * Walk-in, stealth, and approach are unchanged. Player (Ryo, plus the usual partner) fights one.
-   * Side pairs are handmade in-engine poses on #nqxside; one rAF only while the fight screen is up. */
-  var brawlTo = 0, brawlLive = 0;
-  function brawlOff() {
-    brawlLive = 0;
-    if (brawlTo) { try { clearTimeout(brawlTo); } catch (e) {} brawlTo = 0; }
-    var el = document.getElementById('nqxside');
-    if (el && el.parentNode) el.parentNode.removeChild(el);
-    try { ev('world:nq:allybrawl:off'); } catch (e2) {}
+  /* v6.5.66 t626u/t627u: Flip's south-end clash as world cinematics (no battle-screen overlay).
+   * Pre-fight: after the walk-in (unchanged) and Flip's line, each helper Punk runs at a different Hustler while Ryo (and Aoi)
+   * step up to the middle one, so three pairs square off on the street (run lean, guard stance), then Ryo fights one Hustler.
+   * Post-win: the camera pulls back over the street, the two helpers finish their Hustlers (exchange, KO, down), everyone
+   * regroups, then Flip's line. Skippable, tap-safe, every exit releases input. Only one-shot timers and the existing move() /
+   * c2Walk() steps run, and only while a cine plays: no new always-on loop. */
+  var XC = { tok: 0, st: '', to: [], won: 0 };
+  var HX = [[1740, 2550], [1786, 2562], [1832, 2550]];
+  (function () { if (document.getElementById('nqxcss')) return; var st = document.createElement('style'); st.id = 'nqxcss';
+    st.textContent = '.wsp.nqguard{scale:1.04 .95;translate:0 2.5%}.wsp.nqhit{scale:.96 1.03;translate:0 -1.5%}#nqxskip{position:fixed;right:10px;top:44px;z-index:90;padding:6px 12px;border:2px solid #f6f1e4;background:#1a2740;color:#f6f1e4;font:700 13px/1 system-ui,sans-serif;border-radius:10px}';
+    (document.head || document.documentElement).appendChild(st); })();
+  function xcLater(ms, fn) { var tk = XC.tok, id = setTimeout(function () { if (tk !== XC.tok) return; try { fn(); } catch (e) { ev('world:nq:err:xc:' + (e && e.message)); } }, ms); XC.to.push(id); }
+  function live(s) { return !!(s && s.el && s.el.isConnected); }
+  function lean(s, d) { if (!live(s)) return; s.lean = d; try { place(s, 0); } catch (e) {} }
+  function dirX(a, b) { return Math.abs(b - a) < 18 ? 0 : (b > a ? 1 : -1); }
+  function pose(s, k) { if (!live(s)) return; var c = s.el.classList; c.toggle('nqguard', k === 'guard'); c.toggle('nqhit', k === 'hit'); }
+  function flash(s) { if (!live(s)) return; s.el.style.filter = 'brightness(1.75) saturate(.35)'; xcLater(120, function () { if (live(s)) s.el.style.filter = ''; }); }
+  function calm(s) { if (!s) return; s.lean = 0; if (s.el) { s.el.style.filter = ''; s.el.classList.remove('nqguard', 'nqhit'); } if (live(s)) try { place(s, 0); } catch (e) {} }
+  function down(h) { if (!h) return; try { var le = lieEl(H, h.x, h.y, C2K[H]); if (le) { layer.appendChild(le); W.ints.push({ el: le }); setTimeout(function () { le.classList.add('fade'); }, 4000); setTimeout(function () { le.remove(); }, 5000); } } catch (e) {} kill(h); }
+  function skipBtn(on1) { var el = document.getElementById('nqxskip'); if (!on1) { if (el) el.remove(); return; } if (el) return;
+    el = document.createElement('button'); el.id = 'nqxskip'; el.type = 'button'; el.textContent = 'Skip';
+    var used = 0, go = function (e) { e.preventDefault(); e.stopPropagation(); if (used) return; used = 1; xcSkip(); };
+    el.addEventListener('pointerdown', function (e) { e.stopPropagation(); }); el.addEventListener('click', go);
+    (document.body || document.documentElement).appendChild(el); }
+  /* stop whatever cine is playing and put every actor back to plain standing; input released */
+  function xcAbort(why) { XC.tok++; XC.to.forEach(clearTimeout); XC.to = []; var was = XC.st; XC.st = ''; XC.won = 0; skipBtn(0);
+    (NPC.clash || []).forEach(calm); if (CL) { calm(CL.flip); (CL.pk || []).forEach(calm); }
+    try { rdyOff(W.ryo); rdyOff(W.aoi); } catch (e) {} panEnd();
+    if (was) { lockIn(false); ev('world:nq:xc:abort:' + was + ':' + (why || '')); } }
+  function xcSkip() { if (XC.st === 'pre') { ev('world:nq:xc:skip:pre'); preDone(true); } else if (XC.st === 'post') { ev('world:nq:xc:skip:post'); postDone(true); } }
+  /* (1) pre-fight square-off */
+  function preCine() {
+    var r = W.ryo, a = W.aoi, hs = NPC.clash; XC.tok++; XC.to = []; XC.st = 'pre'; lockIn(true); skipBtn(1); ev('world:nq:xc:pre');
+    CL.r0 = r ? [r.x, r.y] : null;
+    var h0 = hs[0], h1 = hs[1] || hs[0], h2 = hs[2];
+    CL.pairs = [[CL.pk[0], h0], [CL.pk[1], h2]];
+    var n = 0, need = 0, arrive = function () { if (++n >= need) xcLater(650, function () { preDone(false); }); };
+    CL.pairs.forEach(function (q, i) { var p = q[0], h = q[1]; if (!live(p) || !live(h)) return; need++;
+      var tx = h.x + (i ? 6 : -6), ty = h.y - 42, d = dirX(p.x, tx); lean(p, -d * 13);
+      face(h, p.x, p.y);
+      xcLater(i * 140, function () { move(p, [[tx, ty]], 290, function () { lean(p, 0); face(p, h.x, h.y); pose(p, 'guard'); face(h, p.x, p.y); pose(h, 'guard'); arrive(); }); p.runK = 1; }); });
+    if (r && live(h1)) { need++; var rx = h1.x, ry = h1.y - 44;
+      c2Walk(r, rx, ry, 175, function () { try { rdyOn(r, 0); } catch (e) {} face(h1, r.x, r.y); pose(h1, 'guard'); arrive(); });
+      if (a && a.el) c2Walk(a, rx + 30, ry - 20, 175, function () { try { rdyOn(a, 0); } catch (e) {} }); }
+    if (!need) { preDone(false); return; }
+    xcLater(6500, function () { preDone(true); }); /* watchdog */
   }
-  function brawlFig(g, pose, kind) {
-    var skin = '#e0b090', ink = '#2a211c';
-    var jacket = kind === 'punk' ? '#5c2a7a' : '#e07020';
-    var trim = kind === 'punk' ? '#d4a84b' : '#3a2418';
-    var pants = kind === 'punk' ? '#1a1520' : '#3a2a22';
-    var hair = kind === 'punk' ? '#1a1218' : '#3b2418';
-    g.fillStyle = 'rgba(0,0,0,.28)'; g.beginPath(); g.ellipse(0, 26, 16, 5, 0, 0, 7); g.fill();
-    if (pose === 4) {
-      g.save(); g.translate(0, 10); g.rotate(1.15);
-      g.fillStyle = pants; g.fillRect(-7, 6, 10, 18); g.fillRect(0, 6, 10, 16);
-      g.fillStyle = jacket; g.fillRect(-11, -10, 22, 20);
-      g.strokeStyle = trim; g.lineWidth = 2; g.beginPath(); g.moveTo(-9, -8); g.lineTo(9, -8); g.stroke();
-      g.fillStyle = skin; g.beginPath(); g.arc(0, -16, 8, 0, 7); g.fill();
-      g.fillStyle = hair; g.beginPath(); g.arc(-2, -19, 7, Math.PI, 0); g.fill();
-      g.restore(); return;
-    }
-    var lean = pose === 2 ? 0.18 : pose === 1 ? -0.1 : pose === 3 ? 0.08 : 0;
-    g.save(); g.rotate(lean);
-    g.fillStyle = pants;
-    g.beginPath(); g.moveTo(-7, 8); g.lineTo(-11, 24); g.lineTo(-4, 24); g.lineTo(-1, 8); g.fill();
-    g.beginPath(); g.moveTo(2, 8); g.lineTo(-1, 24); g.lineTo(7, 24); g.lineTo(8, 8); g.fill();
-    g.fillStyle = jacket; g.beginPath(); g.moveTo(-12, -8); g.lineTo(12, -8); g.lineTo(10, 10); g.lineTo(-10, 10); g.closePath(); g.fill();
-    g.strokeStyle = trim; g.lineWidth = 2.2; g.beginPath(); g.moveTo(-10, -6); g.lineTo(10, -6); g.stroke();
-    if (kind === 'punk') { g.strokeStyle = '#d4a84b'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(-8, 2); g.lineTo(8, 2); g.stroke(); }
-    function arm(a, punch) {
-      g.save(); g.translate(punch ? 8 : -8, -4); g.rotate(a);
-      g.strokeStyle = jacket; g.lineWidth = 6; g.beginPath(); g.moveTo(0, 0); g.lineTo(0, 14); g.stroke();
-      g.strokeStyle = trim; g.lineWidth = 7; g.beginPath(); g.moveTo(0, 12); g.lineTo(0, 15); g.stroke();
-      g.fillStyle = skin; g.beginPath(); g.arc(0, 17, 4.2, 0, 7); g.fill();
-      g.restore();
-    }
-    var backA = pose === 2 ? -0.9 : pose === 1 ? 0.8 : pose === 3 ? -0.3 : 0.25;
-    var frontA = pose === 2 ? 1.35 : pose === 1 ? -0.7 : pose === 3 ? 0.55 : 0.45;
-    arm(backA, false); arm(frontA, true);
-    g.fillStyle = skin; g.beginPath(); g.arc(0, -16, 8, 0, 7); g.fill();
-    g.strokeStyle = ink; g.lineWidth = 1.4; g.beginPath(); g.arc(0, -16, 8, 0, 7); g.stroke();
-    g.fillStyle = hair; g.beginPath(); g.arc(-1, -19, 7.2, Math.PI, 0.15); g.fill();
-    if (kind === 'punk') { g.fillStyle = '#d4a84b'; g.beginPath(); g.arc(6, -14, 1.6, 0, 7); g.fill(); }
-    g.restore();
+  function preDone(snap) {
+    if (XC.st !== 'pre') return; var r = W.ryo, hs = NPC.clash, h1 = hs[1] || hs[0];
+    if (snap) { XC.tok++; XC.to.forEach(clearTimeout); XC.to = [];
+      (CL.pairs || []).forEach(function (q, i) { var p = q[0], h = q[1]; if (!live(p) || !live(h)) return; p.nqtok = (p.nqtok | 0) + 1; p.x = h.x + (i ? 6 : -6); p.y = h.y - 42; lean(p, 0); face(p, h.x, h.y); pose(p, 'guard'); face(h, p.x, p.y); pose(h, 'guard'); });
+      if (r && live(h1)) { r.x = h1.x; r.y = h1.y - 44; r.v = 0; place(r, 0); try { camera(true); } catch (e) {} } }
+    XC.st = ''; skipBtn(0); try { rdyOff(W.ryo); rdyOff(W.aoi); } catch (e1) {} lockIn(false); ev('world:nq:xc:pre:end:' + (snap ? 'skip' : 'done'));
+    CL.f = 1; fight([H], false, { dg: 'c2', dgk: 'nq_x_0', dgks: ['nq_x_0', 'nq_x_1', 'nq_x_2'], nqk: 'nq_x', nqx: 1, c2pos: live(h1) ? [[H, h1.x, h1.y]] : undefined });
   }
-  function brawlDrawOne(c, t, ph) {
-    var dpr = Math.min(2, root.devicePixelRatio || 1), w = c.clientWidth || 96, h = c.clientHeight || 140;
-    var W2 = Math.max(1, Math.round(w * dpr)), H2 = Math.max(1, Math.round(h * dpr));
-    if (c.width !== W2 || c.height !== H2) { c.width = W2; c.height = H2; }
-    var g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
-    var s = Math.max(0.95, Math.min(1.45, Math.min(w, h) / 110));
-    var beat = ((t / 1000) + ph) % 1.6, poseL, poseR, resolve = 0;
-    try { if (root.FFF_UI && FFF_UI.ST && FFF_UI.ST.b && FFF_UI.ST.b.over && FFF_UI.ST.b.winner === 0) resolve = 1; } catch (eR) {}
-    if (resolve) { poseL = 0; poseR = 4; }
-    else if (beat < 0.35) { poseL = 1; poseR = 0; }
-    else if (beat < 0.55) { poseL = 2; poseR = 3; }
-    else if (beat < 0.95) { poseL = 0; poseR = 1; }
-    else if (beat < 1.15) { poseL = 3; poseR = 2; }
-    else { poseL = 0; poseR = 0; }
-    g.save(); g.translate(w * 0.32, h * 0.58); g.scale(s, s); brawlFig(g, poseL, 'punk'); g.restore();
-    g.save(); g.translate(w * 0.68, h * 0.58); g.scale(-s, s); brawlFig(g, poseR, 'hustler'); g.restore();
+  /* (2) post-win: the helpers finish theirs */
+  function exchange(p, h, t0, side) {
+    /* the Punk stands north of his Hustler: jab, he swings back, the finisher, KO. Lunges run along y, the lean sells the swing */
+    function nudge(s, dy, ln) { if (!live(s)) return; s.y += dy; lean(s, ln); }
+    xcLater(t0, function () { if (!live(p) || !live(h)) return; nudge(p, 10, side * 14); flash(h); pose(h, 'hit'); nudge(h, 6, -side * 12); sfx('hit', { gain: 0.35 }); });
+    xcLater(t0 + 260, function () { if (!live(p) || !live(h)) return; nudge(p, -10, 0); pose(p, 'guard'); nudge(h, -6, 0); pose(h, 'guard'); });
+    xcLater(t0 + 520, function () { if (!live(p) || !live(h)) return; nudge(h, -9, -side * 14); flash(p); pose(p, 'hit'); nudge(p, -4, side * 10); });
+    xcLater(t0 + 760, function () { if (!live(p) || !live(h)) return; nudge(h, 9, 0); pose(h, 'guard'); nudge(p, 4, 0); pose(p, 'guard'); });
+    xcLater(t0 + 1020, function () { if (!live(p) || !live(h)) return; nudge(p, 14, side * 20); flash(h); pose(h, 'hit'); nudge(h, 8, -side * 22); sfx('hit', { gain: 0.5 }); });
+    xcLater(t0 + 1300, function () { if (live(h)) { down(h); ev('world:nq:xc:ko'); } if (live(p)) { nudge(p, -8, 0); pose(p, ''); } });
   }
-  function brawlOn() {
-    brawlOff();
-    var host = document.getElementById('stage') || document.getElementById('game');
-    if (!host) return;
-    var box = document.createElement('div');
-    box.id = 'nqxside'; box.setAttribute('aria-hidden', 'true');
-    box.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:3;';
-    function mk(side, top) {
-      var c = document.createElement('canvas');
-      c.style.cssText = 'position:absolute;' + side + ':4px;top:' + top + ';width:96px;height:140px;';
-      box.appendChild(c); return c;
-    }
-    var cL = mk('left', '30%'), cR = mk('right', '34%');
-    host.appendChild(box);
-    brawlLive = 1;
-    try { ev('world:nq:allybrawl:on'); } catch (e0) {}
-    var t0 = performance.now();
-    (function tick() {
-      if (!brawlLive || !box.parentNode) { brawlTo = 0; return; }
-      var now = performance.now();
-      try {
-        var st = root.FFF_UI && FFF_UI.ST;
-        if (st && !st.inGame && now - t0 > 900) { brawlOff(); return; }
-      } catch (e1) {}
-      try { brawlDrawOne(cL, now - t0, 0); brawlDrawOne(cR, now - t0, 0.7); } catch (e2) { ev('world:nq:err:brawl:' + (e2 && e2.message)); }
-      brawlTo = setTimeout(tick, 80);
-    })();
+  function panEnd() { var pm = XC.pan; XC.pan = null; if (pm && W.pan === pm) for (var i = 0; i < 4 && W.pan === pm; i++) try { pm.run(99); } catch (e) { W.pan = null; } }
+  function postCine() {
+    var r = W.ryo, hs = NPC.clash.slice(); XC.tok++; XC.to = []; XC.st = 'post'; lockIn(true); skipBtn(1); ev('world:nq:xc:post');
+    down(hs[1]); /* Ryo's man is already down */
+    var pairs = [[CL.pk[0], hs[0]], [CL.pk[1], hs[2]]].filter(function (q) { return live(q[0]) && live(q[1]); }); CL.pairs = pairs;
+    pairs.forEach(function (q, i) { var p = q[0], h = q[1]; p.x = h.x + (i ? 6 : -6); p.y = h.y - 42; place(p, 0); face(p, h.x, h.y); pose(p, 'guard'); face(h, p.x, p.y); pose(h, 'guard'); });
+    try { XC.pan = camPan([HX[1][0], HX[1][1] - 40], { go: 0.55, hold: 2.3, back: 0.55, tag: 'nqxcam' }); } catch (e) {}
+    pairs.forEach(function (q, i) { exchange(q[0], q[1], 520 + i * 200, i ? 1 : -1); });
+    xcLater(520 + 200 + 1500, regroup);
+    xcLater(7000, function () { postDone(true); }); /* watchdog */
   }
-  function hookAllyMatch() {
-    var UI = root.FFF_UI, fn = (UI && UI.startMatch) || (typeof startMatch === 'function' ? startMatch : null);
-    if (typeof fn !== 'function' || fn._nqAlly) return !!(fn && fn._nqAlly);
-    var smAlly = fn;
-    var wrapped = function (me, story) {
-      var r = smAlly.apply(this, arguments);
-      try { if (story && story.ctx && story.ctx.nqAlly) brawlOn(); else brawlOff(); } catch (e) {}
-      return r;
-    };
-    wrapped._nqAlly = 1;
-    if (UI) UI.startMatch = wrapped;
-    try { startMatch = wrapped; } catch (eW) {}
-    return true;
+  function regroup() {
+    if (XC.st !== 'post') return; var r = W.ryo; if (!r) { postDone(true); return; }
+    try { rdyOff(r); rdyOff(W.aoi); } catch (e) {}
+    var spots = [[r.x - 64, r.y + 6], [r.x + 64, r.y + 6]], n = 0, need = 0, fin = function () { if (++n >= need) xcLater(250, function () { postDone(false); }); };
+    (CL.pk || []).forEach(function (p, i) { if (!live(p)) return; need++; calm(p); move(p, [spots[i]], 150, function () { face(p, r.x, r.y); fin(); }); });
+    if (live(CL.flip)) { need++; calm(CL.flip); move(CL.flip, [[r.x - 20, r.y - 52]], 130, function () { face(CL.flip, r.x, r.y); fin(); }); }
+    if (!need) postDone(false);
   }
-  if (!hookAllyMatch()) later(0, hookAllyMatch);
+  function postDone(snap) {
+    if (XC.st !== 'post') return; var r = W.ryo;
+    XC.tok++; XC.to.forEach(clearTimeout); XC.to = [];
+    if (snap) { NPC.clash.forEach(down); NPC.clash = [];
+      if (r) { (CL.pk || []).forEach(function (p, i) { if (!live(p)) return; p.nqtok = (p.nqtok | 0) + 1; calm(p); p.x = r.x + (i ? 64 : -64); p.y = r.y + 6; place(p, 0); face(p, r.x, r.y); });
+        if (live(CL.flip)) { CL.flip.nqtok = (CL.flip.nqtok | 0) + 1; calm(CL.flip); CL.flip.x = r.x - 20; CL.flip.y = r.y - 52; place(CL.flip, 0); face(CL.flip, r.x, r.y); } } }
+    NPC.clash.forEach(down); NPC.clash = [];
+    panEnd();
+    try { rdyOff(W.ryo); rdyOff(W.aoi); } catch (e1) {}
+    XC.st = ''; skipBtn(0); lockIn(false); ev('world:nq:xc:post:end:' + (snap ? 'skip' : 'done'));
+    wonTalk();
+  }
+  function xDown() { var f = S().f; return !!(f.nq_x_0 && f.nq_x_1 && f.nq_x_2); }
 
   /* the clash at the south end of the west side street: Flip brings two */
   var CL = null;
@@ -41005,18 +40991,29 @@ function camPan(to, o, done) {
     var fx = r.x, fy = r.y - 240; CL.flip = npc('n13flip', fx, fy, Math.PI / 2); CL.pk = [npc(P, fx - 50, fy - 20, Math.PI / 2), npc(P, fx + 50, fy - 26, Math.PI / 2)];
     NPC.clash.forEach(function (h) { face(h, r.x, r.y); });
     var n = 0, fin = function () { if (++n < 3) return; [CL.flip].concat(CL.pk).forEach(function (q) { face(q, 1790, 2550); }); lockIn(false);
-      talk(VO.clash, function () {
-        var hs = NPC.clash; CL.f = 1; var one = hs[1] || hs[0]; fight([H], false, { dg: 'c2', dgk: 'nq_x_0', dgks: ['nq_x_0', 'nq_x_1', 'nq_x_2'], nqk: 'nq_x', nqAlly: 1, c2pos: one ? [[H, one.x, one.y]] : undefined }); }); };
+      talk(VO.clash, function () { if (CL) preCine(); }); };
     move(CL.flip, [[r.x - 70, r.y + 10]], 210, fin); move(CL.pk[0], [[r.x - 120, r.y - 4]], 210, fin); move(CL.pk[1], [[r.x + 100, r.y + 4]], 210, fin);
   }
   function clashWon() {
-    NPC.clash.forEach(function (h) { try { var le = lieEl(H, h.x, h.y, C2K[H]); if (le) { layer.appendChild(le); W.ints.push({ el: le }); setTimeout(function () { le.classList.add('fade'); }, 4000); setTimeout(function () { le.remove(); }, 5000); } } catch (e) {} kill(h); }); NPC.clash = [];
-    var fl = CL && CL.flip;
+    if (XC.won || stg('west') !== 'clash') return; XC.won = 1; ev('world:nq:xc:won:' + (CL ? 'live' : 'resume'));
+    var r = W.ryo;
+    if (!CL || !live(CL.flip)) { /* a reload after the win: no fight left to show, the crew is back with Ryo */
+      if (CL) { kill(CL.flip); (CL.pk || []).forEach(kill); }
+      NPC.clash.forEach(kill); NPC.clash = [];
+      CL = { f: 1, flip: npc('n13flip', r.x - 20, r.y - 52, Math.PI / 2), pk: [npc(P, r.x - 64, r.y + 6, Math.PI / 2), npc(P, r.x + 64, r.y + 6, Math.PI / 2)] };
+      [CL.flip].concat(CL.pk).forEach(function (q) { face(q, r.x, r.y); }); wonTalk(); return; }
+    /* the stock post-fight quip (Aoi) opens a beat after the board closes: let it play first, then the street */
+    later(350, function () { whenFree(function () {
+      if (!XC.won || XC.st) return; if (!CL || !live(CL.flip)) { XC.won = 0; clashWon(); return; }
+      (CL.pk || []).forEach(function (p, i) { if (!live(p)) { var h = NPC.clash[i ? 2 : 0]; CL.pk[i] = npc(P, h ? h.x : r.x + (i ? 64 : -64), h ? h.y - 42 : r.y + 6, Math.PI / 2); } });
+      postCine(); }); });
+  }
+  function wonTalk() {
     talk(VO.clashWon, function () {
       setStg('west', 'done'); E().vend_x2st = 1; qClose('west'); sting('west', function () { ginko('Q2', 'dagashi'); later(1400, function () { toast('Lantern Alley: the West Street stall is open.'); });
         talk(VO.cold, function () {
           setStg('cold', 0); qOpen('cold'); crewSync(); try { qBanner('NEW JOB', Q.cold.n, Q.cold.giver); } catch (e) {}
-          if (CL) [CL.flip].concat(CL.pk).forEach(function (q, i) { move(q, [[1790 + i * 30, 2700]], 120, function () { kill(q); }); }); CL = null; }); }); });
+          if (CL) [CL.flip].concat(CL.pk).forEach(function (q, i) { move(q, [[1790 + i * 30, 2700]], 120, function () { kill(q); }); }); CL = null; XC.won = 0; }); }); });
   }
   /* the door man: Kaneda and two guards in front of Kitsune-no-Yu */
   var DM = null;
@@ -41036,11 +41033,14 @@ function camPan(to, o, done) {
     talk(VO.doorWon, function () {
       move(DM.k, [[150, 930]], 100, function () { kill(DM.k); DM = null; }); qClose('door'); setStg('seal', 'open'); qOpen('seal'); try { qBanner('KITSUNE-NO-YU', 'The door is open.', Q.seal.n); } catch (e2) {} });
   }
-  NQ.clashBeat = clashBeat; NQ.doorBeat = doorBeat; NQ.brawlOn = brawlOn; NQ.brawlOff = brawlOff;
+  NQ.clashBeat = clashBeat; NQ.doorBeat = doorBeat; NQ.xc = { st: function () { return XC.st; }, skip: xcSkip, abort: xcAbort };
   /* a beat cut short (a lost fight, a wake-up at the clinic, a reload mid-scene) never leaves the street stuck: the scene NPCs go and the beat can fire again */
   function beatReset(force) {
     if (DM && (force || !DM.f)) { kill(DM.k); (DM.g || []).forEach(kill); DM = null; try { var bg = window.c2DoorGuard && window.c2DoorGuard('sento'); if (bg && bg.el) bg.el.style.visibility = ''; } catch (e) {} }
-    if (CL && (force || !CL.f)) { kill(CL.flip); (CL.pk || []).forEach(kill); CL = null; brawlOff(); }
+    if (XC.st) { var wasPost = XC.st === 'post'; xcAbort(force ? 'reset' : 'pop'); if (wasPost && CL) { kill(CL.flip); (CL.pk || []).forEach(kill); CL = null; } }
+    if (CL && (force || !CL.f)) { var r0 = CL.r0; kill(CL.flip); (CL.pk || []).forEach(kill); CL = null;
+      if (force && r0 && W.ryo && inTown()) { W.ryo.x = r0[0]; W.ryo.y = Math.min(r0[1], 2550 - 215); /* just outside the 190px trigger, so a retreat does not loop straight back into the walk-in */ W.ryo.v = 0; W.path = []; try { place(W.ryo, 0); camera(true); } catch (eR) {} } /* retreat: back up the street, off the trigger */
+      (NPC.clash || []).forEach(calm); }
     try { lockIn(false); } catch (e2) {} }
   /* and the chain itself is re-derived on each town visit, so an interrupted hand-off (quest closed, next one not yet opened) heals */
   function chainRepair() { var n = NS(), w = won(), ch = 0;
