@@ -1893,14 +1893,12 @@ span.ashine::before{display:none}
 #qmap.out{opacity:0;transition:opacity .3s}
 #qmap .qmin{position:relative;width:min(88vw,520px);border:6px solid #6b4a2a;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.6),inset 0 0 0 2px #a07a4a;background:#e9dcc0;transform:rotate(-1.5deg);overflow:visible}
 #qmap img{display:block;width:100%;filter:sepia(.35) saturate(.85)}
-/* v4.51 t1077u: red X / Gouki pin / SE circle — absolute % of .qmin (rotates with map); above img */
+/* v4.51 t1077u: red X / SE circle (v6566: Gouki pin removed) — absolute % of .qmin (rotates with map); above img */
 #qmap .qmk{position:absolute;z-index:2;pointer-events:none;animation:qdrop .35s cubic-bezier(.3,1.6,.6,1) both}
 #qmap .qmk.qx{width:30px;height:30px;margin:-15px 0 0 -15px}
 #qmap .qmk.qx::before,#qmap .qmk.qx::after{content:'';position:absolute;left:50%;top:50%;width:26px;height:5px;margin:-2.5px 0 0 -13px;background:#c4161c;border-radius:2px;box-shadow:0 0 0 1px rgba(80,0,0,.35),0 2px 4px rgba(0,0,0,.45)}
 #qmap .qmk.qx::before{transform:rotate(45deg)}
 #qmap .qmk.qx::after{transform:rotate(-45deg)}
-#qmap .qmk.qg{width:22px;height:22px;margin:-30px 0 0 -11px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:radial-gradient(circle at 40% 40%,#ffd28a,#c45a10 62%);box-shadow:0 2px 5px rgba(0,0,0,.55),0 0 0 2px #fff3}
-#qmap .qmk.qg::after{content:'';position:absolute;left:6px;top:6px;width:10px;height:10px;border-radius:50%;background:#5a2208;transform:none}
 #qmap .qmk.qc{width:46px;height:46px;margin:-23px 0 0 -23px;border:3px solid #e8b000;border-radius:50%;background:rgba(255,220,80,.18);box-shadow:0 0 0 2px rgba(90,50,0,.35),0 2px 6px rgba(0,0,0,.4);animation:qdrop .35s cubic-bezier(.3,1.6,.6,1) both,qpul 1s .4s ease-in-out infinite}
 /* legacy .qpin kept empty-safe for mid-flight old DOM */
 #qmap .qpin{position:absolute;width:18px;height:18px;margin:-26px 0 0 -9px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:radial-gradient(circle at 40% 40%,#ff8a8a,#c4161c 60%);box-shadow:0 2px 4px rgba(0,0,0,.5)}
@@ -12948,7 +12946,6 @@ var QTALK = {
     ['aoi', 'Cafeteria.', { mood: 'neutral' }],
     ['@map', 'x:mb_cafe'],
     ['ryo', 'Three corners.{p} Gouki’s gym sits dead center.', { mood: 'neutral' }],
-    ['@map', 'gouki'],
     ['aoi', 'That energy at the gym keeps pulling inward.', { mood: 'neutral' }],
     ['ryo', 'From the outer buildings?', { mood: 'neutral' }],
     ['aoi', '{slow}Maybe those three were feeding students into the middle.{/slow}', { mood: 'neutral' }],
@@ -12987,7 +12984,7 @@ function qMap(st, cb) { var o = document.getElementById('qmap'); ev('world:qmap:
   var wait = function (ms) { setTimeout(function () { if (cb) cb(); }, Math.round(ms * k)); };
   if (st === 'on' || st === 'show') { wait(380); return; }
   if (st.indexOf('x:') === 0) { mark(st.slice(2), 'qx'); wait(520); return; }
-  if (st === 'gouki') { mark('gouki', 'qg'); wait(600); return; }
+  if (st === 'gouki') { if (cb) cb(); return; } /* v6566 (Erik t535u): no orange Gouki pin on the desk map — only the red Xs and the SE circle; old 'gouki' steps are a no-op */
   if (st === 'se') { mark('mb_field', 'qc'); wait(700); return; }
   /* legacy 'pins' (prior mid-cinematic / old tests): three red Xs in order, then continue */
   if (st === 'pins') { ['mb_lib', 'mb_art', 'mb_cafe'].forEach(function (id, i) { setTimeout(function () { mark(id, 'qx'); }, Math.round((450 + i * 550) * k)); }); setTimeout(function () { if (cb) cb(); }, Math.round((450 + 3 * 550 + 250) * k)); return; }
