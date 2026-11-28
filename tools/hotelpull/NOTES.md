@@ -34,3 +34,11 @@ c2v2Go, c2v2Men, c2v2Mark, c2v2Sweep, dlgGuard, useDoor.
 ## Tests
 `/workspace/pwenv/bin/python3 tools/hotelpull/test_hotelpull.py [hotel alley ko groups turn guard door stick repair]`
 (FFD_INDEX=<other>/index.html runs against live). The fixture fixtures/erik_hotel_respawned.json is Erik's state: c1/c2 beaten, flags swept, men back, cold=2, Ryo at the door.
+
+## Final results (branch vs live e4139c5)
+- tools/hotelpull/test_hotelpull.py: all sections pass (133 checks). s2 167/167, ngp 104/104 (ngp_test hard-codes port 8977; run via a copy with another port), verify_wired ok, plus amb_check 95, ground 172, gangcam 40, escint 20, ch2ov 26, ch_smoke.
+- Perf, 4x CPU throttle, dpr 3, 2 interleaved pairs, medians live / branch (fps; main-thread busy %; heap MB):
+  hotel street 59.9 / 59.6; 71.6 / 67.0; 61.7 / 65.0.
+  hotel door lip 57.7 / 54.6; 78.4 / 76.7; 58.7 / 59.8.
+  2-enemy hotel battle 43.6 / 40.3; 80.2 / 71.9; 57.5 / 57.7.
+  The battle is below 55 on both builds under swiftshader at 4x; the branch adds no CPU.
