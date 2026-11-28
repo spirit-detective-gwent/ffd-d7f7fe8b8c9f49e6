@@ -34851,9 +34851,8 @@ IMG.aoi_lie = 'data:image/webp;base64,UklGRlpdAABXRUJQVlA4TE5dAAAvn8IfEHUGJEly40
   }
   function knownBorders() {
     if (!E().fc51Hear) return [];
-    var e = E(), seen = e.fc51Seen || {}, both = !!(seen.X1 && seen.X3);
-    if (both || sided()) return ['X1', 'X2', 'X3', 'X4'].filter(borderLive);
-    return heardBrawls().filter(borderLive);
+    /* v6.5.66 (t610u): every live border is in play from gym exit, not only X1/X3. */
+    return ['X1', 'X2', 'X3', 'X4'].filter(borderLive);
   }
 
   /* ---------- 3) quests ---------- */
@@ -36281,6 +36280,11 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
       if (s.gone || !s.el.parentNode || s.n13tok !== tok) return;
       var now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
       var p = pts[i]; if (!p) { if (s.walker) { s.actMove = 0; s.run = false; animWalk(s, 0); } else waddle(s, 0, s.fa); if (done) done(); return; }
+      if (W.nalleySkipFlip && (s.n13id === 'n13flip' || s === T.flip)) {
+        var lastp = pts[pts.length - 1] || p; s.x = lastp[0]; s.y = lastp[1];
+        try { if (typeof place === 'function') place(s, 0); } catch (ePl) {}
+        i = pts.length; W.nalleySkipFlip = 0; ev('world:nalley:flip:skipped'); requestAnimationFrame(step); return;
+      }
       if (s.n13hold && s.n13hold()) { if (s.walker) animWalk(s, 0); else waddle(s, 0, s.fa); requestAnimationFrame(step); return; }
       var dx = p[0] - s.x, dy = p[1] - s.y, d = Math.hypot(dx, dy), mv = Math.min(d, sp * dt);
       if (d < 1.5) { i++; requestAnimationFrame(step); return; }
@@ -36345,15 +36349,28 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
     if (!on() || !inTown()) return;
     signOn();
     var s = st();
-    if (s === 'cut' || s === 'meet') { var at = W.n13flipAt || flipStartAt(); T.flip = flipNpc(at[0], at[1]); if (s === 'meet') escortStart('meet'); }
+    if (s === 'cut' || s === 'meet') { var at = W.n13flipAt || flipStartAt(); T.flip = flipNpc(at[0], at[1]); if (s === 'meet') escortStart('meet'); if (s === 'cut' && !W.n13cutGo) later(200, cutStart); }
     if (s === 'meet') guardsOn();
     if (s === 'tin') { T.flip = flipNpc(W.n13tinEsc ? ARC_AT[0] + 40 : GK_CURB[0], W.n13tinEsc ? ARC_AT[1] + 40 : GK_CURB[1]); if (W.n13tinEsc) escortStart('tin'); else flipLean(); }
     if (s === 'paid') { T.flip = flipNpc(GK_CURB[0], GK_CURB[1]); flipLean(); }
     if (s === 'look' || s === 'done') lookCrew();
     if (s === 'done') cornerOn();
   }
-  function flipStartAt() { var r = W.ryo, B = G38T.BORDER[E().n13b || 'X2']; var b = B ? B.at : [r.x, r.y];
-    var cand = [[r.x + 150, r.y + 40], [r.x - 150, r.y + 40], [r.x, r.y + 160], [r.x + 120, r.y - 120]]; for (var i = 0; i < cand.length; i++) if (okAt(cand[i][0], cand[i][1])) return cand[i]; return [r.x + 60, r.y + 60]; }
+  function flipStartAt() {
+    var r = W.ryo || { x: 1790, y: 2165 };
+    var cam = W.cam || { x: r.x - 195, y: r.y - 422 };
+    var Scl = 1; try { Scl = (typeof WORLD_API !== 'undefined' && WORLD_API.W && WORLD_API.W.S) || W.S || 1; } catch (eS) {}
+    var vw = 390 / Scl, vh = 844 / Scl, pad = 90;
+    var cand = [
+      [cam.x - pad, r.y], [cam.x + vw + pad, r.y],
+      [r.x, cam.y - pad], [r.x, cam.y + vh + pad],
+      [cam.x - pad, cam.y + vh + pad], [cam.x + vw + pad, cam.y + vh + pad],
+      [r.x, r.y + 280], [r.x, r.y - 280]
+    ];
+    var i, p;
+    for (i = 0; i < cand.length; i++) { p = cand[i]; if (okAt(p[0], p[1])) { ev('world:nalley:flip:off:' + Math.round(p[0]) + ',' + Math.round(p[1])); return p; } }
+    return [r.x + 60, r.y + 220];
+  }
   function flipLean() { var f = T.flip; if (!f) return; f.lean = -7; f.n13leaning = 1; waddle(f, 0, Math.PI); place(f, 0); } /* ch2-fixes GGD-26 (r2): the SAME lean he uses against the coat rack inside the cafe (lean -7, side-on facing left), here with his back (his right side) against the trunk; curb [2226, 2712] = right against the trunk base, clear of the canopy and the crates */
   /* t3118u: after a Kissa Gekko loss, Flip (at the curb by the tree) says one
    * trash-talk line when you walk up. Once per return, no repeat spam. */
@@ -36373,10 +36390,13 @@ root.N13U_ART = {"bt_gekko":"data:image/webp;base64,UklGRlpsAABXRUJQVlA4IE5sAACw
   };
   function cutStart() {
     if (st() !== 'cut' || !inTown()) return;
+    if (W.n13cutGo) return;
     if (busy() && !W.cut) { later(500, cutStart); return; }
+    W.n13cutGo = 1; W.nalleySkipFlip = 0;
+    try { var sb = document.getElementById('nalleyskip'); if (!sb) { sb = document.createElement('button'); sb.id = 'nalleyskip'; sb.type = 'button'; sb.textContent = 'Skip'; sb.style.cssText = 'position:fixed;right:10px;top:44px;z-index:90;padding:6px 12px;border:2px solid #f6f1e4;background:#1a2740;color:#f6f1e4;font:700 13px/1 system-ui,sans-serif;border-radius:10px;'; sb.onclick = function (e) { e.preventDefault(); W.nalleySkipFlip = 1; ev('world:nalley:skip:flip'); if (sb.parentNode) sb.parentNode.removeChild(sb); }; (document.body || document.documentElement).appendChild(sb); } } catch (eSk) {}
     var at = flipStartAt(); W.n13flipAt = at;
     if (!T.flip || !T.flip.el || !T.flip.el.parentNode) T.flip = flipNpc(at[0], at[1]);
-    var f = T.flip, r = W.ryo; lockIn(1); ev('world:13u:cut');
+    var f = T.flip, r = W.ryo; lockIn(1); ev('world:13u:cut'); ev('world:nalley:flip:walk');
     var to = [r.x + (f.x > r.x ? 70 : -70), r.y + 10]; if (!okAt(to[0], to[1])) to = [r.x, r.y + 70];
     cam([r, W.aoi, f], function () {
       move(f, route([f.x, f.y], to), SP, function () {
@@ -38764,13 +38784,9 @@ var GINKO = (function () {
       try {
         if (typeof chN === 'function' && chN() === 2 && typeof c2S === 'function') {
           var e = c2S().e || {};
-          if (e.fc51Hear && !e.run_fac && !e.solo) {
-            var seen = e.fc51Seen || {};
-            if (!(seen.X1 && seen.X3) && b && b !== 'X1' && b !== 'X3') {
-              ev('world:v6551:brawl:hold:' + b);
-              return false;
-            }
-          }
+          /* v6.5.66 (t610u): all four borders may start once Four Corners is given.
+             The t3047u hold kept X2/X4 empty until X1 and X3 were seen, so the Nails
+             alley (X2, closest to the gym) was vacant on exit while Chuo-dori fought. */
         }
       } catch (eG) {}
       return gStart0.apply(this, arguments);
@@ -39337,9 +39353,8 @@ var GINKO = (function () {
     try {
       if (typeof chN === 'function' && chN() !== 2) return false;
       var e = (typeof c2S === 'function' && c2S() && c2S().e) || {};
-      if (!e.fc51Hear || e.run_fac || e.solo) return false;
-      var seen = e.fc51Seen || {};
-      return !(seen.X1 && seen.X3);
+      /* v6.5.66 (t610u): do not hide X2/X4 posts during the hear phase. */
+      return false;
     } catch (eH) { return false; }
   }
   function heldCrewKeys() {
@@ -39394,6 +39409,7 @@ var GINKO = (function () {
     (W.dgF || []).slice().forEach(function (f) {
       if (!f || ks.indexOf(f.crew) < 0) return;
       if (W.dgFight === f) return;
+      if (f.nalleyKeep) return; /* v6.5.66: handshake spokesman */
       try {
         if (typeof g38tDrop === 'function') g38tDrop(f);
         else if (f.s && f.s.el) { try { f.s.el.remove(); } catch (eR) {} }
@@ -39418,11 +39434,25 @@ var GINKO = (function () {
     try { if (typeof save === 'function') save(); } catch (eS) {}
     try { if (W.g38c && W.g38c.b === cl.b && typeof g38tEnd === 'function') g38tEnd(W.g38c, 'v6552win'); } catch (eE) {}
     var prefix = 'p_g38x_' + cl.b;
+    var keepCrew = null;
+    try {
+      var faA = (typeof G38T !== 'undefined' && G38T.FAC) ? G38T.FAC : {};
+      function facOfCrew(k) {
+        var c = (typeof c2Crew === 'function' && c2Crew(k)) || null, id = c && c.ids && c.ids[0];
+        if (!id && typeof C2CREW !== 'undefined') {
+          for (var ci = 0; ci < C2CREW.length; ci++) if (C2CREW[ci].k === k && C2CREW[ci].ids) { id = C2CREW[ci].ids[0]; break; }
+        }
+        return id ? faA[id] : null;
+      }
+      if (cl.backed) keepCrew = facOfCrew(B.a) === cl.backed ? B.a : (facOfCrew(B.b) === cl.backed ? B.b : null);
+    } catch (eK) {}
     (W.dgF || []).slice().forEach(function (foe) {
       if (!foe || W.dgFight === foe) return;
       var k = String(foe.key || ''), crew = foe.crew || '';
       var hit = crew === B.a || crew === B.b || foe.g38x || k.indexOf(prefix) === 0;
       if (!hit) return;
+      /* v6.5.66 (t611u): keep one backed post man for the handshake; extras and the fought side still go. */
+      if (keepCrew && crew === keepCrew && !foe.g38x && k.indexOf(prefix) !== 0) { foe.nalleyKeep = 1; ev('world:nalley:keep:' + crew); return; }
       try {
         if (typeof g38tDrop === 'function') g38tDrop(foe);
         else if (foe.s && foe.s.el) { try { foe.s.el.remove(); } catch (eR) {} }
@@ -39593,9 +39623,8 @@ var GINKO = (function () {
     }
     function heardList(e) {
       var out = [], seen = (e && e.fc51Seen) || {};
-      if (e && e.fc51Hear && !e.run_fac && !e.solo && !(seen.X1 && seen.X3)) {
-        out = ['X1', 'X3'];
-        ['X2', 'X4'].forEach(function (b) { if (seen[b] && out.indexOf(b) < 0) out.push(b); });
+      if (e && e.fc51Hear && !e.run_fac && !e.solo) {
+        out = ['X1', 'X2', 'X3', 'X4'];
         return out;
       }
       /* v6.5.60: nothing outside that window. Before Ryo steps out of the gym with the Four Corners job, after a
@@ -54739,6 +54768,371 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
   ev('world:qs:ready');
   } catch (eQ) { try { ev('world:qs:err:init:' + (eQ && eQ.message)); } catch (e2) {} }
 })(window);
+/* v6.5.66 FFF_NALLEY: Nails alley gym-exit spawn + handshake cine (Erik t610u / t611u).
+ * After Four Corners, every border (including X2, the west-side Nails alley) can start as soon
+ * as you walk up. After a won clash the backed spokesman stays, walks to Ryo, offers a hand,
+ * and they shake; Flip then walks in from off-screen. Wraps only. No new rAF / interval:
+ * walks use the existing 13u stepper; resume rides c2Pop / c2Frame. */
+(function (root) {
+  try {
+  if (typeof c2S !== 'function' || typeof ev !== 'function') { try { ev('world:nalley:skip'); } catch (e0) {} return; }
+  var MAN = { arc: 'c2_punk', neo: 'c2_suit', bat: 'c2_hustler', dep: 'c2_boso' };
+  var HI = {
+    arc: 'You hit like a Punk. Nails likes people who pay back.',
+    neo: 'Clean work. Jin keeps a seat for people who earn.',
+    bat: 'Ha! G\u014dda would feed you for that.',
+    dep: 'You showed up on time. Masa notices that.'
+  };
+  function on() { return (typeof c2On !== 'function' || c2On()) && (typeof chN !== 'function' || chN() === 2); }
+  function S() { try { return c2S(); } catch (e) { return null; } }
+  function E() { var s = S(); return (s && s.e) || {}; }
+  function inTown() { try { return c2Room() === 'town'; } catch (e) { return false; } }
+  function busyHard() { return !!(W.dgFight || W.fading || W.paused || W.ambOn); }
+  function sv() { try { if (typeof save === 'function') save(); } catch (e) {} }
+
+  /* ---- 1) start a waiting border if the approach edge was eaten while another clash ran ---- */
+  function retrigger() {
+    if (!on() || !inTown() || W.g38c || busyHard() || W.dlg || W.cut || W.busy) return;
+    if (typeof g38tRoam === 'function' && !g38tRoam()) return;
+    if (typeof tagsLive === 'function' && !tagsLive()) return;
+    var r = W.ryo; if (!r || typeof G38T === 'undefined' || !G38T.BORDER) return;
+    var R = (G38T.CLASH && G38T.CLASH.r) || 600, best = null, bd = R + 1;
+    Object.keys(G38T.BORDER).forEach(function (b) {
+      var B = G38T.BORDER[b], d = Math.hypot(r.x - B.at[0], r.y - B.at[1]);
+      if (d >= R || d >= bd) return;
+      if (E()['g38win_' + b]) return;
+      var A = typeof g38tFoe === 'function' ? g38tFoe(B.a) : null;
+      var Z = typeof g38tFoe === 'function' ? g38tFoe(B.b) : null;
+      if (typeof g38tCalm === 'function' ? !(g38tCalm(A) && g38tCalm(Z)) : !(A && Z)) return;
+      best = b; bd = d;
+    });
+    if (!best) return;
+    W.g38in = W.g38in || {}; W.g38in[best] = 1;
+    ev('world:nalley:retrigger:' + best);
+    try { g38tStart(best, 'nalley'); } catch (eS) { ev('world:nalley:err:start:' + (eS && eS.message)); }
+  }
+  if (typeof g38tClashCheck === 'function') {
+    var ck0 = g38tClashCheck;
+    g38tClashCheck = function () {
+      var r = ck0.apply(this, arguments);
+      try { retrigger(); } catch (eR) {}
+      return r;
+    };
+  }
+
+  /* ---- 2) handshake cine ---- */
+  function camScale() {
+    try { return (root.WORLD_API && WORLD_API.W && WORLD_API.W.S) || W.S || 1; } catch (e) { return 1; }
+  }
+  function lockIn(on1) {
+    if (on1) { W.cut = true; W.path = []; if (W.ryo) W.ryo.v = 0; try { if (typeof stickEnd === 'function') stickEnd(); } catch (e) {} }
+    else W.cut = false;
+  }
+  function crewFac(k) {
+    var id = null;
+    try {
+      var c = (typeof c2Crew === 'function' && c2Crew(k)) || null;
+      if (c && c.ids && c.ids[0]) id = c.ids[0];
+    } catch (e) {}
+    if (!id && typeof C2CREW !== 'undefined') {
+      for (var i = 0; i < C2CREW.length; i++) if (C2CREW[i].k === k && C2CREW[i].ids) { id = C2CREW[i].ids[0]; break; }
+    }
+    return (typeof G38T !== 'undefined' && G38T.FAC && id) ? G38T.FAC[id] : null;
+  }
+  function keptMan() {
+    var L = W.dgF || [], i, f;
+    for (i = 0; i < L.length; i++) { f = L[i]; if (f && f.nalleyKeep && f.s && f.s.el && f.s.el.parentNode) return f; }
+    return null;
+  }
+  function sprOf(f) { return f && (f.s || f); }
+  function spawnMan(id, x, y) {
+    var s = null;
+    try { s = c2Npc(id, x, y, 0); } catch (e) { ev('world:nalley:err:npc:' + (e && e.message)); return null; }
+    if (!s) return null;
+    s.nalleyKeep = 1; s.n13id = id; s.id = id;
+    if (s.el) s.el.classList.add('nalley');
+    W.nalleyMan = s;
+    ev('world:nalley:spawn:' + id);
+    return s;
+  }
+  function dropMan(s) {
+    if (!s) return;
+    s.nalleyKeep = 0;
+    try {
+      if (s.s && typeof g38tDrop === 'function') g38tDrop(s);
+      else if (s.el && s.el.parentNode) s.el.remove();
+    } catch (e) {}
+    if (W.nalleyMan === s) W.nalleyMan = null;
+  }
+  function face(s, x, y) {
+    if (!s) return;
+    try { if (s.walker && typeof c2Face === 'function') c2Face(s, x, y); else if (typeof waddle === 'function') waddle(s, 0, Math.atan2(y - (s.y || 0), x - (s.x || 0))); } catch (e) {}
+  }
+  function pos(s) { s = sprOf(s) || s; return s ? [s.x, s.y] : [0, 0]; }
+  function walkTo(s, dest, done) {
+    s = sprOf(s) || s;
+    if (!s || !dest) { if (done) done(); return; }
+    var pts = null;
+    try { if (typeof findPath === 'function') pts = findPath(s.x, s.y, dest[0], dest[1]); } catch (e) {}
+    if (!pts || !pts.length) pts = [dest];
+    var i = 0, last = performance.now(), tok = s.nalleyTok = (s.nalleyTok | 0) + 1;
+    var sp = (typeof FAST_WALK === 'number' ? FAST_WALK : 178);
+    (function step() {
+      if (s.gone || (s.el && !s.el.parentNode) || s.nalleyTok !== tok) return;
+      if (W.nalleySkipWalk) { s.x = dest[0]; s.y = dest[1]; try { if (typeof place === 'function') place(s, 0); } catch (eP) {} if (done) done(); return; }
+      var now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
+      var p = pts[i];
+      if (!p) { try { if (typeof waddle === 'function') waddle(s, 0, s.fa || 0); } catch (eW) {} if (done) done(); return; }
+      var dx = p[0] - s.x, dy = p[1] - s.y, d = Math.hypot(dx, dy), mv = Math.min(d, sp * dt);
+      if (d < 1.5) { i++; requestAnimationFrame(step); return; }
+      s.x += dx / d * mv; s.y += dy / d * mv;
+      try {
+        if (s.walker) { s.actMove = 1; s.run = false; if (typeof faceDir === 'function') s.dir = faceDir(s.dir, dx, dy); if (typeof animWalk === 'function') animWalk(s, mv); }
+        else if (typeof waddle === 'function') { s.fa = Math.atan2(dy, dx); waddle(s, mv, s.fa); }
+        if (typeof place === 'function') place(s, 0);
+      } catch (eS) {}
+      requestAnimationFrame(step);
+    })();
+  }
+  function hsClear() {
+    var el = document.getElementById('nalleyhs');
+    if (el && el.parentNode) el.parentNode.removeChild(el);
+  }
+  function hsDraw(rx, ry, px, py) {
+    var el = document.getElementById('nalleyhs');
+    if (!el) {
+      el = document.createElement('canvas');
+      el.id = 'nalleyhs';
+      el.width = 200; el.height = 140;
+      el.style.cssText = 'position:absolute;pointer-events:none;z-index:8;width:100px;height:70px;margin-left:-50px;margin-top:-86px;';
+      var host = (typeof layer !== 'undefined' && layer) || document.getElementById('wsp');
+      if (host) host.appendChild(el);
+    }
+    el.style.left = Math.round((rx + px) / 2) + 'px';
+    el.style.top = Math.round((ry + py) / 2) + 'px';
+    var g = el.getContext('2d'), w = el.width, h = el.height;
+    g.clearRect(0, 0, w, h);
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    /* Ryo's sleeve (left): school white + navy cuff, tan hand. Punk (right): sukajan purple + gold trim. */
+    function arm(x0, y0, x1, y1, sleeve, cuff, skin) {
+      g.strokeStyle = sleeve; g.lineWidth = 22;
+      g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+      g.strokeStyle = cuff; g.lineWidth = 24;
+      g.beginPath(); g.moveTo(x1 - (x1 - x0) * 0.12, y1 - (y1 - y0) * 0.12); g.lineTo(x1, y1); g.stroke();
+      g.fillStyle = skin;
+      g.beginPath(); g.arc(x1, y1, 13, 0, Math.PI * 2); g.fill();
+    }
+    var midX = w * 0.5, midY = h * 0.58;
+    var left = px < rx;
+    var ryoL = left ? false : true;
+    if (ryoL) {
+      arm(18, h - 8, midX - 6, midY, '#f3eee4', '#1a2740', '#e0b090');
+      arm(w - 18, h - 8, midX + 8, midY + 2, '#5c2a7a', '#d4a84b', '#e0b090');
+    } else {
+      arm(w - 18, h - 8, midX + 6, midY, '#f3eee4', '#1a2740', '#e0b090');
+      arm(18, h - 8, midX - 8, midY + 2, '#5c2a7a', '#d4a84b', '#e0b090');
+    }
+    /* clasp */
+    g.fillStyle = '#c9926e';
+    g.beginPath(); g.ellipse(midX, midY, 16, 12, 0.15, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = '#8a5a3a'; g.lineWidth = 2;
+    g.beginPath(); g.ellipse(midX, midY, 16, 12, 0.15, 0, Math.PI * 2); g.stroke();
+    ev('world:nalley:hs:draw');
+  }
+
+  function stopCine(why) {
+    W.nalleySkipWalk = 1;
+    hsClear();
+    skipBtn(0);
+    lockIn(0);
+    W.nalleyCine = null;
+    ev('world:nalley:cine:end:' + (why || 'done'));
+  }
+
+  function offerSpot(r, man) {
+    var mx = (sprOf(man) || man).x, my = (sprOf(man) || man).y;
+    var side = mx >= r.x ? 1 : -1;
+    var to = [r.x + side * 42, r.y + 6];
+    if (typeof okAt === 'function' && !okAt(to[0], to[1])) to = [r.x - side * 42, r.y + 6];
+    if (typeof okAt === 'function' && !okAt(to[0], to[1])) to = [r.x, r.y + 48];
+    return to;
+  }
+
+  function ensureMan(f) {
+    var m = keptMan() || W.nalleyMan;
+    if (m && (sprOf(m) || m).el && (sprOf(m) || m).el.parentNode) return sprOf(m) || m;
+    var r = W.ryo, id = MAN[f] || 'c2_punk';
+    var x = r.x + 90, y = r.y + 20;
+    if (typeof okAt === 'function' && !okAt(x, y)) { x = r.x - 90; y = r.y + 20; }
+    return spawnMan(id, x, y);
+  }
+
+  function askDialog(f) {
+    var s = S(); if (!s || s.e.run_fac) { stopCine('already'); return; }
+    var m = MAN[f], nm = (typeof c2sFacName === 'function' ? c2sFacName(f) : f);
+    ev('world:nalley:ask:' + f);
+    try {
+      dialog(
+        '<b>' + nm + '</b><p class="q">\u201cShake on it and you\u2019re ours. The other three crews will come for you.\u201d</p>',
+        [
+          ['Walk away', function () { walkOff(f); }, ''],
+          ['Shake on it', function () { doShake(f); }, 'hot']
+        ],
+        m + '_fig',
+        { versus: 1, name: nm }
+      );
+    } catch (eD) {
+      ev('world:nalley:err:dlg:' + (eD && eD.message));
+      try { if (typeof c2sLock === 'function') c2sLock(f); } catch (eL) {}
+      stopCine('dlgerr');
+    }
+  }
+
+  function walkOff(f) {
+    ev('world:c2:lock:no:' + f);
+    ev('world:nalley:walkoff:' + f);
+    var s = S(); if (s && s.e) { delete s.e.lockAsk; sv(); }
+    var man = keptMan() || W.nalleyMan, r = W.ryo;
+    hsClear();
+    lockIn(1);
+    if (man && r) {
+      var away = [((sprOf(man) || man).x - r.x > 0 ? 1 : -1) * 180 + r.x, r.y + 40];
+      W.nalleySkipWalk = 0;
+      walkTo(man, away, function () { dropMan(man); stopCine('no'); });
+      setTimeout(function () { if (W.nalleyCine) { dropMan(man); stopCine('no'); } }, 4000);
+    } else { dropMan(man); stopCine('no'); }
+  }
+
+  function doShake(f) {
+    var s = S(); if (!s || s.e.run_fac) { stopCine('already'); return; }
+    ev('world:nalley:shake:' + f);
+    var r = W.ryo, man = keptMan() || W.nalleyMan;
+    lockIn(1);
+    if (r && man) {
+      var mp = sprOf(man) || man;
+      face(r, mp.x, mp.y); face(mp, r.x, r.y);
+      try { if (typeof rdyOn === 'function') rdyOn(r, 2); } catch (eR) {}
+      hsDraw(r.x, r.y, mp.x, mp.y);
+    }
+    setTimeout(function () {
+      hsClear();
+      try { if (typeof rdyOff === 'function' && r) rdyOff(r); } catch (eO) {}
+      if (s.e) { delete s.e.lockAsk; sv(); }
+      try { c2sLock(f); } catch (eL) { ev('world:nalley:err:lock:' + (eL && eL.message)); }
+      var man2 = keptMan() || W.nalleyMan;
+      if (man2 && r) {
+        var side = ((sprOf(man2) || man2).x >= r.x ? 1 : -1);
+        walkTo(man2, [r.x + side * 90, r.y + 8], function () { /* stay out of Flip's path; drop once Flip is talking or after a beat */ });
+        setTimeout(function () { dropMan(man2); }, 4200);
+      }
+      stopCine('yes');
+    }, 900);
+  }
+
+  function startCine(f, from) {
+    var s = S(); if (!s || !on() || s.e.run_fac) return;
+    if (W.nalleyCine && W.nalleyCine.st && W.nalleyCine.st !== 'done') return;
+    if (busyHard()) { setTimeout(function () { startCine(f, from); }, 500); return; }
+    s.e.lockAsk = { fac: f, b: (s.e.lockAsk && s.e.lockAsk.b) || (W.n13clash && W.n13clash.b) || (W.g38c && W.g38c.b) || '' };
+    sv();
+    W.nalleyCine = { st: 'walk', fac: f, from: from || 'ask' };
+    W.nalleySkipWalk = 0;
+    skipBtn(1);
+    lockIn(1);
+    ev('world:nalley:cine:start:' + f + ':' + (from || 'ask'));
+    var r = W.ryo, man = ensureMan(f);
+    if (!r || !man) { askDialog(f); return; }
+    var to = offerSpot(r, man);
+    var focus = [r, W.aoi, man];
+    function afterWalk() {
+      if (!W.nalleyCine || W.nalleyCine.st !== 'walk') return;
+      W.nalleyCine.st = 'offer';
+      face(man, r.x, r.y); face(r, (sprOf(man) || man).x, (sprOf(man) || man).y);
+      if (W.aoi) face(W.aoi, (sprOf(man) || man).x, (sprOf(man) || man).y);
+      ev('world:nalley:offer:' + f);
+      var lines = [[MAN[f], HI[f] || HI.arc]];
+      try {
+        scene(null, lines, function () { askDialog(f); });
+      } catch (eS) { askDialog(f); }
+    }
+    try {
+      if (typeof camera === 'function') camera(true);
+    } catch (eC) {}
+    walkTo(man, to, afterWalk);
+  }
+
+  if (typeof c2sLockAsk === 'function') {
+    var ask0 = c2sLockAsk;
+    c2sLockAsk = function (f) {
+      var s = S(); if (!s || s.e.run_fac) return;
+      ev('world:c2:lock:ask:' + f);
+      startCine(f, 'ask');
+    };
+  }
+
+  /* skip a walk (punk or Flip) with the on-screen Skip control or a tap while W.cut and no dialog */
+  function skipBtn(on1) {
+    var el = document.getElementById('nalleyskip');
+    if (!on1) { if (el && el.parentNode) el.parentNode.removeChild(el); return; }
+    if (el) return;
+    el = document.createElement('button');
+    el.id = 'nalleyskip'; el.type = 'button'; el.textContent = 'Skip';
+    el.style.cssText = 'position:fixed;right:10px;top:44px;z-index:90;padding:6px 12px;border:2px solid #f6f1e4;background:#1a2740;color:#f6f1e4;font:700 13px/1 system-ui,sans-serif;border-radius:10px;';
+    el.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); skipWalk(); });
+    (document.body || document.documentElement).appendChild(el);
+  }
+  function skipWalk() {
+    if (!W.cut || W.dlg) return false;
+    if (W.nalleyCine && W.nalleyCine.st === 'walk') { W.nalleySkipWalk = 1; ev('world:nalley:skip:walk'); skipBtn(0); return true; }
+    if (W.n13cutGo && !W.dlg) {
+      ev('world:nalley:skip:flip');
+      W.nalleySkipFlip = 1;
+      skipBtn(0);
+      return true;
+    }
+    return false;
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target, lab = (t && (t.textContent || (t.getAttribute && t.getAttribute('aria-label')))) || '';
+    if (/^Skip/i.test(String(lab).trim()) || (t && t.classList && t.classList.contains('skip'))) skipWalk();
+  }, true);
+
+  function resume() {
+    if (!on() || !inTown()) return;
+    var s = S(); if (!s) return;
+    if (s.e.lockAsk && s.e.lockAsk.fac && !s.e.run_fac && !(W.nalleyCine && W.nalleyCine.st)) {
+      ev('world:nalley:resume:ask:' + s.e.lockAsk.fac);
+      setTimeout(function () { startCine(s.e.lockAsk.fac, 'resume'); }, 400);
+    }
+  }
+  if (typeof c2Pop === 'function') {
+    var pop0 = c2Pop;
+    c2Pop = function () {
+      var r = pop0.apply(this, arguments);
+      try { resume(); } catch (eP) { ev('world:nalley:err:pop:' + (eP && eP.message)); }
+      return r;
+    };
+  }
+  if (typeof c2Frame === 'function') {
+    var fr0 = c2Frame, acc = 0;
+    c2Frame = function (dt) {
+      var r = fr0.apply(this, arguments);
+      try {
+        acc += (dt || 0.016);
+        if (acc > 0.5) { acc = 0; if (!W.g38c) retrigger(); }
+        if (W.nalleySkipFlip) {
+          /* Flip's 13u move() is not skippable from here; cutStart will still finish. Flag is informational. */
+        }
+      } catch (eF) {}
+      return r;
+    };
+  }
+
+  root.FFF_NALLEY = { retrigger: retrigger, startCine: startCine, resume: resume, keep: keptMan };
+  ev('world:nalley:ready');
+  } catch (eAll) { try { ev('world:nalley:err:init:' + (eAll && eAll.message)); } catch (e2) {} }
+})(window);
+
 /* v6.5.61 FFF_C2AMB: luminescent Ch2 overworld (grade + bloom cached per room; motes / steam / rain / lantern / neon
  * ride the existing c2Frame loop). One overlay canvas. No new rAF. Reduced motion: still grade only. Roof is skipped. */
 (function (root) {
