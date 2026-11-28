@@ -39,6 +39,14 @@ if os.environ.get('SET') == '4':  # t583u: guard room while he patrols (you peek
       ('long_walk', "cafGo('line'); " + walk(980, 470, 160, 470), "cafGo('dock'); " + walk(980, 700, 160, 700)),
       ('fight5', "cafGo('kitchen'); setTimeout(function(){ " + F5 + " },300)", "cafGo('cooler'); setTimeout(function(){ " + F5 + " },300)"),
     ]
+if os.environ.get('SET') == '5':  # t583u follow-up 4x: cafeteria patrol + hurdle rooms with their roamers
+    GO = "setTimeout(function(){ W.ryo.x=%d; W.ryo.y=%d; place(W.ryo,0); },300)"
+    SCENES = [
+      ('guard_patrol', "cafGo('kitchen'); " + GO % (972, 450), "cafGo('cooler'); " + GO % (972, 450)),
+      ('hurdle_cage', "fldGo('bay'); " + GO % (600, 500), "fldGo('cage'); " + GO % (700, 700)),
+      ('hurdle_showers', "fldGo('lockers'); " + GO % (575, 500), "fldGo('showers'); " + GO % (300, 700)),
+      ('hurdle_trainer', "fldGo('coach'); " + GO % (400, 500), "fldGo('trainer'); " + GO % (400, 700)),
+    ]
 def fps(ft):
     ft = ft[2:]; return round(1000 * len(ft) / sum(ft), 1) if ft else 0
 def p5(ft):
@@ -70,7 +78,7 @@ async def one(p, tree, port, thr, tag):
 async def main():
     out = []
     async with async_playwright() as p:
-        for thr in (1, 4):
+        for thr in ([int(x) for x in os.environ['THR'].split(',')] if os.environ.get('THR') else (1, 4)):
             for rep in range(REPS):
                 for i, (tag, tree) in enumerate((('live', LIVE), ('branch', BR)) if rep % 2 == 0 else (('branch', BR), ('live', LIVE))):
                     while os.getloadavg()[0] > 6: time.sleep(15)
