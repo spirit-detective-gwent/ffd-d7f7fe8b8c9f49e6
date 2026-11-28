@@ -104,3 +104,12 @@ async def adv(self, n=40, stop=None):
         await self.pg.touchscreen.tap(*c); await self.wait(350)
     return n
 Game.adv = adv
+
+async def enter(self, k, x=None, y=None, face=0):
+    """natural room entry (c2Enter): one set of NPC sprites, same as play. Optionally then stand Ryo at x,y."""
+    await self.ev(f"c2Enter('{k}')"); await self.wait(1500); await self.hush()
+    if x is not None:
+        await self.ev(f"(function(){{ W.ryo.x={x}; W.ryo.y={y}; place(W.ryo,0); if (W.aoi) {{ W.aoi.x={x}-70; W.aoi.y={y}+30; place(W.aoi,0); }} camera(true); return 1 }})()")
+        await self.wait(400)
+    await self.hush(); return await self.ev("c2Room()")
+Game.enter = enter

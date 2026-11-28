@@ -14,7 +14,7 @@ PROBE = """(function(){ function r(e){ if(!e) return null; var b=e.getBoundingCl
 async def main():
     os.makedirs(OUT, exist_ok=True)
     async with h.Game(path='compassionate', out=OUT) as g:
-        await g.boot(); print('room', await g.go('clinic', 560, 640))
+        await g.boot(); print('room', await g.enter('clinic', 560, 640))
         await g.hush(); await g.ev(STATE); await g.ev("c2SumireD()"); await g.wait(900)
         await g.ev("(function(){var b=[...document.querySelectorAll('#wdlg button')].find(function(x){return /Teach me$/.test(x.textContent.trim())}); b.click(); return 1})()")
         log = []; i = 0

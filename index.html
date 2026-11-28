@@ -58297,7 +58297,7 @@ function hsStage(stage, ms) { return ['@fn', function (next) { hsCmpCard(stage);
  * Props are DOM in the sprite layer (world px, z = 100 + feet y), WAAPI / CSS animations of fixed length, finite c2Walk and camera moves.
  * A tap during a staged beat fast-forwards it; every timer / animation / walk checks HS.g, so a Reset / NG+ / slot load / room change
  * (scene generation) or the end of the scene drops the whole thing with nothing left behind. ---------- */
-var HSC = { K: [611, 421], SU: [678, 450], RYO: [598, 612], AOI: [532, 624], HAND: [642, 606], VIA: [668, 522], GRIP: [674, 399], BP: [21, 40], BC: [35, 42] };
+var HSC = { K: [611, 421], SU: [678, 450], RYO: [598, 612], AOI: [532, 624], HAND: [622, 606], VIA: [668, 522], GRIP: [676, 400], BP: [24, 38], BC: [35, 32], RH: [41, 49] };
 var HS = { g: 0, on: false, ph: false, skip: false, t0: 0, timers: [], anims: [], walk: null, home: null, bound: false, sg: 0 };
 function hsLayer() { return document.getElementById('wisp') || (typeof layer !== 'undefined' ? layer : null); }
 function hsProp(id, x, y, w, h, html, z) { var L = hsLayer(); if (!L) return null; var e = document.getElementById(id); if (!e) { e = document.createElement('i'); e.id = id; e.className = 'hsprop'; L.appendChild(e); }
@@ -58305,13 +58305,13 @@ function hsProp(id, x, y, w, h, html, z) { var L = hsLayer(); if (!L) return nul
 function hsPropsOff() { ['hssteam', 'hsstream', 'hsladle', 'hsbot', 'hsanchor'].forEach(function (id) { var e = document.getElementById(id); if (e) e.remove(); }); }
 function hsBottleSvg(fill) { return '<svg viewBox="0 0 40 40" width="100%" height="100%" aria-hidden="true"><defs><clipPath id="hsbcl"><path d="M16.8 10h6.4v4.6c4.6 1.9 7.6 5.6 7.6 10.4v6.8a3.4 3.4 0 0 1-3.4 3.4H12.6a3.4 3.4 0 0 1-3.4-3.4V25c0-4.8 3-8.5 7.6-10.4z"/></clipPath></defs><path d="M15 5h10v4h-10z" fill="#b98a52" stroke="#14110d" stroke-width="2"/><path d="M16 9h8v5c5 2 8 6 8 11v7a4 4 0 0 1-4 4H12a4 4 0 0 1-4-4v-7c0-5 3-9 8-11z" fill="rgba(210,230,240,.35)" stroke="#14110d" stroke-width="2" stroke-linejoin="round"/><g clip-path="url(#hsbcl)"><rect class="hslq" x="8" y="10" width="24" height="30" fill="#7a4520" style="transform:translateY(' + (30 * (1 - (fill || 0))).toFixed(1) + 'px)"/></g><rect x="12" y="21" width="16" height="10" rx="2" fill="#efe4c8" stroke="#14110d" stroke-width="1.4" opacity=".9"/><path d="M20 30c-3-2-5-4-5-6.5 2 .4 3.4-.6 3.6-2 1 .9 1.8.9 2.8 0 .2 1.4 1.6 2.4 3.6 2-.1 2.5-2 4.5-5 6.5z" fill="#5f9e4a" stroke="#14110d" stroke-width="1"/><path d="M11 15c-1.2 1.6-2 3.4-2.2 5.4" stroke="#fff" stroke-width="1.4" fill="none" opacity=".7" stroke-linecap="round"/></svg>'; }
 /* the brass dipper: handle to the right (grip at x=44), bowl at the left end. Hung from the brazier's corner it points straight down. */
-function hsDipperSvg() { return '<svg viewBox="0 0 52 24" width="100%" height="100%" aria-hidden="true"><path d="M15 10h31" stroke="#14110d" stroke-width="5" stroke-linecap="round"/><path d="M15 10h31" stroke="#b98a52" stroke-width="2.6" stroke-linecap="round"/><circle cx="48" cy="10" r="2.4" fill="none" stroke="#14110d" stroke-width="1.6"/><path d="M1.5 9h15a7.5 7.5 0 0 1-15 0z" fill="#d9b04a" stroke="#14110d" stroke-width="1.8" stroke-linejoin="round"/><ellipse class="hsdq" cx="9" cy="9.2" rx="6" ry="1.6" fill="#7a4520" opacity="0"/><path d="M4 12c1 2 3 3 5 3" stroke="#fff3c4" stroke-width="1" fill="none" opacity=".7" stroke-linecap="round"/></svg>'; }
+function hsDipperSvg() { return '<svg viewBox="0 0 44 24" width="100%" height="100%" aria-hidden="true"><path d="M14 10h26" stroke="#14110d" stroke-width="5" stroke-linecap="round"/><path d="M14 10h26" stroke="#b98a52" stroke-width="2.6" stroke-linecap="round"/><circle cx="42" cy="10" r="2.2" fill="none" stroke="#14110d" stroke-width="1.6"/><path d="M1.5 9h15a7.5 7.5 0 0 1-15 0z" fill="#d9b04a" stroke="#14110d" stroke-width="1.8" stroke-linejoin="round"/><ellipse class="hsdq" cx="9" cy="9.3" rx="6" ry="1.5" fill="#7a4520" opacity="0"/><path d="M4 12.5c1 2 3 3 5 3" stroke="#fff3c4" stroke-width="1" fill="none" opacity=".7" stroke-linecap="round"/></svg>'; }
 function hsCineCss() { if (document.getElementById('hscine')) return; var s = document.createElement('style'); s.id = 'hscine';
   s.textContent = 'body.hscine #wbub,body.hscine #wmark{display:none!important}body.hscine #wtags{pointer-events:none!important}body.hscine #wtags .wtag{pointer-events:none!important}' + '.hsprop{position:absolute;display:block;pointer-events:none}' +
     '#hssteam b{position:absolute;bottom:0;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#fff 0,#f2efe8 45%,rgba(240,236,228,0) 72%);opacity:0;animation:hspuff 1.5s ease-out 4}' +
     '#hssteam b:nth-child(2){animation-delay:.5s;left:60%}#hssteam b:nth-child(3){animation-delay:1s;left:35%}#hssteam b:nth-child(1){left:50%}' +
     '@keyframes hspuff{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:.95}100%{opacity:0;transform:translate(6px,-34px) scale(1.9)}}' +
-    '#hsladle{transform-origin:44px 12px;will-change:transform}#hsladle svg{overflow:visible}' +
+    '#hsladle{transform-origin:27px 10px;will-change:transform}#hsladle svg{overflow:visible}' +
     '#hsstream{background:linear-gradient(#a9692f,#7a4520);border-radius:0 0 2px 2px;transform-origin:50% 0;transform:scaleY(0);opacity:.95}' +
     '.hsbc{position:absolute;width:18px;height:18px;pointer-events:none;z-index:4;display:block}.hsbc svg{display:block;overflow:visible}.hsbc .hslq{transition:none}' +
     '@media (prefers-reduced-motion:reduce){#hssteam b{animation-duration:2.4s;animation-iteration-count:1}}';
@@ -58361,11 +58361,13 @@ function hsCineSetup(next) { hsCineCss(); HS.g++; HS.on = true; HS.skip = false;
 function hsCineBrew(next) { var su = hsSu(), g = HS.g; if (!su || !su.el) { hsWait(600, next); return; }
   hsProp('hssteam', 611, 398, 30, 44, '<b></b><b></b><b></b>', 900); try { AU.play('craft_pot_work', { gain: 0.8 }); } catch (e) {}
   var BP = HSC.BP, BC = HSC.BC, P0 = HSC.GRIP;
-  var bot = hsBottleIn(su.el, BC[0], BC[1], 0), dp = hsProp('hsladle', P0[0] - 20, P0[1] + 12, 52, 24, hsDipperSvg(), 100 + HSC.SU[1] + 6);
-  dp.style.left = (P0[0] - 44) + 'px'; dp.style.top = (P0[1] - 12) + 'px'; dp.style.transform = hsPose([659, 436], -90);
-  var HANG = hsPose([659, 436], -90), UP = hsPose([667, 418], -52), DIP = hsPose([673, 405], -25), DIP2 = hsPose([675, 408], -31), LIFT = hsPose([674, 398], -6), OVER = hsPose([698, 386], -8), POUR = hsPose([694, 377], -28);
-  var mx = su.x - 34 + BP[0] - 2, my = su.y - 87 + BP[1] - 7; /* world point at the bottle's mouth */
-  var sm = hsProp('hsstream', mx, my + 1, 3, 8, '', 100 + HSC.SU[1] + 5);
+  var bot = hsBottleIn(su.el, BC[0], BC[1], 0), dp = hsProp('hsladle', P0[0], P0[1] + 12, 44, 24, hsDipperSvg(), 100 + HSC.SU[1] + 6);
+  dp.style.left = (P0[0] - 27) + 'px'; dp.style.top = (P0[1] - 10) + 'px';
+  function pz(bx, by, d) { var r = d * Math.PI / 180; return hsPose([bx + 18 * Math.cos(r), by + 18 * Math.sin(r)], d); } /* bowl centre + angle -> pose (grip is 18 px behind the bowl) */
+  var HANG = hsPose([659, 453], -90), UP = hsPose([664, 432], -62), DIP = pz(648, 414, -35), DIP2 = pz(647, 417, -38), LIFT = pz(650, 398, 5), OVER = pz(669, 391, -12), POUR = pz(668, 395, -36);
+  dp.style.transform = HANG;
+  var mx = su.x - 34 + BP[0] - 3, my = su.y - 87 + BP[1] - 7; /* the bottle's mouth, a little left of centre where the lip lands */
+  var sm = hsProp('hsstream', mx + 1, my + 5, 4, 8, '', 100 + HSC.SU[1] + 8);
   function dq(on) { var q = dp.querySelector('.hsdq'); if (q) q.setAttribute('opacity', on ? '1' : '0'); }
   function pour(from, to, nx) { hsSeq([
     function (n) { hsAnim(dp, [{ transform: LIFT }, { transform: OVER }], 450, n); },
@@ -58401,14 +58403,15 @@ function hsCineHand(next) { var su = hsSu(), b = document.getElementById('hsbot'
     function (n) { su.fa = Math.PI; try { waddle(su, 0, su.fa); } catch (e) {} place(su, 0); ry.dir = 2; place(ry, 0); if (W.aoi && W.aoi.el) { W.aoi.dir = 2; place(W.aoi, 0); }
       try { var a2 = document.getElementById('hsanchor'); if (a2 && root.FFF_SCAM) { a2.style.top = (590 - 60) + 'px'; a2.style.left = (618) + 'px'; FFF_SCAM.shot({ el: a2 }, { z: 1.6, ms: 900, f: 0.56 }); } } catch (e) {}
       hsWait(450, n); },
-    function (n) { /* she holds it out toward him */ hsAnim(b, [{ transform: 'translate(0,0)' }, { transform: 'translate(-20px,3px)' }], 520, n); },
-    function (n) { /* he takes it: same world point, new owner, so it never jumps */
-      var wx = su.x - 34 + BC[0] - 20, wy = su.y - 87 + BC[1] + 3, o = hsBoxO(ry), lx = wx - o[0], ly = wy - o[1];
-      b.style.transform = ''; try { b.getAnimations().forEach(function (q) { q.cancel(); }); } catch (e) {} hsBottleIn(ry.el, lx, ly, 0.92); b = document.getElementById('hsbot');
-      var fq = b.querySelector('.hslq'); if (fq) fq.style.transform = 'translateY(' + (30 * (1 - 0.92)).toFixed(1) + 'px)';
-      try { AU.play('place', { gain: 0.6 }); } catch (e2) {} ev('world:hs:cine:give'); hsWait(220, n); },
-    function (n) { var ho = hsBoxO(ry); hsAnim(b, [{ transform: 'translate(0,0)' }, { transform: 'translate(-6px,0)' }], 360, n); },
-    function (n) { hsWait(500, n); }
+    function (n) { /* she holds it out toward him, lowering it to where his hand is */
+      var o = hsBoxO(ry); HS.offer = [ry.x + 13, ry.y - 34]; HS.offerD = [HS.offer[0] - (su.x - 34 + BC[0]), HS.offer[1] - (su.y - 87 + BC[1])];
+      hsAnim(b, [{ transform: 'translate(0,0)' }, { transform: 'translate(' + HS.offerD[0].toFixed(1) + 'px,' + HS.offerD[1].toFixed(1) + 'px)' }], 560, n); },
+    function (n) { /* he takes it: same world point, new owner, so it never jumps; then it settles in his hand */
+      var o = hsBoxO(ry), lx = HS.offer[0] - o[0], ly = HS.offer[1] - o[1], RH = HSC.RH;
+      try { b.getAnimations().forEach(function (q) { q.cancel(); }); } catch (e) {} hsBottleIn(ry.el, lx, ly, 0.92); b = document.getElementById('hsbot');
+      try { AU.play('place', { gain: 0.6 }); } catch (e2) {} ev('world:hs:cine:give');
+      hsAnim(b, [{ transform: 'translate(0,0)' }, { transform: 'translate(' + (RH[0] - lx).toFixed(1) + 'px,' + (RH[1] - ly).toFixed(1) + 'px)' }], 420, n); },
+    function (n) { hsWait(450, n); }
   ], next); }
 /* the end of the lesson: the bottle goes to his bag, she walks back to her counter, the camera eases out */
 function hsCineBack(next) { var su = hsSu(), b = document.getElementById('hsbot'), g = HS.g, h = HS.home;
