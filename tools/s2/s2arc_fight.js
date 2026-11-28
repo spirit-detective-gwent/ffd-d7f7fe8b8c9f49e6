@@ -1,14 +1,17 @@
-/* v6.5.64 Game Center cabinet: FOX FIRE FIST II (2D fighter; rebuild of the 3-button Fox Fist). v6564-arcade.
- * Character select (Ryo, Aoi, Goda, Nails, Masa, Jin) -> arcade ladder of 5 matches, best of 3 rounds, 60 s timer.
- * Stick: walk / jump (up) / crouch (down) / block (hold away; down-away blocks low). P light, K heavy, SP special
- * (SP alone, SP+toward, SP+up), SUPER when the bar is full. Swipe the screen toward / up for the dash / rising specials, tap it for SP.
+/* v6.5.64 Game Center cabinet: SHONEN SHOWDOWN (2D fighter; was "Fox Fire Fist II"). v6564-arcade, v6566-shonen (Erik t569u).
+ * Character select (six in-universe anime/game heroes on the cast models) -> arcade ladder of 5 matches, best of 3 rounds, 60 s timer.
+ * v6566-shonen controls: D-pad left / right, swipe up anywhere to jump. AUTO-BLOCK: you guard on your own whenever you are not
+ * attacking (no high / low; chip damage stays; a short lockout after an attack and enemy throws keep a rhythm).
+ * Two buttons: ATTACK (tap; keep tapping for the P > P > K chain) and SPECIAL (tap = special, hold 0.4 s+ = charged move).
+ * When the super bar is full SPECIAL glows and one tap fires the SUPER. The AI keeps its full move list.
+ * Internal ids (fighter / ryo / aoi ...) are unchanged so saves and boards keep working.
  * Fighters are hand-posed skeleton models drawn every frame in each character's outfit. */
 (function () {
   try {
   var root = typeof window !== 'undefined' ? window : this;
   var A = root.FFF_S2ARC = root.FFF_S2ARC || { v: 1 };
   A.GAMES = A.GAMES || {}; A.CABS = A.CABS || {};
-  A.CABS.fighter = { n: 'Fox Fire Fist II', jp: '\u72d0\u706b\u62f3 II', col: '#ff9a3a', body: '#22140e', mq: ['#4a1a06', '#140804'], deck: ['#3a2418', '#1a0e08'],
+  A.CABS.fighter = { n: 'Sh\u014dnen Showdown', jp: '\u5c11\u5e74\u5bfe\u6c7a', mqPx: 21, col: '#ff9a3a', body: '#22140e', mq: ['#4a1a06', '#140804'], deck: ['#3a2418', '#1a0e08'],
     tiers: [12000, 30000, 50000],
     seed: [['JIN', 1.45], ['NLS', 1.22], ['GDA', 1.04], ['MSA', 0.86], ['KNZ', 0.7], ['BAN', 0.55], ['TTS', 0.42], ['OGT', 0.3], ['PNT', 0.2], ['KDE', 0.12]],
     mqArt: function (p, x, y, w, h) { var g = p.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, 'rgba(255,120,40,.35)'); g.addColorStop(0.5, 'rgba(255,200,80,0)'); g.addColorStop(1, 'rgba(255,60,90,.35)'); p.fillStyle = g; p.fillRect(x, y, w, h);
@@ -17,17 +20,17 @@
   var PI = Math.PI;
   /* ---------- the cast ---------- */
   var CH = {
-    ryo: { n: 'RYO', full: 'Ryo Kazan', hp: 100, spd: 92, w: 1, skin: '#e8b890', hair: '#14101a', top: '#1c2244', top2: '#2a3260', shirt: '#a01e24', pants: '#161a30', shoe: '#2a1a12', trim: '#d8b040', style: 'gakuran', hd: 'spiky', aura: '255,120,40',
+    ryo: { n: 'KAZE TENMA', full: 'Hero of \u201cFox Spirit Kaze\u201d', hp: 100, spd: 92, w: 1, skin: '#e8b890', hair: '#14101a', top: '#e8dcc8', top2: '#a01e24', shirt: '#1a1a22', pants: '#2a1820', shoe: '#2a1a12', trim: '#c82028', style: 'openjack', hd: 'tallspike', aura: '255,120,40',
       mv: { p: ['Jab', 4], k: ['Roundhouse', 9], sp: ['Fox Fire', 8, 'proj'], spf: ['Kitsune Rush', 10, 'dash'], spu: ['Rising Fox', 11, 'rise'], su: ['Nine-Tail Barrage', 30, 'rush'] }, stage: 'roof', where: 'School roof \u00b7 after class' },
-    aoi: { n: 'AOI', full: 'Aoi Hayase', hp: 95, spd: 100, w: 0.9, skin: '#f0c8a8', hair: '#121018', top: '#24503a', top2: '#2e6a4a', shirt: '#f2f2f2', pants: '#1a2a24', shoe: '#2a1a12', trim: '#f2f2f2', style: 'sailor', hd: 'pony', aura: '120,220,255',
+    aoi: { n: 'BLUE LOTUS', full: 'Star of \u201cShrine Maiden Blitz\u201d', hp: 95, spd: 100, w: 0.9, skin: '#f0c8a8', hair: '#121018', top: '#7ec8e8', top2: '#5ab0d8', shirt: '#f2f2f2', pants: '#1a3a5a', shoe: '#2a1a12', trim: '#f2f2f2', style: 'sailor', hd: 'pony', aura: '120,220,255',
       mv: { p: ['Palm', 4], k: ['High Kick', 9], sp: ['Ofuda Toss', 7, 'proj'], spf: ['Shrine Step', 9, 'slide'], spu: ['Crescent Kick', 10, 'rise'], su: ['Kagura Storm', 28, 'rush'] }, stage: 'shrine', where: 'Fox shrine steps' },
-    goda: { n: 'G\u014cDA', full: 'G\u014dda Daiz\u014d', hp: 118, spd: 68, w: 1.35, skin: '#e0b088', hair: '#14101a', top: '#6a3a1e', top2: '#7a4a2a', shirt: '#2a2a30', pants: '#3a2a20', shoe: '#1a1210', trim: '#e8e0d0', style: 'stripe', hd: 'topknot', aura: '255,160,90',
+    goda: { n: 'IRON DAIMYO', full: 'Champ of \u201cSumo Shogun 3\u201d', hp: 118, spd: 68, w: 1.35, skin: '#e0b088', hair: '#14101a', top: '#6a3a1e', top2: '#7a4a2a', shirt: '#2a2a30', pants: '#3a2a20', shoe: '#1a1210', trim: '#e8e0d0', style: 'stripe', hd: 'topknot', aura: '255,160,90',
       mv: { p: ['Slap', 6], k: ['Belly Bump', 12], sp: ['Hundred Slaps', 12, 'multi'], spf: ['Boiler Charge', 13, 'dash'], spu: ['Steam Lift', 12, 'rise'], su: ['Steam Press', 34, 'rush'] }, stage: 'boiler', where: 'Boiler room \u00b7 Kitsune-no-Yu' },
-    nails: { n: 'NAILS', full: 'Nails', hp: 100, spd: 96, w: 1, skin: '#c89068', hair: '#0e0c10', top: '#d8c8a0', top2: '#e8dab8', shirt: '#d0a030', pants: '#c8b890', shoe: '#5a3a1a', trim: '#e8c040', style: 'suit', hd: 'curly', aura: '255,216,96',
+    nails: { n: 'RAZOR REI', full: 'Punk of \u201cAlley Kings\u201d', hp: 100, spd: 96, w: 1, skin: '#c89068', hair: '#0e0c10', top: '#d8c8a0', top2: '#e8dab8', shirt: '#d0a030', pants: '#c8b890', shoe: '#5a3a1a', trim: '#e8c040', style: 'suit', hd: 'curly', aura: '255,216,96',
       mv: { p: ['Brass Jab', 4], k: ['Chain Lash', 8], sp: ['Shades Flash', 12, 'counter'], spf: ['Chain Snap', 10, 'chain'], spu: ['Pompadour Rise', 10, 'rise'], su: ['Delinquent\u2019s Honor', 30, 'rush'] }, stage: 'alley', where: 'Kitsune alley \u00b7 Punks\u2019 wall' },
-    masa: { n: 'MASA', full: 'Foreman Masa', hp: 110, spd: 78, w: 1.18, skin: '#d8a078', hair: '#1a1410', top: '#e8701e', top2: '#f08a3a', shirt: '#2a2a2a', pants: '#3a3a44', shoe: '#2a2018', trim: '#e8f0f0', style: 'hivis', hd: 'hardhat', aura: '255,200,60',
+    masa: { n: 'THE RONIN', full: 'Drifter of \u201cSteel Ronin\u201d', hp: 110, spd: 78, w: 1.18, skin: '#d8a078', hair: '#1a1410', top: '#3a4a62', top2: '#2a3448', shirt: '#8a2a24', pants: '#1e2430', shoe: '#1a1410', trim: '#d4b06a', style: 'kimono', hd: 'kasa', aura: '255,200,60',
       mv: { p: ['Glove Jab', 5], k: ['Wrench Swing', 11], sp: ['Bolt Toss', 8, 'proj'], spf: ['Hardhat Ram', 12, 'dash'], spu: ['Crane Hook', 11, 'rise'], su: ['Shutter Drop', 32, 'drop'] }, stage: 'depot', where: 'Freight depot \u00b7 the shutter' },
-    jin: { n: 'JIN', full: 'High-Score Jin', hp: 96, spd: 108, w: 0.95, skin: '#e8c0a0', hair: '#121418', top: '#7ad82a', top2: '#9aee4a', shirt: '#141414', pants: '#18181c', shoe: '#e8e8e8', trim: '#1a1a1a', style: 'hoodie', hd: 'shaggy', aura: '120,255,80',
+    jin: { n: 'BLACK COMET', full: 'Final boss of \u201cNeon Comet\u201d', hp: 96, spd: 108, w: 0.95, skin: '#e8c0a0', hair: '#121418', top: '#7ad82a', top2: '#9aee4a', shirt: '#141414', pants: '#18181c', shoe: '#e8e8e8', trim: '#1a1a1a', style: 'hoodie', hd: 'shaggy', aura: '120,255,80',
       mv: { p: ['Quick Jab', 3], k: ['Spin Kick', 8], sp: ['Bass Drop', 7, 'proj'], spf: ['Combo Breaker', 9, 'dash'], spu: ['1-UP Rise', 10, 'rise'], su: ['High Score', 32, 'rush'] }, stage: 'prize', where: 'Neon Game Center \u00b7 prize room' }
   };
   var ORDER = ['ryo', 'aoi', 'goda', 'nails', 'masa', 'jin'], LADDER = ['masa', 'aoi', 'goda', 'nails', 'ryo', 'jin'];
@@ -36,10 +39,13 @@
   A.GAMES.fighter = function (K, C) {
     var rr = K.rr, txt = K.txt, otxt = K.otxt, ell = K.ell, poly = K.poly, glow = K.glow, tone = K.tone, drum = K.drum, now = K.now, SW = K.SW, SH = K.SH, INK = K.INK, clamp = K.clamp, mono = K.mono;
     var GY = 430, X0 = 26, X1 = SW - 26;
-    var G = { score: 0, stage: 0, stageWord: 'MATCH', stages: [], how: ['Pick a fighter, beat the other five', 'Stick: walk \u00b7 up jump \u00b7 down crouch', 'Hold AWAY to block (down-away blocks low)', 'P light \u00b7 K heavy \u00b7 chain P \u2192 K \u2192 SP', 'SP, SP+toward, SP+up: three specials', 'Or swipe the screen toward / up, tap for SP', 'SUPER when the bar flashes'],
-      panel: { stick: { x: 82, y: 726, r: 44, c: '#ff9a3a' }, btns: [{ k: 'p', x: 236, y: 690, r: 30, l: 'P', c: '#ffd860', sub: 'light', fs: 18 }, { k: 'k', x: 316, y: 678, r: 30, l: 'K', c: '#ff6a3a', sub: 'heavy', fs: 18 }, { k: 'sp', x: 246, y: 772, r: 30, l: 'SP', c: '#5ad8ff', sub: 'special', fs: 16 }, { k: 'su', x: 326, y: 762, r: 30, l: 'SUPER', c: '#ff5ac8', fs: 11, dim: function () { return !P || P.meter < 100; } }] } };
+    var G = { score: 0, stage: 0, stageWord: 'MATCH', stages: [], how: ['Pick a fighter, beat the other five', '\u25c0 \u25b6 walk \u00b7 swipe up anywhere to jump', 'You block on your own when not attacking', 'ATTACK: keep tapping for a 3-hit combo', 'SPECIAL: tap for a special, hold to charge', 'Bar full? SPECIAL glows: tap for SUPER', 'Careful up close: they can grab you'],
+      panel: { stick: { x: 92, y: 722, r: 56, c: '#ff9a3a', dpad: 1 }, btns: [{ k: 'a', x: 240, y: 728, r: 44, l: 'ATTACK', c: '#ffd860', sub: 'tap \u00b7 combo', fs: 14 }, { k: 'sp', x: 336, y: 700, r: 44, l: 'SPECIAL', lf: function () { return P && P.meter >= 100 && phase === 'fight' ? 'SUPER' : 'SPECIAL'; }, c: '#5ad8ff', sub: 'tap \u00b7 hold', fs: 13,
+        glow: function () { return !!(P && P.meter >= 100 && (phase === 'fight' || phase === 'pre')); }, gc: '255,90,200', gcol: '#ff5ac8', ring: function () { return spHold >= 0 && phase === 'fight' ? Math.min(1, spHold / CHG) : 0; } }] } };
     G.endLine = 'Champion of the Neon Game Center.';
     var phase, sel = 0, selT = 0, P = null, E = null, rnd = 1, wins, rT, roundT, fx, proj, shake, slow, combo, comboT, msg, msgT, bgL = {}, buf = null, bufT = 0, lad = [], sw = {}, freeze = 0, superFlash = 0;
+    /* v6566-shonen: SPECIAL hold timer (-1 = up), queued swipe jump, lockout after an attack before auto-block is back */
+    var spHold = -1, jumpQ = 0, jumpDir = 0, CHG = 0.4, LOCK = 0.14;
     /* ---------- poses: angles (0 = down, + = toward the front), hip height ---------- */
     var POSE = {
       idle: { hip: 52, lean: 0.06, fa: [0.9, 2.3], ba: [0.55, 2.1], fl: [0.28, -0.08], bl: [-0.26, 0.04] },
@@ -75,9 +81,9 @@
       ell(g, 0, 0, 30 * w, 6, 'rgba(0,0,0,.35)', 0);
       var hip = -ps.hip, lean = ps.lean, TL = 40, sx = Math.sin(lean) * TL * f, sy = hip - Math.cos(lean) * TL;
       var tw = 13 * w, lw = 11 * Math.sqrt(w), aw = 9 * Math.sqrt(w), LL = 25;
-      var top = hurt ? '#fff' : c.top, pants = hurt ? '#fff' : c.pants;
+      var top = hurt ? '#fff' : c.top, pants = hurt ? '#fff' : c.pants, arm = (c.style === 'openjack' && !hurt) ? c.skin : top;
       /* back arm + back leg */
-      var bh = limb(g, sx - 4 * f, sy + 6, ps.ba[0], ps.ba[1], 19, 19, aw, shade(top), f); fist(g, bh[0], bh[1], 5.5 * Math.sqrt(w), c.skin);
+      var bh = limb(g, sx - 4 * f, sy + 6, ps.ba[0], ps.ba[1], 19, 19, aw, shade(arm), f); fist(g, bh[0], bh[1], 5.5 * Math.sqrt(w), c.skin);
       var bl = limb(g, -4 * f, hip, ps.bl[0], ps.bl[1], LL, LL, lw, shade(pants), f); shoe(g, bl[0], bl[1], f, c.shoe);
       /* torso */
       g.save(); g.translate(0, hip); g.rotate(lean * f);
@@ -90,9 +96,9 @@
       var hx = sx + Math.sin(lean) * 12 * f, hy = sy - Math.cos(lean) * 12;
       head(g, c, hx, hy, f, (ps.hd || 0) + lean * 0.4, F, t);
       /* front arm */
-      var fh = limb(g, sx + 4 * f, sy + 6, ps.fa[0], ps.fa[1], 19, 19, aw, top, f); fist(g, fh[0], fh[1], 6 * Math.sqrt(w), c.skin);
+      var fh = limb(g, sx + 4 * f, sy + 6, ps.fa[0], ps.fa[1], 19, 19, aw, arm, f); fist(g, fh[0], fh[1], 6 * Math.sqrt(w), c.skin);
       if (c.style === 'suit' && F.st === 'atk' && F.mv && (F.mv.k === 'k' || F.mv.k === 'spf')) { g.strokeStyle = '#d8c060'; g.lineWidth = 3; g.beginPath(); g.moveTo(fh[0], fh[1]); for (var i = 1; i <= 6; i++) g.lineTo(fh[0] + f * i * 10, fh[1] + Math.sin(t * 30 + i) * 3); g.stroke(); }
-      if (c.style === 'hivis' && F.st === 'atk' && F.mv && F.mv.k === 'k') { g.save(); g.translate(fh[0], fh[1]); g.rotate(f * 0.6); rr(g, -3, -26, 6, 30, 2, '#8a96a8', 2.5); rr(g, -8, -32, 16, 10, 3, '#8a96a8', 2.5); g.restore(); }
+      if (F.id === 'masa' && F.st === 'atk' && F.mv && F.mv.k === 'k') { g.save(); g.translate(fh[0], fh[1]); g.rotate(f * 0.6); rr(g, -3, -26, 6, 30, 2, '#8a96a8', 2.5); rr(g, -8, -32, 16, 10, 3, '#8a96a8', 2.5); g.restore(); }
       g.restore();
       F.hand = [F.x + fh[0] * sc, F.y + fh[1] * sc]; F.headP = [F.x + hx * sc, F.y + hy * sc];
     }
@@ -100,11 +106,25 @@
     function shoe(g, x, y, f, c) { rr(g, x - 6 + (f > 0 ? 0 : -6), y - 3, 13, 7, 3, c, 2); }
     function outfit(g, c, bw, TL, f, hurt) { if (hurt) return; var s = c.style;
       if (s === 'gakuran') { g.fillStyle = c.shirt; poly(g, [-6, -TL - 3, 6, -TL - 3, 3, -TL + 14, -3, -TL + 14], c.shirt, 0); g.fillStyle = c.trim; for (var i = 0; i < 4; i++) { g.beginPath(); g.arc(f * 2, -TL + 10 + i * 9, 1.8, 0, 7); g.fill(); } rr(g, -bw, -TL - 6, bw * 2, 6, 3, c.top2, 2); }
-      else if (s === 'sailor') { poly(g, [-bw, -TL - 2, bw, -TL - 2, 0, -TL + 16], '#f2f2f2', 2); poly(g, [-5, -TL + 12, 5, -TL + 12, 0, -TL + 22], '#f2f2f2', 1.5); g.fillStyle = '#1a2a24'; g.fillRect(-bw, -6, bw * 2, 10); }
+      else if (s === 'sailor') { poly(g, [-bw, -TL - 2, bw, -TL - 2, 0, -TL + 16], '#f2f2f2', 2); g.strokeStyle = c.top2; g.lineWidth = 2.5; g.beginPath(); g.moveTo(-bw + 3, -TL); g.lineTo(0, -TL + 14); g.lineTo(bw - 3, -TL); g.stroke(); poly(g, [-5, -TL + 12, 5, -TL + 12, 0, -TL + 22], '#f2f2f2', 1.5); g.fillStyle = c.pants; g.fillRect(-bw, -6, bw * 2, 10); }
       else if (s === 'stripe') { g.save(); g.beginPath(); g.rect(-8, -TL - 2, 16, TL + 6); g.clip(); for (var j = 0; j < 9; j++) { g.fillStyle = j % 2 ? '#2a2a30' : '#8a8a90'; g.fillRect(-8, -TL - 2 + j * 5, 16, 5); } g.restore(); g.fillStyle = c.trim; g.fillRect(-bw + 3, -TL, 4, TL + 2); }
       else if (s === 'suit') { poly(g, [-7, -TL - 2, 7, -TL - 2, 0, -TL + 18], c.shirt, 1.5); g.strokeStyle = '#e8c040'; g.lineWidth = 2; g.beginPath(); g.arc(0, -TL + 2, 7, 0.2, PI - 0.2); g.stroke(); }
       else if (s === 'hivis') { g.fillStyle = c.trim; g.fillRect(-bw, -TL + 12, bw * 2, 4); g.fillRect(-bw, -TL + 22, bw * 2, 4); g.fillRect(-6, -TL - 2, 4, TL); g.fillRect(2, -TL - 2, 4, TL); }
-      else if (s === 'hoodie') { poly(g, [-6, -TL - 2, 6, -TL - 2, 0, -TL + 10], c.shirt, 1.5); g.strokeStyle = '#1a1a1a'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, -TL + 10); g.lineTo(0, 2); g.stroke(); rr(g, -bw + 2, -10, bw * 2 - 4, 8, 3, c.top2, 1.5); } }
+      else if (s === 'hoodie') { poly(g, [-6, -TL - 2, 6, -TL - 2, 0, -TL + 10], c.shirt, 1.5); g.strokeStyle = '#1a1a1a'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, -TL + 10); g.lineTo(0, 2); g.stroke(); rr(g, -bw + 2, -10, bw * 2 - 4, 8, 3, c.top2, 1.5); }
+      else if (s === 'openjack') { /* v6566-shonen t600u: sleeveless open jacket, undershirt shows down the middle */
+        g.fillStyle = c.shirt; g.fillRect(-5, -TL - 2, 10, TL + 8);
+        poly(g, [-bw, -TL - 4, -5, -TL - 2, -4, 6, -bw, 6], c.top, 2.5);
+        poly(g, [bw, -TL - 4, 5, -TL - 2, 4, 6, bw, 6], c.top, 2.5);
+        poly(g, [-bw + 2, -TL - 2, -6, -TL, -5, 4, -bw + 2, 4], c.top2, 0);
+        poly(g, [bw - 2, -TL - 2, 6, -TL, 5, 4, bw - 2, 4], c.top2, 0);
+        g.strokeStyle = c.trim; g.lineWidth = 2; g.beginPath(); g.moveTo(-5, -TL - 2); g.lineTo(-4, 6); g.moveTo(5, -TL - 2); g.lineTo(4, 6); g.stroke(); }
+      else if (s === 'kimono') { /* v6566-shonen t597u: wrapped kimono, obi, hakama pleats at the hip */
+        poly(g, [f * -bw, -TL - 3, f * 3, -TL - 3, f * 7, 6, f * -bw, 6], c.top2, 2);
+        g.strokeStyle = c.shirt; g.lineWidth = 2.5; g.beginPath(); g.moveTo(f * 2, -TL - 2); g.lineTo(-f * 4, 6); g.stroke();
+        rr(g, -bw - 1, -9, bw * 2 + 2, 11, 2, c.shirt, 2.5);
+        rr(g, -5, -10, 10, 5, 2, '#5a1814', 0);
+        g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1.4;
+        for (var h = -3; h <= 3; h++) { g.beginPath(); g.moveTo(h * (bw / 3), 2); g.lineTo(h * (bw / 3), 8); g.stroke(); } } }
     function head(g, c, x, y, f, tilt, F, t) { g.save(); g.translate(x, y); g.rotate(tilt * f); var r = 12.5 * (c.w > 1.2 ? 1.1 : 1);
       if (c.hd === 'pony') { g.strokeStyle = INK; g.lineWidth = 9; g.lineCap = 'round'; g.beginPath(); g.moveTo(-f * 6, -8); g.quadraticCurveTo(-f * 20, -4 + Math.sin(t * 6) * 2, -f * 18, 18); g.stroke(); g.strokeStyle = c.hair; g.lineWidth = 6; g.stroke(); }
       ell(g, 0, 0, r, r * 1.08, F.flash > 0 ? '#fff' : c.skin, 2.5);
@@ -114,6 +134,17 @@
       else if (c.hd === 'topknot') { g.beginPath(); g.arc(0, -2, r + 1, PI, 0); g.closePath(); g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); ell(g, -f * 2, -r - 4, 5, 4, c.hair, 2); }
       else if (c.hd === 'curly') { for (var i = 0; i < 7; i++) ell(g, -9 + i * 3, -8 - (i % 2) * 3, 5, 5, c.hair, 0); rr(g, f > 0 ? -2 : -12, -4, 14, 5, 2, '#0a0a0a', 1.5); }
       else if (c.hd === 'hardhat') { g.beginPath(); g.arc(0, -3, r + 2, PI, 0); g.closePath(); g.fillStyle = '#f2c020'; g.fill(); g.lineWidth = 2.5; g.strokeStyle = INK; g.stroke(); rr(g, -r - 5, -5, (r + 5) * 2, 4, 2, '#f2c020', 2); }
+      else if (c.hd === 'tallspike') { /* v6566-shonen t600u: taller spikes + red headband */
+        poly(g, [-13, 0, -16, -16, -9, -12, -12, -28, -4, -16, 0, -32, 5, -18, 11, -30, 10, -12, 16, -18, 13, 0, f * 6, -6, -f * 4, -4], c.hair, 2);
+        rr(g, -r - 2, -3, (r + 2) * 2, 5, 2, '#c82028', 2);
+        g.fillStyle = '#c82028'; g.fillRect(f * (r - 1), -2, 5, 2); g.fillRect(f * (r + 2), 0, 7, 2); }
+      else if (c.hd === 'kasa') { /* v6566-shonen t597u: short hair under a straw kasa */
+        g.beginPath(); g.arc(0, -1, r + 1, PI, 0); g.closePath(); g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke();
+        var straw = '#d4b06a', rib = '#a07838';
+        poly(g, [0, -r - 15, -r - 16, -1, r + 16, -1], straw, 2.5);
+        g.strokeStyle = rib; g.lineWidth = 1.3;
+        for (var kasaI = -2; kasaI <= 2; kasaI++) { g.beginPath(); g.moveTo(0, -r - 14); g.lineTo(kasaI * 7, -1); g.stroke(); }
+        ell(g, 0, -1, r + 16, 3.2, '#c4a060', 2); }
       else if (c.hd === 'shaggy') { poly(g, [-13, 2, -13, -8, -6, -15, 4, -15, 12, -9, 13, 2, f * 8, -5, f * 2, -2, -f * 6, -4], c.hair, 2); g.fillStyle = '#7ad82a'; poly(g, [f * 8, -5, f * 13, 2, f * 10, -9], '#7ad82a', 0); g.strokeStyle = '#2a2a2a'; g.lineWidth = 3; g.beginPath(); g.arc(0, 0, r + 2, PI * 0.95, PI * 0.05, false); g.stroke(); ell(g, -f * 10, 4, 4, 5, '#2a2a2a', 1.5); }
       /* eyes */
       if (c.hd !== 'curly') { g.fillStyle = INK; var ex = f * 5; g.fillRect(ex - 1, -2, 3, F.st === 'hit' || F.st === 'down' ? 1 : 3); g.fillRect(ex - 6 * f - 1, -2, 2, F.st === 'hit' ? 1 : 3); }
@@ -147,26 +178,30 @@
       multi: { pose: 'p', s: 0.08, a: 0.6, r: 0.3, reach: 48, lvl: 'mid', hs: 0.16, bs: 0.1, kb: 20, multi: 5, chip: 1 },
       counter: { pose: 'counter', s: 0.03, a: 0.55, r: 0.3, reach: 60, lvl: 'mid', hs: 0.6, bs: 0.2, kb: 220, kd: 1 },
       rush: { pose: 'dash', s: 0.6, a: 0.35, r: 0.4, reach: 46, lvl: 'mid', hs: 1.2, bs: 0.3, kb: 0, vx: 360, chip: 3, sup: 1 },
-      drop: { pose: 'rise', s: 0.6, a: 0.25, r: 0.5, reach: 999, lvl: 'mid', hs: 1, bs: 0.3, kb: 120, chip: 4, sup: 1, kd: 1 }
+      drop: { pose: 'rise', s: 0.6, a: 0.25, r: 0.5, reach: 999, lvl: 'mid', hs: 1, bs: 0.3, kb: 120, chip: 4, sup: 1, kd: 1 },
+      thr: { pose: 'p', s: 0.07, a: 0.06, r: 0.42, reach: 26, lvl: 'throw', hs: 0.4, bs: 0, kb: 220, kd: 1 } /* v6566-shonen: AI grab, beats auto-block */
     };
     function moveOf(F, k) { var c = F.c, base, dmg, nm;
       if (k === 'p' || k === 'k') { base = F.air ? MV.jk : (F.crouch && k === 'k') ? MV.ck : MV[k]; dmg = c.mv[k][1] * (F.air ? 1.1 : F.crouch && k === 'k' ? 0.9 : 1); nm = F.air ? 'Jump Attack' : F.crouch && k === 'k' ? 'Sweep' : c.mv[k][0]; }
+      else if (k === 'thr') { base = MV.thr; dmg = c.w > 1.2 ? 12 : 10; nm = 'Grab'; }
       else { var m = c.mv[k]; base = MV[m[2]]; dmg = m[1]; nm = m[0]; }
+      if (k === 'spf' && !F.ai) dmg = Math.round(dmg * 1.25); /* v6566-shonen: the player's spf is the charged SPECIAL */
       var o = {}; for (var q in base) o[q] = base[q]; o.k = k; o.dmg = dmg; o.n = nm;
       if (F.c.w > 1.2) { o.s *= 1.25; o.r *= 1.15; o.reach *= 1.12; } if (F.id === 'jin') { o.s *= 0.85; o.r *= 0.9; }
       if (k === 'k' && F.id === 'nails' && !F.air && !F.crouch) o.reach = 84; if (k === 'k' && F.id === 'masa' && !F.air && !F.crouch) { o.reach = 66; o.s *= 1.2; }
       return o; }
-    function doMove(F, k) {
-      if (F.st === 'atk' && F.cancel > 0 && F.mv && F.mv.hit && (F.mv.k === 'p' || (F.mv.k === 'k' && k !== 'p'))) { /* chain cancel */ }
+    function doMove(F, k, force) {
+      if (force) { /* v6566-shonen: player chain / special cancel, checked by pAct */ }
+      else if (F.st === 'atk' && F.cancel > 0 && F.mv && F.mv.hit && (F.mv.k === 'p' || (F.mv.k === 'k' && k !== 'p'))) { /* chain cancel */ }
       else if (!(F.st === 'idle' || F.st === 'walk' || F.st === 'crouch' || (F.st === 'jump' && (k === 'p' || k === 'k')))) return false;
       if (k === 'su') { if (F.meter < 100) return false; F.meter = 0; superFlash = 0.6; freeze = 0.5; say(F.c.mv.su[0].toUpperCase() + '!', 1.2); drum('k', now(), 0.6); tone(220, now(), 0.5, 'sawtooth', 0.08); tone(440, now() + 0.2, 0.5, 'square', 0.07); }
-      F.mv = moveOf(F, k); F.st = 'atk'; F.stT = 0; F.hitDone = false; F.cancel = 0; F.rushN = 0; F.mv.hit = false;
+      F.mv = moveOf(F, k); F.st = 'atk'; F.stT = 0; if (k === 'thr') say('GRAB!', 0.6); if (k === 'spf' && !F.ai) flashFx(F.x, F.y - 70, F.c.aura); F.hitDone = false; F.cancel = 0; F.rushN = 0; F.mv.hit = false;
       if (F.mv.inv) F.inv = F.mv.inv; if (F.mv.vy) { F.vy = F.mv.vy; F.air = true; F.vx = F.face * 60; }
       tone(k === 'p' ? 520 : k === 'k' ? 330 : 260, now(), 0.06, 'square', 0.035); return true; }
     function say(m, d) { msg = m; msgT = d || 1; }
     function setupMatch() { var me = ORDER[sel], foe = lad[G.stage]; P = mk(me, 110, 1, false); E = mk(foe, 252, -1, true); rnd = 1; wins = [0, 0]; startRound(); }
     function startRound() { P.x = 110; E.x = 252; P.y = E.y = GY; P.hp = P.max; E.hp = E.max; [P, E].forEach(function (F) { F.st = 'idle'; F.stT = 0; F.vx = F.vy = 0; F.air = false; F.mv = null; F.flash = 0; F.inv = 0; F.pose = POSE.idle; });
-      roundT = 60; phase = 'pre'; rT = 0; fx = []; proj = []; combo = 0; comboT = 0; slow = 0; shake = 0; freeze = 0; }
+      roundT = 60; phase = 'pre'; rT = 0; spHold = -1; jumpQ = 0; buf = null; bufT = 0; fx = []; proj = []; combo = 0; comboT = 0; slow = 0; shake = 0; freeze = 0; }
     G.start = function () { phase = 'select'; selT = 0; G.stage = 0; G.score = 0; return 'select'; };
     function confirmSel() { var me = ORDER[sel]; lad = LADDER.filter(function (k) { return k !== me; }).slice(0, 5);
       G.stages = lad.map(function (k) { return { n: 'VS ' + CH[k].n, sub: CH[k].where, k: k }; }); tone(1046, now(), 0.15, 'square', 0.07); tone(1568, now() + 0.12, 0.25, 'square', 0.07); setupMatch(); phase = 'vs'; }
@@ -179,28 +214,26 @@
       poly(q, [0, 0, SW * 0.62, 0, SW * 0.38, SH, 0, SH], 'rgba(255,120,40,.22)', 0); poly(q, [SW * 0.62, 0, SW, 0, SW, SH, SW * 0.38, SH], 'rgba(90,160,255,.2)', 0);
       var a = { c: P.c, pose: POSE.win, face: 1, flash: 0, x: 90 - (1 - k) * 160, y: 360, st: 'idle' }, b = { c: E.c, pose: POSE.idle, face: -1, flash: 0, x: 272 + (1 - k) * 160, y: 360, st: 'idle' };
       drawFighter(q, a, t, 1.9); drawFighter(q, b, t, 1.9);
-      otxt(q, P.c.n, 90, 400, 22, '#ffd860'); otxt(q, E.c.n, 272, 400, 22, '#7fe8ff'); txt(q, P.c.full, 90, 422, 10, '#fff'); txt(q, E.c.full, 272, 422, 10, '#fff');
+      otxt(q, P.c.n, 90, 400, P.c.n.length > 8 ? 17 : 22, '#ffd860'); otxt(q, E.c.n, 272, 400, E.c.n.length > 8 ? 17 : 22, '#7fe8ff'); txt(q, P.c.full, 90, 422, 9, '#fff', 'center', 700); txt(q, E.c.full, 272, 422, 9, '#fff', 'center', 700);
       otxt(q, 'VS', SW / 2, 230, 54 + Math.sin(t * 12) * 3, '#ff5a3a'); txt(q, 'MATCH ' + (G.stage + 1) + ' / 5', SW / 2, 54, 13, '#ffd860'); txt(q, E.c.where, SW / 2, 74, 11, '#e8e0f8', 'center', 700);
       if (G.stage === 4) otxt(q, 'FINAL BOSS', SW / 2, 470, 18, '#ff4a5a'); };
     /* ---------- input ---------- */
-    function towardHeld() { var I = G.in; return P && (P.face > 0 ? I.r : I.l); }
+    /* v6566-shonen: ATTACK (a) / SPECIAL (sp) only. SPECIAL fires on release (tap vs hold); with a full bar it fires the SUPER on press. */
     G.press = function (k) {
-      if (phase === 'select') { if (k === 'p' || k === 'k' || k === 'sp') { if (selT > 0.3) confirmSel(); } return; }
-      if (phase !== 'fight') return; var I = G.in, kk = k;
-      if (k === 'sp') kk = I.u ? 'spu' : towardHeld() ? 'spf' : 'sp';
-      buf = kk; bufT = 0.18; };
+      if (phase === 'select') { if (k === 'a' || k === 'sp') { if (selT > 0.3) confirmSel(); } return; }
+      if (phase !== 'fight') return;
+      if (k === 'a') { buf = 'a'; bufT = 0.26; return; }
+      if (k === 'sp') { if (P && P.meter >= 100) { buf = 'su'; bufT = 0.3; spHold = -1; } else spHold = 0; } };
+    G.release = function (k) { if (k !== 'sp' || spHold < 0) return; var h = spHold; spHold = -1; if (phase !== 'fight') return; buf = h >= CHG ? 'spf' : 'sp'; bufT = 0.3; };
+    G.swipeUp = function (dx) { if (phase !== 'fight') return; jumpQ = 0.25; jumpDir = dx ? (dx > 0 ? 1 : -1) : 0; };
     G.dir = function (d) { if (phase === 'select') { if (d === 'l') sel = (sel + 5) % 6; if (d === 'r') sel = (sel + 1) % 6; if (d === 'u' || d === 'd') sel = (sel + 3) % 6; selT = 0.31; tone(660, now(), 0.04, 'square', 0.04); } };
     G.tap = function (x, y, id) { if (phase === 'select') { var i = selHit(x, y); if (i >= 0) { if (i === sel && selT > 0.25) confirmSel(); else { sel = i; selT = 0.26; tone(660, now(), 0.04, 'square', 0.04); } } return; }
       sw[id] = { x: x, y: y, t: performance.now() }; };
-    G.drag = function () {};
-    G.lift = function (id) { var S0 = sw[id]; delete sw[id]; };
-    /* swipes: the framework only sends drag to us; read the last position on lift via move tracking */
-    var lastXY = {}; G.drag = function (x, y, id) { lastXY[id] = [x, y]; };
-    G.lift = function (id) { var S0 = sw[id], L = lastXY[id]; delete sw[id]; delete lastXY[id]; if (!S0 || phase !== 'fight') return; var dx = L ? L[0] - S0.x : 0, dy = L ? L[1] - S0.y : 0;
-      if (Math.abs(dx) < 28 && Math.abs(dy) < 28) { buf = 'sp'; bufT = 0.2; return; }
-      if (-dy > Math.abs(dx)) { buf = 'spu'; bufT = 0.2; } else if (dx * P.face > 0) { buf = 'spf'; bufT = 0.2; } else { buf = null; } };
+    /* swipe up anywhere on the screen = jump (fires as soon as the finger has gone up 32 px; a diagonal sets the jump direction) */
+    G.drag = function (x, y, id) { var S0 = sw[id]; if (!S0 || S0.done || phase !== 'fight') return; var dx = x - S0.x, dy = y - S0.y; if (-dy > 32 && -dy > Math.abs(dx) * 0.8) { S0.done = 1; G.swipeUp(Math.abs(dx) > 24 ? dx : 0); } };
+    G.lift = function (id) { delete sw[id]; };
     function selHit(x, y) { for (var i = 0; i < 6; i++) { var cx = 34 + (i % 3) * 102, cy = 280 + ((i / 3) | 0) * 92; if (x > cx && x < cx + 92 && y > cy && y < cy + 84) return i; } return -1; }
-    G.lit = function (k) { return k === 'su' && P && P.meter >= 100 && ((now() * 5) | 0) % 2; };
+    G.lit = function () { return false; }; /* v6566-shonen: SPECIAL glows instead (panel.btns[1].glow) */
     /* ---------- AI ---------- */
     function aiThink(F, O, dt) { var lv = G.stage, W = F.want; F.aiT -= dt; var dist = Math.abs(O.x - F.x);
       if (F.aiT > 0) return; F.aiT = Math.max(0.1, 0.34 - lv * 0.05) * (0.7 + Math.random() * 0.6);
@@ -211,6 +244,9 @@
       if (oAtk && dist < 120 && r < 0.2 + lv * 0.14) { W.block = true; W.crouch = O.mv.lvl === 'low' && Math.random() < 0.5 + lv * 0.1; F.aiT = 0.35; return; }
       if (O.air && dist < 130 && O.vy > -200 && r < 0.15 + lv * 0.12) { W.act = 'spu'; return; }
       if (F.meter >= 100 && dist < 130 && r < 0.6) { W.act = 'su'; return; }
+      /* v6566-shonen: the player auto-blocks, so the AI punishes recovery and grabs a turtle */
+      if (!O.ai && O.st === 'atk' && O.mv && O.stT >= O.mv.s + O.mv.a && dist < 90 && r < 0.3 + lv * 0.12) { W.act = dist < 56 ? 'p' : 'k'; return; }
+      if (!O.ai && !O.air && (O.st === 'idle' || O.st === 'walk' || O.st === 'block')) { if (dist < 58 && r < 0.22 + lv * 0.07) { W.act = 'thr'; return; } if (dist < 100 && r < 0.12 + lv * 0.04) { W.mv = 1; F.aiT *= 0.6; return; } }
       if (dist > 170) { if (r < 0.28 && F.c.mv.sp[2] === 'proj') W.act = 'sp'; else if (r < 0.4) W.act = 'spf'; else W.mv = 1; return; }
       if (dist > 70) { if (r < 0.15) { W.jump = true; W.mv = 1; F.jumpAtk = true; } else if (r < 0.35) W.act = 'k'; else if (r < 0.45 && F.c.mv.spf[2] === 'chain') W.act = 'spf'; else W.mv = 1; return; }
       if (r < 0.36) { W.act = 'p'; F.chainPlan = lv >= 2 && Math.random() < 0.3 + lv * 0.1; } else if (r < 0.56) W.act = 'k'; else if (r < 0.7) { W.crouch = true; W.act = 'k'; } else if (r < 0.78) W.act = 'sp'; else if (r < 0.88) W.mv = -1; else W.block = true; }
@@ -218,38 +254,66 @@
     function ctrl(F, O, dt) {
       var W, away;
       if (F.ai) { aiThink(F, O, dt); W = F.want; }
-      else { var I = G.in, fwd = F.face > 0 ? I.r : I.l, bk = F.face > 0 ? I.l : I.r; W = { mv: fwd ? 1 : bk ? -1 : 0, crouch: !!I.d, jump: !!I.u, block: bk, act: null }; if (bufT > 0 && buf) { W.act = buf; } }
+      else { var I = G.in, fwd = F.face > 0 ? I.r : I.l, bk = F.face > 0 ? I.l : I.r; W = { mv: fwd ? 1 : bk ? -1 : 0, crouch: false, jump: jumpQ > 0 || !!I.u, block: false, act: null };
+        if (W.jump && !W.mv && jumpDir) W.mv = jumpDir * F.face;
+        if (pAct(F)) return; }
       F.crouch = false; F.blockW = W.block || (!F.ai && W.mv < 0);
       if (F.st === 'idle' || F.st === 'walk' || F.st === 'crouch') {
         if (W.act && doMove(F, W.act)) { if (!F.ai) { buf = null; bufT = 0; } else W.act = null; return; }
-        if (W.jump) { F.st = 'jump'; F.air = true; F.vy = -540; F.vx = W.mv * F.c.spd * 1.25 * F.face; F.stT = 0; tone(300, now(), 0.05, 'triangle', 0.03); W.jump = false; return; }
+        if (W.jump) { if (!F.ai) { jumpQ = 0; jumpDir = 0; } F.st = 'jump'; F.air = true; F.vy = -540; F.vx = W.mv * F.c.spd * 1.25 * F.face; F.stT = 0; tone(300, now(), 0.05, 'triangle', 0.03); W.jump = false; return; }
         if (W.crouch) { F.st = 'crouch'; F.crouch = true; F.vx = 0; return; }
         if (W.mv) { F.st = 'walk'; F.vx = W.mv * F.c.spd * (W.mv < 0 ? 0.8 : 1) * F.face; } else { F.st = 'idle'; F.vx = 0; }
       } else if (F.st === 'jump') { if (W.act === 'p' || W.act === 'k') { doMove(F, W.act); if (!F.ai) { buf = null; bufT = 0; } else W.act = null; } else if (F.ai && F.jumpAtk && O && Math.abs(O.x - F.x) < 90 && F.vy > -100) { doMove(F, 'k'); F.jumpAtk = false; } }
       else if (F.st === 'atk' && W.act && F.cancel > 0) { if (doMove(F, W.act)) { if (!F.ai) { buf = null; bufT = 0; } else W.act = null; } }
       if (F.ai && F.chainPlan && F.st === 'atk' && F.cancel > 0) { F.chainPlan = false; doMove(F, Math.random() < 0.5 ? 'k' : 'spf'); }
     }
+    /* v6566-shonen: the player's two buttons. ATTACK chains P > P > K (tap again from the end of the active frames, or on hit);
+       SPECIAL / charged / SUPER come out from neutral or cancel a connected ATTACK. */
+    function pAct(F) { if (!(bufT > 0 && buf)) return false; var k = buf, ok = false, m = F.mv;
+      if (k === 'a') {
+        if (F.st === 'atk' && m && !F.air && F.chainN > 0 && F.chainN < 3 && (m.k === 'p' || m.k === 'k') && (F.cancel > 0 || F.stT >= m.s + m.a)) { ok = doMove(F, F.chainN === 1 ? 'p' : 'k', true); if (ok) F.chainN++; }
+        else if (F.st === 'idle' || F.st === 'walk') { ok = doMove(F, 'p'); if (ok) F.chainN = 1; }
+        else if (F.st === 'jump') { ok = doMove(F, 'k'); F.chainN = 0; }
+      } else if (!F.air) {
+        if (F.st === 'idle' || F.st === 'walk') ok = doMove(F, k);
+        else if (F.st === 'atk' && m && F.cancel > 0 && m.hit && (m.k === 'p' || m.k === 'k')) { if (k !== 'su' || F.meter >= 100) ok = doMove(F, k, true); }
+        if (ok) F.chainN = 0; }
+      if (ok) { buf = null; bufT = 0; } return ok; }
     function hitTest(F, O) { var m = F.mv; if (!m || m.k === 'sp' && m.pose === 'proj') return;
       if (m.reach >= 999) return true; /* drop: hits anywhere */
       var dx = (O.x - F.x) * F.face; if (dx < -10) return false; if (dx > m.reach + 18 * O.c.w) return false;
       if (m.lvl === 'low' && O.air) return false; if (!m.air && O.air && O.y < GY - 70 && m.k !== 'spu') return false; return true; }
+    /* v6566-shonen t606u: hitstop on a landed hit. Jab ~0.045s, kick/special ~0.06s, scaled by damage and capped at 0.09s.
+       Blocked hits ~0.03s. Follow-up hits of a multi are shorter so a slap string does not freeze the round. Super's own 0.5s freeze is never shortened.
+       bufT / jumpQ do not tick while freeze > 0 (see G.step), so a buffered ATTACK or SPECIAL is still there after the pause; F.cancel also holds because stepF is skipped. */
+    function hitStop(m, blocked, follow) {
+      if (G.noHS) return;
+      if (follow) { freeze = Math.max(freeze, 0.02); return; }
+      if (blocked) { freeze = Math.max(freeze, 0.03); return; }
+      var base = (m && m.k === 'p') ? 0.045 : 0.06, dmg = (m && m.dmg) || 8;
+      freeze = Math.max(freeze, Math.min(0.09, base * Math.max(1, dmg / 9)));
+    }
     function land(F, O, m, mult) {
       if (O.inv > 0) return 'whiff';
       if (O.st === 'atk' && O.mv && O.mv.pose === 'counter' && O.stT >= O.mv.s && O.stT < O.mv.s + O.mv.a && !m.sup) { /* Shades Flash */ O.stT = O.mv.s + O.mv.a; O.inv = 0.3; flashFx(O.x, O.y - 70, '255,216,96'); say('COUNTER!', 0.8); var mm = moveOf(O, 'sp'); mm.dmg = 12; applyHit(O, F, mm, 1); return 'counter'; }
-      var canBlock = O.blockW && !O.air && (O.st === 'idle' || O.st === 'walk' || O.st === 'crouch' || O.st === 'block');
-      var crouchB = O.ai ? O.want.crouch : !!G.in.d;
-      if (canBlock && ((m.lvl === 'low' && !crouchB) || (m.lvl === 'over' && crouchB))) canBlock = false;
-      if (canBlock) { O.st = 'block'; O.stT = 0; O.bsT = m.bs; O.crouch = crouchB; O.vx = -O.face * 80; O.hp = Math.max(1, O.hp - (m.chip || 0)); O.meter = Math.min(100, O.meter + 3); F.meter = Math.min(100, F.meter + 2); fx.push({ k: 'blk', x: (F.x + O.x) / 2, y: O.y - 60, t: 0 }); tone(900, now(), 0.04, 'square', 0.04); return 'block'; }
+      if (m.lvl === 'throw') { if (O.air || O.st === 'hit' || O.st === 'down') return 'whiff'; applyHit(F, O, m, 1); return 'hit'; }
+      var canBlock, crouchB = false;
+      if (!O.ai) canBlock = !O.air && !(O.lockT > 0) && (O.st === 'idle' || O.st === 'walk' || O.st === 'block'); /* v6566-shonen: auto-block, no high / low */
+      else { canBlock = O.blockW && !O.air && (O.st === 'idle' || O.st === 'walk' || O.st === 'crouch' || O.st === 'block'); crouchB = O.want.crouch;
+        if (canBlock && ((m.lvl === 'low' && !crouchB) || (m.lvl === 'over' && crouchB))) canBlock = false; }
+      if (canBlock) { O.st = 'block'; O.stT = 0; O.bsT = m.bs; O.crouch = crouchB; O.vx = -O.face * 80; O.hp = Math.max(1, O.hp - (m.chip || 0)); O.meter = Math.min(100, O.meter + (O.ai ? 3 : 2)); F.meter = Math.min(100, F.meter + 2); if (!O.ai) G._blocks = (G._blocks | 0) + 1; fx.push({ k: 'blk', x: (F.x + O.x) / 2, y: O.y - 60, t: 0 }); tone(900, now(), 0.04, 'square', 0.04); hitStop(m, true, F.rushN > 1); return 'block'; }
       applyHit(F, O, m, mult || 1); return 'hit'; }
     function applyHit(F, O, m, mult) { var d = Math.round(m.dmg * mult); O.hp = Math.max(0, O.hp - d); O.flash = 0.08; O.meter = Math.min(100, O.meter + 5); F.meter = Math.min(100, F.meter + 8);
-      if (m.kd || O.air || O.hp <= 0) { O.st = 'down'; O.stT = 0; O.vy = O.air ? O.vy : -260; O.air = true; O.vx = -O.face * 120; } else { O.st = 'hit'; O.stT = 0; O.hsT = m.hs; O.vx = -O.face * (m.kb || 60); }
-      if (m) m.hit = true; F.cancel = 0.2;
+      var kb = m.kb || 60;
+      if (F.chainN === 3 && !m.kd) kb = Math.round(kb * 1.2); /* v6566-shonen: a little more push on the P>P>K finisher */
+      if (m.kd || O.air || O.hp <= 0) { O.st = 'down'; O.stT = 0; O.vy = O.air ? O.vy : -260; O.air = true; O.vx = -O.face * 120; } else { O.st = 'hit'; O.stT = 0; O.hsT = m.hs; O.vx = -O.face * kb; }
+      if (m) m.hit = true; F.cancel = 0.2; hitStop(m, false, F.rushN > 1);
       if (F === P) { combo = comboT > 0 ? combo + 1 : 1; comboT = 0.9; G.score += d * 10 + (combo >= 3 ? combo * 60 : 0); } else { combo = 0; }
       shake = Math.min(0.25, 0.05 + d * 0.008); fx.push({ k: 'hit', x: (F.x + O.x) / 2 + O.face * -10, y: O.y - 64 - Math.random() * 20, t: 0, big: d >= 9 }); drum(d >= 9 ? 'k' : 's', now(), d >= 9 ? 0.5 : 0.3); tone(180 + d * 10, now(), 0.06, 'square', 0.04);
       if (O.hp <= 0) { slow = 1; say('K.O.', 2); drum('k', now(), 0.7); drum('k', now() + 0.2, 0.6); } }
     function flashFx(x, y, c) { fx.push({ k: 'flash', x: x, y: y, t: 0, c: c }); }
     function stepF(F, O, dt) {
-      F.stT += dt; F.flash = Math.max(0, F.flash - dt); F.inv = Math.max(0, F.inv - dt); F.cancel = Math.max(0, F.cancel - dt);
+      F.stT += dt; F.lockT = Math.max(0, (F.lockT || 0) - dt); F.flash = Math.max(0, F.flash - dt); F.inv = Math.max(0, F.inv - dt); F.cancel = Math.max(0, F.cancel - dt);
       if (F.st === 'atk') { var m = F.mv, T = F.stT;
         if (m.vx && T > m.s && T < m.s + m.a) F.vx = F.face * m.vx; else if (!F.air) F.vx *= 0.8;
         if (T >= m.s && T < m.s + m.a) {
@@ -258,8 +322,8 @@
           else if (m.sup && hitTest(F, O)) { if (!F.hitDone) { F.hitDone = true; F.rushN = 1; if (land(F, O, m, 0.3) === 'hit') { F.rushHit = true; } } else if (F.rushHit && F.rushN < 7 && T > m.s + F.rushN * 0.05) { F.rushN++; O.hp = Math.max(0, O.hp - Math.round(m.dmg * 0.1)); O.flash = 0.06; if (F === P) G.score += 60; fx.push({ k: 'hit', x: O.x, y: O.y - 50 - Math.random() * 40, t: 0, big: true }); drum('s', now(), 0.3); if (O.hp <= 0 && O.st !== 'down') { O.st = 'down'; O.air = true; O.vy = -300; slow = 1; say('K.O.', 2); if (F === P) G.score += 2000; } } }
           else if (!m.multi && !m.sup && m.pose !== 'proj' && m.pose !== 'counter' && !F.hitDone && hitTest(F, O)) { F.hitDone = true; land(F, O, m, 1); }
         }
-        if (m.air) { if (!F.air) { F.st = 'idle'; F.mv = null; } }
-        else if (T >= m.s + m.a + m.r && !F.air) { F.st = 'idle'; F.mv = null; F.rushHit = false; }
+        if (m.air) { if (!F.air) { F.st = 'idle'; F.mv = null; if (!F.ai) F.lockT = LOCK; } }
+        else if (T >= m.s + m.a + m.r && !F.air) { F.st = 'idle'; F.mv = null; F.rushHit = false; if (!F.ai) { F.lockT = LOCK; F.chainN = 0; } }
       }
       else if (F.st === 'hit') { F.vx *= 0.85; if (F.stT > F.hsT) F.st = 'idle'; }
       else if (F.st === 'block') { F.vx *= 0.8; if (F.stT > F.bsT) F.st = 'idle'; }
@@ -276,8 +340,9 @@
     G.step = function (dt) {
       if (phase === 'select') { selT += dt; return; }
       if (phase === 'vs') { phase = 'pre'; rT = 0; return 'go'; }
-      fx.forEach(function (F) { F.t += dt; }); fx = fx.filter(function (F) { return F.t < 0.35; }); msgT = Math.max(0, (msgT || 0) - dt); bufT = Math.max(0, bufT - dt); comboT -= dt; shake = Math.max(0, shake - dt); superFlash = Math.max(0, superFlash - dt);
-      if (freeze > 0) { freeze -= dt; return; }
+      fx.forEach(function (F) { F.t += dt; }); fx = fx.filter(function (F) { return F.t < 0.35; }); msgT = Math.max(0, (msgT || 0) - dt); shake = Math.max(0, shake - dt); superFlash = Math.max(0, superFlash - dt);
+      if (freeze > 0) { freeze = Math.max(0, freeze - dt); if (freeze > 0) return; } /* v6566-shonen t606u: bufT holds through hitstop so a buffered input is not eaten */
+      bufT = Math.max(0, bufT - dt); jumpQ = Math.max(0, jumpQ - dt); if (spHold >= 0 && phase === 'fight') spHold += dt; comboT -= dt;
       var sdt = slow > 0 ? dt * 0.3 : dt; slow = Math.max(0, slow - dt);
       rT += dt;
       if (phase === 'pre') { if (rT < 0.05) say('ROUND ' + rnd, 1); if (rT > 1.0 && rT - dt <= 1.0) { say('FIGHT!', 0.7); tone(880, now(), 0.2, 'square', 0.07); } if (rT > 1.4) { phase = 'fight'; rT = 0; } stepF(P, E, sdt); stepF(E, P, sdt); return; }
@@ -320,10 +385,12 @@
     function hud(g, t) {
       bar(g, 10, 30, 146, P.hp, P.max, false, '#ffd860'); bar(g, SW - 156, 30, 146, E.hp, E.max, true, '#ffd860');
       txt(g, P.c.n, 12, 56, 12, '#fff', 'left'); txt(g, E.c.n, SW - 12, 56, 12, '#fff', 'right');
-      for (var i = 0; i < 2; i++) { ell(g, 60 + i * 14, 56, 5, 5, i < wins[0] ? '#ffd860' : 'rgba(255,255,255,.2)', 1.5); ell(g, SW - 60 - i * 14, 56, 5, 5, i < wins[1] ? '#ffd860' : 'rgba(255,255,255,.2)', 1.5); }
+      for (var i = 0; i < 2; i++) { ell(g, SW / 2 - 34 - i * 14, 56, 5, 5, i < wins[0] ? '#ffd860' : 'rgba(255,255,255,.2)', 1.5); ell(g, SW / 2 + 34 + i * 14, 56, 5, 5, i < wins[1] ? '#ffd860' : 'rgba(255,255,255,.2)', 1.5); } /* v6566-shonen: round pips beside the timer so long names fit */
       rr(g, SW / 2 - 22, 28, 44, 34, 6, 'rgba(0,0,0,.6)', 2, '#ffd860'); mono(g, String(Math.max(0, Math.ceil(roundT))), SW / 2, 46, 20, roundT < 10 ? '#ff4a5a' : '#ffd860', 'center');
       /* super bars */
-      [[P, 10, false], [E, SW - 130, true]].forEach(function (q) { var F = q[0], full = F.meter >= 100; rr(g, q[1], SH - 26, 120, 12, 4, '#0a0614', 2); rr(g, q[1] + 2, SH - 24, 116 * F.meter / 100, 8, 3, full ? (((t * 8) | 0) % 2 ? '#ff5ac8' : '#ffd860') : '#5ad8ff', 0); txt(g, full ? 'SUPER!' : 'SUPER', q[1] + 60, SH - 36, 9, full ? '#ff5ac8' : 'rgba(255,255,255,.6)'); });
+      /* v6566-shonen: one super bar (yours), wide; when full it pulses and says to tap SPECIAL */
+      var full = P.meter >= 100; rr(g, 10, SH - 30, SW - 20, 18, 6, '#0a0614', 2.5); rr(g, 13, SH - 27, (SW - 26) * clamp(P.meter / 100, 0, 1), 12, 4, full ? (((t * 6) | 0) % 2 ? '#ff5ac8' : '#ffd860') : '#5ad8ff', 0);
+      txt(g, full ? 'SUPER READY \u00b7 TAP SPECIAL' : 'SUPER', SW / 2, SH - 21, full ? 11 : 10, full ? INK : 'rgba(255,255,255,.85)');
       if (combo >= 2 && comboT > 0) { otxt(g, combo + ' HITS', 70, 120, 20, '#ffd860'); }
       if (msgT > 0) otxt(g, msg, SW / 2, 200, msg.length > 10 ? 24 : 40, msg === 'K.O.' ? '#ff4a3a' : '#fff');
       fx.forEach(function (F) { if (F.k === 'tally') txt(g, F.s, SW / 2, 250, 11, '#7aff9a'); });
@@ -331,32 +398,35 @@
     }
     function drawSelect(g, t) {
       var bg = g.createLinearGradient(0, 0, 0, SH); bg.addColorStop(0, '#2a0a06'); bg.addColorStop(1, '#0a0614'); g.fillStyle = bg; g.fillRect(0, 0, SW, SH);
-      otxt(g, 'SELECT YOUR FIGHTER', SW / 2, 44, 20, '#ffd860');
       var c = CH[ORDER[sel]]; g.drawImage(glow(c.aura, 90), 90 - 90, 170 - 90);
       drawFighter(g, { c: c, pose: lerpPose(POSE.idle, POSE.idle, 0), face: 1, flash: 0, x: 92, y: 250, st: 'idle' }, t, 1.6);
-      otxt(g, c.n, 250, 84, 26, '#fff'); txt(g, c.full, 250, 108, 11, '#ffd860');
-      var M = c.mv; [['SP', M.sp[0]], ['SP+\u2192', M.spf[0]], ['SP+\u2191', M.spu[0]], ['SUPER', M.su[0]]].forEach(function (q, i) { txt(g, q[0], 182, 136 + i * 22, 10, '#7fe8ff', 'left'); txt(g, q[1], 236, 136 + i * 22, 12, '#fff', 'left', 800); });
-      txt(g, 'HP ' + c.hp + '  \u00b7  SPEED ' + c.spd, 250, 232, 10, 'rgba(255,255,255,.7)');
+      /* v6566-shonen t604u: keep the tall hair at full size; paint the title last so it sits above the spikes */
+      otxt(g, 'SELECT YOUR FIGHTER', SW / 2, 44, 20, '#ffd860');
+      otxt(g, c.n, 262, 84, c.n.length > 9 ? 20 : 24, '#fff'); txt(g, c.full, 262, 108, 10, '#ffd860');
+      var M = c.mv; [['TAP SPECIAL', M.sp[0]], ['HOLD SPECIAL', M.spf[0]], ['FULL BAR \u00b7 SUPER', M.su[0]]].forEach(function (q, i) { txt(g, q[0], 190, 130 + i * 30, 9, '#7fe8ff', 'left'); txt(g, q[1], 190, 143 + i * 30, 12, '#fff', 'left', 800); });
+      txt(g, 'HP ' + c.hp + '  \u00b7  SPEED ' + c.spd, 262, 232, 10, 'rgba(255,255,255,.7)');
       for (var i = 0; i < 6; i++) { var C0 = CH[ORDER[i]], x = 34 + (i % 3) * 102, y = 280 + ((i / 3) | 0) * 92, on = i === sel;
         rr(g, x, y, 92, 84, 10, on ? 'rgba(' + C0.aura + ',.35)' : 'rgba(255,255,255,.06)', on ? 4 : 2, on ? '#ffd860' : 'rgba(255,255,255,.25)');
         g.save(); g.beginPath(); g.rect(x + 2, y + 2, 88, 80); g.clip(); drawFighter(g, { c: C0, pose: POSE.idle, face: 1, flash: 0, x: x + 46, y: y + 124, st: 'idle' }, t, 1.0); g.restore();
-        txt(g, C0.n, x + 46, y + 74, 11, on ? '#ffd860' : '#fff'); }
-      if (((t * 2) | 0) % 2) txt(g, 'Tap again or press P to fight', SW / 2, 474, 12, '#7aff9a', 'center', 800);
+        txt(g, C0.n, x + 46, y + 74, C0.n.length > 9 ? 10 : 11, on ? '#ffd860' : '#fff'); }
+      if (((t * 2) | 0) % 2) txt(g, 'Tap again or press ATTACK to fight', SW / 2, 474, 12, '#7aff9a', 'center', 800);
     }
     /* ---------- title ---------- */
     var TT = null;
     G.title = function (g, t) {
       if (!TT) TT = K.layer(SW, SH, function (q) { var bg = q.createLinearGradient(0, 0, 0, SH); bg.addColorStop(0, '#1a0604'); bg.addColorStop(0.55, '#5a1a08'); bg.addColorStop(1, '#ff8a2a'); q.fillStyle = bg; q.fillRect(0, 0, SW, SH);
         for (var i = 0; i < 14; i++) { q.fillStyle = 'rgba(255,200,90,' + (0.05 + (i % 3) * 0.04) + ')'; poly(q, [SW / 2, 260, SW / 2 + Math.cos(i * 0.45) * 400, 260 + Math.sin(i * 0.45) * 400, SW / 2 + Math.cos(i * 0.45 + 0.2) * 400, 260 + Math.sin(i * 0.45 + 0.2) * 400], q.fillStyle, 0); }
-        otxt(q, '\u72d0\u706b\u62f3', SW / 2, 64, 34, '#ffd860'); otxt(q, 'FOX FIRE', SW / 2, 112, 44, '#fff', 'center', '#ff5a1a'); otxt(q, 'FIST II', SW / 2, 160, 44, '#ff9a3a'); });
+        otxt(q, '\u5c11\u5e74\u5bfe\u6c7a', SW / 2, 64, 34, '#ffd860'); otxt(q, 'SH\u014cNEN', SW / 2, 112, 46, '#fff', 'center', '#ff5a1a'); otxt(q, 'SHOWDOWN', SW / 2, 160, 44, '#ff9a3a'); });
       K.blit(g, TT, 0, 0);
       var a = CH[ORDER[((t / 2.2) | 0) % 6]], b = CH[ORDER[(((t / 2.2) | 0) + 3) % 6]];
       drawFighter(g, { c: a, pose: POSE.p, face: 1, flash: 0, x: 100, y: 410, st: 'atk' }, t, 1.6); drawFighter(g, { c: b, pose: POSE.block, face: -1, flash: 0, x: 262, y: 410, st: 'idle' }, t, 1.6);
-      txt(g, '6 FIGHTERS \u00b7 5-MATCH ARCADE LADDER', SW / 2, 196, 12, '#fff'); txt(g, 'Best of 3 rounds \u00b7 specials \u00b7 supers', SW / 2, 216, 11, '#ffe0c0', 'center', 700);
+      txt(g, '6 FIGHTERS \u00b7 5-MATCH ARCADE LADDER', SW / 2, 196, 12, '#fff'); txt(g, 'Two buttons \u00b7 auto-block \u00b7 supers', SW / 2, 216, 11, '#ffe0c0', 'center', 700);
     };
     G.dispose = function () { bgL = {}; TT = null; };
     G.dbg = function (o) { o = o || {}; if (phase === 'select') { if (o.sel != null) sel = o.sel; confirmSel(); phase = 'pre'; } if (o.lives) { P.max = P.hp = 9999; } if (o.foeHp != null) E.hp = o.foeHp; if (o.meter) P.meter = 100; return { phase: phase, p: P && P.hp, e: E && E.hp, foe: E && E.id, me: P && P.id, wins: wins, rnd: rnd }; };
     G.phase = function () { return phase; }; G._pe = function () { return [P, E]; };
+    G._in = function () { return { buf: buf, bufT: bufT, spHold: spHold, jumpQ: jumpQ, blocks: G._blocks | 0, freeze: freeze }; };
+    G.resetCtrl = function () { buf = null; bufT = 0; spHold = -1; jumpQ = 0; freeze = 0; G.noHS = false; if (G._rawStep) G.step = G._rawStep; };
     return G;
   };
   } catch (eTop) { try { console.warn('S2ARC fight init', eTop); } catch (e2) {} }

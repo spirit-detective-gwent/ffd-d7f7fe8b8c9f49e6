@@ -99,7 +99,7 @@
     var mg = p.createLinearGradient(0, 10, 0, 80); mg.addColorStop(0, C.mq ? C.mq[0] : '#2a0e3a'); mg.addColorStop(1, C.mq ? C.mq[1] : '#0e0620'); rr(p, 13, 11, 364, 68, 7, mg, 0);
     p.drawImage(glow(rgb, 140), 195 - 140, 44 - 140);
     if (C.mqArt) { p.save(); rr(p, 13, 11, 364, 68, 7, null, 0); p.clip(); C.mqArt(p, 13, 11, 364, 68); p.restore(); }
-    otxt(p, C.n.toUpperCase(), 195, 38, C.n.length > 14 ? 24 : 28, '#fff', 'center', col); txt(p, C.jp, 195, 66, 12, col);
+    otxt(p, C.n.toUpperCase(), C.mqPx ? 186 : 195, 38, C.mqPx || (C.n.length > 14 ? 24 : 28), '#fff', 'center', col); txt(p, C.jp, 195, 66, 12, col);
     p.fillStyle = 'rgba(255,255,255,.12)'; p.fillRect(16, 14, 358, 8);
     /* bezel */
     rr(p, 6, 86, 378, 514, 16, '#0c0912', 4);
@@ -146,7 +146,9 @@
     var ptr = {};
     function des(e) { var r = cv.c.getBoundingClientRect(); return [(e.clientX - r.left - ox) / s, (e.clientY - r.top) / s]; }
     function hitBtn(x, y) { var B = PN.btns || []; for (var i = 0; i < B.length; i++) { var b = B[i]; if (b.hide && b.hide()) continue; var dx = x - b.x, dy = y - b.y; if (dx * dx + dy * dy <= (b.r + 10) * (b.r + 10)) return b; } return null; }
-    function stickSet(x, y) { var S = PN.stick, dx = (x - S.x) / S.r, dy = (y - S.y) / S.r, m = Math.sqrt(dx * dx + dy * dy); if (m > 1) { dx /= m; dy /= m; } var I = G.in, ol = I.l, or2 = I.r, ou = I.u, od = I.d; I.sx = dx; I.sy = dy; I.l = dx < -0.38; I.r = dx > 0.38; I.u = dy < -0.45; I.d = dy > 0.45;
+    function stickSet(x, y) { var S = PN.stick, dx = (x - S.x) / S.r, dy = (y - S.y) / S.r, m = Math.sqrt(dx * dx + dy * dy); if (m > 1) { dx /= m; dy /= m; } var I = G.in, ol = I.l, or2 = I.r, ou = I.u, od = I.d;
+      if (S.dpad) { I.sx = dx; I.sy = 0; I.l = dx < -0.2; I.r = dx > 0.2; I.u = I.d = false; } /* v6566-shonen: left / right D-pad */
+      else { I.sx = dx; I.sy = dy; I.l = dx < -0.38; I.r = dx > 0.38; I.u = dy < -0.45; I.d = dy > 0.45; }
       if (G.dir && st === 'play') { if (I.l && !ol) G.dir('l'); if (I.r && !or2) G.dir('r'); if (I.u && !ou) G.dir('u'); if (I.d && !od) G.dir('d'); } }
     function stickOff() { var I = G.in; I.sx = I.sy = 0; I.l = I.r = I.u = I.d = false; }
     function btnDown(b) { G.in[b.k] = true; b.dn = 1; if (st === 'play' && G.press) G.press(b.k); }
@@ -154,13 +156,15 @@
     function onDown(e) { if (done) return; e.preventDefault(); var q = des(e), x = q[0], y = q[1];
       if (st !== 'play') { metaTap(x, y); return; }
       if (guard > 0) return;
-      if (y >= PY) { var S = PN.stick; if (S && Math.abs(x - S.x) < S.r * 1.6 && Math.abs(y - S.y) < S.r * 1.6) { ptr[e.pointerId] = { k: 'stick' }; stickSet(x, y); return; }
-        var b = hitBtn(x, y); if (b) { ptr[e.pointerId] = { k: 'btn', b: b }; btnDown(b); return; } if (G.off) G.off(); return; }
+      if (y >= PY) { var S = PN.stick; if (S && Math.abs(x - S.x) < S.r * 1.6 && Math.abs(y - S.y) < S.r * 1.6) { ptr[e.pointerId] = { k: 'stick', x0: x, y0: y }; stickSet(x, y); return; }
+        var b = hitBtn(x, y); if (b) { ptr[e.pointerId] = { k: 'btn', b: b }; btnDown(b); return; } if (G.swipeUp) ptr[e.pointerId] = { k: 'pan', x0: x, y0: y }; if (G.off) G.off(); return; }
       if (x >= SX && x <= SX + SW && y >= SY && y <= SY + SH) { if (G.tap) { ptr[e.pointerId] = { k: 'scr' }; G.tap(x - SX, y - SY, e.pointerId); } } else if (G.off) G.off(); }
     function onMove(e) { var P = ptr[e.pointerId]; if (!P || done) return; var q = des(e);
+      /* v6566-shonen: games with G.swipeUp jump on an upward swipe that starts on the D-pad or on bare deck */
+      if ((P.k === 'stick' || P.k === 'pan') && G.swipeUp && !P.up && st === 'play' && P.y0 - q[1] > 32 && P.y0 - q[1] > Math.abs(q[0] - P.x0) * 0.8) { P.up = 1; G.swipeUp(Math.abs(q[0] - P.x0) > 24 ? q[0] - P.x0 : 0); }
       if (P.k === 'stick') stickSet(q[0], q[1]); else if (P.k === 'scr' && G.drag) G.drag(q[0] - SX, q[1] - SY, e.pointerId);
       else if (P.k === 'btn' && P.b.slide) { var b = hitBtn(q[0], q[1]); if (b && b !== P.b) { btnUp(P.b); P.b = b; btnDown(b); } } }
-    function onUp(e) { var P = ptr[e.pointerId]; if (!P) return; delete ptr[e.pointerId]; if (P.k === 'stick') stickOff(); else if (P.k === 'btn') btnUp(P.b); else if (P.k === 'scr' && G.lift) G.lift(e.pointerId); }
+    function onUp(e) { var P = ptr[e.pointerId]; if (!P) return; delete ptr[e.pointerId]; if (P.k === 'pan') return; if (P.k === 'stick') stickOff(); else if (P.k === 'btn') btnUp(P.b); else if (P.k === 'scr' && G.lift) G.lift(e.pointerId); }
     cv.c.addEventListener('pointerdown', onDown); cv.c.addEventListener('pointermove', onMove); cv.c.addEventListener('pointerup', onUp); cv.c.addEventListener('pointercancel', onUp);
     var KEYS = { ArrowLeft: 'l', ArrowRight: 'r', ArrowUp: 'u', ArrowDown: 'd', a: 'l', d: 'r', w: 'u', s: 'd' }, KB = ['z', 'x', 'c', 'v', 'b'];
     function keyEv(e, dn) { if (done) return; var k = e.key; if (k === 'Escape' && dn) { kill(true); return; }
@@ -270,13 +274,22 @@
         return; }
     }
     function drawPanel(q) { var S = PN.stick, B = PN.btns || [];
-      if (S) { K.ell(q, S.x, S.y, S.r + 6, S.r + 6, '#0c0812', 3); K.ell(q, S.x, S.y, S.r, S.r, '#1e1828', 0); var I = G.in, kx = S.x + (I.sx || 0) * S.r * 0.55, ky = S.y + (I.sy || 0) * S.r * 0.55;
+      if (S && S.dpad) { /* v6566-shonen: wide two-key D-pad, the held side sinks */ var I0 = G.in, hw = S.r * 1.5, hh = S.r * 0.66;
+        rr(q, S.x - hw - 6, S.y - hh - 4, (hw + 6) * 2, hh * 2 + 14, hh * 0.7, '#0a0610', 0); rr(q, S.x - hw - 6, S.y - hh - 8, (hw + 6) * 2, hh * 2 + 14, hh * 0.7, '#0c0812', 3);
+        [-1, 1].forEach(function (d) { var on = d < 0 ? I0.l : I0.r, kx = S.x + d * hw * 0.5, ky = S.y - 2 + (on ? 3 : 0), kw = hw * 0.92;
+          rr(q, kx - kw / 2, ky - hh + 4, kw, hh * 2 - 8, 12, on ? '#f0e0c8' : '#2a2034', 3); if (!on) rr(q, kx - kw / 2 + 6, ky - hh + 8, kw - 12, 8, 4, 'rgba(255,255,255,.12)', 0);
+          K.poly(q, [kx + d * 16, ky, kx - d * 12, ky - 18, kx - d * 12, ky + 18], on ? INK : (S.c || '#e83040'), 2.5); });
+        rr(q, S.x - 5, S.y - hh + 2, 10, hh * 2 - 10, 4, '#0c0812', 0); txt(q, 'swipe \u2191 jump', S.x, S.y + hh + 16, 9, 'rgba(255,255,255,.7)'); }
+      else if (S) { K.ell(q, S.x, S.y, S.r + 6, S.r + 6, '#0c0812', 3); K.ell(q, S.x, S.y, S.r, S.r, '#1e1828', 0); var I = G.in, kx = S.x + (I.sx || 0) * S.r * 0.55, ky = S.y + (I.sy || 0) * S.r * 0.55;
         q.lineWidth = 9; q.strokeStyle = '#d8d0e0'; q.beginPath(); q.moveTo(S.x, S.y); q.lineTo(kx, ky - 4); q.stroke(); K.ell(q, kx, ky - 6, 17, 17, S.c || '#e83040', 3); K.ell(q, kx - 5, ky - 11, 5, 4, 'rgba(255,255,255,.5)', 0); }
       for (var i = 0; i < B.length; i++) { var b = B[i]; if (b.hide && b.hide()) continue; var dn = b.dn || (st === 'play' && G.lit && G.lit(b.k)), off = dn ? 3 : 0;
-        K.ell(q, b.x, b.y + 4, b.r, b.r * 0.92, '#0a0610', 0); K.ell(q, b.x, b.y + off, b.r, b.r * 0.92, b.c, 3);
+        var gl = st === 'play' && b.glow && b.glow(); /* v6566-shonen: a ready button glows; this only runs inside the open cabinet's own frame */
+        if (gl) { var gr = b.r + 36; q.globalAlpha = 0.7 + 0.3 * Math.sin(t * 9); q.drawImage(glow(b.gc || '255,255,255', gr), b.x - gr, b.y - gr); q.globalAlpha = 1; /* unscaled cached halo: alpha pulse only */ q.lineWidth = 3; q.strokeStyle = 'rgba(255,255,255,' + (0.5 + 0.4 * Math.sin(t * 9)) + ')'; q.beginPath(); q.arc(b.x, b.y, b.r + 6, 0, 7); q.stroke(); }
+        K.ell(q, b.x, b.y + 4, b.r, b.r * 0.92, '#0a0610', 0); K.ell(q, b.x, b.y + off, b.r, b.r * 0.92, gl ? (b.gcol || b.c) : b.c, 3);
+        var rg = st === 'play' && b.ring ? b.ring() : 0; if (rg > 0) { q.lineWidth = 6; q.strokeStyle = rg >= 1 ? '#fff' : 'rgba(255,255,255,.8)'; q.beginPath(); q.arc(b.x, b.y + off, b.r + 7, -Math.PI / 2, -Math.PI / 2 + rg * Math.PI * 2); q.stroke(); }
         if (!dn) K.ell(q, b.x - b.r * 0.3, b.y - b.r * 0.35, b.r * 0.35, b.r * 0.22, 'rgba(255,255,255,.45)', 0);
         if (b.dim && b.dim()) { q.globalAlpha = 0.55; K.ell(q, b.x, b.y + off, b.r, b.r * 0.92, '#000', 0); q.globalAlpha = 1; }
-        txt(q, b.l, b.x, b.y + off, b.fs || (b.l.length > 4 ? 10 : 13), INK); if (b.sub) txt(q, b.sub, b.x, b.y + b.r + 12, 9, 'rgba(255,255,255,.7)'); } }
+        var bl = b.lf ? b.lf() : b.l; txt(q, bl, b.x, b.y + off, b.fs || (bl.length > 4 ? 10 : 13), INK); if (b.sub) txt(q, b.sub, b.x, b.y + b.r + 12, 9, 'rgba(255,255,255,.7)'); } }
     /* ---- main loop (only while open) ---- */
     function frame() {
       if (!CUR || CUR.id !== myId) return;
