@@ -28,6 +28,11 @@ async def main():
             await ev(pg, "SAVE.items=20; save(); hud(); cafVend('c1'); 1"); await pg.wait_for_timeout(500); await shoot(pg, tag + '_soda_machine.png'); await shut(pg)
             await ev(pg, "SAVE.items=20; SAVE.hp=20; save(); hud(); cafGo('line'); 1"); await pg.wait_for_timeout(900); await skipall(pg, 4); await shut(pg)
             await ev(pg, "cafLunch(); 1"); await pg.wait_for_timeout(500); await shoot(pg, tag + '_lunch_counter.png'); await shut(pg)
+            await ev(pg, "W.ryo.x=520; W.ryo.y=560; place(W.ryo,0); 1"); await pg.wait_for_timeout(1500); await shoot(pg, tag + '_lunch_line_sign.png')
+            await ev(pg, "SAVE.items=2; save(); hud(); fldVend('f1'); 1"); await pg.wait_for_timeout(500); await shoot(pg, tag + '_greyed_soda_button.png'); await shut(pg)
+            await ev(pg, "SAVE.items=10; SAVE.shops=SAVE.shops||{}; delete SAVE.shops.nq_gk1; save(); hud(); c2Shop('nq_gk1'); 1"); await pg.wait_for_timeout(600); await shoot(pg, tag + '_ch2_dagashi_fumi.png')
+            await ev(pg, "try{ var m=document.getElementById('wshop'); if(m) m.className=''; }catch(e){} W.dlg=false; if(!SHOPS.shop_surplus) SHOPS.shop_surplus=C3SHOPS.shop_surplus; delete SAVE.shops.shop_surplus; save(); c2Shop('shop_surplus'); 1"); await pg.wait_for_timeout(600); await shoot(pg, tag + '_ch2_harbor_surplus.png')
+            await ev(pg, "try{ var m=document.getElementById('wshop'); if(m) m.className=''; }catch(e){} W.dlg=false; 1")
             if live: await b.close(); h.shutdown(); return
         # ---------- P: constants
         k = await ev(pg, "[SODA.cost, FOOD.cost, FOOD.pct, CAF_LUNCH, CAF_LUNCH_PCT, STORY.POTION.cost, AID.cost, MAXHP]")
@@ -84,11 +89,11 @@ async def main():
         ok('S1 shop soda prices: cold box 3, Dagashi Fumi 3, Machi Motors 3 (Nails 2)', sh == [3, 3, 3, 2], sh)
         for sid, iid, nm, pay in (('shop_surplus', 's3_soda', 'harbor cold box', 3), ('nq_gk1', 'ram', 'Dagashi Fumi', 3), ('nq_motors', 'can', 'Machi Motors (Nails price)', 2)):
             await shut(pg); await ev(pg, "SAVE.items=10; SAVE.shops=SAVE.shops||{}; delete SAVE.shops['%s']; save(); c2Shop('%s'); 1" % (sid, sid)); await pg.wait_for_timeout(300)
-            bt = await ev(pg, "(function(){ var b=document.querySelector('#wshop [data-i=\"%s\"]'); return b?[b.textContent.trim(), b.disabled]:null; })()" % iid)
+            bt = await ev(pg, "(function(){ var b=document.querySelector('#wshop button[data-i=\"%s\"]'); return b?[b.textContent.trim(), b.disabled]:null; })()" % iid)
             s0 = await ev(pg, "sodaN()"); r = await ev(pg, "shopBuy('%s','%s')" % (sid, iid)); s1 = await ev(pg, "[SAVE.items, sodaN()]")
             ok('S %s: button shows Y%d, buying charges %d and bags a soda' % (nm, pay, pay), bt and ('\u00a5%d' % pay) in bt[0] and not bt[1] and r and s1 == [10 - pay, s0 + 1], [bt, r, s1])
             await ev(pg, "try{ var m=document.getElementById('wshop'); if(m) m.className=''; }catch(e){} SAVE.items=%d; save(); c2Shop('%s'); 1" % (pay - 1, sid)); await pg.wait_for_timeout(300)
-            bt = await ev(pg, "(function(){ var b=document.querySelector('#wshop [data-i=\"%s\"]'); return b?[b.textContent.trim(), b.disabled]:null; })()" % iid)
+            bt = await ev(pg, "(function(){ var b=document.querySelector('#wshop button[data-i=\"%s\"]'); return b?[b.textContent.trim(), b.disabled]:null; })()" % iid)
             r = await ev(pg, "shopBuy('%s','%s')" % (sid, iid))
             ok('S %s: with Y%d the button is greyed and buying refuses' % (nm, pay - 1), bt and bt[1] and not r and await ev(pg, "SAVE.items") == pay - 1, [bt, r])
         await ev(pg, "try{ var m=document.getElementById('wshop'); if(m) m.className=''; }catch(e){} W.dlg=false; 1")
@@ -97,9 +102,17 @@ async def main():
         kl = re.search(r"talk_eat2: \[\['kenta', '([^']*)'", src).group(1)
         ok('T1 Kenta line: twelve yen, no "two yen", no deal/cheap wording', 'Twelve yen' in kl and 'two yen' not in kl.lower() and not re.search(r'deal|cheap|best', kl, re.I), kl)
         ok('T2 no "Two yen" soda banter left', "Two yen. We'll grab some." not in src and src.count("Three yen. We'll grab some.") == 2)
-        sodas = [m.group(0) for m in re.finditer(r"[^\n]{0,80}\\u00a52[^\n]{0,60}", src) if re.search(r'(?i)soda|flavour|machine', m.group(0))]
+        sodas = [m.group(0) for m in re.finditer(r"[^\n]{0,80}\\u00a52[^\n]{0,60}", src) if re.search(r'(?i)soda|flavour|machine', m.group(0)) and 'Nails' not in m.group(0)]
         ok('T3 no soda/machine text still says Y2', not sodas, sodas[:3])
-        ok('T4 harbor Ramune description matches what it does (+5 Spirit), no "more yen"', 'more yen from your next fights' not in src and "n: 'Ramune (cold box)', cost: 2, stock: 3, d: 'A soda: +5 Spirit on the map, full Spirit on a chug win.'" in src)
+        ok('T4 harbor Ramune description matches what it does (+5 Spirit), no "more yen"', 'more yen from your next fights' not in src and "n: 'Ramune (cold box)', cost: 3, stock: 3, d: 'A soda: +5 Spirit on the map, full Spirit on a chug win.'" in src)
+        import base64, io
+        from PIL import Image as PI
+        bim = PI.open(io.BytesIO(base64.b64decode(re.search(r"IMG\['wkitbg_cf_line'\] = 'data:image/webp;base64,([^']+)'", src).group(1)))).convert('RGB')
+        px = bim.load(); lit = [sum(px[x, y]) > 480 for x in range(227, 406) for y in range(29, 96)]
+        rows = [y for y in range(29, 96) if any(sum(px[x, y]) > 480 for x in range(227, 406))]
+        bands = sum(1 for a, b in zip([28] + rows, rows) if b - a > 1)
+        purple = sum(1 for x in range(290, 340) for y in range(78, 92) if px[x, y][2] > 170 and px[x, y][0] < 195)
+        ok('T7 Lunch Line board repainted: 1152x864 room image, 4 chalk lines (today / melon bread / hot lunch / purple EAT.)', bim.size == (1152, 864) and bands == 4 and purple > 15, [bim.size, bands, purple, sum(lit)])
         pp = await ev(pg, "PHONE.prices()")
         ok('T5 phone price notes: soda 3, food 7, potion 6, effect text current', pp['soda']['yen'] == 3 and pp['food']['yen'] == 7 and pp['potionShop']['yen'] == 6 and 'Fizz' not in pp['soda']['effect'] and '\u00a512' in pp['recommendation'] and 'shop sodas are \u00a53' in pp['recommendation'], pp)
         ok('T6 no page errors', not errs, errs); await b.close()
