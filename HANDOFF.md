@@ -11,8 +11,8 @@ Full rules, story and process: see the handoff doc Ernest shared (FoxFireFist_Ha
 
 ## Log (newest first)
 
-### 2026-11-27 — executor (Grok Bot) — v6.5.65 (branch rc-v6565) — UNPUBLISHED, waiting on Erik's OK
-Versions: `window.FFF_BUILD="v6565"`, title `.vtag` "v6.5.65", `#ver` text "v6.5.65" (bumped in 269a7c9). Not pushed, not published. Built on origin/main c1a3b8c (live v6.5.64, published 2ee7cbf).
+### 2026-11-27 — executor (Grok Bot) — v6.5.65 (commit eb3079c) — LIVE after Erik's OK
+Versions: `window.FFF_BUILD="v6565"`, title `.vtag` "v6.5.65", `#ver` text "v6.5.65" (bumped in 269a7c9). Approved by Erik (t606, publish card). Fast-forward c1a3b8c..eb3079c; published commit `eb3079c`. Built on origin/main c1a3b8c (live v6.5.64, published 2ee7cbf).
 
 Merged into `rc-v6565` in this order (each merge is its own commit). Alley Cat was merged last (Erik t531/t532: it finished before the v6.5.65 checks, so it ships in this release).
 
