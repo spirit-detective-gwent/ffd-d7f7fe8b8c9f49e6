@@ -20,3 +20,11 @@ shoyu tapP .05 (20 taps) tapH .075 cool .42; miso .048 (21) / .08 / .40; tonkots
 
 ## Tests
 `node tools/eatgame/eat_test.js [index.html]` (80 checks: tiers at 3/4/5/6 taps/s, lazy, burst, fail; ramen careful/greedy; soda unchanged).
+
+## Perf (eat overlay, iPhone dpr3, interleaved live 2ee7cbf vs branch)
+- 4x onigiri held mid-game (3 taps then idle), 4 runs each, 2026-11-27 7:15 PM ET, load 3.3-5.3, another job's perf_check was also running:
+  live 54.3 fps / heat 87.2, branch 56.8 / 82.5 (-4.7).
+- 4x onigiri leak shot (branch bursty thumb, live 'good' thumb), 4 runs: live 52.1 / 85.8, branch 58.2 / 78.5 (-7.3).
+- An earlier 2-run pass on a load-5 box read +10.4 / +5.2; runs spread about +-8 heat, so that was noise. No gauge change was needed.
+- 1x: bites 60.0 both; shoyu 59.8 vs 59.2. Memory: 8 open/close cycles +0.43 MB both, canvases 9 both.
+- World perf_check c1a3b8c vs branch (world+soak): OVERALL PASS, all key spots 59.7-60, soak slope 0.067 vs 0.062.
