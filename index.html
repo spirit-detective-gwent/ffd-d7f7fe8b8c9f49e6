@@ -47200,6 +47200,30 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   try { (C2W.props.place || []).forEach(function (q) { if (q[0] === 'tree' && q[1] === 3060 && q[2] === 2700) q[1] = 2790; });
     (C2W.pblocks || []).forEach(function (b) { if (b[0] === 3046 && b[1] === 2684 && b[2] === 3074) { b[0] = 2776; b[2] = 2804; } }); } catch (eT) {}
   if (typeof TRANS !== 'undefined') TRANS.s2_e_waga = 1;
+  /* v6.5.66 (t612u): the SOUTH side of Wagashi row has the "SWEETS" noren building (bld shopsE2, named WAGASHI) with no door, no sign and no shop
+   * behind it, which read as "Wagashi was never built". Chiyo Wagashi is one shop with two fronts: the south front is a second door into the same
+   * room (opens when the shop does), with a painted open window and sign on the facade, and you step back out onto that side. */
+  var WAGA_S = { r: [3030, 3210, 3130, 3300], at: [3080, 3334], out: [3080, 3352] }, WAGA_N_OUT = WAGA_DOOR.out.slice();
+  INT.c2_town.spots.push({ id: 's2_e_waga_s', r: WAGA_S.r, at: WAGA_S.at, face: 3, lab: 'Sweets' });
+  var WAGA_SC = null;
+  function wagaSouthCanvas() { var P = root.FFF_NQ && root.FFF_NQ.paint; if (!P) return null; var c = P.cv(200, 92), g = c.getContext('2d');
+    var bg = g.createLinearGradient(0, 0, 0, 92); bg.addColorStop(0, '#fbe3b8'); bg.addColorStop(1, '#e7b27c'); g.fillStyle = bg; g.fillRect(0, 0, 200, 92);
+    g.fillStyle = '#6a3e2a'; g.fillRect(0, 0, 200, 22); P.box(g, 14, 3, 172, 17, '#f4ead2', 2, 2);
+    g.font = '900 11px ' + P.JPF; g.textBaseline = 'middle'; g.textAlign = 'center'; g.fillStyle = '#8e3b52'; g.fillText('\u548c\u83d3\u5b50', 52, 12); g.fillStyle = '#2a211c'; g.fillText('CHIYO WAGASHI', 134, 12);
+    g.fillStyle = '#7a4a30'; g.fillRect(0, 56, 200, 36); g.strokeStyle = P.INK; g.lineWidth = 2; g.strokeRect(0, 56, 200, 4);
+    var cols = ['#f2c4cf', '#9ec27a', '#f4ead2', '#e8a0b8', '#c9b3e0'];
+    [[26, 0], [76, 1], [126, 2], [172, 3]].forEach(function (q, i) { P.box(g, q[0] - 20, 40, 40, 16, '#3b2a22', 3, 2);
+      for (var k = 0; k < 3; k++) { g.beginPath(); g.arc(q[0] - 11 + k * 11, 38, 6.5, 0, 7); g.fillStyle = cols[(i + k) % cols.length]; g.fill(); g.lineWidth = 2; g.strokeStyle = P.INK; g.stroke(); } });
+    g.fillStyle = 'rgba(255,240,200,.35)'; g.fillRect(0, 22, 200, 14);
+    P.box(g, 160, 64, 34, 18, '#f4ead2', 2, 2); P.jp(g, '\u55b6\u696d\u4e2d', 177, 73, 9, '#b8332a'); g.strokeStyle = P.INK; g.lineWidth = 3; g.strokeRect(1.5, 1.5, 197, 89); return c; }
+  function placeSouth() {
+    WAGA_DOOR.out = WAGA_N_OUT.slice(); /* back to the north exit once you are in the street */
+    if (!on() || !inTown() || !roomOpen() || document.getElementById('s2WagaSouth')) return;
+    WAGA_SC = WAGA_SC || wagaSouthCanvas(); if (!WAGA_SC) return;
+    WAGA_SC.className = 'nqprop'; WAGA_SC.id = 's2WagaSouth'; WAGA_SC.style.cssText = 'position:absolute;left:2980px;top:3200px;width:200px;height:92px;z-index:' + (100 + 3299) + ';pointer-events:none';
+    var host = document.getElementById('wisp') || document.getElementById('world') || document.getElementById('wimap'); if (host) host.appendChild(WAGA_SC); try { W.ints.push({ el: WAGA_SC }); } catch (eI) {}
+  }
+  S2.placeSouth = placeSouth; S2.WAGA_S = WAGA_S;
   delete INT.c2_town.G;
   /* painted storefront, 400×160, center 3080, bottom flush on y=2600 (Lucky 7 south wall).
      NQ's FAC / propEl / facades live inside the NQ IIFE, so we append the canvas ourselves and hook c2Pop. */
@@ -47223,7 +47247,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   S2.placeDoor = placeDoor;
   if (typeof facades === 'function') {
     var fac0 = facades;
-    facades = function () { fac0.apply(this, arguments); try { placeDoor(); } catch (eD) {} };
+    facades = function () { fac0.apply(this, arguments); try { placeDoor(); } catch (eD) {} try { placeSouth(); } catch (eS) {} };
   }
   function hookBattle() {
     if (S2._bt) return true;
@@ -47529,7 +47553,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     c2ActC = function (k, a) {
       try {
         if (on()) {
-          if (a === 's2_e_waga') { doorTalk(); return true; }
+          if (a === 's2_e_waga') { WAGA_DOOR.out = WAGA_N_OUT.slice(); doorTalk(); return true; }
+          if (a === 's2_e_waga_s') { if (roomOpen()) { WAGA_DOOR.out = WAGA_S.out.slice(); W._s2WagaSaid = 0; c2Enter('waga'); } return true; }
           if (a === 's2_waga_order') { if (CHI) chiyoFaceCustomer(); counterMenu(); return true; }
           if (a === 's2_flip' || (FL && a && /n13flip/.test(a) && qOn() && stg() === 'open')) { flipTalk(); return true; }
         }
@@ -47562,6 +47587,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
         if (out && on()) out = out.filter(function (t) {
           if (!t || !t.key) return true;
           if (t.key.indexOf(':s2_flip') >= 0) return qOn() && stg() === 'open';
+          if (t.key.indexOf(':s2_e_waga_s') >= 0) { t.obj = null; t.y = 3262; return roomOpen(); }
           if (t.key.indexOf(':s2_e_waga') >= 0) return punkAfterSeal();
           if (t.key.indexOf(':s2_waga_order') >= 0) return room() === 'waga';
           return true;
