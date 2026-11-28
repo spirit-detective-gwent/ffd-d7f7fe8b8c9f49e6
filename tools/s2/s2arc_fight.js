@@ -426,6 +426,7 @@
     G.dbg = function (o) { o = o || {}; if (phase === 'select') { if (o.sel != null) sel = o.sel; confirmSel(); phase = 'pre'; } if (o.lives) { P.max = P.hp = 9999; } if (o.foeHp != null) E.hp = o.foeHp; if (o.meter) P.meter = 100; return { phase: phase, p: P && P.hp, e: E && E.hp, foe: E && E.id, me: P && P.id, wins: wins, rnd: rnd }; };
     G.phase = function () { return phase; }; G._pe = function () { return [P, E]; };
     G._in = function () { return { buf: buf, bufT: bufT, spHold: spHold, jumpQ: jumpQ, blocks: G._blocks | 0, freeze: freeze }; };
+    G.resetCtrl = function () { buf = null; bufT = 0; spHold = -1; jumpQ = 0; freeze = 0; G.noHS = false; if (G._rawStep) G.step = G._rawStep; };
     return G;
   };
   } catch (eTop) { try { console.warn('S2ARC fight init', eTop); } catch (e2) {} }

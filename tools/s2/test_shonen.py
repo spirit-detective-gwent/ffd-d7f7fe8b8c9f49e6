@@ -38,7 +38,7 @@ async def main():
         ph = await g.ev("%s.phase()" % G); ok('match reaches fight', ph == 'fight', ph)
         # helpers
         RESET = """(function(o){var G=FFF_S2ARC.cabG(), pe=G._pe(), P=pe[0], E=pe[1]; P.max=P.hp=9999; E.max=E.hp=9999; P.x=150; E.x=150+(o.d||70); P.face=1; E.face=-1;
-          [P,E].forEach(function(F){F.st='idle';F.mv=null;F.stT=0;F.vx=0;F.vy=0;F.air=false;F.y=430;F.lockT=0;F.inv=0;F.meter=o.m||0}); E.aiT=99; E.want={}; G.in.l=G.in.r=false; return 1})"""
+          [P,E].forEach(function(F){F.st='idle';F.mv=null;F.stT=0;F.vx=0;F.vy=0;F.air=false;F.y=430;F.lockT=0;F.inv=0;F.meter=o.m||0}); E.aiT=99; E.want={}; G.in.l=G.in.r=false; if (G.resetCtrl) G.resetCtrl(); return 1})"""
         FOE_HIT = """(function(k){var G=FFF_S2ARC.cabG(), pe=G._pe(), P=pe[0], E=pe[1]; E.aiT=99; E.want={act:null}; var h0=P.hp, b0=G._in().blocks;
           return JSON.stringify({h0:h0,b0:b0})})"""
         async def foe_attack(k='p', d=46, setup=None, frames=40):
@@ -147,7 +147,7 @@ async def ladder_live():
           else if ((E.st==='atk'&&E.stT>E.mv.s+E.mv.a)||Math.random()<0.25) G.press('a'); }, 33); return 1 })()"""
         await g.ev(BOT)
         seen = set(); stt = None
-        for i in range(900):
+        for i in range(1200):  # hitstop makes matches a little longer
             await g.wait(1000)
             stt = await g.ev("FFF_S2ARC.cabSt()")
             stg = await g.ev("%s ? %s.stage : -1" % (G, G)); seen.add(stg)

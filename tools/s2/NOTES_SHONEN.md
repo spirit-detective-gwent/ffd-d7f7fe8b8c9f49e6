@@ -36,3 +36,19 @@ Short 4x dpr3 match vs live 2ee7cbf, two interleaved reps (labels 6–7), load u
 - match heat avg live 59.7%, branch 64.9% (deltas +3.4 and +6.9). The +6.9 pair is live7 running cool at 57.1% vs branch 64.0%; branch heat is in the same band as earlier live reps (62–67%). Superfull fps 60.0 vs 59.7, heat +1.9.
 - heap branch 50.6 → 51.4 MB, closed clean. Memory flat.
 Not pushed. No version bump.
+
+## Title z-order (Erik t604u)
+SELECT YOUR FIGHTER is drawn after the big select portrait (same x/y/scale as before: 92, 250, 1.6). No clip, no shrink. Kaze's tall spikes go behind the letters; the title stays fully readable. Same for every fighter.
+
+## Hit feel (Erik t606u)
+hitStop() on landed hits. Jab 0.045s, kick/special 0.06s, scaled by dmg/9, cap 0.09s. Blocks 0.03s. Multi follow-ups 0.02s. Super's 0.5s freeze is never shortened. White flash, spark, shake and drum unchanged. Chain finisher (chainN===3) gets 1.2x knockback.
+G.step skips bufT / jumpQ / spHold / comboT and stepF while freeze > 0, so a buffered ATTACK or SPECIAL is still there after the pause and the cancel window does not tick away. G.resetCtrl() clears buf/freeze (test hook). G.noHS disables hitstop for before/after strips.
+
+## Tests and shots
+test_shonen 36 checks: 35/36 on the first in-page rerun after RESET was cleaned up (SPECIAL tap then passed). The remaining miss was the in-page bot: it reached all 5 matches but the 900s cap ended while the cabinet was still in 'play'. A previous run of the same hitstop build did reach ALL CLEAR. Node ladder: 18/18 full clears with continues, idle player 0/18 (still loses); without continues a smart bot still gets some full clears (3/30).
+Shots: /workspace/shonen/shots/costumes_before_after.png, /workspace/shonen/shots/hitfeel_before_after.png.
+
+## Heat, 3 interleaved 4x dpr3 match pairs vs live 2ee7cbf (perf3, load under 6, no other perf)
+Pairs 8–10 (costume/title build, before hitstop): heat deltas +6.2, +3.6, +4.0. Median +4.0 (mean +4.6). Under the +5 cap; no draw-cache fix. Both sides ran a bit low on fps this set (live 56.3/59.8/54.8, branch 56.2/55.7/56.1) with the machine warmer (~70% cpu). Earlier quieter sets were ~59 fps.
+After hitstop (2 pairs): clean pair live 59.7 fps / 71.6% vs branch 59.2 / 72.8% (heat +1.2). Second pair had a hitch on the branch (51.4 fps, +12.8) then superfull recovered to 58.8. Heap 50.5→51.4 MB, flat.
+Not pushed. No version bump.
