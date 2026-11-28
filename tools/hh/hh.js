@@ -75,6 +75,8 @@
 
   /* ======================= the handheld (overlay) ======================= */
   var HHP = null; /* the open handheld */
+  /* keys: one capture listener installed at load, ahead of the controller layer (which stops arrows while the world is paused) */
+  root.addEventListener('keydown', function (e) { if (HHP && HHP.key) HHP.key(e, true); }, true); root.addEventListener('keyup', function (e) { if (HHP && HHP.key) HHP.key(e, false); }, true);
   var SX = 14, SY = 78, SW = 362, SH = 500;
   function hhPaint(p) { var K = HHA().K, rr = K.rr, txt = K.txt;
     p.fillStyle = '#10141c'; p.fillRect(-80, -20, 560, 900);
@@ -149,7 +151,6 @@
       if (KD[k]) { G.in[KD[k]] = dn; return; } if (KU[k]) { if (dn && !held[k] && G.swipeUp) G.swipeUp(G.in.l ? -30 : G.in.r ? 30 : 0); held[k] = dn; return; }
       if (KA[k]) { var b = KA[k]; if (dn && !held[k]) { G.in[b] = true; if (G.press) G.press(b); } else if (!dn && held[k]) { G.in[b] = false; if (G.release) G.release(b); } held[k] = dn; } }
     function kd(e) { key(e, true); } function ku(e) { key(e, false); }
-    root.addEventListener('keydown', kd, true); root.addEventListener('keyup', ku, true);
     function go(k) { st = k; stT = 0; hhEv('st:' + k); }
     function tick(ts) { if (done) return; var dt = Math.min(0.05, Math.max(0, (ts - last) / 1000)); last = ts; t += dt; stT += dt;
       if (st === 'boot' && stT > 1.1) { G.start(); go('intro'); }
@@ -172,11 +173,11 @@
       if (o.again) { var b2 = document.createElement('button'); b2.type = 'button'; b2.className = 'hot'; b2.textContent = 'Again'; b2.addEventListener('click', function (e) { e.stopPropagation(); finish(true); }); rb.appendChild(b2); }
       el.appendChild(rb); hhEv('end:' + (o.ch || 'cpu') + ':' + (won ? 'win' : 'loss')); }
     function finish(again) { var r = res; kill(false); if (o.onEnd) o.onEnd(r ? r.won : false, false, again); }
-    function kill(quit) { if (done) return; done = true; cancelAnimationFrame(raf); root.removeEventListener('keydown', kd, true); root.removeEventListener('keyup', ku, true);
+    function kill(quit) { if (done) return; done = true; cancelAnimationFrame(raf);
       try { if (G.dispose) G.dispose(); } catch (eD) {} plate.width = plate.height = 0; scr.width = scr.height = 0; cv.width = cv.height = 0; if (el.parentNode) el.parentNode.removeChild(el); hhUnfreeze(hid);
       W.paused = prev.paused; W.dlg = prev.dlg; if (W.ryo) W.ryo.v = 0; W.path = []; HHP = null; try { wMus(); } catch (eM) {} hhEv('close:' + (quit ? 'quit' : 'done'));
       if (quit && o.onEnd) o.onEnd(false, true); }
-    HHP = { kill: kill, st: function () { return st; }, G: G, cfg: cfg, go: go, end: end, res: function () { return res; } };
+    HHP = { key: key, kill: kill, st: function () { return st; }, G: G, cfg: cfg, go: go, end: end, res: function () { return res; } };
     hhEv('open:' + (o.ch || 'cpu') + ':' + me + ':' + o.foe); raf = requestAnimationFrame(tick); return true; }
 
   /* ======================= challengers in the world ======================= */
