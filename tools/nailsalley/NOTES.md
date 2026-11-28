@@ -103,3 +103,21 @@ Video: shots/flipfight_cine.mp4 (tools/corners/rec_clash.py).
 Perf 4x dpr3 vs live e4139c5 (perf_clash.py, 3 interleaved, run 3 load-hit
 both sides): pre 57.5 vs 58.8 fps, heat 81.3 vs 91.3; battle 50.7 vs 48.3,
 heat 90.1 vs 87.5 (+2.6); post 59.0 vs 53.4, heat 81.4 vs 88.0.
+
+## t629u: teleport fix + simplified post-win (flipfight_cine_v2)
+
+Teleport cause: the guard stance used CSS individual `scale`/`translate`
+properties on the NPC sprite. Those compose OUTSIDE the inline
+`transform: translate3d(worldX, worldY)`, so scale(1.04,.95) multiplied the
+world translate: every posed Hustler/Punk jumped ~+53px x, -121px y on screen
+(world coords unchanged, which is why t13 never saw it). Fix: stance rides the
+same transform via `s.sq` in `place()`; CSS rules removed.
+Post-win now: battle returns -> 220ms white one-shot overlay (#nqxflash,
+pointer-events none) -> all three Hustlers already lying (lieEl) in front of
+their Punks -> Aoi stock quip -> NEW VO.clashDown (Flip + path reaction) -> Flip's
+original VO.clashWon. No post cine, no pan, no exchange. Skip stays on pre.
+Retreat/defeat: Ryo respawns just north of the trigger (approved).
+Tests: t13 83/83 (adds screen-jump monitor + no scale/translate props), s2 167/167,
+ngp 104 PASS, verify_wired PASS, ch_smoke PASS. Video shots/flipfight_cine_v2.mp4.
+Perf 4x dpr3, 2 interleaved pairs: pre 60.0/58.2 fps heat 82.3/87.9; battle 57.2/57.5,
+88.3/88.5; post-win window 51.8/54.0, 86.4/88.8 (branch/live).
