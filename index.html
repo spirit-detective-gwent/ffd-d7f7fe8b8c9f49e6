@@ -60156,22 +60156,22 @@ var CAP = false;
 var ITEMS = {
 /* GGD-51 eatg */
   shoyu: { game: 'noodles', ramen: 'shoyu', jp: '醤油らーめん', en: 'SHOYU RAMEN', tag: 'BLOW · SLURP · DON\u2019T BURN', bg: '#ffe2b0', ray1: 'rgba(200,110,50,.42)', ray2: 'rgba(140,70,30,.22)', broth: '#a0602a',
-    tapP: 0.034, tapH: 0.08, cool: 0.29, stat: 'hp', base: 30, win: 'x1.5', startHp: 4,
+    tapP: 0.05, tapH: 0.075, cool: 0.42, stat: 'hp', base: 30, win: 'x1.5', startHp: 4,
     rows: { win: ['WIN', 'FULL HP', 'back to 55 / 55'], close: ['CLOSE MISS', '+30 HP', 'the normal heal'], bad: ['BAD RUN', '+15 HP', 'half of normal'] } },
   miso: { game: 'noodles', ramen: 'miso', jp: '味噌らーめん', en: 'MISO RAMEN', tag: 'THICK BROTH HOLDS THE HEAT', bg: '#ffdca0', ray1: 'rgba(214,140,40,.42)', ray2: 'rgba(160,90,30,.22)', broth: '#c48a3a',
-    tapP: 0.032, tapH: 0.09, cool: 0.26, stat: 'hp', base: 34, win: 'x1.5', startHp: 4,
+    tapP: 0.048, tapH: 0.08, cool: 0.40, stat: 'hp', base: 34, win: 'x1.5', startHp: 4,
     rows: { win: ['WIN', 'FULL HP', 'back to 55 / 55'], close: ['CLOSE MISS', '+30 HP', 'the normal heal'], bad: ['BAD RUN', '+15 HP', 'half of normal'] } },
   tonkotsu: { game: 'noodles', ramen: 'tonkotsu', jp: '豚骨らーめん', en: 'TONKOTSU RAMEN', tag: 'MILKY BROTH · BIG BOWL', bg: '#fff0d6', ray1: 'rgba(230,190,140,.45)', ray2: 'rgba(170,120,80,.22)', broth: '#e8d4ae',
-    tapP: 0.03, tapH: 0.085, cool: 0.27, stat: 'hp', base: 40, win: 'x1.5', startHp: 4,
+    tapP: 0.045, tapH: 0.08, cool: 0.40, stat: 'hp', base: 40, win: 'x1.5', startHp: 4,
     rows: { win: ['WIN', 'FULL HP', 'back to 55 / 55'], close: ['CLOSE MISS', '+30 HP', 'the normal heal'], bad: ['BAD RUN', '+15 HP', 'half of normal'] } },
   yakitori: { game: 'bite', kind: 'yakitori', jp: '焼き鳥', en: 'YAKITORI', tag: 'MASH · TARE GLAZE OFF THE SKEWER', bg: '#f2dcc0', ray1: 'rgba(170,80,30,.3)', ray2: 'rgba(90,40,20,.16)',
-    tapP: 0.12, tapsNeed: 8, stat: 'hp', startHp: 4,
+    tier: 'std', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+15 HP', 'a generous plate'], close: ['CLOSE MISS', '+10 HP', 'the normal heal'], bad: ['BAD RUN', '+5 HP', 'half of normal'] } },
   karaage: { game: 'bite', kind: 'lunch', jp: '唐揚げ', en: 'KARAAGE', tag: 'MASH · CRUNCHY, STRAIGHT FROM THE OIL', bg: '#f0e0c0', ray1: 'rgba(200,160,80,.28)', ray2: 'rgba(120,90,40,.14)',
-    tapP: 0.11, tapsNeed: 9, stat: 'hp', startHp: 4,
+    tier: 'heavy', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+21 HP', 'a generous plate'], close: ['CLOSE MISS', '+14 HP', 'the normal heal'], bad: ['BAD RUN', '+7 HP', 'half of normal'] } },
   edamame: { game: 'bite', kind: 'edamame', jp: '枝豆', en: 'EDAMAME', tag: 'MASH · POP THE PODS', bg: '#e4f0d0', ray1: 'rgba(90,160,60,.28)', ray2: 'rgba(40,100,40,.14)',
-    tapP: 0.13, tapsNeed: 7, stat: 'hp', startHp: 4,
+    tier: 'light', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+9 HP', 'a generous plate'], close: ['CLOSE MISS', '+6 HP', 'the normal heal'], bad: ['BAD RUN', '+3 HP', 'half of normal'] } },
   kitsune: { game: 'noodles', jp: 'きつねうどん', en: 'KITSUNE UDON', tag: 'FRIED TOFU BITE BEAT', bg: '#ffe9b8', ray1: 'rgba(255,170,80,.45)', ray2: 'rgba(255,120,60,.25)', broth: '#d9b77a',
     tapP: 0.0305, tapH: 0.075, cool: 0.30, tofu: true, stat: 'hp', base: 40, win: 'full', startHp: 4,
@@ -60200,35 +60200,35 @@ var ITEMS = {
   energy: { game: 'soda', kind: 'energy', jp: 'エナジードリンク', en: 'ENERGY DRINK', tag: 'FIZZ CLIMBS FASTER', bg: '#d8e8a8', ray1: 'rgba(180,220,40,.34)', ray2: 'rgba(40,80,20,.18)',
     chug: 0.24, fizz: 0.50, rec: 0.08, stat: 'sp', startSp: 6,
     rows: { win: ['WIN', '+30 SP', '1.5x the normal heal'], close: ['CLOSE MISS', '+20 SP', 'the normal heal'], bad: ['BAD RUN', '+10 SP', 'half of normal'] } },
-  onigiri: { game: 'bite', kind: 'onigiri', jp: 'おにぎり', en: 'ONIGIRI', tag: 'MASH BEFORE TIME RUNS OUT', bg: '#f0e4d0', ray1: 'rgba(80,80,80,.22)', ray2: 'rgba(180,60,60,.14)',
-    tapP: 0.125, tapsNeed: 8, stat: 'hp', startHp: 4,
+  onigiri: { game: 'bite', kind: 'onigiri', jp: 'おにぎり', en: 'ONIGIRI', tag: 'MASH \u00b7 KEEP THE PACE', bg: '#f0e4d0', ray1: 'rgba(80,80,80,.22)', ray2: 'rgba(180,60,60,.14)',
+    tier: 'std', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+40 HP', '1.5x the normal heal'], close: ['CLOSE MISS', '+26 HP', 'the normal heal'], bad: ['BAD RUN', '+13 HP', 'half of normal'] } },
   melonbread: { game: 'bite', kind: 'melonbread', jp: 'メロンパン', en: 'MELON BREAD', tag: 'MASH · TEAR THE CRACKLED CRUST', bg: '#e8f5c8', ray1: 'rgba(140,200,60,.32)', ray2: 'rgba(200,180,60,.14)',
-    tapP: 0.105, tapsNeed: 10, stat: 'hp', startHp: 4,
+    tier: 'std', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+40 HP', '1.5x the normal heal'], close: ['CLOSE MISS', '+26 HP', 'the normal heal'], bad: ['BAD RUN', '+13 HP', 'half of normal'] } },
   yakisoba: { game: 'bite', kind: 'yakisoba', jp: '焼きそばパン', en: 'YAKISOBA BREAD', tag: 'MASH · SAUCE AND NOODLES', bg: '#f3d9b0', ray1: 'rgba(180,90,30,.32)', ray2: 'rgba(120,60,20,.16)',
-    tapP: 0.105, tapsNeed: 10, stat: 'hp', startHp: 4,
+    tier: 'std', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+40 HP', '1.5x the normal heal'], close: ['CLOSE MISS', '+26 HP', 'the normal heal'], bad: ['BAD RUN', '+13 HP', 'half of normal'] } },
   pudding: { game: 'bite', kind: 'pudding', jp: 'プリン', en: 'CUSTARD PUDDING', tag: 'MASH · IT WOBBLES', bg: '#f7e4b8', ray1: 'rgba(200,140,50,.32)', ray2: 'rgba(160,80,30,.14)',
-    tapP: 0.145, tapsNeed: 7, stat: 'hp', startHp: 4,
+    tier: 'light', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+40 HP', '1.5x the normal heal'], close: ['CLOSE MISS', '+26 HP', 'the normal heal'], bad: ['BAD RUN', '+13 HP', 'half of normal'] } },
   melon: { game: 'bite', kind: 'melon', jp: 'メロンパン', en: 'MELON BREAD', tag: 'MASH · TEAR THE CRACKLED CRUST', bg: '#e8f5c8', ray1: 'rgba(140,200,60,.32)', ray2: 'rgba(200,180,60,.14)',
-    tapP: 0.105, tapsNeed: 10, stat: 'hp', startHp: 4,
+    tier: 'std', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+40 HP', '1.5x the normal heal'], close: ['CLOSE MISS', '+26 HP', 'the normal heal'], bad: ['BAD RUN', '+13 HP', 'half of normal'] } },
   lunch: { game: 'bite', kind: 'lunch', jp: 'から揚げ', en: 'HOT LUNCH · KARAAGE', tag: 'MASH · CRUNCHY KARAAGE BITES', bg: '#f0e0c0', ray1: 'rgba(200,160,80,.28)', ray2: 'rgba(120,90,40,.14)',
-    tapP: 0.11, tapsNeed: 9, stat: 'hp', startHp: 4,
+    tier: 'heavy', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', 'FULL HP', 'back to 55 / 55'], close: ['CLOSE MISS', '+40 HP', 'the normal heal'], bad: ['BAD RUN', '+20 HP', 'half of normal'] } },
   antoast: { game: 'bite', kind: 'antoast', jp: 'アントースト', en: 'AN-TOAST', tag: 'MASH · BUTTER MELTS ON RED BEAN', bg: '#f0d4b0', ray1: 'rgba(160,70,40,.32)', ray2: 'rgba(90,40,20,.16)',
-    tapP: 0.12, tapsNeed: 8, stat: 'hp', startHp: 4,
+    tier: 'std', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+20 HP', 'the cafe plate'], close: ['CLOSE MISS', '+13 HP', 'a smaller bite'], bad: ['BAD RUN', '+7 HP', 'half of the plate'] } },
   omurice: { game: 'bite', kind: 'omurice', jp: 'オムライス', en: 'OMURICE', tag: 'MASH · SOFT EGG, KETCHUP RICE', bg: '#f7e8b0', ray1: 'rgba(230,180,50,.34)', ray2: 'rgba(180,40,30,.16)',
-    tapP: 0.10, tapsNeed: 10, stat: 'hp', startHp: 4,
+    tier: 'heavy', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+42 HP', 'the cafe plate'], close: ['CLOSE MISS', '+28 HP', 'a smaller bite'], bad: ['BAD RUN', '+14 HP', 'half of the plate'] } },
   sweetroll: { game: 'bite', kind: 'sweetroll', jp: '\u3042\u3093\u30ed\u30fc\u30eb', en: 'SWEET ROLL', tag: 'MASH, THEN TAP TO PULL APART', bg: '#f3e0c8', ray1: 'rgba(200,80,40,.28)', ray2: 'rgba(230,180,80,.14)',
-    tapP: 0.14, tapsNeed: 6, pull: 1, stat: 'hp', startHp: 4,
+    tier: 'std', pull: 1, stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+21 HP', '1.5x the shop heal'], close: ['CLOSE MISS', '+14 HP', 'the shop heal'], bad: ['BAD RUN', '+7 HP', 'half of the shop heal'] } },
-  dango: { game: 'bite', kind: 'dango', jp: '\u56e3\u5b50', en: 'DANGO', tag: 'MASH BEFORE TIME RUNS OUT', bg: '#f0e4d0', ray1: 'rgba(200,120,140,.22)', ray2: 'rgba(140,180,80,.14)',
-    tapP: 0.16, tapsNeed: 5, stat: 'hp', startHp: 4,
+  dango: { game: 'bite', kind: 'dango', jp: '\u56e3\u5b50', en: 'DANGO', tag: 'MASH \u00b7 KEEP THE PACE', bg: '#f0e4d0', ray1: 'rgba(200,120,140,.22)', ray2: 'rgba(140,180,80,.14)',
+    tier: 'light', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', '+12 HP', '1.5x the shop heal'], close: ['CLOSE MISS', '+8 HP', 'the shop heal'], bad: ['BAD RUN', '+4 HP', 'half of the shop heal'] } },
   lait: { game: 'coffee', variant: 'lait', jp: 'カフェオレ', en: 'CAFÉ AU LAIT', tag: 'MILKY AND MILD. SIP, DON\'T GULP', bg: '#f3e1c9', ray1: 'rgba(205,150,100,.34)', ray2: 'rgba(150,95,60,.16)',
     sip: 0.27, base: 0.07, bit0: 0.09, bitK: 1.05, rec: 1.6, hotA: 0.17, hotB: 0.55, cool: 0.07, stat: 'sp', startSp: 6,
@@ -60243,10 +60243,15 @@ var ITEMS = {
     chug: 0.21, fizz: 0.22, rec: 0.12, stat: 'hp', startHp: 4,
     rows: { win: ['WIN', 'FULL HP', 'back to 55 / 55'], close: ['CLOSE MISS', '+15 HP', 'the normal heal'], bad: ['BAD RUN', '+8 HP', 'half of normal'] } },
   candy: { game: 'bite', kind: 'candy', jp: 'チョコバー', en: 'CANDY BAR', tag: 'MASH · SNAP THE CHOCOLATE', bg: '#f1dfd0', ray1: 'rgba(150,80,40,.32)', ray2: 'rgba(220,60,50,.14)',
-    tapP: 0.16, tapsNeed: 7, stat: 'hp', startHp: 4,
+    tier: 'light', stat: 'hp', startHp: 4,
     rows: { win: ['WIN', 'FULL HP', 'back to 55 / 55'], close: ['CLOSE MISS', '+6 HP', 'the normal heal'], bad: ['BAD RUN', '+3 HP', 'half of normal'] } }
 };
 ITEMS.melonbread.kind = 'melon';
+/* GGD-90 eatgame: quick bites drain. Each tap adds tapP; the meter always leaks drain x fill per second, so it leaks
+ * faster near the top and only a steady pace holds it there (nothing leaks below BITE_FLOOR). Light / standard / heavy foods need a steadier pace. */
+var BITE_TIER = { light: { tapP: 0.09, drain: 0.5 }, std: { tapP: 0.078, drain: 0.5 }, heavy: { tapP: 0.075, drain: 0.5 } }, BITE_FLOOR = 0.3; /* no leak below 30% */
+Object.keys(ITEMS).forEach(function (k) { var c = ITEMS[k], T; if (c.game !== 'bite') return; T = BITE_TIER[c.tier] || BITE_TIER.std; c.tapP = T.tapP; c.drain = T.drain; });
+var BITE_FULL = 0.9999; /* float-safe full (omurice used to need one extra tap from 0.1 x 10 rounding) */
 var POSES = { kitsune: ['eat_happy', 'eat_fail'], curry: ['eat_happy', 'eat_fail_curry'], blend: ['drink_happy', 'drink_fail'], iced: ['drink_happy_iced', 'drink_fail_iced'], fizz: ['chug', 'burp_fail'], cola: ['chug', 'burp_fail'], orange: ['chug', 'burp_fail'], ramune: ['chug', 'burp_fail'], energy: ['chug', 'burp_fail'], onigiri: ['bite_happy', 'bite_fail'], melonbread: ['bite_happy', 'bite_fail'], melon: ['bite_happy', 'bite_fail'], yakisoba: ['bite_happy', 'bite_fail'], pudding: ['bite_happy', 'bite_fail'], lunch: ['bite_happy', 'bite_fail'], antoast: ['bite_happy', 'bite_fail'], omurice: ['bite_happy', 'bite_fail'], candy: ['bite_happy', 'bite_fail'], lait: ['drink_happy', 'drink_fail'], wiener: ['drink_happy', 'drink_fail'], cmilk: ['chug', 'burp_fail'], fmilk: ['chug', 'burp_fail'] };
 /* mouth anchor (portrait px, 360x480) for the fx that come out of the mouth, per character + happy / fail pose */
 var MOUTH = { ryo: { happy: [198, 214], fail: [188, 248], fail_curry: [204, 250], drink: [208, 218], drink_fail: [210, 248], iced: [196, 214], drink_fail_iced: [200, 250], chug: [200, 188], burp: [208, 214], burp_fail: [208, 250], bite: [200, 218], bite_fail: [208, 248] }, aoi: { happy: [222, 232], fail: [198, 278], fail_curry: [218, 248], drink: [222, 232], drink_fail: [215, 255], iced: [228, 216], drink_fail_iced: [215, 260], chug: [218, 198], burp: [208, 230], burp_fail: [210, 255], bite: [218, 230], bite_fail: [202, 265] } };
@@ -60306,7 +60311,7 @@ function newRun(cfgName, who, seed, script) {
     p: 0, pullT: 0, pullGo: 0, heat: 0, tofu: { st: 0, t: 0, hit: 0 }, stains: [],
     L: 1, tol: 0, sipT: 0, sips: 0, cup: 0, hotR: 0, bitR: 0, baseR: 0, temp: 1, warned: false, clinkT: -9, sipN: 0, lastSip: 0,
     hp0: C.startHp != null ? C.startHp : 0, sp0: C.startSp != null ? C.startSp : 6, hpShown: 0, spShown: 0, thumb: null, blowT: 0,
-    fizz: 0, canK: 0, pose: '', poseT: -9, downT: 0, foodK: 0, burpOk: 0, biteT: -9 };
+    fizz: 0, canK: 0, pose: '', poseT: -9, downT: 0, foodK: 0, burpOk: 0, biteT: -9, pk: 0, pg: 0 };
   S.hpShown = S.hp0; S.spShown = S.sp0;
   return S;
 }
@@ -60487,7 +60492,7 @@ function biteTap() {
   if (S.ph !== 'play') return;
   var C = S.C, m = mouthXY();
   S.idle = 0; S.tapU = 0; S.taps++; S.biteT = S.t;
-  S.p = Math.min(1, S.p + C.tapP);
+  S.p = Math.min(1, S.p + C.tapP); if (S.p > S.pk) S.pk = S.p; if (S.p > S.pg) S.pg = S.p;
   var kind = biteKind(), n = S.taps, odd = n % 2, i;
   function crumbs(cnt, cols, sMin, sVar, spread, up) { if (loq()) cnt = Math.max(3, cnt >> 1); for (i = 0; i < cnt; i++) addP({ k: 'crumb', x: m[0], y: m[1], vx: (rnd() - 0.5) * spread, vy: -up * 0.45 - rnd() * up, life: 0.55, s: sMin + rnd() * sVar, col: cols[i % cols.length] }); }
   if (kind === 'onigiri') { sfx(n === 1 ? 'slurp' : 'crunch', n); addLetter(n === 1 ? 'ぺりっ' : (odd ? 'もぐ！' : 'ぱくっ'), odd ? 80 : 300, 190, 42, '#fff6ec', odd ? -0.15 : 0.15, 0.4); crumbs(8, ['#f8f3e8', '#f8f3e8', '#1a1f1c', '#e8dcc4'], 2, 2.4, 240, 140); }
@@ -60500,10 +60505,11 @@ function biteTap() {
   else if (kind === 'antoast') { sfx('crunch'); addLetter(odd ? 'サクッ' : 'とろっ', odd ? 80 : 300, 190, 42, '#f0d4a0', odd ? -0.12 : 0.15, 0.4); crumbs(8, ['#e8c070', '#5c1a20', '#f6e07c', '#9a5a1c'], 2.4, 2.8, 220, 140); }
   else if (kind === 'candy') { sfx('crunch'); addLetter(odd ? 'パキッ！' : 'ガリッ', odd ? 80 : 300, 190, 42, '#ffb070', odd ? -0.14 : 0.16, 0.4); crumbs(9, ['#5a301a', '#8a4e2a', '#e8c98a', '#d83a34'], 2.2, 2.8, 250, 150); }
   else { sfx('jiggle'); addLetter(odd ? 'ふわっ' : 'とろっ', 300, 210, 42, '#f2c24a', 0.2, 0.4); crumbs(7, ['#f6cc40', '#e8742e', '#dc2a1a', '#fff6ac'], 3, 2.8, 170, 110); }
-  if (S.p >= 1) { if (S.C.pull) { S.ph = 'pull'; S.p = 1; S.pullT = 0; S.pullGo = 0; return; } endRun('win'); }
+  if (S.p >= BITE_FULL) { S.p = S.pk = S.pg = 1; if (S.C.pull) { S.ph = 'pull'; S.pullT = 0; S.pullGo = 0; return; } endRun('win'); }
 }
 function biteUpdate(dt) {
   S.idle += dt;
+  if (S.ph === 'play') { if (S.p > BITE_FLOOR) S.p = Math.max(BITE_FLOOR, S.p - (S.C.drain || 0) * (S.p - BITE_FLOOR) * dt); S.pg = Math.max(S.p, S.pg - 0.1 * dt); } /* GGD-90: the leak, and a red ghost that shows what leaked */
   setMood(S.idle < 0.4 ? 'happy' : ((RUN_T - S.pt) < 2.2 && S.p < 0.7 ? 'angry' : 'neutral'));
   if (S.pt >= RUN_T && S.ph === 'play') endRun(S.p >= 0.7 ? 'close' : 'bad', S.p >= 0.7 ? '' : 'choke');
 }
@@ -60645,13 +60651,15 @@ function botSoda(mode) {
   };
 }
 function botBite(mode) {
-  var st = { last: -9, rest: false, didRest: false, n: 0 };
+  /* GGD-90: 'good' = steady 6 taps/s, 'fail' = 3 taps then stops, 'lazy' = 3 taps/s, 'burst' = 1s at 7/s then 1s rest,
+   * a number = that many taps/s. Every interval wobbles +-20% (seeded) like a thumb does. */
+  var st = { last: -9, n: 0, gap: 0 };
+  var rate = typeof mode === 'number' ? mode : mode === 'lazy' ? 3 : mode === 'burst' ? 7 : 6;
   return function (S, dt) {
     if (mode === 'fail') { if (st.n < 3 && S.pt > 0.5 && S.pt - st.last >= 1.5) { st.last = S.pt; st.n++; inDown(); inUp(); } return; }
-    if (st.rest) { if (S.idle > 1.7) st.rest = false; return; }
-    if (st.n === 3 && !st.didRest) { st.rest = true; st.didRest = true; return; }
     if (S.ph === 'pull') { if (!S.pullGo && S.pullT >= 0.28 && S.t - (st.last||0) >= 0.2) { st.last = S.t; inDown(); inUp(); } return; }
-    if (S.pt > 0.3 && S.pt - st.last >= 0.20) { st.last = S.pt; st.n++; inDown(); inUp(); }
+    if (mode === 'burst' && (S.pt % 2) >= 1) return;
+    if (S.pt > 0.3 && S.pt - st.last >= st.gap) { st.last = S.pt; st.n++; st.gap = (1 / rate) * (0.8 + 0.4 * rnd()); inDown(); inUp(); }
   };
 }
 function makeBot(name, mode) {
@@ -60663,11 +60671,11 @@ function makeBot(name, mode) {
   return botCoffee(mode);
 }
 
-/* headless sim (for tuning): run a bot with no drawing */
+/* headless sim (for tuning / tests): run a bot with no drawing. GGD-90: mode can be a tap rate (taps/s) for quick bites. */
 function simulate(name, mode, seed) {
   newRun(name, 'ryo', seed, null); S.script = makeBot(name, mode); var dt = 1 / 60, guard = 0;
   while (S.ph !== 'result' && guard++ < 60 * 20) stepLogic(dt);
-  return { res: S.res, cause: S.cause, t: +S.pt.toFixed(2), p: +S.p.toFixed(2), L: +S.L.toFixed(2), heat: +S.heat.toFixed(2), fizz: +(S.fizz || 0).toFixed(2), taps: S.taps, sips: S.sips };
+  return { res: S.res, cause: S.cause, t: +S.pt.toFixed(2), p: +S.p.toFixed(2), L: +S.L.toFixed(2), heat: +S.heat.toFixed(2), fizz: +(S.fizz || 0).toFixed(2), taps: S.taps, sips: S.sips, pk: +(S.pk || 0).toFixed(2), tier: S.C.tier || '' };
 }
 
 /* ================= drawing ================= */
@@ -61529,13 +61537,13 @@ function drawBitePiece(kind) {
   if (!BITE_OC || BITE_OC.width !== bz) { BITE_OC = document.createElement('canvas'); BITE_OC.width = bz; BITE_OC.height = bz; BITE_OC._k = ''; }
   var g = BITE_OC.getContext('2d'), main = ctx, tt = S.t - (S.biteT == null ? -9 : S.biteT), A = { tt: tt, pop: tt < 0.6 ? Math.exp(-tt * 8) : 0 };
   A.wob = A.pop * Math.sin(tt * 34);
-  var bk = kind + '|' + Math.floor(clamp(S.p, 0, 1) * 40) + '|' + (S.ph || '') + (S.pullGo||0) + Math.floor((S.pullT||0)*20) + '|' + (A.pop > 0 ? 'p' + S.t : Math.floor(S.t * 30));
+  var bk = kind + '|' + Math.floor(clamp(S.pk, 0, 1) * 40) + '|' + (S.ph || '') + (S.pullGo||0) + Math.floor((S.pullT||0)*20) + '|' + (A.pop > 0 ? 'p' + S.t : Math.floor(S.t * 30));
   if (BITE_OC._k === bk) { ctx.drawImage(BITE_OC, -100, -100, 200, 200); return; }
   BITE_OC._k = bk;
   g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.globalAlpha = 1; g.clearRect(0, 0, bz, bz); g.setTransform(bs, 0, 0, bs, 100 * bs, 100 * bs);
   ctx = g;
-  try { spec.draw(clamp(S.p, 0, 1), A); } finally { }
-  var nb = spec.bites.length, shown = Math.min(nb, Math.floor(clamp(S.p, 0, 1) * (nb + 1))), i, b, r;
+  try { spec.draw(clamp(S.pk, 0, 1), A); } finally { }
+  var nb = spec.bites.length, shown = Math.min(nb, Math.floor(clamp(S.pk, 0, 1) * (nb + 1))), i, b, r;
   g.globalCompositeOperation = 'destination-out'; g.fillStyle = '#000';
   for (i = 0; i < shown; i++) { b = spec.bites[i]; r = b[2] * (i === shown - 1 ? 0.55 + 0.45 * Math.min(1, tt / 0.12) : 1); g.beginPath(); g.arc(b[0], b[1], r, 0, 7); g.fill(); }
   g.globalCompositeOperation = 'source-atop';
@@ -61645,9 +61653,30 @@ function drawLetters(off) {
 
 /* ----- HUD below the panel: gauge, chips, big thumb button ----- */
 function zoneCol(v) { return v < 0.6 ? '#5ed46a' : v < 0.85 ? '#ffcf40' : '#ff4a2a'; }
+/* GGD-90: the quick-bite gauge is the eat meter. Green while it climbs, orange with a red ghost while it leaks
+ * (the ghost is what you just lost), 70% CLOSE line and the gold WIN edge. Drawn only inside the EATG frame. */
+function drawBiteGauge(v, gx, gy, gw, gh) {
+  var gv = clamp(S.pg || 0, 0, 1), leak = S.ph === 'play' && S.idle > 0.22 && v > BITE_FLOOR + 0.01, iw = gw - 4;
+  ltext('EAT', gx + 2, gy - 17, 12, '#fff6ec', INK, 4, 'left', LAT);
+  if (leak) ltext('\u25bc LEAKING \u00b7 TAP FASTER', gx + gw, gy - 17, 12, '#ff7a5a', INK, 4, 'right', LAT);
+  else ltext('\u3082\u3050  keep tapping, it leaks', gx + gw, gy - 17, 12, '#fff6ec', INK, 4, 'right', JPF);
+  box(gx, gy, gw, gh, '#2a2438', 14, 4);
+  ctx.save(); rr(gx + 2, gy + 2, gw - 4, gh - 4, 12); ctx.clip();
+  ctx.globalAlpha = 0.16; ctx.fillStyle = '#5ed46a'; ctx.fillRect(gx + 2 + iw * 0.7, gy, iw * 0.3, gh);
+  ctx.globalAlpha = 1;
+  if (gv > v) { var lx = gx + 2 + iw * v, lw = iw * (gv - v), k; ctx.fillStyle = '#ff3a2a'; ctx.fillRect(lx, gy, lw, gh); ctx.fillStyle = 'rgba(255,230,210,.55)';
+    for (k = Math.floor((lx - gx) / 10) * 10 + gx - (S.t * 40 % 10); k < lx + lw; k += 10) ctx.fillRect(Math.max(lx, k), gy, Math.max(0, Math.min(3, lx + lw - k)), gh); }
+  ctx.fillStyle = leak ? '#ff9a3a' : v >= 0.7 ? '#5ed46a' : '#ffcf40'; ctx.fillRect(gx + 2, gy, iw * v, gh);
+  ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillRect(gx + 2, gy + 3, iw * v, 5);
+  ctx.restore();
+  var cx = gx + 2 + iw * 0.7; ctx.fillStyle = '#fff6ec'; ctx.fillRect(cx - 1, gy + 3, 2, gh - 6);
+  ctx.fillStyle = '#ffd23a'; ctx.fillRect(gx + gw - 8, gy + 3, 4, gh - 6);
+  var mx = gx + 2 + iw * v; ctx.beginPath(); ctx.moveTo(mx, gy - 2); ctx.lineTo(mx - 6, gy - 11); ctx.lineTo(mx + 6, gy - 11); ctx.closePath(); ctx.fillStyle = leak ? '#ff7a5a' : '#fff6ec'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = INK; ctx.stroke();
+}
 function drawGauge() {
   var C = S.C, g = C.game, noodles = g === 'noodles', soda = g === 'soda', bite = g === 'bite';
-  var v = bite ? clamp(S.pt / RUN_T, 0, 1) : clamp(dangerLevel(), 0, 1), gx = 24, gy = 618, gw = 342, gh = 28;
+  var v = bite ? clamp(S.p, 0, 1) : clamp(dangerLevel(), 0, 1), gx = 24, gy = 618, gw = 342, gh = 28;
+  if (bite) drawBiteGauge(v, gx, gy, gw, gh); else {
   ltext(noodles ? 'HEAT' : soda ? 'FIZZ' : bite ? 'TIME' : 'SIP LIMIT', gx + 2, gy - 17, 12, '#fff6ec', INK, 4, 'left', LAT);
   ltext(noodles ? '熱さ  stop before the red' : soda ? 'burp before the red' : bite ? 'mash before it runs out' : 'let go before the red', gx + gw, gy - 17, 12, '#fff6ec', INK, 4, 'right', JPF);
   box(gx, gy, gw, gh, '#2a2438', 14, 4);
@@ -61657,6 +61686,7 @@ function drawGauge() {
   ctx.fillStyle = 'rgba(255,255,255,.28)'; ctx.fillRect(gx + 2, gy + 3, (gw - 4) * v, 5);
   ctx.restore();
   var mx = gx + 2 + (gw - 4) * v; ctx.beginPath(); ctx.moveTo(mx, gy - 2); ctx.lineTo(mx - 6, gy - 11); ctx.lineTo(mx + 6, gy - 11); ctx.closePath(); ctx.fillStyle = '#fff6ec'; ctx.fill(); ctx.lineWidth = 2.5; ctx.strokeStyle = INK; ctx.stroke();
+  }
   /* chips */
   var y2 = 662;
   function bar(x, w, label, f, col) { box(x, y2, w, 20, '#2a2438', 10, 3); ctx.save(); rr(x + 1.5, y2 + 1.5, Math.max(0, (w - 3) * clamp(f, 0, 1)), 17, 8); ctx.fillStyle = col; ctx.fill(); ctx.restore(); ltext(label, x + 9, y2 + 10.5, 11.5, '#fff6ec', INK, 3.5, 'left', LAT); }
@@ -61676,7 +61706,7 @@ function drawButton() {
   ltext(g === 'coffee' || g === 'soda' ? 'HOLD' : 'TAP', 0, -8, 30, '#fff6ec', INK, 7, 'center', BANG, 400);
   jtext(g === 'noodles' ? 'ズル' : g === 'soda' ? 'ごくっ' : g === 'bite' ? 'もぐ' : 'ごくっ', 0, 24, 19, '#ffe9b8', INK, 5, 0);
   ctx.restore();
-  ltext(g === 'noodles' ? 'TAP fast to slurp   ·   STOP to blow it cool' : g === 'soda' ? 'HOLD to chug   ·   TAP to burp before it overflows' : g === 'bite' ? 'MASH taps   ·   finish before the timer runs out' : 'HOLD to sip   ·   LET GO before it turns', 195, 828, 11.5, '#fff6ec', INK, 4, 'center', LAT, 800);
+  ltext(g === 'noodles' ? 'TAP fast to slurp   ·   STOP to blow it cool' : g === 'soda' ? 'HOLD to chug   ·   TAP to burp before it overflows' : g === 'bite' ? 'MASH taps   ·   keep the pace, the meter leaks' : 'HOLD to sip   ·   LET GO before it turns', 195, 828, 11.5, '#fff6ec', INK, 4, 'center', LAT, 800);
 }
 function drawRipples() {
   S.ripples.forEach(function (r) { var a = (S.t - r.t0) / 0.4; ctx.beginPath(); ctx.arc(r.x, r.y, 26 + a * 44, 0, 7); ctx.lineWidth = 5 * (1 - a) + 1; ctx.strokeStyle = 'rgba(255,255,255,' + (0.85 * (1 - a)) + ')'; ctx.stroke(); });
@@ -61819,7 +61849,7 @@ function close() {
   var q = AFTER; AFTER = []; q.forEach(function (f) { try { f(res); } catch (e3) {} });
 }
 var AFTER = [];
-root.EATG = { dpr: function () { return DPR; }, open: open, close: close, after: function (f) { if (OPT) AFTER.push(f); else f(); }, busy: function () { return !!OPT; }, has: function (n) { return !!ITEMS[n]; }, state: function () { return S ? { ph: S.ph, pt: S.pt, rt: S.rt, res: S.res, p: S.p, fizz: S.fizz } : null; } };
+root.EATG = { dpr: function () { return DPR; }, sim: function (n, m, sd) { return S ? null : (function (r) { S = null; return r; })(simulate(n, m, sd)); }, open: open, close: close, after: function (f) { if (OPT) AFTER.push(f); else f(); }, busy: function () { return !!OPT; }, has: function (n) { return !!ITEMS[n]; }, state: function () { return S ? { ph: S.ph, pt: S.pt, rt: S.rt, res: S.res, p: S.p, fizz: S.fizz } : null; } };
 
 /* ================= tiny synth (live play uses it; capture renders the same events offline) ================= */
 var NOISE = null;
