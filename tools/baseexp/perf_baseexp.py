@@ -30,6 +30,8 @@ if os.environ.get('SET') == '2':  # GGD-89 follow-up: guard rooms, Timing Booth 
       ('track_normal', "fldGo('lockers'); fldGo('track')", "fldS().e.slowArm=0; fldGo('lockers'); fldGo('track')"),
       ('long_walk', "cafGo('line'); " + walk(980, 470, 160, 470), "cafGo('dock'); " + walk(980, 700, 160, 700)),
     ]
+if os.environ.get('SET') == '3':  # slowed lap only, 3 s window so the whole sample is inside the slowed lap
+    SCENES = [('track_slowed', "fldGo('track')", "fldS().e.slowArm=1; fldGo('track')")]
 def fps(ft):
     ft = ft[2:]; return round(1000 * len(ft) / sum(ft), 1) if ft else 0
 def p5(ft):
@@ -51,7 +53,7 @@ async def one(p, tree, port, thr, tag):
         await pg.wait_for_timeout(600)
         m0 = {x['name']: x['value'] for x in (await cdp.send('Performance.getMetrics'))['metrics']}; t0 = time.time()
         await pg.evaluate(SAMPLER); el = 0
-        while el < (4000 if name == "track_slowed" else 7000):
+        while el < (3000 if name == "track_slowed" else 7000):
             await pg.evaluate(NEXT); await pg.wait_for_timeout(1000); el += 1000
         ft = await pg.evaluate("()=>{window.__run=false;return window.__ft}")
         m1 = {x['name']: x['value'] for x in (await cdp.send('Performance.getMetrics'))['metrics']}; wall = time.time() - t0
