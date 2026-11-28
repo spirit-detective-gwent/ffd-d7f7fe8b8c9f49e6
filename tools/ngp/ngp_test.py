@@ -20,7 +20,7 @@ def ok(name, cond, extra=''):
     RES.append((bool(cond), name, extra)); print(('PASS ' if cond else 'FAIL ') + name + ((' :: ' + str(extra)[:300]) if (extra and not cond) else ''), flush=True)
 
 # SAVE keys that start FRESH in NG+ on purpose (everything not carried). A key the game starts mentioning that is in neither list fails T1.
-FRESH_OK = set('''x y hp sp int deck_ intro mb sc chapter ch1 ch2 ch3 gouki dbl gkPh gkRevives gkPhp gkPsp gkTalk hint freeT patchT patchMig vm dg sq qs qa qOff qTrack qTrackPick stuT
+FRESH_OK = set('''x y hp sp int deck_ intro mb sc chapter ch1 ch2 ch3 gouki dbl gkPh gkRevives gkPhp gkPsp gkTalk hint freeT patchT patchMig vm dg sq qs qa qOff qTrack qTrackPick stuT hh
 dgRf crewDown splVs bent bx sit wkit find findHi shops carry saved cur svI svW svT act eMoved cabT c2pre c3pre c2entry c3entry c2acc c2own itemScarce_ fights stuT cxSeen_ ds_ ngp
 gkTalk cx_ journalLog_ chars_ xp phMig_ itemSeed foeStr_ sodaSeen_ icard_ tips_ svV crewRep_ lpv c2 mealEdge itemScarce cabR supLay'''.split())  # itemScarce: retired by v6564-craft (old saves drop it on load); cabR: v6565-nursecab pending cabinet restock, NG+ starts fresh; supLay: v6565-supplyrooms Ch1 cabinet layout, NG+ rolls a fresh one (kits refill)
 

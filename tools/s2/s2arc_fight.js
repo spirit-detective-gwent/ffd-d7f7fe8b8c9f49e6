@@ -43,6 +43,8 @@
       panel: { stick: { x: 92, y: 722, r: 56, c: '#ff9a3a', dpad: 1 }, btns: [{ k: 'a', x: 240, y: 728, r: 44, l: 'ATTACK', c: '#ffd860', sub: 'tap \u00b7 combo', fs: 14 }, { k: 'sp', x: 336, y: 700, r: 44, l: 'SPECIAL', lf: function () { return P && P.meter >= 100 && phase === 'fight' ? 'SUPER' : 'SPECIAL'; }, c: '#5ad8ff', sub: 'tap \u00b7 hold', fs: 13,
         glow: function () { return !!(P && P.meter >= 100 && (phase === 'fight' || phase === 'pre')); }, gc: '255,90,200', gcol: '#ff5ac8', ring: function () { return spHold >= 0 && phase === 'fight' ? Math.min(1, spHold / CHG) : 0; } }] } };
     G.endLine = 'Champion of the Neon Game Center.';
+    /* v6566-handheld (GGD-93): C.hh = one match on the Kitsune BOY handheld { me, foe, lv (AI level), pk / ph / ps (your fighter's star boost: damage / hp / speed), dbl ('p' / 'e': DOUBLE SHOT), title, on(ev) } */
+    var HH = C && C.hh || null;
     var phase, sel = 0, selT = 0, P = null, E = null, rnd = 1, wins, rT, roundT, fx, proj, shake, slow, combo, comboT, msg, msgT, bgL = {}, buf = null, bufT = 0, lad = [], sw = {}, freeze = 0, superFlash = 0;
     /* v6566-shonen: SPECIAL hold timer (-1 = up), queued swipe jump, lockout after an attack before auto-block is back */
     var spHold = -1, jumpQ = 0, jumpDir = 0, CHG = 0.4, LOCK = 0.14;
@@ -188,21 +190,27 @@
       if (k === 'spf' && !F.ai) dmg = Math.round(dmg * 1.25); /* v6566-shonen: the player's spf is the charged SPECIAL */
       var o = {}; for (var q in base) o[q] = base[q]; o.k = k; o.dmg = dmg; o.n = nm;
       if (F.c.w > 1.2) { o.s *= 1.25; o.r *= 1.15; o.reach *= 1.12; } if (F.id === 'jin') { o.s *= 0.85; o.r *= 0.9; }
+      if (F.dk) o.dmg = Math.round(o.dmg * F.dk * 10) / 10; /* v6566-handheld: star boost */
       if (k === 'k' && F.id === 'nails' && !F.air && !F.crouch) o.reach = 84; if (k === 'k' && F.id === 'masa' && !F.air && !F.crouch) { o.reach = 66; o.s *= 1.2; }
       return o; }
     function doMove(F, k, force) {
       if (force) { /* v6566-shonen: player chain / special cancel, checked by pAct */ }
       else if (F.st === 'atk' && F.cancel > 0 && F.mv && F.mv.hit && (F.mv.k === 'p' || (F.mv.k === 'k' && k !== 'p'))) { /* chain cancel */ }
       else if (!(F.st === 'idle' || F.st === 'walk' || F.st === 'crouch' || (F.st === 'jump' && (k === 'p' || k === 'k')))) return false;
-      if (k === 'su') { if (F.meter < 100) return false; F.meter = 0; superFlash = 0.6; freeze = 0.5; say(F.c.mv.su[0].toUpperCase() + '!', 1.2); drum('k', now(), 0.6); tone(220, now(), 0.5, 'sawtooth', 0.08); tone(440, now() + 0.2, 0.5, 'square', 0.07); }
+      if (k === 'su') { if (F.meter < 100) return false; F.meter = 0; superFlash = 0.6; freeze = 0.5; if (HH && HH.on && !F.ai) { try { HH.on('super'); } catch (eHH) {} } say(F.c.mv.su[0].toUpperCase() + '!', 1.2); drum('k', now(), 0.6); tone(220, now(), 0.5, 'sawtooth', 0.08); tone(440, now() + 0.2, 0.5, 'square', 0.07); }
       F.mv = moveOf(F, k); F.st = 'atk'; F.stT = 0; if (k === 'thr') say('GRAB!', 0.6); if (k === 'spf' && !F.ai) flashFx(F.x, F.y - 70, F.c.aura); F.hitDone = false; F.cancel = 0; F.rushN = 0; F.mv.hit = false;
       if (F.mv.inv) F.inv = F.mv.inv; if (F.mv.vy) { F.vy = F.mv.vy; F.air = true; F.vx = F.face * 60; }
       tone(k === 'p' ? 520 : k === 'k' ? 330 : 260, now(), 0.06, 'square', 0.035); return true; }
     function say(m, d) { msg = m; msgT = d || 1; }
-    function setupMatch() { var me = ORDER[sel], foe = lad[G.stage]; P = mk(me, 110, 1, false); E = mk(foe, 252, -1, true); rnd = 1; wins = [0, 0]; startRound(); }
+    function boost(F, k, h, sp) { var c = {}, q0; for (q0 in F.c) c[q0] = F.c[q0]; c.hp = Math.round(c.hp * (h || 1)); c.spd = Math.round(c.spd * (sp || 1)); F.c = c; F.hp = F.max = c.hp; F.dk = k || 1; } /* v6566-handheld: a fighter's stars */
+    function setupMatch() { var me = ORDER[sel], foe = lad[G.stage]; P = mk(me, 110, 1, false); E = mk(foe, 252, -1, true);
+      if (HH) { boost(P, HH.pk, HH.ph, HH.ps); boost(E, HH.ek, HH.eh, HH.es); P.dbl = String(HH.dbl || '').indexOf('p') >= 0; E.dbl = String(HH.dbl || '').indexOf('e') >= 0; }
+      rnd = 1; wins = [0, 0]; startRound(); }
     function startRound() { P.x = 110; E.x = 252; P.y = E.y = GY; P.hp = P.max; E.hp = E.max; [P, E].forEach(function (F) { F.st = 'idle'; F.stT = 0; F.vx = F.vy = 0; F.air = false; F.mv = null; F.flash = 0; F.inv = 0; F.pose = POSE.idle; });
       roundT = 60; phase = 'pre'; rT = 0; spHold = -1; jumpQ = 0; buf = null; bufT = 0; fx = []; proj = []; combo = 0; comboT = 0; slow = 0; shake = 0; freeze = 0; }
-    G.start = function () { phase = 'select'; selT = 0; G.stage = 0; G.score = 0; return 'select'; };
+    G.start = function () { selT = 0; G.stage = 0; G.score = 0;
+      if (HH) { sel = Math.max(0, ORDER.indexOf(HH.me)); lad = [HH.foe]; G.stages = [{ n: 'VS ' + CH[HH.foe].n, sub: CH[HH.foe].where, k: HH.foe }]; setupMatch(); phase = 'vs'; return 'intro'; } /* v6566-handheld: one match, no select */
+      phase = 'select'; return 'select'; };
     function confirmSel() { var me = ORDER[sel]; lad = LADDER.filter(function (k) { return k !== me; }).slice(0, 5);
       G.stages = lad.map(function (k) { return { n: 'VS ' + CH[k].n, sub: CH[k].where, k: k }; }); tone(1046, now(), 0.15, 'square', 0.07); tone(1568, now() + 0.12, 0.25, 'square', 0.07); setupMatch(); phase = 'vs'; }
     G.cont = function () { setupMatch(); };
@@ -215,8 +223,8 @@
       var a = { c: P.c, pose: POSE.win, face: 1, flash: 0, x: 90 - (1 - k) * 160, y: 360, st: 'idle' }, b = { c: E.c, pose: POSE.idle, face: -1, flash: 0, x: 272 + (1 - k) * 160, y: 360, st: 'idle' };
       drawFighter(q, a, t, 1.9); drawFighter(q, b, t, 1.9);
       otxt(q, P.c.n, 90, 400, P.c.n.length > 8 ? 17 : 22, '#ffd860'); otxt(q, E.c.n, 272, 400, E.c.n.length > 8 ? 17 : 22, '#7fe8ff'); txt(q, P.c.full, 90, 422, 9, '#fff', 'center', 700); txt(q, E.c.full, 272, 422, 9, '#fff', 'center', 700);
-      otxt(q, 'VS', SW / 2, 230, 54 + Math.sin(t * 12) * 3, '#ff5a3a'); txt(q, 'MATCH ' + (G.stage + 1) + ' / 5', SW / 2, 54, 13, '#ffd860'); txt(q, E.c.where, SW / 2, 74, 11, '#e8e0f8', 'center', 700);
-      if (G.stage === 4) otxt(q, 'FINAL BOSS', SW / 2, 470, 18, '#ff4a5a'); };
+      otxt(q, 'VS', SW / 2, 230, 54 + Math.sin(t * 12) * 3, '#ff5a3a'); txt(q, HH ? (HH.title || 'VS CPU') : 'MATCH ' + (G.stage + 1) + ' / 5', SW / 2, 54, 13, '#ffd860'); txt(q, E.c.where, SW / 2, 74, 11, '#e8e0f8', 'center', 700);
+      if (!HH && G.stage === 4) otxt(q, 'FINAL BOSS', SW / 2, 470, 18, '#ff4a5a'); if (HH && HH.dbl) { var dp = String(HH.dbl).indexOf('p') >= 0, de = String(HH.dbl).indexOf('e') >= 0; if (dp) otxt(q, 'CHEAT: DOUBLE SHOT', SW / 2, de ? 452 : 470, 16, '#7aff9a'); if (de) otxt(q, '???: A HIDDEN RULE', SW / 2, 470 + (dp ? 8 : 0), 16, '#ff4a5a'); } };
     /* ---------- input ---------- */
     /* v6566-shonen: ATTACK (a) / SPECIAL (sp) only. SPECIAL fires on release (tap vs hold); with a full bar it fires the SUPER on press. */
     G.press = function (k) {
@@ -235,7 +243,7 @@
     function selHit(x, y) { for (var i = 0; i < 6; i++) { var cx = 34 + (i % 3) * 102, cy = 280 + ((i / 3) | 0) * 92; if (x > cx && x < cx + 92 && y > cy && y < cy + 84) return i; } return -1; }
     G.lit = function () { return false; }; /* v6566-shonen: SPECIAL glows instead (panel.btns[1].glow) */
     /* ---------- AI ---------- */
-    function aiThink(F, O, dt) { var lv = G.stage, W = F.want; F.aiT -= dt; var dist = Math.abs(O.x - F.x);
+    function aiThink(F, O, dt) { var lv = HH ? HH.lv : G.stage, W = F.want; F.aiT -= dt; var dist = Math.abs(O.x - F.x);
       if (F.aiT > 0) return; F.aiT = Math.max(0.1, 0.34 - lv * 0.05) * (0.7 + Math.random() * 0.6);
       W.mv = 0; W.crouch = false; W.block = false; W.act = null; W.jump = false;
       var oAtk = O.st === 'atk' && O.stT < O.mv.s + O.mv.a, r = Math.random();
@@ -322,6 +330,8 @@
           else if (m.sup && hitTest(F, O)) { if (!F.hitDone) { F.hitDone = true; F.rushN = 1; if (land(F, O, m, 0.3) === 'hit') { F.rushHit = true; } } else if (F.rushHit && F.rushN < 7 && T > m.s + F.rushN * 0.05) { F.rushN++; O.hp = Math.max(0, O.hp - Math.round(m.dmg * 0.1)); O.flash = 0.06; if (F === P) G.score += 60; fx.push({ k: 'hit', x: O.x, y: O.y - 50 - Math.random() * 40, t: 0, big: true }); drum('s', now(), 0.3); if (O.hp <= 0 && O.st !== 'down') { O.st = 'down'; O.air = true; O.vy = -300; slow = 1; say('K.O.', 2); if (F === P) G.score += 2000; } } }
           else if (!m.multi && !m.sup && m.pose !== 'proj' && m.pose !== 'counter' && !F.hitDone && hitTest(F, O)) { F.hitDone = true; land(F, O, m, 1); }
         }
+        /* v6566-handheld DOUBLE SHOT: the special fires again the moment its active frames end, skipping the recovery (no recharge) */
+        if (F.dbl && !m.twin && (m.k === 'sp' || m.k === 'spf') && T >= m.s + m.a && F.hp > 0 && phase === 'fight') { var k2 = m.k; if (doMove(F, k2, true)) { F.mv.twin = true; F.mv.s = Math.min(F.mv.s, 0.06); say('DOUBLE SHOT!', 0.6); } return; }
         if (m.air) { if (!F.air) { F.st = 'idle'; F.mv = null; if (!F.ai) F.lockT = LOCK; } }
         else if (T >= m.s + m.a + m.r && !F.air) { F.st = 'idle'; F.mv = null; F.rushHit = false; if (!F.ai) { F.lockT = LOCK; F.chainN = 0; } }
       }
@@ -390,7 +400,7 @@
       /* super bars */
       /* v6566-shonen: one super bar (yours), wide; when full it pulses and says to tap SPECIAL */
       var full = P.meter >= 100; rr(g, 10, SH - 30, SW - 20, 18, 6, '#0a0614', 2.5); rr(g, 13, SH - 27, (SW - 26) * clamp(P.meter / 100, 0, 1), 12, 4, full ? (((t * 6) | 0) % 2 ? '#ff5ac8' : '#ffd860') : '#5ad8ff', 0);
-      txt(g, full ? 'SUPER READY \u00b7 TAP SPECIAL' : 'SUPER', SW / 2, SH - 21, full ? 11 : 10, full ? INK : 'rgba(255,255,255,.85)');
+      txt(g, full ? (HH ? 'SUPER READY \u00b7 TAP B' : 'SUPER READY \u00b7 TAP SPECIAL') : 'SUPER', SW / 2, SH - 21, full ? 11 : 10, full ? INK : 'rgba(255,255,255,.85)');
       if (combo >= 2 && comboT > 0) { otxt(g, combo + ' HITS', 70, 120, 20, '#ffd860'); }
       if (msgT > 0) otxt(g, msg, SW / 2, 200, msg.length > 10 ? 24 : 40, msg === 'K.O.' ? '#ff4a3a' : '#fff');
       fx.forEach(function (F) { if (F.k === 'tally') txt(g, F.s, SW / 2, 250, 11, '#7aff9a'); });
@@ -424,7 +434,10 @@
     };
     G.dispose = function () { bgL = {}; TT = null; };
     G.dbg = function (o) { o = o || {}; if (phase === 'select') { if (o.sel != null) sel = o.sel; confirmSel(); phase = 'pre'; } if (o.lives) { P.max = P.hp = 9999; } if (o.foeHp != null) E.hp = o.foeHp; if (o.meter) P.meter = 100; return { phase: phase, p: P && P.hp, e: E && E.hp, foe: E && E.id, me: P && P.id, wins: wins, rnd: rnd }; };
-    G.phase = function () { return phase; }; G._pe = function () { return [P, E]; };
+    G.phase = function () { return phase; }; G._pe = function () { return [P, E]; }; G._pj = function () { return proj.length; };
+    /* v6566-handheld: one still figure for the menu cards / LCD (no loop) */
+    G.figure = function (q, id, x, y, sc, pose) { var c = CH[id]; if (!c) return; drawFighter(q, { c: c, pose: POSE[pose || 'win'] || POSE.idle, face: 1, flash: 0, x: x, y: y, st: 'idle' }, 0, sc || 1); };
+    G.wins = function () { return wins ? wins.slice() : [0, 0]; };
     G._in = function () { return { buf: buf, bufT: bufT, spHold: spHold, jumpQ: jumpQ, blocks: G._blocks | 0, freeze: freeze }; };
     G.resetCtrl = function () { buf = null; bufT = 0; spHold = -1; jumpQ = 0; freeze = 0; G.noHS = false; if (G._rawStep) G.step = G._rawStep; };
     return G;
