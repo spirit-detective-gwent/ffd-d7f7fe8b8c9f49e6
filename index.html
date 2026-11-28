@@ -47452,7 +47452,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   function s2Tgt() {
     if (!on() || !qOn()) return null;
     var t = stg(), p = FLIP_AT, lab = 'Flip';
-    if (t === 'sawshop' || (path() === 'balanced' && t === 'open')) { p = SHOP_AT; lab = 'Sweet shop'; }
+    if (t === 'sawshop') { p = SHOP_AT; lab = 'Sweet shop'; } /* v6566-rc: Compassionate too hears Flip first (journal step 1); the pin used to send it to Chiyo's door at 'open', where the door talk never advances the quest */
     if (t === 'w1') { p = [2460, 3190]; lab = 'Wagashi row'; }
     if (t === 'w2') { p = [2520, 3190]; lab = 'Wagashi row'; }
     if (t === 'clash') { p = X3C; lab = 'Wagashi row'; }
