@@ -65,7 +65,7 @@ All code changes are made by tools/baseexp/patch_code.py from /workspace/baseexp
   `--existing` adds the new doors / track gate to cf_kitchen, cf_staff, sf_bay, sf_lockers, sf_coach, sf_track
   (world files; originals kept in /workspace/baseexp/work/orig) and the baked wkitbg PNGs re-embedded by patch_code.py.
 ## Tools
-- tools/baseexp/test_baseexp.py (SECT=DGRLSCO), shoot_baseexp.py (contact strips), perf_baseexp.py (live vs branch),
+- tools/baseexp/test_baseexp.py (SECT=DGRHQLSCO), shoot_baseexp.py / shoot_patrol.py / shoot_carry.py / compose_followups.py, perf_baseexp.py (SET=5 = patrol + hurdle rooms),
   vis_sim.py (guard sight preview), smoke.py, dbg.py.
 
 # v6566-lockeramb — Storehouse bay arrival: two bullies, no locker (Erik t536/t537/t538)
