@@ -52005,6 +52005,13 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   }
   P6.s2Tgt = s2Tgt;
   if (typeof c2LocksT === 'function') { var lt0 = c2LocksT; c2LocksT = function () { try { var t = s2Tgt(); if (t) return t; } catch (eL) {} return lt0.apply(this, arguments); }; }
+  /* v6566-rc: the S2 phase quests (Night Runs .. Jin) open as the active quest (qOpen sets S.qa), but only Wagashi Row hooked c2QT; the rest fell
+   * through to c2QT's last-resort 'Clinic' pin (Night Runs pointed at the clinic door). When that fallback fires for one of them, use the
+   * phase's own target (the same one Four Corners shows). */
+  if (typeof c2QT === 'function') { var qtS2 = c2QT; c2QT = function () { var r = qtS2.apply(this, arguments);
+    try { var s = c2S(), M = { cq2_s2_runs: root.FFF_S2P2, cq2_s2_boat: root.FFF_S2P3, cq2_s2_gar: root.FFF_S2P4, cq2_s2_depot: root.FFF_S2P5, cq2_s2_jin: P6 }, PM = s && M[s.qa];
+      if (PM && typeof PM.s2Tgt === 'function' && r && r.lab === 'Clinic') { var t = PM.s2Tgt(); if (t && t.x != null) { var rm = t.room || 'town'; return { qid: s.qa, kind: 'main', lab: t.lab, x: t.x, y: t.y, dg: 'c2', c2: rm, rooms: rm !== 'town' ? [rm] : [], loc: t.loc || r.loc, n: r.n }; } } } catch (eQ) {}
+    return r; }; }
 
   function chainRepair() {
     if (!p6Enter()) return;

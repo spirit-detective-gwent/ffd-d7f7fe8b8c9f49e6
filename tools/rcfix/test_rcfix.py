@@ -1,5 +1,6 @@
 #!/workspace/pwenv/bin/python3
 """v6566-rc integration fixes found in the Ch2 playthrough. usage: test_rcfix.py   (FFD_INDEX=... for another index.html)
+ 2. S2 phase quests (Night Runs..Jin) as the active quest: the journal target is the phase's own pin, not the 'Clinic' fallback.
  1. Wagashi Row on Compassionate (balanced): at stage 'open' the pin points at Flip (journal step 1), not Chiyo's door
     (the door talk never advanced the quest, so the pin looped there forever)."""
 import asyncio, sys
@@ -31,5 +32,11 @@ async def main():
                     if await g.ev("FFF_S2.stg()==='w1'"): break
                 chk('[balanced] Chiyo at the door -> first Rider push (w1)', await g.ev("FFF_S2.stg()==='w1'"), await g.ev("FFF_S2.stg()"))
             chk(f'[{path}] no page errors', not [e for e in g.errs if '404' not in e], g.errs[:3])
+    async with h.Game(path='balanced') as g:
+        await g.boot()
+        r = await g.ev("(function(){var st=c2S(); st.q.cq2_s2_runs=0; st.qa='cq2_s2_runs'; if(FFF_S2P2.setStg) FFF_S2P2.setStg('open'); c2QSync(); save(); var t=c2QT(); return [t&&t.lab, t&&t.x, t&&t.y, t&&t.qid]})()")
+        chk('Night Runs active at stage open: journal target is Flip (2360,3190), not the clinic', r[0] == 'Flip' and r[1] == 2360 and r[3] == 'cq2_s2_runs', r)
+        r = await g.ev("(function(){ if(FFF_S2P2.setStg) FFF_S2P2.setStg('r1'); var t=c2QT(); return [t&&t.lab, t&&t.x, t&&t.y]})()")
+        chk('Night Runs r1: journal target is the first night run', r[0] == 'Night run' and r[1] == 3610, r)
     n = sum(R); print(f'RESULT {n}/{len(R)} passed'); sys.exit(0 if n == len(R) else 1)
 asyncio.run(main())
