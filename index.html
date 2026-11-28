@@ -17544,19 +17544,19 @@ function dgFrame(dt) { var I = W.inside; if (!I || !INT[I.id].dg || !W.dgF) retu
   var okIn = function (x, y) { return okAt(x, y) && (D.deep || x > DSAFE + 20) && !(D.c2 === 'town' && typeof g38tNoGo === 'function' && g38tNoGo(x, y)); }, can = live && !safe && !(D.c2 === 'town' && typeof g38tSafeAt === 'function' && g38tSafeAt(r.x, r.y)); /* v6.5.38 b4: gangs never enter the neutral zones; nothing sees, chases or fights on the safe lane */
   trailRec(dt);
   W.dgF.forEach(function (f) { var s = f.s, d = Math.hypot(r.x - s.x, r.y - s.y), mv = 0, px = s.x, py = s.y; f.t = (f.t || 0) + dt; stampNotice(f); var on = sprCull(s, 160); if (f.stun > 0) { f.stun -= dt; if (f.stun <= 0 && f.wvA && typeof waveWake === 'function') { f.wvA = 0; waveWake(f, W.dgF, okAt); } if (f.grd) grdVis(f); return; } if (f.ambd) return; /* v4.23: being ambushed */
-    if (f.grd) { if (f.st === 'grd') grdStep(f, dt); grdVis(f); } /* GGD-89 room guard beat */
+    if (f.grd) { if (f.st === 'grd') { var gmv = grdStep(f, dt); if (on) waddle(s, gmv, f.fa); } grdVis(f); } /* GGD-89 room guard loop */
     if (f.g38m && !f.route) { f.route = 1; f.st = 'g38'; } else if (!f.route) { f.fa = Math.random() * 6.283; routeOn(f, f.c2 ? c2Turf(f, okIn) : okIn, null); f.wait = Math.random() * 1.2; }
     var to = null, sp = 46;
     var peace = f.c2 && typeof gangPeace === 'function' && gangPeace(f);
     if (peace && (f.st === 'alert' || f.st === 'chase')) { f.st = 'scan'; f.wait = AW.lookT; f.sus = 0; s.runK = 0; }
     var hot = f.st === 'alert' || f.st === 'chase' || d < 280; f.aiDt = Math.min(0.25, (f.aiDt || 0) + dt); /* v6.5.30: sight time since the last AI tick */
     if (tickAI || hot) { var sdt = f.aiDt; f.aiDt = 0;
-    if (f.st !== 'alert' && f.st !== 'chase') { var k = !peace && can && (!D.art || artOnCam(s.x, s.y)) && !(f.c2 && hidFrom(d)) ? seeK(f, r.x, r.y, okAt) : 0; /* v5.2 Hidden: sight shrinks to arm's length */ /* v4.37c: Wing patrols only notice you on camera */ if (susStep(f, k, sdt) && can) { alertOn(f, W.dgF, d < AW.sense ? 'near' : 'sight', okAt); groupPull(f, W.dgF, okAt); } else if (k > 0 && !f.grd) f.fa += angD(Math.atan2(r.y - s.y, r.x - s.x), f.fa) * Math.min(1, dt * 2); }
+    if (f.st !== 'alert' && f.st !== 'chase') { var k = !peace && can && (!D.art || artOnCam(s.x, s.y)) && !(f.c2 && hidFrom(d)) && !(f.grd && grdPeek(f)) ? seeK(f, r.x, r.y, okAt) : 0; /* v5.2 Hidden: sight shrinks to arm's length */ /* v4.37c: Wing patrols only notice you on camera */ if (susStep(f, k, sdt) && can) { alertOn(f, W.dgF, d < AW.sense ? 'near' : 'sight', okAt); groupPull(f, W.dgF, okAt); } else if (k > 0 && !f.grd) f.fa += angD(Math.atan2(r.y - s.y, r.x - s.x), f.fa) * Math.min(1, dt * 2); }
     if (f.st === 'alert') { if (!can) f.st = 'scan', f.wait = AW.lookT, f.lk0 = f.fa; else { f.at -= dt; f.fa = Math.atan2(r.y - s.y, r.x - s.x); if (f.at <= 0) { f.st = 'chase'; chaseSee(f, r); ev('world:chase:run:' + f.key); } } }
     else if (f.st === 'chase') { var seen = can && (d < AW.sense || losClear(s.x, s.y, r.x, r.y, okAt) && !(f.c2 && hidFrom(d))); if (seen) chaseSee(f, r); else f.lost = (f.lost || 0) + dt;
       if (!can || f.lost > CHASE.lostT || d > chaseFar()) { f.st = 'search'; s.runK = 0; f.sT = CHASE.searchT; bubbleOn(s, '?'); ev('world:aware:lost:' + f.key); } else { to = seen ? [r.x, r.y] : (trailNext(f) || [f.lx, f.ly]); sp = baseWalkOn() ? FAST_WALK : chaseSpd(); if (!f._bwEv && baseWalkOn()) { f._bwEv = 1; ev('world:basewalk:chase:' + f.key); } } }
     else if (f.st === 'search') { s.runK = 0; to = [f.lx, f.ly]; if (Math.hypot(f.lx - s.x, f.ly - s.y) < 4) { f.st = 'scan'; f.wait = f.sT || AW.lookT; f.sT = 0; f.lk0 = f.fa; to = null; } }
-    else if (f.st === 'scan') { f.wait -= dt; f.fa = f.lk0 + Math.sin(f.t * 3.2) * 1.1; if (f.wait <= 0) { f.sus = 0; f.qm = 0; if (f.grd) { f.st = 'ret'; f.rp = null; ev('world:cafe:guard:ret:' + f.key); } else if (f.g38m) f.st = 'g38'; else routeOn(f, f.c2 ? c2Turf(f, okIn) : okIn, null); } }
+    else if (f.st === 'scan') { f.wait -= dt; f.fa = f.lk0 + Math.sin(f.t * 3.2) * 1.1; if (f.wait <= 0) { f.sus = 0; f.qm = 0; if (f.grd) { f.st = 'ret'; f.rp = null; if (f.team) grdDismiss(f); ev('world:cafe:guard:ret:' + f.key); } else if (f.g38m) f.st = 'g38'; else routeOn(f, f.c2 ? c2Turf(f, okIn) : okIn, null); } }
     else if (f.st === 'g38') { to = g38tTo(f, dt); if (f.g38sp) sp = f.g38sp; }
     else if (f.st === 'ret') { to = grdRetTo(f); }
     else if (f.st === 'patrol') { to = f.goal; if (Math.hypot(f.goal[0] - s.x, f.goal[1] - s.y) < 3) { f.st = 'look'; f.wait = AW.pause[0] + Math.random() * (AW.pause[1] - AW.pause[0]); f.lk0 = f.fa; to = null; } }
@@ -17564,11 +17564,11 @@ function dgFrame(dt) { var I = W.inside; if (!I || !INT[I.id].dg || !W.dgF) retu
     } else { if (f.st === 'g38') { to = g38tTo(f, dt); if (f.g38sp) sp = f.g38sp; } else if (f.st === 'ret') to = grdRetTo(f); else if (f.st === 'patrol') to = f.goal; else if (f.st === 'search') to = [f.lx, f.ly]; else if (f.st === 'look' || f.st === 'scan') f.wait -= dt; }
     if (to) { var dx = to[0] - s.x, dy = to[1] - s.y, dd = Math.hypot(dx, dy), st = sp * dt; if (dd > 0.5) { var nx2 = s.x + dx / dd * Math.min(st, dd), ny2 = s.y + dy / dd * Math.min(st, dd);
       if (okIn(nx2, ny2)) { s.x = nx2; s.y = ny2; mv = Math.min(st, dd); if (Math.abs(dx) > 2) s.flip = dx < 0; } else if (f.st === 'patrol' || f.st === 'search') { f.st = 'scan'; f.wait = AW.lookT * 0.6; f.lk0 = f.fa; } else if (f.st === 'ret') { f.rp = null; } } } // blocked: stop and look (the next beat starts from here)
-    if (mv > 0.3) f.fa = Math.atan2(s.y - py, s.x - px); if (on && (mv > 0 || !f.grd || f.st !== 'grd' || f.turn || !f._wd)) { waddle(s, mv, f.fa); if (f.grd) f._wd = !f.turn && f.st === 'grd'; } /* v6.5.18: offscreen town crews skip the blit */
+    if (mv > 0.3) f.fa = Math.atan2(s.y - py, s.x - px); if (on && !(f.grd && f.st === 'grd')) waddle(s, mv, f.fa); /* v6.5.18: offscreen town crews skip the blit */
     if (peace) { /* disguised: they do not start a fight by touching you. A Fight tag does. */ }
     else if (can && d < 34 && !W.dgFight && !(f.c2 && W.hid && f.st !== 'chase' && f.st !== 'alert')) {
       if (root.FFF_OPN_BREAK && root.FFF_OPN_BREAK(f)) return; /* v6.5.40 b9b: Riders' chase break (and no touch fight while he's still down) */
-      var cap2 = f.c2 && c2Room() === 'town'; var grp = cap2 ? [f] : noticedPack(f, W.dgF); var c2vh = cap2 && typeof c2v2Touch === 'function' ? c2v2Touch(f, grp, D, I) : 0; if (c2vh === 'defer') return; if (cap2) { W.dgF.forEach(function (o) { if (o !== f && o.c2 && o.grp === f.grp && grp.length < 2) grp.push(o); }); try { if (typeof waveNote === 'function') waveNote(f, W.dgF, grp, 2); } catch (eWn) {} }
+      var cap2 = f.c2 && c2Room() === 'town'; var grp = cap2 ? [f] : noticedPack(f, W.dgF); if (f.team) grp = W.dgF.filter(function (o) { return o.team === f.team; }).sort(function (a, b) { return (b.grd ? 1 : 0) - (a.grd ? 1 : 0); }); var c2vh = cap2 && typeof c2v2Touch === 'function' ? c2v2Touch(f, grp, D, I) : 0; if (c2vh === 'defer') return; if (cap2) { W.dgF.forEach(function (o) { if (o !== f && o.c2 && o.grp === f.grp && grp.length < 2) grp.push(o); }); try { if (typeof waveNote === 'function') waveNote(f, W.dgF, grp, 2); } catch (eWn) {} }
       W.dgFight = f; W.path = []; r.v = 0; ev('world:dg:touch:' + I.id + ':' + f.key); if (grp.length > 1) ev('world:aware:dgjoin:' + grp.length); AU.play('hit', { gain: 0.5 });
       W.fLv = grpLv(grp); var crw = f.crew && typeof c2Crew === 'function' ? c2Crew(f.crew) : null;
       grp.forEach(function (o) { if (o !== f && o.s && o.s.el) o.s.el.style.visibility = 'hidden'; });
@@ -19028,16 +19028,16 @@ var CAFG = {
     open: [[80, 155, 1200, 658]], block: [[200, 300, 520, 360], [760, 300, 1080, 360], [200, 470, 520, 530], [760, 470, 1080, 530], [520, 150, 760, 220], [1080, 180, 1170, 260]],
     doors: { gS: { r: [581, 625, 694, 715], at: [637, 650], land: [637, 585, 3], to: 'line:gN' } },
     spots: [{ id: 'clue', r: [600, 160, 680, 220], at: [640, 410], face: 3 }, { id: 'search', r: [690, 155, 760, 230], at: [725, 410], face: 3 }], foes: [] },
-  /* GGD-89 (v6.5.66): four more rooms. Cooler / Dock / Bakery each hold a crate and ONE room guard (CAF_GRD) who turns on a beat; the handmade props are cover.
-   * after: 1 = roamers only once the Cafeteria is cleared and refilled (never before). The Dish Room is a quiet link. */
+  /* GGD-89 (v6.5.66): four more rooms. Cooler / Dock / Bakery each hold a crate and ONE room guard (CAF_GRD) who walks a loop round the room; the handmade props are cover.
+   * t583u: crate rooms hold only the quest guard, never roamers (foes: []). The Dish Room is a quiet link (and the rations side-quest prop). */
   cooler: { n: 'Cafeteria \u00b7 Walk-in Cooler', pic: [1152, 864], s: 1.0, plan: [-1, 1, 0, 2],
     open: [[100, 155, 1050, 785]], block: [[200, 318, 880, 372], [200, 560, 880, 614], [930, 186, 1020, 262], [110, 660, 200, 740]],
     doors: { gE: { r: [1055, 330, 1125, 562], at: [1032, 450], to: 'kitchen:gW' }, gN: { r: [506, 7, 640, 150], at: [573, 178], to: 'dock:gS' } },
-    spots: [{ id: 'look', r: [700,  40,  860,  96], at: [780,  200], face: 3 }], crate: [150, 486], after: 1, foes: [[620, 470], [520, 720]] },
+    spots: [{ id: 'look', r: [700,  40,  860,  96], at: [780,  200], face: 3 }], crate: [150, 486], foes: [] },
   dock: { n: 'Cafeteria \u00b7 Loading Dock', pic: [1152, 864], s: 1.0, plan: [-1, 0, 0, 1],
     open: [[100, 155, 1050, 785]], block: [[560, 196, 880, 330], [250, 566, 350, 636], [720, 566, 830, 636], [124, 450, 234, 500], [620, 400, 710, 456]],
     doors: { gS: { r: [453, 800, 690, 850], at: [571, 828], land: [571, 700, 3], to: 'cooler:gN' }, gE: { r: [1055, 330, 1125, 562], at: [1032, 450], to: 'dish:gW' } },
-    spots: [{ id: 'look', r: [300,  40,  480,  98], at: [390,  200], face: 3 }], crate: [190, 310], after: 1, foes: [[460, 720], [960, 480]] },
+    spots: [{ id: 'look', r: [300,  40,  480,  98], at: [390,  200], face: 3 }], crate: [190, 310], foes: [] },
   dish: { n: 'Cafeteria \u00b7 Dish Room', pic: [1152, 864], s: 1.0, plan: [0, 0, 1, 1],
     open: [[100, 155, 1050, 785]], block: [[170, 186, 560, 250], [620, 186, 860, 256], [900, 296, 970, 380], [360, 470, 780, 540], [140, 620, 210, 700]],
     doors: { gS: { r: [453, 800, 690, 850], at: [571, 828], land: [571, 700, 3], to: 'kitchen:gN' }, gW: { r: [28, 323, 91, 562], at: [110, 450], to: 'dock:gE' } },
@@ -19045,7 +19045,7 @@ var CAFG = {
   bakery: { n: 'Cafeteria \u00b7 Bakery', pic: [1152, 864], s: 1.0, plan: [2, 0, 3, 1],
     open: [[100, 155, 1050, 785]], block: [[150, 176, 560, 276], [640, 176, 860, 276], [300, 420, 760, 486], [170, 540, 240, 680], [880, 520, 950, 660], [640, 610, 800, 664], [984, 470, 1040, 560]],
     doors: { gS: { r: [453, 800, 690, 850], at: [571, 828], land: [571, 700, 3], to: 'staff:gN' } },
-    spots: [{ id: 'look', r: [180,  34,  420,  92], at: [600,  300], face: 3 }], crate: [960, 360], after: 1, foes: [[450, 620], [700, 330]] } };
+    spots: [{ id: 'look', r: [180,  34,  420,  92], at: [600,  300], face: 3 }], crate: [960, 360], foes: [] } };
 var CAFP = { line: [{ id: 'eat1', at: [560, 470] }, { id: 'eat2', at: [740, 640] }], dining: [{ id: 'kurata', at: [640, 255], block: [612, 236, 668, 266] }] };
 var CAF_FOES = ['bully4', 'bully3'] /* v4.41 (Ernest): the red-haired boy + the girl with the bat, drawn from their cel walk/run sheets */, CAF_CRATES = ['cooler', 'dock', 'bakery'], CAF_LUNCH = 2; /* the reopened counter: a hot lunch, \u00a52, back to full HP */
 NM.cafe_stu = 'Taniguchi Haru'; PT.cafe_stu = 'cafe_stu_fig'; /* v4.72 #20: the Staff Room first-year (was a Yuto clone) */ NM.kurata = 'Kurata Tetsu'; PT.kurata = 'kurata_fig'; ARTK.mb_cafe = 'kurata';
@@ -19059,40 +19059,70 @@ Object.keys(CAFG).forEach(function (k) { var R = CAFG[k], spots = [];
   INT['cf_' + k] = { id: 'cf_' + k, n: R.n, w: Math.round(R.pic[0] * R.s), h: Math.round(R.pic[1] * R.s), src: 'world/cf_' + k + '.webp', cell: 15, dg: 'cafe', cafe: k, deep: 1, safe: R.safe ? 1 : 0,
     open: R.open.map(function (r) { return lr(R, r); }), base: R.block.map(function (r) { return lr(R, r); }), block: [], 'in': libLand(R, first), back: libLand(R, first), spots: spots };
   TAGS_IN['cf_' + k] = {}; });
-/* ---- GGD-89 room guards (v6.5.66). One per crate room, part of the main quest only. He stands at his post next to the crate and turns
- * between two facings on a fixed beat (hold, then a slow turn through the back wall). Sight is the normal seeK/susStep (vision cone,
- * "?" then "!"), with his own NOTICE (q.N). Carrying a crate widens his reach and halves his notice time. Props block his line of sight
- * (losClear), so the room furniture is cover. Beaten or slipped past, he stays resolved: S.f['g'+room] after a win, and no guard once
- * that room's crate is in the chute. No roamers in his room until the Cafeteria is cleared (R.after). No per-frame DOM work: the cone is
- * one element, rotated by a CSS transition only when he starts a turn. */
-var CAF_GRD = { cooler: { at: [420, 466], fa: [Math.PI, 0], r: 330, a: 46, id: 'bully3' }, dock: { at: [430, 420], fa: [Math.PI, 0], r: 380, a: 46, id: 'bully4' },
-  bakery: { at: [810, 400], fa: [Math.PI, 0], r: 360, a: 46, id: 'bully3' } };
-var GRD_T = { hold: 3.0, turn: 0.7, t: 0.55, carryR: 1.25, carryT: 0.5 };
+/* ---- GGD-89 room guards (v6.5.66; t583u patrol). One per crate room, part of the main quest only. He walks a loop round the room
+ * (CAF_GRD[k].pts, picture px) and stops at each corner: a look-around (GRD_T.pause, +-GRD_T.look rad), then a turn to the next leg.
+ * Sight is the normal seeK/susStep (vision cone, "?" then "!"), with his own NOTICE (q.N); the cone element follows his spot and
+ * facing. Props block his line of sight (losClear), so the furniture is cover. Doorway landings are safe to peek from (grdPeek).
+ * SPOTTED ("!"): he barks for backup and 4 more (CAF_FOES) burst in through the doors; touching any of them is ONE fight of 5
+ * (guard + 4, the normal group fight). Reached from behind unseen: a solo fight with him. A win resolves him (S.f['g'+room]); a flee or
+ * a lost chase sends the backups away and him back to his loop. No roamers ever in his room (t583u). Everything here runs inside
+ * dgFrame, which only runs while you are in a Cafeteria room: no new always-on loop. */
+var CAF_GRD = { cooler: { pts: [[170, 440], [170, 270], [900, 270], [900, 440]], r: 330, a: 46, id: 'bully3' },
+  dock: { pts: [[260, 380], [800, 380], [800, 520], [260, 520]], r: 380, a: 46, id: 'bully4' },
+  bakery: { pts: [[260, 340], [840, 340], [840, 560], [260, 560]], r: 360, a: 46, id: 'bully3' } };
+var GRD_T = { sp: 58, pause: 1.3, look: 0.5, turn: 0.55, t: 0.55, carryR: 1.25, carryT: 0.5, peek: 80, team: 4, bark: 1.6 };
 (function () { var st = document.createElement('style'); st.id = 'ggd89css';
-  st.textContent = '.wgcone{position:absolute;pointer-events:none;border-radius:50%;background:conic-gradient(from -46deg,rgba(255,222,96,.46) 0deg 92deg,rgba(0,0,0,0) 92deg 360deg);-webkit-mask:radial-gradient(closest-side,#000 62%,rgba(0,0,0,0) 100%);mask:radial-gradient(closest-side,#000 62%,rgba(0,0,0,0) 100%);transition:transform .7s linear,opacity .25s;will-change:transform;z-index:60}'
+  st.textContent = '.wgcone{position:absolute;left:0;top:0;pointer-events:none;border-radius:50%;background:conic-gradient(from -46deg,rgba(255,222,96,.46) 0deg 92deg,rgba(0,0,0,0) 92deg 360deg);-webkit-mask:radial-gradient(closest-side,#000 62%,rgba(0,0,0,0) 100%);mask:radial-gradient(closest-side,#000 62%,rgba(0,0,0,0) 100%);transition:opacity .25s;will-change:transform;z-index:60}'
     + '.wgcone.sus{background:conic-gradient(from -46deg,rgba(255,100,70,.5) 0deg 92deg,rgba(0,0,0,0) 92deg 360deg)}.wgcone.off{opacity:0}'
+    + '.wgbark{position:absolute;transform:translate(-50%,-100%);padding:3px 9px 4px;background:#fff3c4;color:#1c1622;border:2px solid #1c1622;border-radius:9px;font:900 15px/1.1 system-ui,sans-serif;letter-spacing:.04em;white-space:nowrap;pointer-events:none;z-index:120;box-shadow:0 3px 0 #1c1622;animation:wgbark 1.6s ease-out forwards}'
+    + '.wgbark::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-6px;border:6px solid transparent;border-top-color:#1c1622;border-bottom:0}'
+    + '@keyframes wgbark{0%{scale:.3;opacity:0}12%{scale:1.18;opacity:1}22%{scale:1}80%{opacity:1}100%{opacity:0;translate:0 -14px}}'
+    + '.wsp[data-dir="3"] .wcarry.fh{width:96%;left:2%;top:31%;height:30%;-webkit-mask:linear-gradient(90deg,#000 0 30%,rgba(0,0,0,0) 30% 70%,#000 70%);mask:linear-gradient(90deg,#000 0 30%,rgba(0,0,0,0) 30% 70%,#000 70%)}'
     + '.fslotring{position:absolute;width:76px;height:34px;margin:-17px 0 0 -38px;border-radius:50%;border:3px dashed rgba(255,255,255,.0);pointer-events:none;z-index:99;opacity:0;transition:opacity .2s}'
     + '.fslotring.on{opacity:1}.fslotring.ok{border-color:#7be07b;box-shadow:0 0 10px rgba(123,224,123,.6)}.fslotring.no{border-color:#e85a5a;box-shadow:0 0 10px rgba(232,90,90,.5)}'
     + '.fkick{animation:fkick .75s cubic-bezier(.2,.6,.4,1) forwards;pointer-events:none}@keyframes fkick{0%{translate:0 0;rotate:0deg;opacity:1}60%{translate:var(--kx,-120px) -70px;rotate:-260deg;opacity:1}100%{translate:calc(var(--kx,-120px)*1.6) -20px;rotate:-400deg;opacity:0}}'
     + '.fldlap.fslow{filter:saturate(.55) brightness(.92)}.fldlap.fslow::after{content:"";position:absolute;left:50%;top:-14px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:#fff;border:2px solid #1c1622;box-shadow:inset 0 0 0 3px #6fb6e8}';
   document.head.appendChild(st); })();
-function grdCone(f) { var G = f.grd, e = document.createElement('i'), R = f.N0.r; e.className = 'wgcone'; e.style.width = e.style.height = (2 * R) + 'px';
-  e.style.left = (f.hx - R) + 'px'; e.style.top = (f.hy - 18 - R) + 'px'; f.cdeg = f.fa * 180 / Math.PI + 90; f.cone = e; grdConeSet(f, 0); layer.appendChild(e); W.ints.push({ el: e }); }
-function grdConeSet(f, tr) { var e = f.cone; if (!e) return; e.style.transitionDuration = tr ? (tr + 's, .25s') : '0s, .25s'; e.style.transform = 'rotate(' + f.cdeg.toFixed(1) + 'deg) scale(' + (W.carry ? GRD_T.carryR : 1) + ')'; }
-function grdVis(f) { var on = f.st === 'grd', sus = !!f.qm, c = f.cone; if (!c) return; if (c._on !== on) { c._on = on; c.classList.toggle('off', !on); } if (c._sus !== sus) { c._sus = sus; c.classList.toggle('sus', sus); }
-  var cr = !!W.carry; if (f._cr !== cr) { f._cr = cr; f.N = cr ? f.Nc : f.N0; grdConeSet(f, GRD_T.turn); ev('world:cafe:guard:carry:' + f.key + ':' + (cr ? 1 : 0)); } }
-function grdHome(f) { var G = f.grd; f.st = 'grd'; f.gi = 0; f.gT = GRD_T.hold; f.turn = null; f.fa = G.fa[0]; f.rp = null; f.sus = 0; f.qm = 0; f.s.runK = 0; f.s.x = f.hx; f.s.y = f.hy;
-  f.cdeg = f.fa * 180 / Math.PI + 90; grdConeSet(f, 0); waddle(f.s, 0, f.fa); ev('world:cafe:guard:home:' + f.key); }
-/* the beat: hold GRD_T.hold, then turn GRD_T.turn to the other facing, always through the back wall (north), so the swing is readable */
-function grdStep(f, dt) { var G = f.grd; if (f.turn) { f.turn.t += dt; var u = Math.min(1, f.turn.t / GRD_T.turn); f.fa = f.turn.a0 + f.turn.d * u; if (u >= 1) { f.fa = G.fa[f.gi]; f.turn = null; f.gT = GRD_T.hold; ev('world:cafe:guard:face:' + f.key + ':' + f.gi); } return; }
-  f.gT -= dt; if (f.gT > 0) return; var a0 = G.fa[f.gi]; f.gi = 1 - f.gi; var a1 = G.fa[f.gi], d = angD(a1, a0);
-  if (Math.abs(Math.abs(d) - Math.PI) < 0.05) d = angD(-Math.PI / 2, a0) * 2; /* half-turns go via north */
-  f.turn = { a0: a0, d: d, t: 0 }; f.cdeg += d * 180 / Math.PI; grdConeSet(f, GRD_T.turn); }
-function grdRetTo(f) { var s = f.s; if (!f.rp) f.rp = (typeof findPath === 'function' && findPath(s.x, s.y, f.hx, f.hy)) || [[f.hx, f.hy]];
+function grdCone(f) { var e = document.createElement('i'), R = f.N0.r; e.className = 'wgcone'; e.style.width = e.style.height = (2 * R) + 'px'; e.style.margin = (-R - 18) + 'px 0 0 ' + (-R) + 'px';
+  f.cone = e; f._ck = ''; grdConeSet(f); layer.appendChild(e); W.ints.push({ el: e }); }
+/* the cone sits on him and points where he faces; one transform write, only when it changed */
+function grdConeSet(f) { var e = f.cone; if (!e) return; var k = Math.round(f.s.x) + ',' + Math.round(f.s.y) + ',' + Math.round(f.fa * 180 / Math.PI + 90) + ',' + (W.carry ? 1 : 0);
+  if (k === f._ck) return; f._ck = k; e.style.transform = 'translate(' + Math.round(f.s.x) + 'px,' + Math.round(f.s.y) + 'px) rotate(' + Math.round(f.fa * 180 / Math.PI + 90) + 'deg) scale(' + (W.carry ? GRD_T.carryR : 1) + ')'; }
+function grdVis(f) { var on = f.st === 'grd', sus = !!f.qm, c = f.cone; if (!f.team && (f.st === 'alert' || f.st === 'chase')) grdCall(f); if (!c) return;
+  if (c._on !== on) { c._on = on; c.classList.toggle('off', !on); } if (c._sus !== sus) { c._sus = sus; c.classList.toggle('sus', sus); }
+  var cr = !!W.carry; if (f._cr !== cr) { f._cr = cr; f.N = cr ? f.Nc : f.N0; ev('world:cafe:guard:carry:' + f.key + ':' + (cr ? 1 : 0)); } if (on) grdConeSet(f); }
+/* doorway landings: you can always peek in */
+function grdPeek(f) { var r = W.ryo; return (f.peek || []).some(function (a) { return Math.hypot(r.x - a[0], r.y - a[1]) < GRD_T.peek; }); }
+/* spotted: the bark, then 4 backups through the doors, all on you. One team = one fight. */
+function grdCall(f) { var R = CAFG[cafRoom()], doors = (f.peek || []).slice(); f.team = f.key; f.spot = 1; ev('world:cafe:guard:spot:' + f.key);
+  var b = document.createElement('i'); b.className = 'wgbark'; b.textContent = 'BACKUP!'; b.style.left = Math.round(f.s.x) + 'px'; b.style.top = Math.round(f.s.y - 104) + 'px'; layer.appendChild(b); W.ints.push({ el: b });
+  setTimeout(function () { b.remove(); }, GRD_T.bark * 1000); AU.play('door', { gain: 0.6 });
+  if (!doors.length) doors = [[f.s.x, f.s.y]];
+  for (var i = 0; i < GRD_T.team; i++) { var id = CAF_FOES[i % CAF_FOES.length], s = intSprite(id + '_map', SPH, 'dgfoe'), a = doors[i % doors.length], j = Math.floor(i / doors.length) - (doors.length > 1 ? 0.5 : 1.5);
+    s.el.classList.add('foe'); s.x = a[0] + j * 30; s.y = a[1] + (i % 2 ? 18 : -18); if (!okAt(s.x, s.y)) { s.x = a[0]; s.y = a[1]; } place(s, 0); waddle(s, 0, f.fa);
+    var o = { key: f.key + 'b' + i, id: id, s: s, hx: s.x, hy: s.y, tx: null, ty: null, st: 'walk', route: 1, stun: 0, wait: 0, team: f.key, bk: 1, fa: 0 }; W.dgF.push(o); alertOn(o, W.dgF, 'pull', okAt, AW.alertT + 0.3 + 0.2 * i); }
+  ev('world:cafe:guard:team:' + f.key + ':' + (GRD_T.team + 1)); }
+/* backups leave (a flee, a lost chase); the guard forgets you */
+function grdDismiss(g) { (W.dgF || []).slice().forEach(function (o) { if (!o.bk) return; o.s.el.classList.add('out'); (function (el) { setTimeout(function () { el.remove(); }, 600); })(o.s.el); W.dgF.splice(W.dgF.indexOf(o), 1); });
+  (W.dgF || []).forEach(function (o) { if (o.grd) { o.team = null; o.spot = 0; } }); if (g) ev('world:cafe:guard:dismiss:' + g.key); }
+function grdHome(f) { f.st = 'grd'; f.ph = 'look'; f.gT = GRD_T.pause; f.lk0 = f.fa; f.turn = null; f.rp = null; f.sus = 0; f.qm = 0; f.s.runK = 0; if (f.team) grdDismiss(f); f._ck = ''; grdConeSet(f); ev('world:cafe:guard:home:' + f.key); }
+/* the loop: walk to the next corner, look around, turn to the next leg */
+function grdStep(f, dt) { if (f.hold) return 0; var P = f.pts, s = f.s;
+  if (f.ph === 'walk') { var t = P[f.pi], dx = t[0] - s.x, dy = t[1] - s.y, dd = Math.hypot(dx, dy), st = GRD_T.sp * dt;
+    if (dd <= st) { s.x = t[0]; s.y = t[1]; f.ph = 'look'; f.gT = GRD_T.pause; f.lk0 = f.fa; ev('world:cafe:guard:corner:' + f.key + ':' + f.pi); return dd; }
+    s.x += dx / dd * st; s.y += dy / dd * st; f.fa = Math.atan2(dy, dx); if (Math.abs(dx) > 2) s.flip = dx < 0; return st; }
+  if (f.ph === 'look') { f.gT -= dt; f.fa = f.lk0 + Math.sin((1 - Math.max(0, f.gT) / GRD_T.pause) * Math.PI * 2) * GRD_T.look; if (f.gT > 0) return 0;
+    var n = (f.pi + 1) % P.length; f.turn = { a0: f.lk0, d: angD(Math.atan2(P[n][1] - s.y, P[n][0] - s.x), f.lk0), t: 0 }; f.pi = n; f.ph = 'turn'; return 0; }
+  if (f.turn) { f.turn.t += dt; var u = Math.min(1, f.turn.t / GRD_T.turn); f.fa = f.turn.a0 + f.turn.d * u; if (u >= 1) { f.turn = null; f.ph = 'walk'; } } else f.ph = 'walk'; return 0; }
+/* back to the nearest corner of his loop, then on with the loop */
+function grdRetTo(f) { var s = f.s; if (!f.rp) { var bi = 0, bd = 1e9; f.pts.forEach(function (q, i) { var d = Math.hypot(q[0] - s.x, q[1] - s.y); if (d < bd) { bd = d; bi = i; } }); f.pi = bi;
+    f.rp = (typeof findPath === 'function' && findPath(s.x, s.y, f.pts[bi][0], f.pts[bi][1])) || [f.pts[bi]]; }
   while (f.rp.length && Math.hypot(f.rp[0][0] - s.x, f.rp[0][1] - s.y) < 4) f.rp.shift(); if (!f.rp.length) { grdHome(f); return null; } return f.rp[0]; }
 function cafGuard(k, R, S, b) { var G = CAF_GRD[k]; if (!G || b || S.cr[k] === 2 || S.f['g' + k]) return null;
-  var gs = intSprite(G.id + '_map', SPH, 'dgfoe'); gs.el.classList.add('foe', 'wguard'); var a = lw(R, G.at); gs.x = a[0]; gs.y = a[1]; place(gs, 0);
-  var f = { key: 'g' + k, id: G.id, s: gs, hx: a[0], hy: a[1], tx: null, ty: null, st: 'grd', route: 1, stun: 0, wait: 0, grd: G, gi: 0, gT: GRD_T.hold, fa: G.fa[0],
+  var gs = intSprite(G.id + '_map', SPH, 'dgfoe'); gs.el.classList.add('foe', 'wguard'); var pts = G.pts.map(function (q) { return lw(R, q); }); gs.x = pts[0][0]; gs.y = pts[0][1]; place(gs, 0);
+  var peek = Object.keys(R.doors || {}).map(function (d) { var D = R.doors[d]; return lw(R, D.land || D.at); });
+  var f = { key: 'g' + k, id: G.id, s: gs, hx: pts[0][0], hy: pts[0][1], tx: null, ty: null, st: 'grd', route: 1, stun: 0, wait: 0, grd: G, pts: pts, pi: 1, ph: 'walk', gT: 0, peek: peek,
+    fa: Math.atan2(pts[1][1] - pts[0][1], pts[1][0] - pts[0][0]),
     N0: { r: G.r * R.s, a: G.a, t: GRD_T.t }, Nc: { r: G.r * R.s * GRD_T.carryR, a: G.a, t: GRD_T.t * GRD_T.carryT } }; f.N = W.carry ? f.Nc : f.N0; f._cr = !!W.carry;
   waddle(gs, 0, f.fa); W.dgF.push(f); grdCone(f); ev('world:cafe:guard:spawn:' + k); return f; }
 function cafS() { var o = dgS('cafe'); ['e', 'v', 'vm', 'kit', 'cr', 'f'].forEach(function (q) { o[q] = o[q] && typeof o[q] === 'object' ? o[q] : {}; }); return o; }
@@ -19111,7 +19141,7 @@ function cafGo(k, at) { cafRegrid(k); var out = !W.inside; intGo('cf_' + k, { at
 function cafEnter() { if (W.fading) return; W.path = []; W.dlg = true; ev('world:dg:enter:cafe'); if (beaten('mb_cafe')) dgMarkRefill('cafe'); /* the defeat step stays open until Kurata is actually beaten */ var er = W.entRet;
   intFade(function () { W.dlg = false; cafGo('line'); if (er) W.inRet = er; AU.play('door', { gain: 0.6 }); }); }
 function cafPop() { var I = W.inside, D = INT[I.id], k = D.cafe, R = CAFG[k], S = cafS(), b = beaten('mb_cafe'); W.dgF = []; W.dgRelay = null; W.libN = {}; W.artW = []; W.cafCr = null;
-  (R.foes || []).forEach(function (p, i) { var key = 'c' + k + i; if (!dgShouldSpawn('cafe', 'mb_cafe')) return; if (R.after && !dgRefilled('cafe')) return; /* GGD-89: guard rooms get roamers only after the clear */ var down = dgRefilled('cafe') ? !!(S.rf && S.rf[key]) : !!S.f[key]; if (down) return; var id = CAF_FOES[(i + k.length) % 2], s = intSprite(id + '_map', SPH, 'dgfoe'); s.el.classList.add('foe');
+  (R.foes || []).forEach(function (p, i) { var key = 'c' + k + i; if (!dgShouldSpawn('cafe', 'mb_cafe')) return; var down = dgRefilled('cafe') ? !!(S.rf && S.rf[key]) : !!S.f[key]; if (down) return; var id = CAF_FOES[(i + k.length) % 2], s = intSprite(id + '_map', SPH, 'dgfoe'); s.el.classList.add('foe');
     var a = lw(R, p); s.x = a[0]; s.y = a[1]; place(s, 0); waddle(s, 0, Math.PI / 2); W.dgF.push({ key: key, id: id, s: s, hx: a[0], hy: a[1], tx: null, ty: null, wait: 0.6 + Math.random() * 1.5, st: 'walk', stun: 0 }); });
   cafGuard(k, R, S, b);
   (CAFP[k] || []).forEach(function (n) { var a = lw(R, n.at), s;
@@ -19171,13 +19201,13 @@ function cafBondScene() { var S = cafS(), R = CAFG.staff, P = function (x, y) { 
 function cafArrive(k) { var S = cafS(), b = beaten('mb_cafe'); if (cafHide(k)) { libPend(function () { cafBondScene(); }); return; }
   if (k === 'dining' && !b) { cafBoss(); return; } /* the fight starts on room entry (Ernest) */
   if (S.e[k]) return; S.e[k] = 1; save(); var L = CAF_SC['in_' + k], after = null; if (!L) return;
-  if (k === 'line') after = function () { helpTip('cafedg', { t: 'The Cafeteria', h: '<p>The <b>lunch shutter</b> to the Dining Hall is down.</p><p>Find the three crates of possessed bread: the <b>Walk-in Cooler</b>, the <b>Loading Dock</b> and the <b>Bakery</b>. <b>Lift</b> one, carry it to the Kitchen\u2019s <b>disposal chute</b>. No running with a crate, and a fight knocks it back.</p><p>Each crate has a <b>guard</b> who turns on a beat. Move while he looks away and hide behind the furniture.</p><p>The Staff Room is a <b>safe room</b>.</p>' }); };
+  if (k === 'line') after = function () { helpTip('cafedg', { t: 'The Cafeteria', h: '<p>The <b>lunch shutter</b> to the Dining Hall is down.</p><p>Find the three crates of possessed bread: the <b>Walk-in Cooler</b>, the <b>Loading Dock</b> and the <b>Bakery</b>. <b>Lift</b> one, carry it to the Kitchen\u2019s <b>disposal chute</b>. No running with a crate, and a fight knocks it back.</p><p>Each crate has a <b>guard</b> who walks the room, stopping to look round at each corner. Stay out of his cone and behind the furniture. If he <b>spots</b> you he shouts for backup: <b>five on one</b>. Catch him from behind and it’s just him.</p><p>The Staff Room is a <b>safe room</b>.</p>' }); };
   libPend(function () { scene(null, L, after); }); }
 function cafBoss() { var S = cafS(), first = !S.e.dining, m = MINIS.find(function (q) { return q.id === 'mb_cafe'; }), R = CAFG.dining; W.path = []; W.ryo.v = 0; ev('world:cafe:boss:auto:' + (first ? 1 : 0)); if (first) { S.e.dining = 1; save(); }
   libPend(function () { var k0 = lw(R, CAFP.dining[0].at), tc = camAt(k0[0], k0[1] + 60), a0 = [W.cam.x, W.cam.y], t = 0; W.dlg = true; W.pan = { scr: 1, run: function (dt) { t += dt; var e = ease(Math.min(1, t / 0.8)); W.cam.x = a0[0] + (tc[0] - a0[0]) * e; W.cam.y = a0[1] + (tc[1] - a0[1]) * e; } }; ev('world:cafe:boss:pan');
     var go = function () { W.bossCamHold = 1; if (typeof libBossCam === 'function') libBossCam(); W.dlg = false; var up = lw(R, [640, 360]); walkTo(up[0], up[1], true, false); /* a short controlled walk-up, then the challenge */ setTimeout(function () { miniDialog(m, { base: 1, away: function () { W.bossCamHold = 0; if (typeof libBossCamOff === 'function') libBossCamOff(); if (cafRoom() === 'dining' && !beaten('mb_cafe')) cafDoor('gS'); } }); }, 700); };
     setTimeout(function () { if (first) bossEnt('mb_cafe', cafBossLines(), go); else go(); }, 850); }); }
-function cafBack(win, st) { if (W.carry) cafDrop('fight'); }
+function cafBack(win, st) { if (W.carry) cafDrop('fight'); if (!win && typeof grdDismiss === 'function') grdDismiss(); }
 function cafPost(done) { W.dlg = true; AU.play('shatter', { gain: 0.8 }); wSparks(); ev('world:cafe:post');
   if (cafRoom() === 'dining') { var o = W.libN && W.libN.kurata, a = lw(CAFG.dining, CAFP.dining[0].at); if (o && o.el) o.el.remove(); var s = celKneel('kurata', 0, 'lkneel'); if (s) { s.x = a[0]; s.y = a[1]; place(s, 0); W.libN.kurata = s; ev('world:cafe:kneel'); } }
   scene(null, CAF_SC.post, function () { var S = cafS(); S.f.ref = 1; save(); W.dlg = false; if (done) done(); }); }
@@ -19249,15 +19279,15 @@ function cafMap() { var S = cafS(), cur = cafRoom(), h = '<div class="pmap lmap"
 /* the cafeteria's story: short lines (16 words max), under a minute of reading in a row */
 var CAF_SC = {
   /* GGD-89 rooms */
-  in_cooler: [['', '<p class="dim">The Walk-in Cooler. Breath turns white. A crate sits by the shelves, glowing through the slats.</p>'], ['aoi', 'There\u2019s a guard. Watch him turn. {slow}Move when he looks away.{/slow}', { mood: 'neutral' }], ['@tip', 'cafguard', { t: 'Room guards', h: '<p>A guard stands by each crate and turns between two sides on a steady beat. His view is the pale cone.</p><p>Shelves, crates and counters block his view. Walk while he faces away, wait behind cover while he turns back.</p><p>With a crate in your arms he sees farther and notices faster. If he spots you, it\u2019s a fight and the crate goes back.</p>' }]],
-  in_dock: [['', '<p class="dim">The Loading Dock. A delivery van, back doors open. Pallets of melon bread, still warm.</p>'], ['aoi', 'Another guard. Same rhythm. Use the pallets.', { mood: 'neutral' }]],
+  in_cooler: [['', '<p class="dim">The Walk-in Cooler. Breath turns white. A crate sits by the shelves, glowing through the slats.</p>'], ['aoi', 'There\u2019s a guard on rounds. {slow}Stay behind him.{/slow} If he sees us, he\u2019ll call the others.', { mood: 'neutral' }], ['@tip', 'cafguard', { t: 'Room guards', h: '<p>A guard walks a loop round each crate room and stops at the corners to look around. His view is the pale cone, and it turns with him.</p><p>Shelves, crates and counters block his view. Doorways are safe to peek from. Follow him from behind, or wait behind cover until he passes.</p><p>If he spots you (<b>!</b>) he shouts for backup and it\u2019s a fight against <b>five</b>. Reach him from behind unseen and it\u2019s just him. With a crate in your arms he sees farther and notices faster, and a fight sends the crate back.</p>' }]],
+  in_dock: [['', '<p class="dim">The Loading Dock. A delivery van, back doors open. Pallets of melon bread, still warm.</p>'], ['aoi', 'Another one on rounds. Use the pallets.', { mood: 'neutral' }]],
   in_dish: [['', '<p class="dim">The Dish Room. The conveyor runs with nothing on it. Nobody\u2019s washed a tray in days.</p>']],
   in_bakery: [['', '<p class="dim">The Bakery. Both ovens roaring. Trays of melon bread cool on the racks, every one of them purple.</p>'], ['aoi', 'This is where it comes from. The crate\u2019s behind him.', { mood: 'neutral' }]],
   l_cooler: [['', '<p class="dim">KEEP CLOSED. Someone has scratched out CLOSED and written FULL.</p>']],
   l_dock: [['', '<p class="dim">DELIVERY 6:00. Every morning. Same van, same order: 500 melon bread.</p>']],
   l_dish: [['', '<p class="dim">ORDER UP. The bell under the sign is wrapped in purple tape.</p>']],
   l_bakery: [['', '<p class="dim">MELON BREAD \u00d7500. The 5 has been gone over again and again.</p>'], ['aoi', 'They\u2019re baking for the whole school.', { mood: 'neutral' }]],
-  guard_lost: [['aoi', 'He\u2019s back at his post. Wait for the turn.', { mood: 'neutral' }]],
+  guard_lost: [['aoi', 'He\u2019s back on his rounds. Get behind him.', { mood: 'neutral' }]],
   in_line: [['', '<p class="dim">The cafeteria. Every tray is full of melon bread. Nobody is eating. Nobody is leaving.</p>'], ['aoi', 'The bread is steaming purple.{p} {slow}That’s not steam.{/slow}', { mood: 'neutral' }], ['ryo', 'And the shutter\u2019s down. Lunch is behind it.', { mood: 'neutral' }]],
   menu: [['', '<p class="dim">The menu board. TODAY: MELON BREAD. Underneath, in purple chalk:{p=500} {slow}EAT.{/slow}</p>'], ['aoi', 'Someone wants the whole school eating this.', { mood: 'neutral' }]],
   lift: [['', '<p class="dim">The crate is warm. Something inside it whispers about seconds.</p>'], ['aoi', 'The Kitchen has a disposal chute. Walk, Kazan. Don\u2019t drop it.', { mood: 'neutral' }]],
@@ -19316,19 +19346,20 @@ var FLDG = {
     doors: { gS: { r: [581, 625, 694, 715], at: [637, 650], land: [637, 585, 3], to: 'lockers:gN' }, gE: { r: [1205, 380, 1265, 510], at: [1180, 445], to: 'booth:gW' } },
     spots: [{ id: 'warm', r: [200, 500, 280, 560], at: [240, 580], face: 3 },
       { id: 'slot0', r: [250, 350, 310, 410], at: [280, 430], face: 3 }, { id: 'slot1', r: [610, 170, 670, 230], at: [640, 250], face: 3 }, { id: 'slot2', r: [970, 350, 1030, 410], at: [1000, 430], face: 3 }], foes: [] },
-  /* GGD-89 (v6.5.66): four more rooms. The hurdles now live in the Cage / Showers / Trainer; the Timing Booth lever slows Bando for one lap. */
+  /* GGD-89 (v6.5.66): four more rooms. The hurdles now live in the Cage / Showers / Trainer, each guarded by 2-3 roamers
+   * (t587u/t588u: library rule, beaten = gone for the main quest via S.f; a kicked hurdle back in the Cage never respawns them). The Timing Booth lever slows Bando for one lap. */
   cage: { n: 'Storehouse \u00b7 Equipment Cage', pic: [1152, 864], s: 1.0, plan: [0, 1, 1, 2],
     open: [[100, 155, 1050, 785]], block: [[150, 196, 420, 262], [480, 200, 640, 252], [740, 206, 880, 270], [150, 690, 360, 750]],
     doors: { gE: { r: [1055, 330, 1125, 562], at: [1032, 450], to: 'bay:gW' } },
-    spots: [{ id: 'look', r: [120,  40,  290,  96], at: [300,  180], face: 3 }], hurdle: [300, 560], kick: { showers: [520, 600], trainer: [740, 600] }, foes: [] },
+    spots: [{ id: 'look', r: [120,  40,  290,  96], at: [300,  180], face: 3 }], hurdle: [300, 560], kick: { showers: [520, 600], trainer: [740, 600] }, foes: [[470, 520], [250, 440], [700, 470]] },
   showers: { n: 'Storehouse \u00b7 Showers', pic: [1152, 864], s: 1.0, plan: [0, 0, 1, 1],
     open: [[100, 155, 1050, 785]], block: [[300, 560, 700, 602], [770, 160, 790, 300]],
     doors: { gE: { r: [1055, 330, 1125, 562], at: [1032, 450], to: 'lockers:gW' } },
-    spots: [{ id: 'look', r: [140,  20,  760,  150], at: [450,  200], face: 3 }], hurdle: [870, 650], foes: [] },
+    spots: [{ id: 'look', r: [140,  20,  760,  150], at: [450,  200], face: 3 }], hurdle: [870, 650], foes: [[740, 650], [910, 470], [540, 700]] },
   trainer: { n: 'Storehouse \u00b7 Trainer\u2019s Room', pic: [1152, 864], s: 1.0, plan: [2, 0, 3, 1],
     open: [[100, 155, 1050, 785]], block: [[160, 196, 330, 320], [370, 196, 540, 320], [640, 420, 880, 494], [180, 560, 420, 620], [870, 186, 1010, 252]],
     doors: { gW: { r: [28, 323, 91, 562], at: [110, 450], to: 'lockers:gE' }, gS: { r: [453, 800, 690, 850], at: [571, 828], land: [571, 700, 3], to: 'coach:gN' } },
-    spots: [{ id: 'look', r: [180,  36,  400,  92], at: [350,  180], face: 3 }], hurdle: [800, 680], foes: [] },
+    spots: [{ id: 'look', r: [180,  36,  400,  92], at: [350,  180], face: 3 }], hurdle: [800, 680], foes: [[630, 650], [960, 580]] },
   booth: { n: 'Storehouse \u00b7 Timing Booth', pic: [1152, 864], s: 1.0, plan: [2, -1.1, 3, -0.1],
     open: [[100, 155, 1050, 785]], block: [[300, 186, 850, 280], [700, 600, 960, 660], [160, 600, 420, 640]],
     doors: { gW: { r: [28, 323, 91, 562], at: [110, 450], to: 'track:gE' } },
@@ -19432,7 +19463,7 @@ function hurdleSvg() { return '<svg viewBox="0 0 20 20" aria-hidden="true"><rect
 function fldHud() { var h = document.getElementById('lkeys'), S = fldS(); if (!h) { h = document.createElement('div'); h.id = 'lkeys'; (document.getElementById('world') || document.body).appendChild(h); }
   if (!fldRoom()) return; h.innerHTML = !beaten('mb_field') ? FLD_SLOTS.filter(function (k) { return S.sl[k]; }).map(function (k) { return '<span class="lks got ahurdle" data-k="' + k + '" style="--kc:#d8323a" title="Hurdle set (' + k + ')">' + hurdleSvg() + '</span>'; }).join('') : '';
   h.classList.add('on'); }
-function fldCarryEl() { var r = W.ryo, e = r.el && r.el.querySelector('.wcarry'); if (W.carry && !e && r.el) { e = document.createElement('b'); e.className = 'wcarry'; e.style.backgroundImage = 'url(' + (IMG.sf_hurdle || IMG.cf_crate) + ')'; r.el.appendChild(e); } else if (!W.carry && e) e.remove(); }
+function fldCarryEl() { var r = W.ryo, e = r.el && r.el.querySelector('.wcarry'); if (W.carry && !e && r.el) { e = document.createElement('b'); e.className = 'wcarry fh'; e.style.backgroundImage = 'url(' + (IMG.sf_hurdle || IMG.cf_crate) + ')'; r.el.appendChild(e); } else if (!W.carry && e) e.remove(); }
 function fldLift(k, from) { var S = fldS(); if (W.carry) { if (typeof sayKey === 'function') sayKey('hint', 'hurdle_arms'); else toast('Your arms are full. One hurdle at a time.'); return; } if (S.hr[k]) return; S.hr[k] = 1; W.carry = 'h:' + k; W.run = false; save(); fldRegrid(fldRoom() || k);
   if (from === 'cage') { if (W.fldHk && W.fldHk[k]) { W.fldHk[k].el.remove(); W.fldHk[k] = null; } } else if (W.fldHr) { W.fldHr.el.remove(); W.fldHr = null; } fldCarryEl(); AU.play('place'); ev('world:field:lift:' + k);
   if (!S.e.lift) { S.e.lift = 1; save(); scene(null, FLD_SC.lift); } else if (typeof sayKey === 'function') sayKey('hint', 'hurdle_up'); else toast('Hurdle up. Set it on a lane mark on the Outdoor Track. No running.'); }
@@ -20473,13 +20504,13 @@ var SQDEF = {
     turn: [['aya', 'My drum sheet! The cabinet\'s whole again.', { mood: 'neutral' }], ['aya', 'Take these. Timing helps both of you.', { mood: 'neutral' }]],
     rarity: 'common', pair: 0 },
   sq_riku: { n: 'Kitchen Line Standoff', who: 'rikuf', room: 'c1a', mb: 'mb_cafe', dg: 'cafe', need: 3, item: 'rations',
-    steps: ['Defeat lingering Cafeteria bullies', 'Grab the sealed rations in the Kitchen', 'Return to Riku in Class 1-A'],
+    steps: ['Defeat lingering Cafeteria bullies', 'Grab the sealed rations in the Dish Room', 'Return to Riku in Class 1-A'],
     offer: [['riku', 'Nobody trusts the cafeteria trays.', { mood: 'neutral' }], ['riku', 'Brawlers hoard sealed emergency rations.', { mood: 'neutral' }], ['riku', 'Clear three. Grab the rations for us.', { mood: 'neutral' }], ['aoi', 'Kitchen lanes. Close range.', { hype: 0, mood: 'neutral' }]],
     accept: [['riku', 'We\'re starving. Please hurry.', { mood: 'sad' }]],
     turn: [['riku', 'Real food. Not Kurata\'s trays.', { mood: 'neutral' }], ['riku', 'These are for both of you.', { mood: 'neutral' }]],
     rarity: 'common', pair: 0 },
   sq_yuto: { n: 'Clearing the Track Lanes', who: 'yuto', room: 'hall', mb: 'mb_field', dg: 'field', need: 4, item: 'spikes',
-    steps: ['Defeat lingering Storehouse bullies', 'Recover Yuto\'s track spikes from Equipment', 'Return to Yuto in the Nurse\'s Hallway'],
+    steps: ['Defeat lingering Storehouse bullies', 'Recover Yuto\'s track spikes from the Timing Booth', 'Return to Yuto in the Nurse\'s Hallway'],
     offer: [['yuto', 'I can\'t stop pacing this hall.', { mood: 'sad' }], ['yuto', 'Track toughs blocked the Storehouse again.', { mood: 'neutral' }], ['yuto', 'Clear four. Grab my spikes for me.', { mood: 'neutral' }], ['ryo', 'Footwork drill. Let\'s run it.', { hype: 1, mood: 'neutral' }]],
     accept: [['yuto', 'I\'ll keep walking. Come back soon.', { mood: 'neutral' }]],
     turn: [['yuto', 'My spikes! Now I can stop pacing.', { mood: 'neutral' }], ['yuto', 'These drills are for both of you.', { mood: 'neutral' }]],
@@ -20610,11 +20641,11 @@ function sqArtDrumFight() { var s = sqState('sq_aya'); if (s.st !== 2 || s.item 
   W.dlg = true; scene(null, [['', '<p class="dim">A hall monitor waves Aya\'s drum sheet like a baton.</p>'], ['aoi', 'That sheet is hers. End this.', { mood: 'neutral' }]], function () {
     W.dlg = false; fight(['bully3'], false, sqRushCtx({ dg: 'art', dgk: 'sq_drum', dgks: ['sq_drum'], dgm: W.inside && W.inside.id, sqItem: 'sq_aya' }));
   }); }
-function sqCafeRationsTag(out, k) { if (k !== 'kitchen') return; var id = 'sq_riku', D = SQDEF[id], s = sqState(id); if (s.st !== 2 || s.item || s.kills < D.need) return;
-  var R = CAFG.kitchen, at = lw(R, SQ_SPOT.rations);
+function sqCafeRationsTag(out, k) { if (k !== 'dish') return; /* t583u: Dish Room */ var id = 'sq_riku', D = SQDEF[id], s = sqState(id); if (s.st !== 2 || s.item || s.kills < D.need) return;
+  var R = CAFG.dish, at = lw(R, SQ_SPOT.rations);
   out.push({ key: 'cafe:rations', lab: '', silent: 1, x: at[0], y: at[1] - 62, below: false, ax: at[0], ay: at[1] + 30, R: 95, cls: ' sqi', sqp: 'rations', sqf: 'bully4', px: at[0], py: at[1], fn: function () { sqGuardFight('sq_riku', 'bully4', 'cafe', 'sq_rations', [['', '<p class="dim">A bully sits on Riku\'s sealed ration crate, peeling a stolen orange.</p>'], ['ryo', 'Off the crate. That\'s not yours.', { hype: 1, mood: 'neutral' }]]); } }); }
-function sqFieldSpikesTag(out, k) { if (k !== 'bay') return; var id = 'sq_yuto', D = SQDEF[id], s = sqState(id); if (s.st !== 2 || s.item || s.kills < D.need) return;
-  var R = FLDG.bay, at = lw(R, SQ_SPOT.spikes);
+function sqFieldSpikesTag(out, k) { if (k !== 'booth') return; /* t583u: Timing Booth */ var id = 'sq_yuto', D = SQDEF[id], s = sqState(id); if (s.st !== 2 || s.item || s.kills < D.need) return;
+  var R = FLDG.booth, at = lw(R, SQ_SPOT.spikes);
   out.push({ key: 'field:spikes', lab: '', silent: 1, x: at[0], y: at[1] - 62, below: false, ax: at[0], ay: at[1] + 30, R: 95, cls: ' sqi', sqp: 'spikes', sqf: 'bully1', px: at[0], py: at[1], fn: function () { sqGuardFight('sq_yuto', 'bully1', 'field', 'sq_spikes', [['', '<p class="dim">A bully kicks Yuto\'s spikes around the dugout like a football.</p>'], ['aoi', 'Those are his. Put them down.', { mood: 'neutral' }]]); } }); }
 /* v5.3 #11: every Ch1 step-2 prop has a guard now; the guard rushes you and the win hands over the item */
 function sqGuardFight(id, foe, dg, key, lines) { var s = sqState(id); if (s.st !== 2 || s.item || W.busy) return; W.dlg = true;
@@ -20628,7 +20659,7 @@ function sqAfterFight(win, st) { if (!win || !st || !st.ctx) return;
 function sqSig() { if (typeof SAVE === 'undefined' || !SAVE) return ''; var o = SAVE.sq || {}; return ':sq' + SQ_IDS.map(function (id) { var s = o[id]; return s ? (s.st | 0) + '.' + (s.kills | 0) + '.' + (s.item | 0) : '0'; }).join(',') + (SAVE.qOff ? ':o' + Object.keys(SAVE.qOff).filter(function (k) { return SAVE.qOff[k]; }).join(',') : ''); }
 function sqRefresh() { try { if (W.inside) { tagsBuild(); } if (typeof sqPaintMarks === 'function') sqPaintMarks(); if (typeof qMark === 'function') qMark(); } catch (e) {} ev('world:sq:refresh'); }
 /* v4.69: the visible cel-drawn Step-2 pickups (code-drawn SVG, ink outline + flat cel fills, warm glow ring; no raster sprites) */
-var SQ_SPOT = { bout: [436, 820], drum: [500, 430], drumB: [820, 500], rations: [930, 420], spikes: [580, 600] }; /* v6.5.42 b13i: open aisle, not behind the bay table */
+var SQ_SPOT = { bout: [436, 820], drum: [500, 430], drumB: [820, 500], rations: [640, 380], spikes: [560, 430] }; /* t583u: Dish Room aisle / Timing Booth floor */ /* v6.5.42 b13i: open aisle, not behind the bay table */
 var SQ_PROP_SVG = {
   bout: '<svg viewBox="0 0 60 44" aria-hidden="true"><ellipse cx="30" cy="40" rx="24" ry="4" fill="rgba(0,0,0,.35)"/><g stroke="#1c1622" stroke-width="1.6" stroke-linejoin="round"><path d="M8 30 L30 36 L52 30 L30 24Z" fill="#e9dcc0"/><path d="M8 26 L30 32 L52 26 L30 20Z" fill="#f6ecd4"/><path d="M8 22 L30 28 L52 22 L30 16Z" fill="#fffaf0"/><path d="M8 22 L8 30 L30 36 L30 28Z" fill="#d9c8a2"/><path d="M30 28 L30 36 L52 30 L52 22Z" fill="#c8b48a"/><path d="M19 19 L41 25" stroke="#c4161c" stroke-width="3"/><path d="M26 17 L26 6 L36 6 L36 20" fill="#7a3b1f"/></g><path d="M14 22 L25 25 M15 24.5 L23 26.8" stroke="#6b5a40" stroke-width="1"/><text x="31" y="15" font-size="6" font-weight="900" fill="#ffe7a0" text-anchor="middle" font-family="system-ui">BOUT</text></svg>',
   drum: '<svg viewBox="0 0 60 44" aria-hidden="true"><ellipse cx="30" cy="40" rx="20" ry="4" fill="rgba(0,0,0,.35)"/><g stroke="#1c1622" stroke-width="1.6" stroke-linejoin="round"><path d="M14 36 L18 6 L46 6 L42 36Z" fill="#fffaf0"/><path d="M42 36 L46 6 L49 9 L45 38Z" fill="#d9c8a2"/></g><g stroke="#1c1622" stroke-width=".9"><path d="M19 12 H43 M18.6 15 H42.6 M18.2 18 H42.2 M17.8 21 H41.8 M17.4 24 H41.4 M17 27 H41"/></g><g fill="#1c1622"><ellipse cx="23" cy="18" rx="2" ry="1.5"/><ellipse cx="30" cy="15" rx="2" ry="1.5"/><ellipse cx="37" cy="21" rx="2" ry="1.5"/><path d="M25 18 V10 M32 15 V8 M39 21 V13" stroke="#1c1622" stroke-width="1"/></g><text x="30" y="33.5" font-size="5" font-weight="900" fill="#c4161c" text-anchor="middle" font-family="system-ui">DRUMS</text></svg>',

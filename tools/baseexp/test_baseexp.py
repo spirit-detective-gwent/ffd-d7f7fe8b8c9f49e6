@@ -1,11 +1,12 @@
 #!/workspace/pwenv/bin/python3
 """v6566-baseexp (GGD-89, Erik t548u): Cafeteria + Storehouse grow to 8 rooms each.
-Cafeteria: crate rooms Cooler / Dock / Bakery each have ONE room guard (turns on a beat, props are cover, carrying widens his sight),
-no roamers there until the base is cleared. Storehouse: hurdles in Cage / Showers / Trainer, lane fee (set only while Bando is on the
+Cafeteria: crate rooms Cooler / Dock / Bakery each have ONE room guard (t583u: walks a loop with corner looks, cone follows, props are
+cover, carrying widens his sight; spotted = BACKUP! and a fight of 5, from behind unseen = solo), never any roamers there. Hurdle rooms:
+2-3 library-style roamers (t587u/t588u). Side-quest props in the Dish Room / Timing Booth. Storehouse: hurdles in Cage / Showers / Trainer, lane fee (set only while Bando is on the
 far side, else he kicks it to the Cage), one-use Timing Booth lever slows one lap. Supplies: 9 pairs, caf 2 / fld 2, 8 boxes per base.
 usage: test_baseexp.py <worktree> [port]     SECT=DGRLSCO to pick sections"""
 import asyncio, sys, json, os, math
-SECT = os.environ.get('SECT', 'DGRLSCO')
+SECT = os.environ.get('SECT', 'DGRHQLSCO')
 exec(open(__file__.rsplit('/', 1)[0] + '/../lockeramb/lib.py').read())
 NEXT = """()=>{var b=[...document.querySelectorAll('button')].filter(e=>/^(Next|Skip|Close|OK|Got it)/.test((e.textContent||'').trim())&&e.offsetParent!==null);if(!b.length)return 0;b[0].click();return 1}"""
 STUB = "(function(){ if(!W.__fo){ W.__fo=fight; } W.__fights=[]; fight=function(g,b,c){ W.__fights.push({g:g.slice(),c:c}); ev('test:fight'); }; return 1; })()"
@@ -27,10 +28,13 @@ async def put(pg, x, y):
     await ev(pg, "W.path=[]; W.ryo.v=0; W.ryo.x=%d; W.ryo.y=%d; place(W.ryo,0); 1" % (x, y))
 async def end_fight(pg, win, escaped=False):
     return await ev(pg, "(function(){ var F=W.__fights[W.__fights.length-1]; var st={ctx:F.c, escaped:%s, endHp:null}; try{ back(%s, st); }catch(e){ return 'err '+e.message; } return 1; })()" % ('true' if escaped else 'false', 'true' if win else 'false'))
-async def enter(pg, base):
+HOLD = "(function(x,y,fa){ var f=W.dgF.find(q=>q.grd); f.hold=1; f.st='grd'; f.turn=null; f.ph='walk'; f.s.x=x; f.s.y=y; f.fa=fa; place(f.s,0); f.sus=0; f.qm=0; f._ck=''; grdConeSet(f); return 1; })(%d,%d,%f)"
+HURDLE_ROAM = "var S=fldS(); ['fcage0','fcage1','fcage2','fshowers0','fshowers1','fshowers2','ftrainer0','ftrainer1'].forEach(k=>S.f[k]=1); save(); 1"
+async def enter(pg, base, roam=False):
     await ev(pg, ("cafEnter(); 1" if base == 'caf' else "fldEnter(); 1")); await pg.wait_for_timeout(1500); await skipall(pg, 8); await free(pg)
     if base == 'fld':  # the bay arrival pair (lockeramb) is not part of this test: mark it done
         await ev(pg, "var S=fldS(); S.e.entry=1; S.f.fbay0=1; S.f.fbay1=1; S.e.surprise=1; save(); 1")
+        if not roam: await ev(pg, HURDLE_ROAM)  # hurdle-room roamers have their own section (H)
 
 async def main():
     h = serve(root, PORT)
@@ -58,72 +62,125 @@ async def main():
             ok('D4 floor plans list 8 rooms each and say /8 rooms seen', mp == [True, True, 8, 8], mp)
             ok('D5 no page errors', not errs, errs); await b.close()
 
-        # ---------- G: guard beat, cover, detect, carry, fight sends crate home, resolved after win
+        # ---------- G: guard patrol loop, cone follows, cover, doorway peek, spotted = 5, from behind = 1, carry, resolved after win
         if 'G' in SECT:
             b, ctx, pg, errs = await boot(p); await ev(pg, STUB); await enter(pg, 'caf')
-            await go(pg, 'caf', 'cooler'); await put(pg, 980, 470)
-            smp = await pump(pg, 9000, GF)
-            fas = [s['fa'] for s in smp if s]
-            hold_w = sum(1 for a in fas if abs(abs(a) - math.pi) < 0.02 or abs(a - math.pi) < 0.02); hold_e = sum(1 for a in fas if abs(a) < 0.02)
-            ok('G1 cooler guard stands at his post (never moves) while he turns', all(s and s['x'] == 420 and s['y'] == 466 and s['st'] == 'grd' for s in smp), smp[-1])
-            ok('G2 beat: holds west and east ~3 s each, turns in between (both facings seen, mid-turn samples few)', hold_w >= 20 and hold_e >= 20 and len(fas) - hold_w - hold_e <= 18, (hold_w, hold_e, len(fas)))
-            mids = [a for a in fas if 0.1 < abs(a) < 3.0]
-            ok('G3 turns go through the back wall (north, fa<0) only', mids and all(a < 0 for a in mids), mids[:8])
-            ok('G4 cone element follows (rotate set), visible while on post', all(s['cone'] and 'rotate' in s['cone'] and not s['off'] for s in smp if s), smp[-1])
-            # dock: in-cone open line -> spotted; behind the sacks -> hidden; behind him -> unseen
-            await go(pg, 'caf', 'dock')
-            await ev(pg, "var f=W.dgF.find(q=>q.grd); f.gT=99; f.gi=0; f.fa=Math.PI; f.turn=null; 1")
+            await go(pg, 'caf', 'cooler'); await put(pg, 972, 450)
+            smp = await pump(pg, 14000, GF)
+            smp = [s for s in smp if s]
+            pos = set((s['x'], s['y']) for s in smp)
+            CORN = [(170, 440), (170, 270), (900, 270), (900, 440)]
+            onloop = all(min(abs(s['x'] - 170), abs(s['x'] - 900)) <= 1 and 270 <= s['y'] <= 440 or min(abs(s['y'] - 270), abs(s['y'] - 440)) <= 1 and 170 <= s['x'] <= 900 for s in smp)
+            ok('G1 cooler guard walks his loop (moves, stays on the loop lines, always on walkable floor)', len(pos) >= 40 and onloop and await ev(pg, "CAF_GRD.cooler.pts.every((q,i,a)=>{var n=a[(i+1)%a.length];for(var t=0;t<=1;t+=0.05){if(!okAt(q[0]+(n[0]-q[0])*t,q[1]+(n[1]-q[1])*t))return false}return true})"), (len(pos), smp[-1]))
+            atc = [s for s in smp if (s['x'], s['y']) in CORN]; fac = set(round(s['fa'], 1) for s in atc)
+            ok('G2 he stops at the corners and looks around there (several samples per corner, facing changes while still)', len(atc) >= 10 and len(fac) >= 5, (len(atc), sorted(fac)[:10]))
+            def cone_ok(s):
+                c = s['cone'] or ''; import re as _re; m = _re.search(r'translate\((-?\d+)px, ?(-?\d+)px\) rotate\((-?\d+)deg\)', c)
+                if not m: return False
+                dg = (int(m.group(3)) - (s['fa'] * 180 / math.pi + 90) + 540) % 360 - 180
+                return abs(int(m.group(1)) - s['x']) <= 1 and abs(int(m.group(2)) - s['y']) <= 1 and abs(dg) <= 1.5
+            ok('G3 the cone follows his position and facing on every sample, visible while on rounds', all(cone_ok(s) and not s['off'] for s in smp if s['st'] == 'grd'), smp[-1])
+            ok('G4 standing on the doorway landing: never noticed (safe to peek)', all(s['sus'] == 0 and s['st'] == 'grd' for s in smp), [s for s in smp if s['sus']][:2])
+            # dock: freeze him (test hold) facing west at 430,420
+            await go(pg, 'caf', 'dock'); await ev(pg, HOLD % (430, 420, math.pi))
             await put(pg, 100, 490); s1 = await pump(pg, 3000, GF)
-            ok('G5 behind the sacks inside his cone: never noticed (prop blocks sight)', all(s['sus'] == 0 and s['st'] == 'grd' for s in s1), s1[-1])
+            ok('G5 behind the sacks inside his cone: never noticed (furniture blocks sight)', all(s['sus'] == 0 and s['st'] == 'grd' for s in s1), s1[-1])
             await put(pg, 760, 440); s2 = await pump(pg, 3000, GF)
             ok('G6 behind him (east, he faces west), 330 px: never noticed', all(s['sus'] == 0 and s['st'] == 'grd' for s in s2), s2[-1])
-            await put(pg, 180, 420); s3 = await pump(pg, 2500, GF)
-            ok('G7 in the open, inside his cone: "?" then "!" (alert/chase) within 2.5 s', any(s['st'] in ('alert', 'chase') for s in s3), s3[-1])
-            await pump(pg, 4000); F = await ev(pg, "W.__fights")
-            ok('G8 he reaches you: one fight with just the guard', len(F) == 1 and F[0]['c']['dgk'] == 'gdock' and F[0]['g'] == ['bully4'], F)
+            await put(pg, 458, 420); await pump(pg, 1200); F = await ev(pg, "W.__fights")
+            ok('G7 sneak up from behind unseen: a SOLO fight with just him, no backups called', len(F) == 1 and F[0]['g'] == ['bully4'] and F[0]['c']['dgk'] == 'gdock' and await ev(pg, "W.dgF.filter(o=>o.bk).length") == 0, F)
             await end_fight(pg, False, True); await pump(pg, 400); await free(pg)
-            await put(pg, 900, 700); s4 = await pump(pg, 15000, GF)
-            ok('G9 fled: he searches, then walks back to his post and resumes the beat', s4[-1] and s4[-1]['st'] == 'grd' and s4[-1]['x'] == 430 and s4[-1]['y'] == 420, s4[-1])
+            await go(pg, 'caf', 'staff'); await go(pg, 'caf', 'dock'); await ev(pg, "W.__fights=[]; 1"); await ev(pg, HOLD % (430, 420, math.pi))
+            await put(pg, 180, 420); s3 = await pump(pg, 1600, GF)
+            tm = await ev(pg, "[W.dgF.filter(o=>o.bk).length, W.dgF.filter(o=>o.team==='gdock').length, !!document.querySelector('.wgbark'), (document.querySelector('.wgbark')||{}).textContent||'', W.dgF.filter(o=>o.bk).map(o=>o.id)]")
+            ok('G8 in the open inside his cone: "!" then the BACKUP! bark, 4 backups burst in (team of 5)', any(s['st'] in ('alert', 'chase') for s in s3) and tm[0] == 4 and tm[1] == 5 and tm[2] and tm[3] == 'BACKUP!' and set(tm[4]) <= {'bully3', 'bully4'}, (s3[-1], tm))
+            await ev(pg, "W.dgF.find(q=>q.grd).hold=0; 1"); await pump(pg, 5000); F = await ev(pg, "W.__fights")
+            ok('G9 they reach you: ONE group fight of 5 (guard first + 4 backups, existing enemy types)', len(F) == 1 and len(F[0]['g']) == 5 and F[0]['g'][0] == 'bully4' and set(F[0]['g']) <= {'bully3', 'bully4'} and len(F[0]['c']['dgks']) == 5 and 'gdock' in F[0]['c']['dgks'], F)
+            await end_fight(pg, False, True); await pump(pg, 400); await free(pg)
+            nb = await ev(pg, "W.dgF.filter(o=>o.bk).length")
+            await put(pg, 972, 450); s4 = await pump(pg, 16000, GF)
+            mv = len(set((s['x'], s['y']) for s in s4[-20:] if s))
+            ok('G10 fled: the backups leave at once, he searches, walks back to his loop and resumes (moving again)', nb == 0 and s4[-1] and s4[-1]['st'] == 'grd' and mv >= 5 and await ev(pg, "W.dgF.length") == 1, (nb, s4[-1], mv))
             # bakery: carrying widens his reach (400 px straight ahead: unseen empty-handed, seen with the crate)
-            await go(pg, 'caf', 'bakery'); await ev(pg, "W.__fights=[]; var f=W.dgF.find(q=>q.grd); f.gT=99; f.gi=0; f.fa=Math.PI; f.turn=null; 1")
+            await go(pg, 'caf', 'bakery'); await ev(pg, "W.__fights=[]; 1"); await ev(pg, HOLD % (810, 400, math.pi))
             await put(pg, 410, 400); s5 = await pump(pg, 2500, GF)
-            ok('G10 400 px ahead, empty-handed: outside his 360 px reach, not noticed', all(s['sus'] == 0 and s['st'] == 'grd' for s in s5), s5[-1])
+            ok('G11 400 px ahead, empty-handed: outside his 360 px reach, not noticed', all(s['sus'] == 0 and s['st'] == 'grd' for s in s5), s5[-1])
             await put(pg, 1000, 420); await ev(pg, "cafLift('bakery'); 1"); await pump(pg, 600); await free(pg)
             g = await ev(pg, GF)
-            ok('G11 lifting the crate: carry on, guard notice switches to the carry reach (x1.25)', await ev(pg, "W.carry") == 'bakery' and abs(g['N'] - 450) < 1 and 'scale(1.25)' in g['cone'], g)
-            await ev(pg, "var f=W.dgF.find(q=>q.grd); f.gT=99; f.gi=0; f.fa=Math.PI; f.turn=null; f.sus=0; f.qm=0; 1")
+            ok('G12 lifting the crate: guard notice switches to the carry reach (x1.25), cone scaled', await ev(pg, "W.carry") == 'bakery' and abs(g['N'] - 450) < 1 and 'scale(1.25)' in g['cone'], g)
+            await ev(pg, HOLD % (810, 400, math.pi))
             await put(pg, 410, 400); s6 = await pump(pg, 2500, GF)
-            ok('G12 same spot carrying the crate: spotted', any(s['st'] in ('alert', 'chase') for s in s6), s6[-1])
-            await pump(pg, 4000); F = await ev(pg, "W.__fights")
-            ok('G13 spotted while carrying -> fight', len(F) == 1 and F[0]['c']['dgk'] == 'gbakery', F)
+            ok('G13 same spot carrying the crate: spotted', any(s['st'] in ('alert', 'chase') for s in s6), s6[-1])
+            await ev(pg, "W.dgF.find(q=>q.grd).hold=0; 1"); await pump(pg, 5000); F = await ev(pg, "W.__fights")
+            ok('G14 spotted while carrying -> group fight of 5', len(F) == 1 and F[0]['c']['dgk'] in F[0]['c']['dgks'] and 'gbakery' in F[0]['c']['dgks'] and len(F[0]['g']) == 5, F)
             await end_fight(pg, True); await pump(pg, 900); await free(pg)
-            ok('G14 the fight sends the crate home (Bakery, not carried) and the beaten guard stays resolved', await ev(pg, "[W.carry, cafS().cr.bakery|0, !!cafS().f.gbakery, !!W.cafCr]") == [None, 0, True, True], await ev(pg, "[W.carry, cafS().cr.bakery, cafS().f.gbakery, !!W.cafCr]"))
+            ok('G15 the fight sends the crate home, the guard stays resolved, no backups left', await ev(pg, "[W.carry, cafS().cr.bakery|0, !!cafS().f.gbakery, !!W.cafCr, W.dgF.length]") == [None, 0, True, True, 0], await ev(pg, "[W.carry, cafS().cr.bakery, cafS().f.gbakery, !!W.cafCr, W.dgF.length]"))
             await go(pg, 'caf', 'staff'); await go(pg, 'caf', 'bakery')
-            ok('G15 re-enter the Bakery: no guard, no roamers (not cleared yet), crate there', await ev(pg, "[(W.dgF||[]).length, !!W.cafCr]") == [0, True], await ev(pg, FOES))
-            ok('G16 no page errors', not errs, errs); await b.close()
+            ok('G16 re-enter the Bakery: no guard, no roamers, crate there', await ev(pg, "[(W.dgF||[]).length, !!W.cafCr]") == [0, True], await ev(pg, FOES))
+            ok('G17 no page errors', not errs, errs); await b.close()
 
-        # ---------- R: roamers only after the clear; guard gone once the crate is dumped
+        # ---------- R: room rules (t583u): crate rooms = guard only, never roamers; other rooms keep theirs
         if 'R' in SECT:
             b, ctx, pg, errs = await boot(p); await ev(pg, STUB); await enter(pg, 'caf'); res = {}
+            ok('R0 room tables: Cooler / Dock / Bakery list no roamers at all', await ev(pg, "['cooler','dock','bakery'].map(k=>(CAFG[k].foes||[]).length)") == [0, 0, 0])
             for k in ['cooler', 'dock', 'dish', 'bakery']:
                 await go(pg, 'caf', k); await pump(pg, 1500); res[k] = await ev(pg, FOES)
-            ok('R1 before the clear: guard rooms hold exactly their one guard, Dish Room none, no roamers',
+            ok('R1 before the clear: crate rooms hold exactly their one guard, Dish Room none',
                all(len(res[k]) == 1 and res[k][0]['g'] for k in ['cooler', 'dock', 'bakery']) and res['dish'] == [], res)
             line = []
             for k in ['line', 'kitchen']:
                 await go(pg, 'caf', k); line.append(len(await ev(pg, FOES)))
-            ok('R2 Lunch Line / Kitchen keep their live roamers', all(n >= 1 for n in line), line)
+            ok('R2 Lunch Line / Kitchen keep their roamers', all(n >= 1 for n in line), line)
             await go(pg, 'caf', 'cooler'); await ev(pg, "cafLift('cooler'); 1"); await go(pg, 'caf', 'kitchen'); await ev(pg, "cafDump(); 1"); await pump(pg, 600); await free(pg)
             await go(pg, 'caf', 'cooler'); await pump(pg, 800)
-            ok('R3 crate dumped: the Cooler guard is gone for good, still no roamers', await ev(pg, "(W.dgF||[]).length") == 0, await ev(pg, FOES))
-            await ev(pg, "SAVE.mb=SAVE.mb||{}; SAVE.mb.mb_cafe=1; save(); 1"); await go(pg, 'caf', 'bakery'); await pump(pg, 600)
-            ok('R4 cleared but not left yet: no guard, no roamers', await ev(pg, "(W.dgF||[]).length") == 0, await ev(pg, FOES))
-            await ev(pg, "dgMarkRefill('cafe'); 1"); post = {}
-            for k in ['cooler', 'dock', 'bakery', 'dish']:
+            ok('R3 crate dumped: the Cooler guard is gone for good, no roamers', await ev(pg, "(W.dgF||[]).length") == 0, await ev(pg, FOES))
+            await ev(pg, "SAVE.mb=SAVE.mb||{}; SAVE.mb.mb_cafe=1; save(); 1"); await ev(pg, "dgMarkRefill('cafe'); 1"); post = {}
+            for k in ['cooler', 'dock', 'bakery', 'dish', 'line', 'kitchen']:
                 await go(pg, 'caf', k); post[k] = await ev(pg, FOES)
-            ok('R5 after the clear + refill: roamers appear in Cooler / Dock / Bakery (2 each, no guard), Dish Room stays empty',
-               all(len(post[k]) == 2 and not any(f['g'] for f in post[k]) for k in ['cooler', 'dock', 'bakery']) and post['dish'] == [], post)
-            ok('R6 no page errors', not errs, errs); await b.close()
+            ok('R4 after the clear + refill: still NO roamers in Cooler / Dock / Bakery / Dish; Lunch Line / Kitchen refill',
+               all(post[k] == [] for k in ['cooler', 'dock', 'bakery', 'dish']) and len(post['line']) >= 1 and len(post['kitchen']) >= 1, post)
+            ok('R5 no page errors', not errs, errs); await b.close()
+
+        # ---------- H: hurdle-room roamers (t587u/t588u): library rule, 2-3 per room, beaten = gone for the main quest
+        if 'H' in SECT:
+            b, ctx, pg, errs = await boot(p); await ev(pg, STUB); await enter(pg, 'fld', roam=True); hr = {}
+            for k in ['cage', 'showers', 'trainer', 'booth']:
+                await go(pg, 'fld', k); hr[k] = [await ev(pg, "(W.dgF||[]).map(f=>f.key)"), await ev(pg, "!!W.fldHr")]
+            ok('H1 before any fight: Cage 3, Showers 3, Trainer 2 roamers (with their hurdle), Booth none',
+               [len(hr[k][0]) for k in ['cage', 'showers', 'trainer', 'booth']] == [3, 3, 2, 0] and all(hr[k][1] for k in ['cage', 'showers', 'trainer']), hr)
+            await go(pg, 'fld', 'cage'); n = 0
+            for i in range(12):
+                left = await ev(pg, "(W.dgF||[]).map(f=>[f.key,Math.round(f.s.x),Math.round(f.s.y)])")
+                if not left: break
+                await ev(pg, "W.__fights=[]; W.dgFight=null; 1"); await put(pg, left[0][1] + 12, left[0][2]); await pump(pg, 500)
+                if await ev(pg, "W.__fights.length"): await end_fight(pg, True); n += 1; await pump(pg, 800); await free(pg)
+            ok('H2 beat them (touch fights, real dgAfter): Cage empty, flags saved', await ev(pg, "[(W.dgF||[]).length, !!fldS().f.fcage0, !!fldS().f.fcage1, !!fldS().f.fcage2]") == [0, True, True, True] and n >= 1, n)
+            th = await ev(pg, "(function(){ var t=(fldTags('sf_cage',INT.sf_cage)||[]).find(q=>/:hurdle$/.test(q.key)); return t?[t.lab, okAt(t.ax||t.x, t.ay||t.y)]:null; })()")
+            await ev(pg, "fldLift('cage'); 1"); await pump(pg, 300); await free(pg)
+            ok('H3 the hurdle is reachable: Lift tag on walkable floor, lifting works', th and th[0] == 'Lift' and th[1] and await ev(pg, "W.carry") == 'h:cage', (th, await ev(pg, "W.carry")))
+            await ev(pg, "fldDrop('fight'); var S=fldS(); S.kick.showers=1; S.hr.showers=0; save(); 1"); await go(pg, 'fld', 'lockers'); await go(pg, 'fld', 'cage')
+            ok('H4 a kicked hurdle back in the Cage does not respawn the Cage roamers', await ev(pg, "[(W.dgF||[]).length, !!(W.fldHk&&W.fldHk.showers)]") == [0, True], await ev(pg, "(W.dgF||[]).map(f=>f.key)"))
+            await go(pg, 'fld', 'showers'); sh = await ev(pg, "(W.dgF||[]).length")
+            await pg.reload(); await pg.wait_for_timeout(3500); await ev(pg, "WORLD_API.enter(true)"); await pg.wait_for_timeout(2500); await skipall(pg, 8); await free(pg); await ev(pg, STUB)
+            await enter(pg, 'fld', roam=True); await go(pg, 'fld', 'cage'); c2 = await ev(pg, "(W.dgF||[]).length"); await go(pg, 'fld', 'showers'); s2_ = await ev(pg, "(W.dgF||[]).length")
+            ok('H5 after a reload: Cage roamers still gone, the unbeaten Showers roamers still there', c2 == 0 and sh == 3 and s2_ == 3, (c2, sh, s2_))
+            ok('H6 no page errors', not errs, errs); await b.close()
+
+        # ---------- Q: side-quest props moved into the new rooms (t583u)
+        if 'Q' in SECT:
+            b, ctx, pg, errs = await boot(p)
+            await ev(pg, "['sq_riku','sq_yuto'].forEach(function(id){ var s=sqState(id); s.st=2; s.kills=9; s.item=0; }); save(); 1")
+            q = await ev(pg, """(function(){ function has(fn,id,key){ var D=INT[id]; return (fn(id,D)||[]).some(t=>t.key===key); }
+              return { dish: has(cafTags,'cf_dish','cafe:rations'), kitchen: has(cafTags,'cf_kitchen','cafe:rations'), booth: has(fldTags,'sf_booth','field:spikes'), bay: has(fldTags,'sf_bay','field:spikes'),
+                steps: [SQDEF.sq_riku.steps[1], SQDEF.sq_yuto.steps[1]], spot: [okAt.apply(null, lw(CAFG.dish, SIDEQ_API.SQ_SPOT.rations)), SIDEQ_API.SQ_SPOT.rations, SIDEQ_API.SQ_SPOT.spikes] }; })()""")
+            ok('Q1 rations prop: Dish Room (not the Kitchen); spikes: Timing Booth (not the Bay); step text names the room',
+               q['dish'] and not q['kitchen'] and q['booth'] and not q['bay'] and 'Dish Room' in q['steps'][0] and 'Timing Booth' in q['steps'][1], q)
+            await enter(pg, 'caf'); await go(pg, 'caf', 'dish'); await pump(pg, 400)
+            okd = await ev(pg, "(function(){ var t=(W.tagL||[]).find(q=>q.key==='cafe:rations'); return t?[okAt(t.px,t.py)||okAt(t.ax,t.ay), !!document.querySelector('.sqi, [class*=sqprop]')]:null; })()")
+            await enter(pg, 'fld'); await go(pg, 'fld', 'booth'); await pump(pg, 400)
+            okb = await ev(pg, "(function(){ var t=(W.tagL||[]).find(q=>q.key==='field:spikes'); return t?[okAt(t.px,t.py)||okAt(t.ax,t.ay)]:null; })()")
+            ok('Q2 in the rooms: both props get their tag on reachable floor', okd and okd[0] and okb and okb[0], (okd, okb))
+            ok('Q3 no page errors', not errs, errs); await b.close()
 
         # ---------- L: lane fee kick, cage pickup, far-side set, lever slow lap, rings
         if 'L' in SECT:

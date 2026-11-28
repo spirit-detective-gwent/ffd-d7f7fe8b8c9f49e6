@@ -35,11 +35,11 @@ rep("doors: { gW: { r: [28, 323, 91, 562], at: [110, 450], to: 'line:gE' } },\n 
     "doors: { gW: { r: [28, 323, 91, 562], at: [110, 450], to: 'line:gE' }, gN: " + GN % 'bakery:gS' + " },\n    spots: [{ id: 'notes'")
 rep("give: ['tape'] }, crate: [930, 420], foes: [] },", "give: ['tape'] }, foes: [] },")
 newc = []
-newc.append("  /* GGD-89 (v6.5.66): four more rooms. Cooler / Dock / Bakery each hold a crate and ONE room guard (CAF_GRD) who turns on a beat; the handmade props are cover.\n   * after: 1 = roamers only once the Cafeteria is cleared and refilled (never before). The Dish Room is a quiet link. */")
-newc.append("  cooler: { n: 'Cafeteria \\u00b7 Walk-in Cooler', pic: [1152, 864], s: 1.0, plan: [-1, 1, 0, 2],\n    %s, block: %s,\n    doors: { gE: %s, gN: %s },\n    spots: [%s], crate: [150, 486], after: 1, foes: [[620, 470], [520, 720]] }," % (OPEN, blocks('cf_cooler'), GE % 'kitchen:gW', GN % 'dock:gS', look([700, 40, 860, 96], [780, 200])))
-newc.append("  dock: { n: 'Cafeteria \\u00b7 Loading Dock', pic: [1152, 864], s: 1.0, plan: [-1, 0, 0, 1],\n    %s, block: %s,\n    doors: { gS: %s, gE: %s },\n    spots: [%s], crate: [190, 310], after: 1, foes: [[460, 720], [960, 480]] }," % (OPEN, blocks('cf_dock'), GS % 'cooler:gN', GE % 'dish:gW', look([300, 40, 480, 98], [390, 200])))
+newc.append("  /* GGD-89 (v6.5.66): four more rooms. Cooler / Dock / Bakery each hold a crate and ONE room guard (CAF_GRD) who walks a loop round the room; the handmade props are cover.\n   * t583u: crate rooms hold only the quest guard, never roamers (foes: []). The Dish Room is a quiet link (and the rations side-quest prop). */")
+newc.append("  cooler: { n: 'Cafeteria \\u00b7 Walk-in Cooler', pic: [1152, 864], s: 1.0, plan: [-1, 1, 0, 2],\n    %s, block: %s,\n    doors: { gE: %s, gN: %s },\n    spots: [%s], crate: [150, 486], foes: [] }," % (OPEN, blocks('cf_cooler'), GE % 'kitchen:gW', GN % 'dock:gS', look([700, 40, 860, 96], [780, 200])))
+newc.append("  dock: { n: 'Cafeteria \\u00b7 Loading Dock', pic: [1152, 864], s: 1.0, plan: [-1, 0, 0, 1],\n    %s, block: %s,\n    doors: { gS: %s, gE: %s },\n    spots: [%s], crate: [190, 310], foes: [] }," % (OPEN, blocks('cf_dock'), GS % 'cooler:gN', GE % 'dish:gW', look([300, 40, 480, 98], [390, 200])))
 newc.append("  dish: { n: 'Cafeteria \\u00b7 Dish Room', pic: [1152, 864], s: 1.0, plan: [0, 0, 1, 1],\n    %s, block: %s,\n    doors: { gS: %s, gW: %s },\n    spots: [%s], foes: [] }," % (OPEN, blocks('cf_dish'), GS % 'kitchen:gN', GW % 'dock:gE', look([200, 34, 430, 92], [315, 290])))
-newc.append("  bakery: { n: 'Cafeteria \\u00b7 Bakery', pic: [1152, 864], s: 1.0, plan: [2, 0, 3, 1],\n    %s, block: %s,\n    doors: { gS: %s },\n    spots: [%s], crate: [960, 360], after: 1, foes: [[450, 620], [700, 330]] } };" % (OPEN, blocks('cf_bakery'), GS % 'staff:gN', look([180, 34, 420, 92], [600, 300])))
+newc.append("  bakery: { n: 'Cafeteria \\u00b7 Bakery', pic: [1152, 864], s: 1.0, plan: [2, 0, 3, 1],\n    %s, block: %s,\n    doors: { gS: %s },\n    spots: [%s], crate: [960, 360], foes: [] } };" % (OPEN, blocks('cf_bakery'), GS % 'staff:gN', look([180, 34, 420, 92], [600, 300])))
 rep("face: 3 }], foes: [] } };\nvar CAFP", "face: 3 }], foes: [] },\n" + '\n'.join(newc) + "\nvar CAFP")
 m = re.search(r"CAF_CRATES = \[[^\]]*\]", src); assert m, 'CAF_CRATES'
 rep(m.group(0), "CAF_CRATES = ['cooler', 'dock', 'bakery']")
@@ -47,68 +47,96 @@ rep(m.group(0), "CAF_CRATES = ['cooler', 'dock', 'bakery']")
 # guard tables + generic room-guard behaviour (stand, hold, turn via the wall side, on a readable beat)
 G = rooms
 GRD_JS = r"""
-/* ---- GGD-89 room guards (v6.5.66). One per crate room, part of the main quest only. He stands at his post next to the crate and turns
- * between two facings on a fixed beat (hold, then a slow turn through the back wall). Sight is the normal seeK/susStep (vision cone,
- * "?" then "!"), with his own NOTICE (q.N). Carrying a crate widens his reach and halves his notice time. Props block his line of sight
- * (losClear), so the room furniture is cover. Beaten or slipped past, he stays resolved: S.f['g'+room] after a win, and no guard once
- * that room's crate is in the chute. No roamers in his room until the Cafeteria is cleared (R.after). No per-frame DOM work: the cone is
- * one element, rotated by a CSS transition only when he starts a turn. */
-var CAF_GRD = { cooler: { at: %COOLER%, fa: [Math.PI, 0], r: %CR%, a: %CA%, id: 'bully3' }, dock: { at: %DOCK%, fa: [Math.PI, 0], r: %DR%, a: %DA%, id: 'bully4' },
-  bakery: { at: %BAK%, fa: [Math.PI, 0], r: %BR%, a: %BA%, id: 'bully3' } };
-var GRD_T = { hold: 3.0, turn: 0.7, t: 0.55, carryR: 1.25, carryT: 0.5 };
+/* ---- GGD-89 room guards (v6.5.66; t583u patrol). One per crate room, part of the main quest only. He walks a loop round the room
+ * (CAF_GRD[k].pts, picture px) and stops at each corner: a look-around (GRD_T.pause, +-GRD_T.look rad), then a turn to the next leg.
+ * Sight is the normal seeK/susStep (vision cone, "?" then "!"), with his own NOTICE (q.N); the cone element follows his spot and
+ * facing. Props block his line of sight (losClear), so the furniture is cover. Doorway landings are safe to peek from (grdPeek).
+ * SPOTTED ("!"): he barks for backup and 4 more (CAF_FOES) burst in through the doors; touching any of them is ONE fight of 5
+ * (guard + 4, the normal group fight). Reached from behind unseen: a solo fight with him. A win resolves him (S.f['g'+room]); a flee or
+ * a lost chase sends the backups away and him back to his loop. No roamers ever in his room (t583u). Everything here runs inside
+ * dgFrame, which only runs while you are in a Cafeteria room: no new always-on loop. */
+var CAF_GRD = { cooler: { pts: [[170, 440], [170, 270], [900, 270], [900, 440]], r: %CR%, a: %CA%, id: 'bully3' },
+  dock: { pts: [[260, 380], [800, 380], [800, 520], [260, 520]], r: %DR%, a: %DA%, id: 'bully4' },
+  bakery: { pts: [[260, 340], [840, 340], [840, 560], [260, 560]], r: %BR%, a: %BA%, id: 'bully3' } };
+var GRD_T = { sp: 58, pause: 1.3, look: 0.5, turn: 0.55, t: 0.55, carryR: 1.25, carryT: 0.5, peek: 80, team: 4, bark: 1.6 };
 (function () { var st = document.createElement('style'); st.id = 'ggd89css';
-  st.textContent = '.wgcone{position:absolute;pointer-events:none;border-radius:50%;background:conic-gradient(from -46deg,rgba(255,222,96,.46) 0deg 92deg,rgba(0,0,0,0) 92deg 360deg);-webkit-mask:radial-gradient(closest-side,#000 62%,rgba(0,0,0,0) 100%);mask:radial-gradient(closest-side,#000 62%,rgba(0,0,0,0) 100%);transition:transform .7s linear,opacity .25s;will-change:transform;z-index:60}'
+  st.textContent = '.wgcone{position:absolute;left:0;top:0;pointer-events:none;border-radius:50%;background:conic-gradient(from -46deg,rgba(255,222,96,.46) 0deg 92deg,rgba(0,0,0,0) 92deg 360deg);-webkit-mask:radial-gradient(closest-side,#000 62%,rgba(0,0,0,0) 100%);mask:radial-gradient(closest-side,#000 62%,rgba(0,0,0,0) 100%);transition:opacity .25s;will-change:transform;z-index:60}'
     + '.wgcone.sus{background:conic-gradient(from -46deg,rgba(255,100,70,.5) 0deg 92deg,rgba(0,0,0,0) 92deg 360deg)}.wgcone.off{opacity:0}'
+    + '.wgbark{position:absolute;transform:translate(-50%,-100%);padding:3px 9px 4px;background:#fff3c4;color:#1c1622;border:2px solid #1c1622;border-radius:9px;font:900 15px/1.1 system-ui,sans-serif;letter-spacing:.04em;white-space:nowrap;pointer-events:none;z-index:120;box-shadow:0 3px 0 #1c1622;animation:wgbark 1.6s ease-out forwards}'
+    + '.wgbark::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-6px;border:6px solid transparent;border-top-color:#1c1622;border-bottom:0}'
+    + '@keyframes wgbark{0%{scale:.3;opacity:0}12%{scale:1.18;opacity:1}22%{scale:1}80%{opacity:1}100%{opacity:0;translate:0 -14px}}'
+    + '.wsp[data-dir="3"] .wcarry.fh{width:96%;left:2%;top:31%;height:30%;-webkit-mask:linear-gradient(90deg,#000 0 30%,rgba(0,0,0,0) 30% 70%,#000 70%);mask:linear-gradient(90deg,#000 0 30%,rgba(0,0,0,0) 30% 70%,#000 70%)}'
     + '.fslotring{position:absolute;width:76px;height:34px;margin:-17px 0 0 -38px;border-radius:50%;border:3px dashed rgba(255,255,255,.0);pointer-events:none;z-index:99;opacity:0;transition:opacity .2s}'
     + '.fslotring.on{opacity:1}.fslotring.ok{border-color:#7be07b;box-shadow:0 0 10px rgba(123,224,123,.6)}.fslotring.no{border-color:#e85a5a;box-shadow:0 0 10px rgba(232,90,90,.5)}'
     + '.fkick{animation:fkick .75s cubic-bezier(.2,.6,.4,1) forwards;pointer-events:none}@keyframes fkick{0%{translate:0 0;rotate:0deg;opacity:1}60%{translate:var(--kx,-120px) -70px;rotate:-260deg;opacity:1}100%{translate:calc(var(--kx,-120px)*1.6) -20px;rotate:-400deg;opacity:0}}'
     + '.fldlap.fslow{filter:saturate(.55) brightness(.92)}.fldlap.fslow::after{content:"";position:absolute;left:50%;top:-14px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:#fff;border:2px solid #1c1622;box-shadow:inset 0 0 0 3px #6fb6e8}';
   document.head.appendChild(st); })();
-function grdCone(f) { var G = f.grd, e = document.createElement('i'), R = f.N0.r; e.className = 'wgcone'; e.style.width = e.style.height = (2 * R) + 'px';
-  e.style.left = (f.hx - R) + 'px'; e.style.top = (f.hy - 18 - R) + 'px'; f.cdeg = f.fa * 180 / Math.PI + 90; f.cone = e; grdConeSet(f, 0); layer.appendChild(e); W.ints.push({ el: e }); }
-function grdConeSet(f, tr) { var e = f.cone; if (!e) return; e.style.transitionDuration = tr ? (tr + 's, .25s') : '0s, .25s'; e.style.transform = 'rotate(' + f.cdeg.toFixed(1) + 'deg) scale(' + (W.carry ? GRD_T.carryR : 1) + ')'; }
-function grdVis(f) { var on = f.st === 'grd', sus = !!f.qm, c = f.cone; if (!c) return; if (c._on !== on) { c._on = on; c.classList.toggle('off', !on); } if (c._sus !== sus) { c._sus = sus; c.classList.toggle('sus', sus); }
-  var cr = !!W.carry; if (f._cr !== cr) { f._cr = cr; f.N = cr ? f.Nc : f.N0; grdConeSet(f, GRD_T.turn); ev('world:cafe:guard:carry:' + f.key + ':' + (cr ? 1 : 0)); } }
-function grdHome(f) { var G = f.grd; f.st = 'grd'; f.gi = 0; f.gT = GRD_T.hold; f.turn = null; f.fa = G.fa[0]; f.rp = null; f.sus = 0; f.qm = 0; f.s.runK = 0; f.s.x = f.hx; f.s.y = f.hy;
-  f.cdeg = f.fa * 180 / Math.PI + 90; grdConeSet(f, 0); waddle(f.s, 0, f.fa); ev('world:cafe:guard:home:' + f.key); }
-/* the beat: hold GRD_T.hold, then turn GRD_T.turn to the other facing, always through the back wall (north), so the swing is readable */
-function grdStep(f, dt) { var G = f.grd; if (f.turn) { f.turn.t += dt; var u = Math.min(1, f.turn.t / GRD_T.turn); f.fa = f.turn.a0 + f.turn.d * u; if (u >= 1) { f.fa = G.fa[f.gi]; f.turn = null; f.gT = GRD_T.hold; ev('world:cafe:guard:face:' + f.key + ':' + f.gi); } return; }
-  f.gT -= dt; if (f.gT > 0) return; var a0 = G.fa[f.gi]; f.gi = 1 - f.gi; var a1 = G.fa[f.gi], d = angD(a1, a0);
-  if (Math.abs(Math.abs(d) - Math.PI) < 0.05) d = angD(-Math.PI / 2, a0) * 2; /* half-turns go via north */
-  f.turn = { a0: a0, d: d, t: 0 }; f.cdeg += d * 180 / Math.PI; grdConeSet(f, GRD_T.turn); }
-function grdRetTo(f) { var s = f.s; if (!f.rp) f.rp = (typeof findPath === 'function' && findPath(s.x, s.y, f.hx, f.hy)) || [[f.hx, f.hy]];
+function grdCone(f) { var e = document.createElement('i'), R = f.N0.r; e.className = 'wgcone'; e.style.width = e.style.height = (2 * R) + 'px'; e.style.margin = (-R - 18) + 'px 0 0 ' + (-R) + 'px';
+  f.cone = e; f._ck = ''; grdConeSet(f); layer.appendChild(e); W.ints.push({ el: e }); }
+/* the cone sits on him and points where he faces; one transform write, only when it changed */
+function grdConeSet(f) { var e = f.cone; if (!e) return; var k = Math.round(f.s.x) + ',' + Math.round(f.s.y) + ',' + Math.round(f.fa * 180 / Math.PI + 90) + ',' + (W.carry ? 1 : 0);
+  if (k === f._ck) return; f._ck = k; e.style.transform = 'translate(' + Math.round(f.s.x) + 'px,' + Math.round(f.s.y) + 'px) rotate(' + Math.round(f.fa * 180 / Math.PI + 90) + 'deg) scale(' + (W.carry ? GRD_T.carryR : 1) + ')'; }
+function grdVis(f) { var on = f.st === 'grd', sus = !!f.qm, c = f.cone; if (!f.team && (f.st === 'alert' || f.st === 'chase')) grdCall(f); if (!c) return;
+  if (c._on !== on) { c._on = on; c.classList.toggle('off', !on); } if (c._sus !== sus) { c._sus = sus; c.classList.toggle('sus', sus); }
+  var cr = !!W.carry; if (f._cr !== cr) { f._cr = cr; f.N = cr ? f.Nc : f.N0; ev('world:cafe:guard:carry:' + f.key + ':' + (cr ? 1 : 0)); } if (on) grdConeSet(f); }
+/* doorway landings: you can always peek in */
+function grdPeek(f) { var r = W.ryo; return (f.peek || []).some(function (a) { return Math.hypot(r.x - a[0], r.y - a[1]) < GRD_T.peek; }); }
+/* spotted: the bark, then 4 backups through the doors, all on you. One team = one fight. */
+function grdCall(f) { var R = CAFG[cafRoom()], doors = (f.peek || []).slice(); f.team = f.key; f.spot = 1; ev('world:cafe:guard:spot:' + f.key);
+  var b = document.createElement('i'); b.className = 'wgbark'; b.textContent = 'BACKUP!'; b.style.left = Math.round(f.s.x) + 'px'; b.style.top = Math.round(f.s.y - 104) + 'px'; layer.appendChild(b); W.ints.push({ el: b });
+  setTimeout(function () { b.remove(); }, GRD_T.bark * 1000); AU.play('door', { gain: 0.6 });
+  if (!doors.length) doors = [[f.s.x, f.s.y]];
+  for (var i = 0; i < GRD_T.team; i++) { var id = CAF_FOES[i % CAF_FOES.length], s = intSprite(id + '_map', SPH, 'dgfoe'), a = doors[i % doors.length], j = Math.floor(i / doors.length) - (doors.length > 1 ? 0.5 : 1.5);
+    s.el.classList.add('foe'); s.x = a[0] + j * 30; s.y = a[1] + (i % 2 ? 18 : -18); if (!okAt(s.x, s.y)) { s.x = a[0]; s.y = a[1]; } place(s, 0); waddle(s, 0, f.fa);
+    var o = { key: f.key + 'b' + i, id: id, s: s, hx: s.x, hy: s.y, tx: null, ty: null, st: 'walk', route: 1, stun: 0, wait: 0, team: f.key, bk: 1, fa: 0 }; W.dgF.push(o); alertOn(o, W.dgF, 'pull', okAt, AW.alertT + 0.3 + 0.2 * i); }
+  ev('world:cafe:guard:team:' + f.key + ':' + (GRD_T.team + 1)); }
+/* backups leave (a flee, a lost chase); the guard forgets you */
+function grdDismiss(g) { (W.dgF || []).slice().forEach(function (o) { if (!o.bk) return; o.s.el.classList.add('out'); (function (el) { setTimeout(function () { el.remove(); }, 600); })(o.s.el); W.dgF.splice(W.dgF.indexOf(o), 1); });
+  (W.dgF || []).forEach(function (o) { if (o.grd) { o.team = null; o.spot = 0; } }); if (g) ev('world:cafe:guard:dismiss:' + g.key); }
+function grdHome(f) { f.st = 'grd'; f.ph = 'look'; f.gT = GRD_T.pause; f.lk0 = f.fa; f.turn = null; f.rp = null; f.sus = 0; f.qm = 0; f.s.runK = 0; if (f.team) grdDismiss(f); f._ck = ''; grdConeSet(f); ev('world:cafe:guard:home:' + f.key); }
+/* the loop: walk to the next corner, look around, turn to the next leg */
+function grdStep(f, dt) { if (f.hold) return 0; var P = f.pts, s = f.s;
+  if (f.ph === 'walk') { var t = P[f.pi], dx = t[0] - s.x, dy = t[1] - s.y, dd = Math.hypot(dx, dy), st = GRD_T.sp * dt;
+    if (dd <= st) { s.x = t[0]; s.y = t[1]; f.ph = 'look'; f.gT = GRD_T.pause; f.lk0 = f.fa; ev('world:cafe:guard:corner:' + f.key + ':' + f.pi); return dd; }
+    s.x += dx / dd * st; s.y += dy / dd * st; f.fa = Math.atan2(dy, dx); if (Math.abs(dx) > 2) s.flip = dx < 0; return st; }
+  if (f.ph === 'look') { f.gT -= dt; f.fa = f.lk0 + Math.sin((1 - Math.max(0, f.gT) / GRD_T.pause) * Math.PI * 2) * GRD_T.look; if (f.gT > 0) return 0;
+    var n = (f.pi + 1) % P.length; f.turn = { a0: f.lk0, d: angD(Math.atan2(P[n][1] - s.y, P[n][0] - s.x), f.lk0), t: 0 }; f.pi = n; f.ph = 'turn'; return 0; }
+  if (f.turn) { f.turn.t += dt; var u = Math.min(1, f.turn.t / GRD_T.turn); f.fa = f.turn.a0 + f.turn.d * u; if (u >= 1) { f.turn = null; f.ph = 'walk'; } } else f.ph = 'walk'; return 0; }
+/* back to the nearest corner of his loop, then on with the loop */
+function grdRetTo(f) { var s = f.s; if (!f.rp) { var bi = 0, bd = 1e9; f.pts.forEach(function (q, i) { var d = Math.hypot(q[0] - s.x, q[1] - s.y); if (d < bd) { bd = d; bi = i; } }); f.pi = bi;
+    f.rp = (typeof findPath === 'function' && findPath(s.x, s.y, f.pts[bi][0], f.pts[bi][1])) || [f.pts[bi]]; }
   while (f.rp.length && Math.hypot(f.rp[0][0] - s.x, f.rp[0][1] - s.y) < 4) f.rp.shift(); if (!f.rp.length) { grdHome(f); return null; } return f.rp[0]; }
 function cafGuard(k, R, S, b) { var G = CAF_GRD[k]; if (!G || b || S.cr[k] === 2 || S.f['g' + k]) return null;
-  var gs = intSprite(G.id + '_map', SPH, 'dgfoe'); gs.el.classList.add('foe', 'wguard'); var a = lw(R, G.at); gs.x = a[0]; gs.y = a[1]; place(gs, 0);
-  var f = { key: 'g' + k, id: G.id, s: gs, hx: a[0], hy: a[1], tx: null, ty: null, st: 'grd', route: 1, stun: 0, wait: 0, grd: G, gi: 0, gT: GRD_T.hold, fa: G.fa[0],
+  var gs = intSprite(G.id + '_map', SPH, 'dgfoe'); gs.el.classList.add('foe', 'wguard'); var pts = G.pts.map(function (q) { return lw(R, q); }); gs.x = pts[0][0]; gs.y = pts[0][1]; place(gs, 0);
+  var peek = Object.keys(R.doors || {}).map(function (d) { var D = R.doors[d]; return lw(R, D.land || D.at); });
+  var f = { key: 'g' + k, id: G.id, s: gs, hx: pts[0][0], hy: pts[0][1], tx: null, ty: null, st: 'grd', route: 1, stun: 0, wait: 0, grd: G, pts: pts, pi: 1, ph: 'walk', gT: 0, peek: peek,
+    fa: Math.atan2(pts[1][1] - pts[0][1], pts[1][0] - pts[0][0]),
     N0: { r: G.r * R.s, a: G.a, t: GRD_T.t }, Nc: { r: G.r * R.s * GRD_T.carryR, a: G.a, t: GRD_T.t * GRD_T.carryT } }; f.N = W.carry ? f.Nc : f.N0; f._cr = !!W.carry;
   waddle(gs, 0, f.fa); W.dgF.push(f); grdCone(f); ev('world:cafe:guard:spawn:' + k); return f; }
 """
 for nm, key in (('cf_cooler', ('COOLER', 'CR', 'CA')), ('cf_dock', ('DOCK', 'DR', 'DA')), ('cf_bakery', ('BAK', 'BR', 'BA'))):
     g = rooms[nm]['guard']
-    GRD_JS = GRD_JS.replace('%' + key[0] + '%', '[%d, %d]' % tuple(g['at'])).replace('%' + key[1] + '%', str(g['r'])).replace('%' + key[2] + '%', str(g['a']))
+    GRD_JS = GRD_JS.replace('%' + key[1] + '%', str(g['r'])).replace('%' + key[2] + '%', str(g['a']))
 rep("function cafS() {", GRD_JS.strip('\n') + "\nfunction cafS() {")
 
-# cafPop: R.after roamers only once refilled; the room guard
-rep("(R.foes || []).forEach(function (p, i) { var key = 'c' + k + i; if (!dgShouldSpawn('cafe', 'mb_cafe')) return;",
-    "(R.foes || []).forEach(function (p, i) { var key = 'c' + k + i; if (!dgShouldSpawn('cafe', 'mb_cafe')) return; if (R.after && !dgRefilled('cafe')) return; /* GGD-89: guard rooms get roamers only after the clear */")
+# cafPop: the room guard
 rep("  (CAFP[k] || []).forEach(function (n) { var a = lw(R, n.at), s;", "  cafGuard(k, R, S, b);\n  (CAFP[k] || []).forEach(function (n) { var a = lw(R, n.at), s;")
 
 # help tip, arrival lines, looks
 OLD_TIP = "<p>Find the three crates of possessed bread. <b>Lift</b> one, carry it to the Kitchen\\u2019s <b>disposal chute</b>. No running with a crate, and a fight knocks it back.</p><p>The Staff Room is a <b>safe room</b>.</p>"
-NEW_TIP = "<p>Find the three crates of possessed bread: the <b>Walk-in Cooler</b>, the <b>Loading Dock</b> and the <b>Bakery</b>. <b>Lift</b> one, carry it to the Kitchen\\u2019s <b>disposal chute</b>. No running with a crate, and a fight knocks it back.</p><p>Each crate has a <b>guard</b> who turns on a beat. Move while he looks away and hide behind the furniture.</p><p>The Staff Room is a <b>safe room</b>.</p>"
+NEW_TIP = "<p>Find the three crates of possessed bread: the <b>Walk-in Cooler</b>, the <b>Loading Dock</b> and the <b>Bakery</b>. <b>Lift</b> one, carry it to the Kitchen\\u2019s <b>disposal chute</b>. No running with a crate, and a fight knocks it back.</p><p>Each crate has a <b>guard</b> who walks the room, stopping to look round at each corner. Stay out of his cone and behind the furniture. If he <b>spots</b> you he shouts for backup: <b>five on one</b>. Catch him from behind and it\u2019s just him.</p><p>The Staff Room is a <b>safe room</b>.</p>"
 rep(OLD_TIP, NEW_TIP)
 rep("  if (a === 'menu') { scene(null, CAF_SC.menu); return; }", "  if (a === 'look' && CAF_SC['l_' + k]) { scene(null, CAF_SC['l_' + k]); return; }\n  if (a === 'menu') { scene(null, CAF_SC.menu); return; }")
 CAF_ADD = r"""  /* GGD-89 rooms */
-  in_cooler: [['', '<p class="dim">The Walk-in Cooler. Breath turns white. A crate sits by the shelves, glowing through the slats.</p>'], ['aoi', 'There\u2019s a guard. Watch him turn. {slow}Move when he looks away.{/slow}', { mood: 'neutral' }], ['@tip', 'cafguard', { t: 'Room guards', h: '<p>A guard stands by each crate and turns between two sides on a steady beat. His view is the pale cone.</p><p>Shelves, crates and counters block his view. Walk while he faces away, wait behind cover while he turns back.</p><p>With a crate in your arms he sees farther and notices faster. If he spots you, it\u2019s a fight and the crate goes back.</p>' }]],
-  in_dock: [['', '<p class="dim">The Loading Dock. A delivery van, back doors open. Pallets of melon bread, still warm.</p>'], ['aoi', 'Another guard. Same rhythm. Use the pallets.', { mood: 'neutral' }]],
+  in_cooler: [['', '<p class="dim">The Walk-in Cooler. Breath turns white. A crate sits by the shelves, glowing through the slats.</p>'], ['aoi', 'There\u2019s a guard on rounds. {slow}Stay behind him.{/slow} If he sees us, he\u2019ll call the others.', { mood: 'neutral' }], ['@tip', 'cafguard', { t: 'Room guards', h: '<p>A guard walks a loop round each crate room and stops at the corners to look around. His view is the pale cone, and it turns with him.</p><p>Shelves, crates and counters block his view. Doorways are safe to peek from. Follow him from behind, or wait behind cover until he passes.</p><p>If he spots you (<b>!</b>) he shouts for backup and it\u2019s a fight against <b>five</b>. Reach him from behind unseen and it\u2019s just him. With a crate in your arms he sees farther and notices faster, and a fight sends the crate back.</p>' }]],
+  in_dock: [['', '<p class="dim">The Loading Dock. A delivery van, back doors open. Pallets of melon bread, still warm.</p>'], ['aoi', 'Another one on rounds. Use the pallets.', { mood: 'neutral' }]],
   in_dish: [['', '<p class="dim">The Dish Room. The conveyor runs with nothing on it. Nobody\u2019s washed a tray in days.</p>']],
   in_bakery: [['', '<p class="dim">The Bakery. Both ovens roaring. Trays of melon bread cool on the racks, every one of them purple.</p>'], ['aoi', 'This is where it comes from. The crate\u2019s behind him.', { mood: 'neutral' }]],
   l_cooler: [['', '<p class="dim">KEEP CLOSED. Someone has scratched out CLOSED and written FULL.</p>']],
   l_dock: [['', '<p class="dim">DELIVERY 6:00. Every morning. Same van, same order: 500 melon bread.</p>']],
   l_dish: [['', '<p class="dim">ORDER UP. The bell under the sign is wrapped in purple tape.</p>']],
   l_bakery: [['', '<p class="dim">MELON BREAD \u00d7500. The 5 has been gone over again and again.</p>'], ['aoi', 'They\u2019re baking for the whole school.', { mood: 'neutral' }]],
-  guard_lost: [['aoi', 'He\u2019s back at his post. Wait for the turn.', { mood: 'neutral' }]],
+  guard_lost: [['aoi', 'He\u2019s back on his rounds. Get behind him.', { mood: 'neutral' }]],
 """
 rep("var CAF_SC = {\n", "var CAF_SC = {\n" + CAF_ADD)
 
@@ -123,10 +151,10 @@ rep("function seeK(q, tx, ty, ok, noSense) { var s = q.s, dx = tx - s.x, dy = ty
 rep("function susStep(q, k, dt) { var N = ntc(q.id);", "function susStep(q, k, dt) { var N = q.N || ntc(q.id);")
 # dgFrame: the guard beat, the return-to-post state, no head-tracking on a partial notice
 rep("if (f.stun > 0) { f.stun -= dt; if (f.stun <= 0 && f.wvA && typeof waveWake === 'function') { f.wvA = 0; waveWake(f, W.dgF, okAt); } return; } if (f.ambd) return; /* v4.23: being ambushed */",
-    "if (f.stun > 0) { f.stun -= dt; if (f.stun <= 0 && f.wvA && typeof waveWake === 'function') { f.wvA = 0; waveWake(f, W.dgF, okAt); } if (f.grd) grdVis(f); return; } if (f.ambd) return; /* v4.23: being ambushed */\n    if (f.grd) { if (f.st === 'grd') grdStep(f, dt); grdVis(f); } /* GGD-89 room guard beat */")
+    "if (f.stun > 0) { f.stun -= dt; if (f.stun <= 0 && f.wvA && typeof waveWake === 'function') { f.wvA = 0; waveWake(f, W.dgF, okAt); } if (f.grd) grdVis(f); return; } if (f.ambd) return; /* v4.23: being ambushed */\n    if (f.grd) { if (f.st === 'grd') { var gmv = grdStep(f, dt); if (on) waddle(s, gmv, f.fa); } grdVis(f); } /* GGD-89 room guard loop */")
 rep("groupPull(f, W.dgF, okAt); } else if (k > 0) f.fa += angD(", "groupPull(f, W.dgF, okAt); } else if (k > 0 && !f.grd) f.fa += angD(")
 rep("if (f.wait <= 0) { f.sus = 0; f.qm = 0; if (f.g38m) f.st = 'g38'; else routeOn(",
-    "if (f.wait <= 0) { f.sus = 0; f.qm = 0; if (f.grd) { f.st = 'ret'; f.rp = null; ev('world:cafe:guard:ret:' + f.key); } else if (f.g38m) f.st = 'g38'; else routeOn(")
+    "if (f.wait <= 0) { f.sus = 0; f.qm = 0; if (f.grd) { f.st = 'ret'; f.rp = null; if (f.team) grdDismiss(f); ev('world:cafe:guard:ret:' + f.key); } else if (f.g38m) f.st = 'g38'; else routeOn(")
 rep("    else if (f.st === 'g38') { to = g38tTo(f, dt); if (f.g38sp) sp = f.g38sp; }\n    else if (f.st === 'patrol') { to = f.goal;",
     "    else if (f.st === 'g38') { to = g38tTo(f, dt); if (f.g38sp) sp = f.g38sp; }\n    else if (f.st === 'ret') { to = grdRetTo(f); }\n    else if (f.st === 'patrol') { to = f.goal;")
 rep("} else { if (f.st === 'g38') { to = g38tTo(f, dt); if (f.g38sp) sp = f.g38sp; } else if (f.st === 'patrol') to = f.goal;",
@@ -134,7 +162,22 @@ rep("} else { if (f.st === 'g38') { to = g38tTo(f, dt); if (f.g38sp) sp = f.g38s
 rep("} else if (f.st === 'patrol' || f.st === 'search') { f.st = 'scan'; f.wait = AW.lookT * 0.6; f.lk0 = f.fa; } } } // blocked",
     "} else if (f.st === 'patrol' || f.st === 'search') { f.st = 'scan'; f.wait = AW.lookT * 0.6; f.lk0 = f.fa; } else if (f.st === 'ret') { f.rp = null; } } } // blocked")
 rep("if (mv > 0.3) f.fa = Math.atan2(s.y - py, s.x - px); if (on) waddle(s, mv, f.fa);",
-    "if (mv > 0.3) f.fa = Math.atan2(s.y - py, s.x - px); if (on && (mv > 0 || !f.grd || f.st !== 'grd' || f.turn || !f._wd)) { waddle(s, mv, f.fa); if (f.grd) f._wd = !f.turn && f.st === 'grd'; }")
+    "if (mv > 0.3) f.fa = Math.atan2(s.y - py, s.x - px); if (on && !(f.grd && f.st === 'grd')) waddle(s, mv, f.fa);")
+
+rep("(!D.art || artOnCam(s.x, s.y)) && !(f.c2 && hidFrom(d)) ? seeK(f, r.x, r.y, okAt)", "(!D.art || artOnCam(s.x, s.y)) && !(f.c2 && hidFrom(d)) && !(f.grd && grdPeek(f)) ? seeK(f, r.x, r.y, okAt)")
+# t583u: a spotted guard's team (him + 4 backups) is one fight; unseen from behind = just him (noticedPack finds nobody else: no roamers in his room)
+rep("var grp = cap2 ? [f] : noticedPack(f, W.dgF);", "var grp = cap2 ? [f] : noticedPack(f, W.dgF); if (f.team) grp = W.dgF.filter(function (o) { return o.team === f.team; }).sort(function (a, b) { return (b.grd ? 1 : 0) - (a.grd ? 1 : 0); });")
+rep("function cafBack(win, st) { if (W.carry) cafDrop('fight'); }", "function cafBack(win, st) { if (W.carry) cafDrop('fight'); if (!win && typeof grdDismiss === 'function') grdDismiss(); }")
+# t583u: side-quest props move into the new rooms (rations: Dish Room, spikes: Timing Booth)
+rep("function sqCafeRationsTag(out, k) { if (k !== 'kitchen') return;", "function sqCafeRationsTag(out, k) { if (k !== 'dish') return; /* t583u: Dish Room */")
+rep("var R = CAFG.kitchen, at = lw(R, SQ_SPOT.rations);", "var R = CAFG.dish, at = lw(R, SQ_SPOT.rations);")
+rep("function sqFieldSpikesTag(out, k) { if (k !== 'bay') return;", "function sqFieldSpikesTag(out, k) { if (k !== 'booth') return; /* t583u: Timing Booth */")
+rep("var R = FLDG.bay, at = lw(R, SQ_SPOT.spikes);", "var R = FLDG.booth, at = lw(R, SQ_SPOT.spikes);")
+rep("rations: [930, 420], spikes: [580, 600] };", "rations: [640, 380], spikes: [560, 430] }; /* t583u: Dish Room aisle / Timing Booth floor */")
+rep("'Grab the sealed rations in the Kitchen'", "'Grab the sealed rations in the Dish Room'")
+rep("'Recover Yuto\\'s track spikes from Equipment'", "'Recover Yuto\\'s track spikes from the Timing Booth'")
+# t588u: carrying a hurdle facing away: his back hides it, only the two ends show (CSS .wcarry.fh in ggd89css)
+rep("e.className = 'wcarry'; e.style.backgroundImage = 'url(' + (IMG.sf_hurdle", "e.className = 'wcarry fh'; e.style.backgroundImage = 'url(' + (IMG.sf_hurdle")
 
 # the live sight is the v6.5.30 override (x2 reach etc.): room guards use their own notice (q.N) at the v4.23 sight numbers (SIGHT23, rk 1)
 rep("seeK = function (q, tx, ty, ok, noSense) { var s = q.s, dx = tx - s.x, dy = ty - s.y, d = Math.hypot(dx, dy), N = ntc(q.id), G = sightOf(q),",
@@ -153,10 +196,10 @@ rep("plan: [1, -0.2, 2, 0.8],", "plan: [1, -1.1, 2, -0.1],")
 rep("doors: { gS: { r: [581, 625, 694, 715], at: [637, 650], land: [637, 585, 3], to: 'lockers:gN' } },",
     "doors: { gS: { r: [581, 625, 694, 715], at: [637, 650], land: [637, 585, 3], to: 'lockers:gN' }, gE: { r: [1205, 380, 1265, 510], at: [1180, 445], to: 'booth:gW' } },")
 newf = []
-newf.append("  /* GGD-89 (v6.5.66): four more rooms. The hurdles now live in the Cage / Showers / Trainer; the Timing Booth lever slows Bando for one lap. */")
-newf.append("  cage: { n: 'Storehouse \\u00b7 Equipment Cage', pic: [1152, 864], s: 1.0, plan: [0, 1, 1, 2],\n    %s, block: %s,\n    doors: { gE: %s },\n    spots: [%s], hurdle: [300, 560], kick: { showers: [520, 600], trainer: [740, 600] }, foes: [] }," % (OPEN, blocks('sf_cage'), GE % 'bay:gW', look([120, 40, 290, 96], [300, 180])))
-newf.append("  showers: { n: 'Storehouse \\u00b7 Showers', pic: [1152, 864], s: 1.0, plan: [0, 0, 1, 1],\n    %s, block: %s,\n    doors: { gE: %s },\n    spots: [%s], hurdle: [870, 650], foes: [] }," % (OPEN, blocks('sf_showers'), GE % 'lockers:gW', look([140, 20, 760, 150], [450, 200])))
-newf.append("  trainer: { n: 'Storehouse \\u00b7 Trainer\\u2019s Room', pic: [1152, 864], s: 1.0, plan: [2, 0, 3, 1],\n    %s, block: %s,\n    doors: { gW: %s, gS: %s },\n    spots: [%s], hurdle: [800, 680], foes: [] }," % (OPEN, blocks('sf_trainer'), GW % 'lockers:gE', GS % 'coach:gN', look([180, 36, 400, 92], [350, 180])))
+newf.append("  /* GGD-89 (v6.5.66): four more rooms. The hurdles now live in the Cage / Showers / Trainer, each guarded by 2-3 roamers\n   * (t587u/t588u: library rule, beaten = gone for the main quest via S.f; a kicked hurdle back in the Cage never respawns them). The Timing Booth lever slows Bando for one lap. */")
+newf.append("  cage: { n: 'Storehouse \\u00b7 Equipment Cage', pic: [1152, 864], s: 1.0, plan: [0, 1, 1, 2],\n    %s, block: %s,\n    doors: { gE: %s },\n    spots: [%s], hurdle: [300, 560], kick: { showers: [520, 600], trainer: [740, 600] }, foes: [[470, 520], [250, 440], [700, 470]] }," % (OPEN, blocks('sf_cage'), GE % 'bay:gW', look([120, 40, 290, 96], [300, 180])))
+newf.append("  showers: { n: 'Storehouse \\u00b7 Showers', pic: [1152, 864], s: 1.0, plan: [0, 0, 1, 1],\n    %s, block: %s,\n    doors: { gE: %s },\n    spots: [%s], hurdle: [870, 650], foes: [[740, 650], [910, 470], [540, 700]] }," % (OPEN, blocks('sf_showers'), GE % 'lockers:gW', look([140, 20, 760, 150], [450, 200])))
+newf.append("  trainer: { n: 'Storehouse \\u00b7 Trainer\\u2019s Room', pic: [1152, 864], s: 1.0, plan: [2, 0, 3, 1],\n    %s, block: %s,\n    doors: { gW: %s, gS: %s },\n    spots: [%s], hurdle: [800, 680], foes: [[630, 650], [960, 580]] }," % (OPEN, blocks('sf_trainer'), GW % 'lockers:gE', GS % 'coach:gN', look([180, 36, 400, 92], [350, 180])))
 newf.append("  booth: { n: 'Storehouse \\u00b7 Timing Booth', pic: [1152, 864], s: 1.0, plan: [2, -1.1, 3, -0.1],\n    %s, block: %s,\n    doors: { gW: %s },\n    spots: [%s, { id: 'lever', r: [920, 70, 1000, 150], at: [960, 210], face: 3 }], foes: [] } };" % (OPEN, blocks('sf_booth'), GW % 'track:gE', look([300, 18, 850, 140], [575, 310])))
 rep("{ id: 'slot2', r: [970, 350, 1030, 410], at: [1000, 430], face: 3 }], foes: [] } };",
     "{ id: 'slot2', r: [970, 350, 1030, 410], at: [1000, 430], face: 3 }], foes: [] },\n" + '\n'.join(newf))
