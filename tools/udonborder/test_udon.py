@@ -70,18 +70,18 @@ async def main():
         # ---- 1. door alignment (udon + Machi) ----
         g = G(); await g.start(b, nq='{udon:1,udonFin:1,won:{udon:1}}')
         r = await g.ev("""(function(){var o={};var bl=C2W.bld.filter(function(b){return b.id==='udon'||b.id==='garage'||b.id==='eastS'||b.id==='shopsE'})
-          o.bld=bl.map(function(b){return b.id+':'+b.r.join(',')});var D=FFF_NQ.P;
+          o.bld=bl.map(function(b){return b.id+':'+b.r.join(',')});var D=FFF_NQ.P;o.door=C2W.doors.nq_udon.r;
           var sp=INT.c2_town.spots.filter(function(s){return /^nq_e_(udon|motors)$/.test(s.id)});o.sp=sp.map(function(s){return [s.id,s.r,s.at,s.lab,!!TRANS[s.id]]});
           var f=[...layer.querySelectorAll('canvas.nqprop')].filter(function(c){return c.width===220&&c.height===104});o.front=f.map(function(c){return [parseFloat(c.style.left),parseFloat(c.style.top),c.width,c.height]});
           o.tag=tagDefs().filter(function(t){return /nq_e_udon/.test(t.key)}).map(function(t){return [t.lab,t.x,t.y]});
           o.bench=(C2W.props.place||[]).filter(function(q){return q[0]==='bench'&&q[2]===3330}).map(function(q){return q[1]});
           o.walk=[[950,3340],[950,3320],[925,3340],[975,3340]].map(function(p){return WORLD_API.walkableAt(p[0],p[1])});return o})()""")
         u = [bb for bb in r['bld'] if bb.startswith('udon:')][0]; ub = [int(v) for v in u.split(':')[1].split(',')]
-        sp = {x[0]: x for x in r['sp']}; d = sp['nq_e_udon']; fr = r['front'][0] if r['front'] else None
-        chk('udon: door rect sits on the udon building (x inside, bottom at its wall)', ub[0] <= d[1][0] and d[1][2] <= ub[2] and d[1][3] <= 3300 and d[1][3] > 3250, (ub, d[1]))
-        chk('udon: open shopfront is painted over the door (door centre within the front, front bottom on the wall)', fr and fr[0] <= (d[1][0] + d[1][2]) / 2 <= fr[0] + fr[2] and abs(fr[1] + fr[3] - 3284) < 30, fr)
+        sp = {x[0]: x for x in r['sp']}; d = sp['nq_e_udon']; dd = d; fr = r['front'][0] if r['front'] else None
+        chk('udon: door rect sits on the udon building (x inside, bottom at its wall)', ub[0] <= r['door'][0] and r['door'][2] <= ub[2] and r['door'][3] <= 3300 and r['door'][3] > 3250, (ub, r['door']))
+        chk('udon: open shopfront is painted over the door (door centre within the front, front bottom on the wall)', fr and fr[0] <= (r['door'][0] + r['door'][2]) / 2 <= fr[0] + fr[2] and abs(fr[1] + fr[3] - 3284) < 30, fr)
         chk('udon: Enter spot stands on open sidewalk under the door', d[2][1] <= 3340 and d[2][1] >= 3300 and r['walk'][0] is not False or r['walk'][1] is not False, (d[2], r['walk']))
-        chk('udon: word tag "Eat" shows once open', any(t[0] == 'Eat' for t in r['tag']), r['tag'])
+        chk('udon: no floating tag; the shopfront is the tap target (spot rect covers door + window)', not r['tag'] and d[1][0] <= 900 and d[1][2] >= 1000 and (d[1][2]-d[1][0]) >= 200, (r['tag'], d[1]))
         chk('udon: not a silent walk-in (no TRANS)', not d[4], d)
         chk('udon: bench no longer on the door step', r['bench'] and r['bench'][0] > 1000, r['bench'])
         await g.ev("walkTo(950,3260,true,false)")
@@ -141,8 +141,8 @@ async def main():
         chk('east: the Minato-so facade is drawn on the building, bottom flush with its wall (was 200 px under it)', f and f[0] >= e[0] - 1 and abs(f[1] + f[3] - e[3]) <= 4, (f, e))
         chk('east: both door stand points are on the sidewalk (walkable)', all(r['walk']), r['walk'])
         for nm, door, room in (('mshop', 'shop', 'mshop'), ('mina', 'lob', 'mina')):
-            await g.go(4300, 3360); at = r[door]['at']; await g.ev("walkTo(%d,%d,true,false)" % (at[0], r[door]['r'][1] + 40)); await g.wait(2500); await g.ev("c2ActC('c2_town','%s')" % ('s2_e_mshop' if door == 'shop' else 's2_e_mina'))
-            i = await g.adv_until("c2Room()==='%s'" % room, 30); chk(f'east: tap the {nm} door, then its tag, enters it', i >= 0, await g.ev("c2Room()"))
+            await g.go(4300, 3360); at = r[door]['at']; await g.ev("walkTo(%d,%d,true,false)" % (at[0] + (25 if door == 'lob' else -25), 3235)); 
+            i = await g.adv_until("c2Room()==='%s'" % room, 30); chk(f'east: tapping the {nm} shopfront walks in', i >= 0, await g.ev("c2Room()"))
         await g.pg.close()
         # ---- 6. Wagashi ----
         g = G(); await g.start(b, nq='{udon:1,udonFin:1,won:{udon:1}}', at=(3080, 2700), extra="var st=c2S();st.e.seal_sento=1;st.q.cq2_s2_waga=9;if(root.FFF_S2&&root.FFF_S2.setStg)root.FFF_S2.setStg('done');c2QSync();save()")
@@ -157,8 +157,8 @@ async def main():
           var f=document.getElementById('s2WagaSouth');o.fac=f?[parseFloat(f.style.left),parseFloat(f.style.top),f.width,f.height]:null;
           o.tag=tagDefs().filter(function(t){return /s2_e_waga_s/.test(t.key)}).map(function(t){return t.lab});o.walk=WORLD_API.walkableAt(d.at[0],d.at[1]);return o})()""")
         chk('wagashi south: the SWEETS building (shopsE2) has a door on its wall, painted front + sign, and an open-sidewalk stand point', r['fac'] and r['bld'][0] <= r['d']['r'][0] and r['d']['r'][2] <= r['bld'][2] and r['d']['r'][3] == 3300 and r['fac'][0] <= 3080 <= r['fac'][0] + r['fac'][2] and r['walk'], r)
-        chk('wagashi south: word tag "Sweets" shows', r['tag'] == ['Sweets'], r['tag'])
-        await g.ev("c2ActC('c2_town','s2_e_waga_s')"); i = await g.adv_until("c2Room()==='waga'", 30); chk('wagashi south: the south door enters Chiyo Wagashi', i >= 0, await g.ev("c2Room()"))
+        chk('wagashi south: no floating tag', r['tag'] == [], r['tag'])
+        await g.ev("walkTo(3040,3240,true,false)"); i = await g.adv_until("c2Room()==='waga'", 30); chk('wagashi south: tapping the sweets front walks into Chiyo Wagashi', i >= 0, await g.ev("c2Room()"))
         await g.ev("c2Go('town',[3080,3352,0]);try{c2Pop()}catch(e){}"); await g.wait(1500)
         y = await g.ev("W.ryo.y"); chk('wagashi south: leaving puts you back on the south street (not teleported to the north lane)', y > 3300, y)
         chk('no page errors in the town/east/wagashi checks', not g.errs, g.errs[:2])

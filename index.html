@@ -40843,7 +40843,7 @@ function camPan(to, o, done) {
   if (typeof c2DoorOf === 'function') { var door0 = c2DoorOf; c2DoorOf = function (k) { if (DOORS[k]) return DOORS[k]; return door0.apply(this, arguments); }; }
   if (typeof c2Surf === 'function') { var surf0 = c2Surf; c2Surf = function (x, y) { var k = c2Room(); if (k === 'udon' || k === 'hotel') return k === 'udon' ? 'wood' : 'stone'; if (k === 'motors') return 'concrete'; return surf0.apply(this, arguments); }; }
   /* town Enter spots (shown once the room is open) */
-  [['nq_e_udon', UDON_DOOR, 'Eat'], ['nq_e_motors', MOTORS_DOOR, 'Shop'], ['nq_e_hotel', HOTEL_DOOR, 'Enter']].forEach(function (a) { INT.c2_town.spots.push({ id: a[0], r: a[1].r, at: a[1].at, face: 3, lab: a[2] }); if (a[2] === 'Enter') TRANS[a[0]] = 1; else delete TRANS[a[0]]; }); delete INT.c2_town.G; /* v6.5.66 (t612u): udon + Machi get a visible word tag (Eat / Shop, shown once the shop is open: tagOk); Ch2 silences 'Enter' tags, so the shutter-up shop had no prompt at all */
+  [['nq_e_udon', UDON_DOOR, [840, 3140, 1090, 3322]], ['nq_e_motors', MOTORS_DOOR, [310, 3140, 530, 3322]], ['nq_e_hotel', HOTEL_DOOR, null]].forEach(function (a) { INT.c2_town.spots.push({ id: a[0], r: a[2] || a[1].r, at: a[1].at, face: 3, lab: 'Enter' }); if (!a[2]) TRANS[a[0]] = 1; else delete TRANS[a[0]]; }); delete INT.c2_town.G; /* v6.5.66 (t612u): udon + Machi are tapped on the shopfront itself (a generous rect around the door and the open window, no floating tag): tap, Ryo walks to the step and goes in. The door rect (UDON_DOOR.r) stays the wall slot. */
   function roomOpen(k) { if (!on()) return false; if (k === 'udon' || k === 'motors') return !!NS().udon; if (k === 'hotel') return (stg('cold') | 0) >= 3 || qDone('cold'); return false; }
   NQ.roomOpen = roomOpen;
   /* --- the painter --- */
@@ -41159,10 +41159,10 @@ function camPan(to, o, done) {
       if (/^nq_lore_/.test(a)) { loreLook(a.slice(8)); return true; }
     } } catch (e) { ev('world:nq:err:act:' + (e && e.message)); } return act0.apply(this, arguments); }; }
   function tagOk(id, key) { var a = key.split(':')[1] || '';
-    if (a === 'nq_e_udon') return roomOpen('udon'); if (a === 'nq_e_motors') return roomOpen('motors'); if (a === 'nq_e_hotel') return roomOpen('hotel');
+    if (a === 'nq_e_udon' || a === 'nq_e_motors') return false; /* v6.5.66: tapped on the shopfront, no floating tag */ if (a === 'nq_e_hotel') return roomOpen('hotel');
     var gm = /^nq_gs_(n\d)$/.exec(a); if (gm) { try { return root.FFF_GINKO.isOpen(gm[1]); } catch (e) { return false; } }
     if (a === 'nq_bandai') return !!E().seal_sento; if (/^nq_lore_/.test(a)) return nailsRun() || true; return true; }
-  if (typeof c2Tags === 'function') { var tags0N = c2Tags; c2Tags = function (id, D) { var out = tags0N.apply(this, arguments); try { if (out && on()) out = out.filter(function (t) { return !t || !t.key || t.key.indexOf(':nq_') < 0 || tagOk(id, t.key); }); out.forEach(function (t) { if (t && /:nq_e_(udon|motors)$/.test(t.key || '')) { t.obj = null; t.y = 3262; } }); /* v6.5.66: a word tag (Eat / Shop) on the shopfront, not a faint outline */ } catch (e) {} return out; }; }
+  if (typeof c2Tags === 'function') { var tags0N = c2Tags; c2Tags = function (id, D) { var out = tags0N.apply(this, arguments); try { if (out && on()) out = out.filter(function (t) { return !t || !t.key || t.key.indexOf(':nq_') < 0 || tagOk(id, t.key); }); } catch (e) {} return out; }; }
   if (typeof c2Sig === 'function') { var sig0 = c2Sig; c2Sig = function () { var s = sig0.apply(this, arguments); try { if (on()) { var n = NS(); s += ':nq' + (n.udon ? 1 : 0) + (stg('cold') | 0) + (qDone('cold') ? 1 : 0) + (E().seal_sento ? 1 : 0) + (root.FFF_GINKO ? ['n1', 'n2', 'n3', 'n4'].map(function (q) { return root.FFF_GINKO.isOpen(q) ? 1 : 0; }).join('') : ''); } } catch (e) {} return s; }; }
   /* no ambush openers on contested ground before Four Corners (nobody's crew yet) */
   function noAmb(q) { try { if (!on() || E().run_fac || !inTown()) return false; var T = root.FFF_C2TURF, s = q && (q.s || q); if (!T || !s) return false; return !!((T.borderAt && T.borderAt(s.x, s.y)) || (T.contestAt && T.contestAt(s.x, s.y))); } catch (e) { return false; } }
@@ -47204,7 +47204,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
    * behind it, which read as "Wagashi was never built". Chiyo Wagashi is one shop with two fronts: the south front is a second door into the same
    * room (opens when the shop does), with a painted open window and sign on the facade, and you step back out onto that side. */
   var WAGA_S = { r: [3030, 3210, 3130, 3300], at: [3080, 3334], out: [3080, 3352] }, WAGA_N_OUT = WAGA_DOOR.out.slice();
-  INT.c2_town.spots.push({ id: 's2_e_waga_s', r: WAGA_S.r, at: WAGA_S.at, face: 3, lab: 'Sweets' });
+  INT.c2_town.spots.push({ id: 's2_e_waga_s', r: [2990, 3150, 3170, 3322], at: WAGA_S.at, face: 3, lab: 'Enter' }); /* generous tap rect over the sweets front; the door slot is WAGA_S.r */
   var WAGA_SC = null;
   function wagaSouthCanvas() { var P = root.FFF_NQ && root.FFF_NQ.paint; if (!P) return null; var c = P.cv(200, 92), g = c.getContext('2d');
     var bg = g.createLinearGradient(0, 0, 0, 92); bg.addColorStop(0, '#fbe3b8'); bg.addColorStop(1, '#e7b27c'); g.fillStyle = bg; g.fillRect(0, 0, 200, 92);
@@ -47587,7 +47587,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
         if (out && on()) out = out.filter(function (t) {
           if (!t || !t.key) return true;
           if (t.key.indexOf(':s2_flip') >= 0) return qOn() && stg() === 'open';
-          if (t.key.indexOf(':s2_e_waga_s') >= 0) { t.obj = null; t.y = 3262; return roomOpen(); }
+          if (t.key.indexOf(':s2_e_waga_s') >= 0) return false;
           if (t.key.indexOf(':s2_e_waga') >= 0) return punkAfterSeal();
           if (t.key.indexOf(':s2_waga_order') >= 0) return room() === 'waga';
           return true;
@@ -47872,8 +47872,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     var surf0 = c2Surf;
     c2Surf = function (x, y) { var k = c2Room(); if (k === 'mina') return 'stone'; if (k === 'mshop') return 'concrete'; return surf0.apply(this, arguments); };
   }
-  INT.c2_town.spots.push({ id: 's2_e_mshop', r: SHOP_DOOR.r, at: SHOP_DOOR.at, face: 3, lab: 'Shop' }); /* v6.5.66: doors are on the building wall now, so word tags (Ch2 silences 'Enter') instead of walk-ins */
-  INT.c2_town.spots.push({ id: 's2_e_mina', r: LOB_DOOR.r, at: LOB_DOOR.at, face: 3, lab: 'Lobby' });
+  INT.c2_town.spots.push({ id: 's2_e_mshop', r: [4020, 3150, 4190, 3322], at: SHOP_DOOR.at, face: 3, lab: 'Enter' }); /* v6.5.66: the doors are on the building wall now; tap the shopfront (generous rect, no floating tag), Ryo walks to the step and in */
+  INT.c2_town.spots.push({ id: 's2_e_mina', r: [4396, 3150, 4566, 3322], at: LOB_DOOR.at, face: 3, lab: 'Enter' });
   INT.c2_town.spots.push({ id: 's2_p2_flip', r: [2320, 3110, 2400, 3210], at: [2360, 3190], face: 1, lab: 'Talk' });
   if (typeof TRANS !== 'undefined') { TRANS.s2_to_lobby = 1; TRANS.s2_to_shop = 1; }
   delete INT.c2_town.G;
@@ -48168,7 +48168,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       try {
         if (out && on()) out = out.filter(function (t) {
           if (!t || !t.key) return true;
-          if (t.key.indexOf(':s2_e_mshop') >= 0 || t.key.indexOf(':s2_e_mina') >= 0) { t.obj = null; t.y = 3262; return punkAfterSeal(); }
+          if (t.key.indexOf(':s2_e_mshop') >= 0 || t.key.indexOf(':s2_e_mina') >= 0) return false;
           if (t.key.indexOf(':s2_p2_flip') >= 0) return wagaDone() && qOn() && (stg() === '' || stg() === 'open');
           if (t.key.indexOf(':s2_hase_shop') >= 0) return room() === 'mshop';
           if (t.key.indexOf(':s2_stair') >= 0 || t.key.indexOf(':s2_talk_') >= 0 || t.key.indexOf(':s2_to_') >= 0) return room() === 'mina' || room() === 'mshop';
