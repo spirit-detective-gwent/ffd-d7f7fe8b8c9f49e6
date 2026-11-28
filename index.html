@@ -40614,8 +40614,12 @@ function camPan(to, o, done) {
   NQ.Q = Q; NQ.stg = stg; NQ.setStg = setStg; NQ.qOpen = qOpen; NQ.qClose = qClose;
   /* places (game coords) */
   var X2C = [1790, 2165], HOTEL = [[1750, 930], [1890, 930], [2030, 930]], WALL = [[205, 1040], [205, 1200], [205, 1360]], UDON = [950, 3340], MOTORS = [420, 3340];
-  var HOTEL_DOOR = { r: [1840, 776, 1940, 852], at: [1890, 884] }, UDON_DOOR = { r: [900, 3226, 1000, 3300], at: [950, 3336] }, MOTORS_DOOR = { r: [370, 3226, 470, 3300], at: [420, 3336] };
+  var HOTEL_DOOR = { r: [1840, 776, 1940, 852], at: [1890, 884] }, UDON_DOOR = { r: [900, 3226, 1000, 3300], at: [950, 3330] } /* v6.5.66 (t612u): under the blue UDON noren; the bench that sat on the door step moved east */, MOTORS_DOOR = { r: [370, 3226, 470, 3300], at: [420, 3336] };
   NQ.P = { X2C: X2C, HOTEL: HOTEL, WALL: WALL, UDON: UDON, MOTORS: MOTORS };
+  /* v6.5.66 (t612u): the street bench sat right on Kitsune Udon's door step (art + its block), so the door could only be reached from its
+   * right edge. It moves east, between the door and the right lantern; the door front is clear sidewalk. */
+  try { (C2W.props.place || []).forEach(function (q) { if (q[0] === 'bench' && q[1] === 900 && q[2] === 3330) q[1] = 1090; });
+    (C2W.pblocks || []).forEach(function (b) { if (b[0] === 844 && b[1] === 3302 && b[2] === 956) { b[0] = 1034; b[2] = 1146; } }); delete INT.c2_town.G; } catch (eB) {}
   function rich(k) {
     var s = stg(k), done = qDone(k), out = [];
     if (k === 'west') { var w = { w1: 0, w2: 1, clash: 2, done: 3 }[s] | 0; if (done) w = 3;
@@ -40854,17 +40858,85 @@ function camPan(to, o, done) {
     g.strokeStyle = INK; g.lineWidth = 3; g.strokeRect(1.5, 1.5, 217, 101);
     g.lineCap = 'round'; g.strokeStyle = '#2a211c'; g.lineWidth = 8; g.beginPath(); g.moveTo(40, 70); g.lineTo(70, 40); g.lineTo(96, 66); g.lineTo(130, 34); g.lineTo(160, 62); g.stroke(); g.strokeStyle = '#ff9a28'; g.lineWidth = 5; g.stroke();
     tx(g, '\u4f11\u696d\u4e2d', 186, 88, 13, '#2a211c', 900, 'center', JPF); return c; }
-  function shutterOn() { if (!inTown() || NS().udon) return; SHUT = SHUT || shutterCanvas(); propEl(SHUT, 852, 3180, 3200); SHUT.style.transformOrigin = '50% 0'; SHUT.style.transition = ''; SHUT.style.transform = 'scaleY(1)'; }
-  function shutterUp() { if (!SHUT) return; SHUT.style.transition = 'transform 1.1s cubic-bezier(.5,.0,.3,1)'; SHUT.style.transform = 'scaleY(0.06)'; sfx('rumble'); later(1200, function () { if (SHUT && SHUT.parentNode) SHUT.remove(); }); }
-  /* Q1 → the udon owner rolls the shutter up; Machi Motors opens; Flip sends the next job */
+  /* v6.5.66 (t612u): the open shopfront behind the shutter, painted once: the warm lit counter, Oda-san's pots, the menu tags.
+   * It sits exactly where the shutter was (the UDON facade under the blue noren), so the roll-up reveals a real shop, and stays there once open. */
+  var OPENF = null;
+  function openFrontCanvas() { var c = cv(220, 104), g = c.getContext('2d');
+    var bg = g.createLinearGradient(0, 0, 0, 104); bg.addColorStop(0, '#f6c98a'); bg.addColorStop(0.55, '#e9a964'); bg.addColorStop(1, '#b8743e'); g.fillStyle = bg; g.fillRect(0, 0, 220, 104);
+    /* back wall: wood slats + the menu tags (o-shinagaki) on a rail */
+    g.fillStyle = 'rgba(120,70,36,.22)'; for (var x = 6; x < 220; x += 14) g.fillRect(x, 0, 2, 58);
+    g.fillStyle = '#5a3a24'; g.fillRect(0, 8, 220, 3);
+    var tags = ['\u304d\u3064\u306d', '\u304b\u3051', '\u6708\u898b', '\u30ab\u30ec\u30fc', '\u934b\u713c'];
+    tags.forEach(function (t, i) { var tx0 = 112 + i * 21; box(g, tx0, 11, 17, 38, '#fbf3e0', 2, 2); g.save(); g.translate(tx0 + 8.5, 14); g.font = '900 9px ' + JPF; g.fillStyle = i === 0 ? '#b8332a' : '#2a211c'; g.textAlign = 'center'; g.textBaseline = 'top';
+      t.split('').forEach(function (ch, j) { g.fillText(ch, 0, j * 9 + (t.length > 2 ? 0 : 4)); }); g.restore(); });
+    /* the stock pot, steam, the noodle baskets on the left */
+    box(g, 20, 26, 46, 30, '#8c9096', 4); g.fillStyle = '#6f7378'; g.fillRect(22, 28, 42, 5); g.strokeStyle = INK; g.lineWidth = 2; g.beginPath(); g.moveTo(16, 34); g.lineTo(20, 34); g.moveTo(66, 34); g.lineTo(70, 34); g.stroke();
+    g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = 3; g.lineCap = 'round'; [[32, 22], [46, 18], [58, 22]].forEach(function (q, i) { g.beginPath(); g.moveTo(q[0], q[1]); g.bezierCurveTo(q[0] - 6, q[1] - 6, q[0] + 6, q[1] - 10, q[0] - 1, q[1] - 17 - i); g.stroke(); });
+    [[76, 40], [92, 40]].forEach(function (q) { g.beginPath(); g.arc(q[0], q[1], 7, 0, Math.PI); g.fillStyle = '#c9a56a'; g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); g.strokeStyle = '#7b5a32'; g.beginPath(); g.moveTo(q[0], q[1] + 7); g.lineTo(q[0], q[1] - 12); g.stroke(); });
+    /* a warm hanging lamp */
+    var lg = g.createRadialGradient(100, 8, 0, 100, 8, 70); lg.addColorStop(0, 'rgba(255,240,200,.55)'); lg.addColorStop(1, 'rgba(255,240,200,0)'); g.fillStyle = lg; g.fillRect(0, 0, 220, 90);
+    /* the counter: dark top, wood front, two bowls steaming on it */
+    g.fillStyle = '#3b2a22'; g.fillRect(0, 56, 220, 7); g.strokeStyle = INK; g.lineWidth = 2; g.strokeRect(0, 56, 220, 7);
+    g.fillStyle = '#8a5a34'; g.fillRect(0, 63, 220, 41); g.fillStyle = 'rgba(0,0,0,.14)'; for (var k = 0; k < 220; k += 22) g.fillRect(k, 63, 2, 41);
+    bowl(g, 96, 54, 0.62, '#b8332a'); bowl(g, 150, 54, 0.62, '#25407a');
+    g.strokeStyle = 'rgba(255,255,255,.7)'; g.lineWidth = 2; [[96, 48], [150, 48]].forEach(function (q) { g.beginPath(); g.moveTo(q[0] - 3, q[1]); g.bezierCurveTo(q[0] - 7, q[1] - 5, q[0] + 4, q[1] - 8, q[0] - 1, q[1] - 13); g.stroke(); });
+    /* stools in front of the counter */
+    [40, 92, 144, 196].forEach(function (x2) { g.fillStyle = '#2a211c'; g.fillRect(x2 - 2, 84, 4, 20); g.beginPath(); g.ellipse(x2, 84, 13, 5, 0, 0, 7); g.fillStyle = '#c0392b'; g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); });
+    /* the open plate on the post, and the frame */
+    box(g, 4, 66, 30, 16, '#f4ead2', 2, 2); jp(g, '\u55b6\u696d\u4e2d', 19, 74, 8, '#b8332a');
+    g.strokeStyle = INK; g.lineWidth = 3; g.strokeRect(1.5, 1.5, 217, 101); return c; }
+  function openFront() { if (!inTown() || !NS().udon) return; OPENF = OPENF || openFrontCanvas(); propEl(OPENF, 852, 3180, 3199); }
+  function shutterOn() { if (!inTown()) return; if (NS().udon && !UDB) { openFront(); return; } if (NS().udon) return; OPENF = OPENF || openFrontCanvas(); propEl(OPENF, 852, 3180, 3199); SHUT = SHUT || shutterCanvas(); propEl(SHUT, 852, 3180, 3200); SHUT.style.transformOrigin = '50% 0'; SHUT.style.transition = ''; SHUT.style.transform = 'scaleY(1)'; }
+  function shutterUp() { if (!SHUT || !SHUT.parentNode) { openFront(); return; } if (!OPENF || !OPENF.parentNode) openFront(); SHUT.style.transition = 'transform 1.1s cubic-bezier(.5,.0,.3,1)'; SHUT.style.transform = 'scaleY(0.06)'; sfx('rumble'); later(1200, function () { if (SHUT && SHUT.parentNode) SHUT.remove(); }); }
+  /* Q1 → the udon owner rolls the shutter up; Machi Motors opens; Flip sends the next job.
+   * v6.5.66 (t612u): every step is guarded so the beat can never strand the player: a failed spawn / walk still goes on, the
+   * walk has its own timeout, NQ.UDB tracks the step for the unstick watchdog (frame, below), and a reload mid-beat replays the
+   * rest from Oda-san's lines (udonFin marks the end). Same flow on Fierce / Strategic / Balanced (VO tables resolve per path). */
+  var UDB = null;
   function udonBeat() {
-    var e = NS(); if (e.udon) return; e.udon = 1; sv(); lockIn(true); ev('world:nq:udon:open');
-    var own = npc('nq_udon', 960, 3306, Math.PI / 2), r = W.ryo, a = W.aoi;
-    try { c2WalkAll([[r, 930, 3372, 140], [a, 990, 3378, 140]], go); } catch (e1) { go(); }
-    function go() { c2Face(r, own.x, own.y); c2Face(a, own.x, own.y); shutterUp();
-      later(900, function () { lockIn(false); talk(VO.udon, function () { sting('udon', function () { kill(own); flipText(); }); }); }); }
+    var e = NS(); if (e.udon) return; e.udon = 1; e.udonTry = 1; sv(); lockIn(true); ev('world:nq:udon:open');
+    UDB = { t0: performance.now(), step: 'walk', own: null }; NQ.UDB = UDB;
+    var own = null, r = W.ryo, a = W.aoi, went = false;
+    try { own = UDB.own = npc('nq_udon', 960, 3306, Math.PI / 2); } catch (eN) { ev('world:nq:err:udon:npc:' + (eN && eN.message)); }
+    function go() { if (went || !UDB) return; went = true;
+      try { if (own) { c2Face(r, own.x, own.y); if (a && a.el) c2Face(a, own.x, own.y); } } catch (eF) {}
+      try { shutterUp(); } catch (eS) { ev('world:nq:err:udon:shut:' + (eS && eS.message)); }
+      later(900, function () { udonTalk(own); }); }
+    try { c2WalkAll([[r, 930, 3372, 140], [a, 990, 3378, 140]].filter(function (q) { return q[0] && q[0].el; }), go); } catch (e1) { go(); }
+    later(6000, go); /* the walk never holds the beat */
   }
-  function flipText() { talk(VO.flip, function () { setStg('west', 'w1'); qOpen('west'); crewSync(); try { qBanner('NEW JOB', Q.west.n, Q.west.giver); } catch (e) {} }); }
+  function udonTalk(own) { if (UDB) UDB.step = 'talk'; lockIn(false);
+    talk(VO.udon, function () { if (UDB) UDB.step = 'sting'; sting('udon', function () { kill(own); flipText(); }); }); }
+  function flipText() { if (UDB) UDB.step = 'flip';
+    talk(VO.flip, function () { setStg('west', 'w1'); qOpen('west'); crewSync(); udonFin(); try { qBanner('NEW JOB', Q.west.n, Q.west.giver); } catch (e) {} }); }
+  function udonFin() { var n = NS(); n.udonFin = 1; sv(); if (UDB && UDB.own) kill(UDB.own); UDB = NQ.UDB = null; ev('world:nq:udon:fin'); openFront(); }
+  /* a reload (or an app close) mid-beat: the shop is already open (e.udon); Oda-san steps out again and the beat finishes from his lines */
+  function udonResume() { var n = NS(); if (!nailsRun() || !n.udon || n.udonFin || UDB) return;
+    if (qOn('west') || qDone('west') || (n.udonTry | 0) >= 3) { n.udonFin = 1; sv(); return; } /* already handed off (older saves) */
+    n.udonTry = (n.udonTry | 0) + 1; sv();
+    whenFree(function () { if (UDB || NS().udonFin || !inTown()) return; UDB = NQ.UDB = { t0: performance.now(), step: 'talk', own: null, resumed: 1 }; ev('world:nq:udon:resume');
+      var own = null; try { own = UDB.own = npc('nq_udon', 960, 3306, Math.PI / 2); face(own, W.ryo.x, W.ryo.y); c2Face(W.ryo, own.x, own.y); } catch (eN) {}
+      udonTalk(own); }); }
+  NQ.udonResume = udonResume; NQ.udonFin = udonFin; NQ.openFront = openFront;
+  /* the unstick watchdog (v6.5.66, t612u): rides the existing c2Frame, checks twice a second. If input is held (cut / dlg / scene lock)
+   * while nothing that holds it is on screen (no dialogue, sting, fight, fade, pause, scripted walk, and the map is what is under the
+   * centre and the dialogue band), for 3.5 s during an NQ beat or 12 s at any other time, it hands control back. */
+  var UST = { at: 0, since: 0 };
+  function heldUp() {
+    if (W.dgFight || W.fading || W.paused || document.getElementById('nqsting')) return true;
+    var d = document.getElementById('wdlg'); if (d && /(^|\s)on(\s|$)/.test(d.className)) return true;
+    if ((W.ryo && W.ryo.actMove) || (W.aoi && W.aoi.actMove)) return true;
+    var wv = document.getElementById('wv'), vw = root.innerWidth || 390, vh = root.innerHeight || 844, pts = [[vw / 2, vh * 0.45], [vw / 2, vh - 140]];
+    for (var i = 0; i < pts.length; i++) { var el = document.elementFromPoint(pts[i][0], pts[i][1]); if (el && wv && !wv.contains(el)) return true; }
+    return false; }
+  function unstick() { var t = performance.now(); if (t - UST.at < 500) return; UST.at = t;
+    var held = !!(W.cut || W.dlg || (W.scr | 0) > 0); if (!held || heldUp()) { UST.since = 0; return; }
+    if (!UST.since) { UST.since = t; return; }
+    if (t - UST.since < (UDB ? 3500 : 12000)) return;
+    UST.since = 0; ev('world:nq:unstick:' + (UDB ? UDB.step : 'idle') + ':' + (W.cut ? 'c' : '') + (W.dlg ? 'd' : '') + ((W.scr | 0) ? 's' : ''));
+    W.cut = false; W.dlg = false; W.scr = 0; W.path = [];
+    if (UDB) { var st = UDB.step; if (st === 'walk') udonTalk(UDB.own); else if (st === 'talk' || st === 'sting') { kill(UDB.own); flipText(); } else { if (!qOn('west') && !qDone('west')) { setStg('west', 'w1'); qOpen('west'); crewSync(); } udonFin(); } } }
+  NQ.unstick = unstick;
   NQ.udonBeat = udonBeat;
   /* the fight hooks */
   if (typeof fight === 'function') { var fightN = fight; fight = function (grp, boss, ctx) { try { if (ctx && on()) { var ks = ctx.dgks || [ctx.dgk]; ks.forEach(function (k) { var m = /^(nq_[a-z]\d?)_\d+$/.exec(String(k || '')); if (m) ctx.nqk = ctx.nqk || m[1]; }); if (ctx.nqk) ev('world:nq:fight:' + ctx.nqk); } } catch (e) {} return fightN.apply(this, arguments); }; }
@@ -41012,7 +41084,7 @@ function camPan(to, o, done) {
     try { lockIn(false); } catch (e2) {} }
   /* and the chain itself is re-derived on each town visit, so an interrupted hand-off (quest closed, next one not yet opened) heals */
   function chainRepair() { var n = NS(), w = won(), ch = 0;
-    if (n.udon && !qOn('west') && !qDone('west')) { w.udon = 1; setStg('west', stg('west') || 'w1'); qOpen('west'); ch = 1; }
+    if (n.udon && (n.udonFin || (n.udonTry | 0) >= 3) && !qOn('west') && !qDone('west')) { w.udon = 1; /* v6.5.66: a beat cut short replays (udonResume) before this fallback */ setStg('west', stg('west') || 'w1'); qOpen('west'); ch = 1; }
     if (qDone('west')) { w.west = 1; if (!E().vend_x2st) { E().vend_x2st = 1; ch = 1; } ginko('Q2', 'dagashi'); if (!qOn('cold') && !qDone('cold')) { setStg('cold', 0); qOpen('cold'); ch = 1; } }
     if (qOn('cold') && (stg('cold') | 0) < 3 && crewsDown('nq_c') === 3) { setStg('cold', 3); qStep('cold', 1); ch = 1; }
     if (qOn('paint') && crewsDown('nq_p') === 3 && !NS().paintFin) { setStg('paint', 3); whenFree(paintFin); ch = 1; }
@@ -41077,7 +41149,7 @@ function camPan(to, o, done) {
   if (typeof c2DoorOf === 'function') { var door0 = c2DoorOf; c2DoorOf = function (k) { if (DOORS[k]) return DOORS[k]; return door0.apply(this, arguments); }; }
   if (typeof c2Surf === 'function') { var surf0 = c2Surf; c2Surf = function (x, y) { var k = c2Room(); if (k === 'udon' || k === 'hotel') return k === 'udon' ? 'wood' : 'stone'; if (k === 'motors') return 'concrete'; return surf0.apply(this, arguments); }; }
   /* town Enter spots (shown once the room is open) */
-  [['nq_e_udon', UDON_DOOR], ['nq_e_motors', MOTORS_DOOR], ['nq_e_hotel', HOTEL_DOOR]].forEach(function (a) { INT.c2_town.spots.push({ id: a[0], r: a[1].r, at: a[1].at, face: 3, lab: 'Enter' }); TRANS[a[0]] = 1; }); delete INT.c2_town.G;
+  [['nq_e_udon', UDON_DOOR, [840, 3140, 1090, 3322]], ['nq_e_motors', MOTORS_DOOR, [310, 3140, 530, 3322]], ['nq_e_hotel', HOTEL_DOOR, null]].forEach(function (a) { INT.c2_town.spots.push({ id: a[0], r: a[2] || a[1].r, at: a[1].at, face: 3, lab: 'Enter' }); if (!a[2]) TRANS[a[0]] = 1; else delete TRANS[a[0]]; }); delete INT.c2_town.G; /* v6.5.66 (t612u): udon + Machi are tapped on the shopfront itself (a generous rect around the door and the open window, no floating tag): tap, Ryo walks to the step and goes in. The door rect (UDON_DOOR.r) stays the wall slot. */
   function roomOpen(k) { if (!on()) return false; if (k === 'udon' || k === 'motors') return !!NS().udon; if (k === 'hotel') return (stg('cold') | 0) >= 3 || qDone('cold'); return false; }
   NQ.roomOpen = roomOpen;
   /* --- the painter --- */
@@ -41393,7 +41465,7 @@ function camPan(to, o, done) {
       if (/^nq_lore_/.test(a)) { loreLook(a.slice(8)); return true; }
     } } catch (e) { ev('world:nq:err:act:' + (e && e.message)); } return act0.apply(this, arguments); }; }
   function tagOk(id, key) { var a = key.split(':')[1] || '';
-    if (a === 'nq_e_udon') return roomOpen('udon'); if (a === 'nq_e_motors') return roomOpen('motors'); if (a === 'nq_e_hotel') return roomOpen('hotel');
+    if (a === 'nq_e_udon' || a === 'nq_e_motors') return false; /* v6.5.66: tapped on the shopfront, no floating tag */ if (a === 'nq_e_hotel') return roomOpen('hotel');
     var gm = /^nq_gs_(n\d)$/.exec(a); if (gm) { try { return root.FFF_GINKO.isOpen(gm[1]); } catch (e) { return false; } }
     if (a === 'nq_bandai') return !!E().seal_sento; if (/^nq_lore_/.test(a)) return nailsRun() || true; return true; }
   if (typeof c2Tags === 'function') { var tags0N = c2Tags; c2Tags = function (id, D) { var out = tags0N.apply(this, arguments); try { if (out && on()) out = out.filter(function (t) { return !t || !t.key || t.key.indexOf(':nq_') < 0 || tagOk(id, t.key); }); } catch (e) {} return out; }; }
@@ -41967,12 +42039,12 @@ function camPan(to, o, done) {
   var pop0 = c2Pop;
   c2Pop = function () { var r = pop0.apply(this, arguments); try { if (!on()) return r; var k = room();
       LN.grays = [];
-      if (k === 'town') { facades2(); laneProps(); if (nailsRun()) { beatReset(false); chainRepair(); shutterOn(); } crewSync(); }
+      if (k === 'town') { facades2(); laneProps(); if (nailsRun()) { beatReset(false); chainRepair(); shutterOn(); udonResume(); } crewSync(); }
       if (k === 'roof') grayProps();
       else if (k === 'sento') sentoPop(); else if (INT[C2R[k]] && INT[C2R[k]].nq) { roomPop(k); if (INT[C2R[k]].nqWing) wingPop(k); }
     } catch (e) { ev('world:nq:err:pop:' + (e && e.message)); } return r; };
   var frN0 = c2Frame;
-  c2Frame = function (dt) { frN0.apply(this, arguments); try { if (!on()) return; laneGate(); flowTick(); sealTick(); veilTick(); gateTick(); wingFightTick(); } catch (e) { if (!NQ.ferr) { NQ.ferr = 1; ev('world:nq:err:frame:' + (e && e.message)); } } };
+  c2Frame = function (dt) { frN0.apply(this, arguments); try { if (!on()) return; try { unstick(); } catch (eU) {} laneGate(); flowTick(); sealTick(); veilTick(); gateTick(); wingFightTick(); } catch (e) { if (!NQ.ferr) { NQ.ferr = 1; ev('world:nq:err:frame:' + (e && e.message)); } } };
   /* ================= styles ================= */
   (function css() { var s = document.createElement('style'); s.id = 'nqcss';
     s.textContent = '.nqprop{image-rendering:auto}' +
@@ -47429,7 +47501,39 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   if (typeof c2DoorOf === 'function') { var door0 = c2DoorOf; c2DoorOf = function (k) { if (k === 'waga') return WAGA_DOOR; return door0.apply(this, arguments); }; }
   if (typeof c2Surf === 'function') { var surf0 = c2Surf; c2Surf = function (x, y) { if (c2Room() === 'waga') return 'wood'; return surf0.apply(this, arguments); }; }
   INT.c2_town.spots.push({ id: 's2_e_waga', r: WAGA_DOOR.r, at: WAGA_DOOR.at, face: 3, lab: 'Enter' });
+  /* v6.5.66 (t612u): the lane tree stood dead centre in front of Chiyo Wagashi and hid the shop (sign, door, windows). It moves to the
+   * west end of the Lucky 7 frontage (art + its trunk block), so the storefront reads from the street. */
+  try { (C2W.props.place || []).forEach(function (q) { if (q[0] === 'tree' && q[1] === 3060 && q[2] === 2700) q[1] = 2790; });
+    (C2W.pblocks || []).forEach(function (b) { if (b[0] === 3046 && b[1] === 2684 && b[2] === 3074) { b[0] = 2776; b[2] = 2804; } }); } catch (eT) {}
   if (typeof TRANS !== 'undefined') TRANS.s2_e_waga = 1;
+  /* v6.5.66 (t612u): the SOUTH side of Wagashi row has the "SWEETS" noren building (bld shopsE2, named WAGASHI) with no door, no sign and no shop
+   * behind it, which read as "Wagashi was never built". Chiyo Wagashi is one shop with two fronts: the south front is a second door into the same
+   * room (opens when the shop does), with a painted open window and sign on the facade, and you step back out onto that side. */
+  var WAGA_S = { r: [3030, 3210, 3130, 3300], at: [3080, 3334], out: [3080, 3352] }, WAGA_N_OUT = WAGA_DOOR.out.slice();
+  INT.c2_town.spots.push({ id: 's2_e_waga_s', r: [2990, 3150, 3170, 3322], at: WAGA_S.at, face: 3, lab: 'Enter' }); /* generous tap rect over the sweets front; the door slot is WAGA_S.r */
+  var WAGA_SC = null;
+  function wagaSouthCanvas() { var P = root.FFF_NQ && root.FFF_NQ.paint; if (!P) return null; var c = P.cv(200, 92), g = c.getContext('2d');
+    var bg = g.createLinearGradient(0, 0, 0, 92); bg.addColorStop(0, '#fbe3b8'); bg.addColorStop(1, '#e7b27c'); g.fillStyle = bg; g.fillRect(0, 0, 200, 92);
+    g.fillStyle = '#6a3e2a'; g.fillRect(0, 0, 200, 22); P.box(g, 14, 3, 172, 17, '#f4ead2', 2, 2);
+    g.font = '900 11px ' + P.JPF; g.textBaseline = 'middle'; g.textAlign = 'center'; g.fillStyle = '#8e3b52'; g.fillText('\u548c\u83d3\u5b50', 52, 12); g.fillStyle = '#2a211c'; g.fillText('CHIYO WAGASHI', 134, 12);
+    g.fillStyle = '#7a4a30'; g.fillRect(0, 56, 200, 36); g.strokeStyle = P.INK; g.lineWidth = 2; g.strokeRect(0, 56, 200, 4);
+    var cols = ['#f2c4cf', '#9ec27a', '#f4ead2', '#e8a0b8', '#c9b3e0'];
+    [[26, 0], [76, 1], [126, 2], [172, 3]].forEach(function (q, i) { P.box(g, q[0] - 20, 40, 40, 16, '#3b2a22', 3, 2);
+      for (var k = 0; k < 3; k++) { g.beginPath(); g.arc(q[0] - 11 + k * 11, 38, 6.5, 0, 7); g.fillStyle = cols[(i + k) % cols.length]; g.fill(); g.lineWidth = 2; g.strokeStyle = P.INK; g.stroke(); } });
+    g.fillStyle = 'rgba(255,240,200,.35)'; g.fillRect(0, 22, 200, 14);
+    P.box(g, 160, 64, 34, 18, '#f4ead2', 2, 2); P.jp(g, '\u55b6\u696d\u4e2d', 177, 73, 9, '#b8332a'); g.strokeStyle = P.INK; g.lineWidth = 3; g.strokeRect(1.5, 1.5, 197, 89); return c; }
+  function placeSouth() {
+    WAGA_DOOR.out = WAGA_N_OUT.slice(); /* back to the north exit once you are in the street */
+    /* facade is a street fixture once S2 is on (same gate as the north front); entering still uses roomOpen() */
+    if (!on() || !inTown() || document.getElementById('s2WagaSouth')) return;
+    WAGA_SC = WAGA_SC || wagaSouthCanvas(); if (!WAGA_SC) return;
+    WAGA_SC.className = 'nqprop'; WAGA_SC.id = 's2WagaSouth'; WAGA_SC.style.cssText = 'position:absolute;left:2980px;top:3200px;width:200px;height:92px;z-index:' + (100 + 3200) + ';pointer-events:none';
+    var host = null, sample = document.querySelector('#world .nqprop, #wimap .nqprop, .nqprop');
+    if (sample && sample.parentNode) host = sample.parentNode;
+    else host = document.getElementById('wisp') || document.getElementById('world') || document.getElementById('wimap');
+    if (host) host.appendChild(WAGA_SC); try { if (W && W.ints) W.ints.push({ el: WAGA_SC }); } catch (eI) {}
+  }
+  S2.placeSouth = placeSouth; S2.WAGA_S = WAGA_S;
   delete INT.c2_town.G;
   /* painted storefront, 400×160, center 3080, bottom flush on y=2600 (Lucky 7 south wall).
      NQ's FAC / propEl / facades live inside the NQ IIFE, so we append the canvas ourselves and hook c2Pop. */
@@ -47453,7 +47557,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   S2.placeDoor = placeDoor;
   if (typeof facades === 'function') {
     var fac0 = facades;
-    facades = function () { fac0.apply(this, arguments); try { placeDoor(); } catch (eD) {} };
+    facades = function () { fac0.apply(this, arguments); try { placeDoor(); } catch (eD) {} try { placeSouth(); } catch (eS) {} };
   }
   function hookBattle() {
     if (S2._bt) return true;
@@ -47759,7 +47863,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     c2ActC = function (k, a) {
       try {
         if (on()) {
-          if (a === 's2_e_waga') { doorTalk(); return true; }
+          if (a === 's2_e_waga') { WAGA_DOOR.out = WAGA_N_OUT.slice(); doorTalk(); return true; }
+          if (a === 's2_e_waga_s') { if (roomOpen()) { WAGA_DOOR.out = WAGA_S.out.slice(); W._s2WagaSaid = 0; c2Enter('waga'); } return true; }
           if (a === 's2_waga_order') { if (CHI) chiyoFaceCustomer(); counterMenu(); return true; }
           if (a === 's2_flip' || (FL && a && /n13flip/.test(a) && qOn() && stg() === 'open')) { flipTalk(); return true; }
         }
@@ -47792,6 +47897,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
         if (out && on()) out = out.filter(function (t) {
           if (!t || !t.key) return true;
           if (t.key.indexOf(':s2_flip') >= 0) return qOn() && stg() === 'open';
+          if (t.key.indexOf(':s2_e_waga_s') >= 0) return false;
           if (t.key.indexOf(':s2_e_waga') >= 0) return punkAfterSeal();
           if (t.key.indexOf(':s2_waga_order') >= 0) return room() === 'waga';
           return true;
@@ -47804,11 +47910,11 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   /* ride c2Frame, no new loop */
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!S2.ferr) { S2.ferr = 1; ev('world:s2:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { placeDoor(); placeSouth(); flowTick(); } } catch (e) { if (!S2.ferr) { S2.ferr = 1; ev('world:s2:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
-    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); crewSync(); flipPop(); suppressX3Loop(); placeDoor(); chiyoPop(); if (room() === 'waga') paintRoom(); } } catch (eP) {} };
+    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); crewSync(); flipPop(); suppressX3Loop(); placeDoor(); placeSouth(); chiyoPop(); if (room() === 'waga') paintRoom(); } } catch (eP) {} };
   }
   try { chainRepair(); } catch (eC) {}
   ev('world:s2:ready');
@@ -48042,9 +48148,11 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   wireWho('nq_haru', 'nq_haru', 0.88, 'haru');
 
   /* ---------------- doors + rooms ---------------- */
-  var SHOP_AT = [4105, 3490], LOB_AT = [4481, 3490];
-  var SHOP_DOOR = { r: [4055, 3380, 4155, 3476], at: SHOP_AT, to: 'mshop', out: [SHOP_AT[0], SHOP_AT[1] + 24] };
-  var LOB_DOOR = { r: [4431, 3380, 4531, 3476], at: LOB_AT, to: 'mina', out: [LOB_AT[0], LOB_AT[1] + 24] };
+  /* v6.5.66 (t612u): Minato-sō is the ground floor of the east block (eastS, bottom wall y=3300), not a second building drawn over
+   * the sidewalk and the canal edge. Doors sit in that frontage like the other street doors (r up to 3300, stand on the sidewalk). */
+  var SHOP_AT = [4105, 3334], LOB_AT = [4481, 3334];
+  var SHOP_DOOR = { r: [4055, 3210, 4155, 3300], at: SHOP_AT, to: 'mshop', out: [SHOP_AT[0], SHOP_AT[1] + 14] };
+  var LOB_DOOR = { r: [4431, 3210, 4531, 3300], at: LOB_AT, to: 'mina', out: [LOB_AT[0], LOB_AT[1] + 14] };
   var RW = 1280, RH = 900;
   function roomDef(k, n, extra) {
     var id = 'c2_nq_' + k; C2R[k] = id;
@@ -48074,10 +48182,10 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     var surf0 = c2Surf;
     c2Surf = function (x, y) { var k = c2Room(); if (k === 'mina') return 'stone'; if (k === 'mshop') return 'concrete'; return surf0.apply(this, arguments); };
   }
-  INT.c2_town.spots.push({ id: 's2_e_mshop', r: SHOP_DOOR.r, at: SHOP_DOOR.at, face: 0, lab: 'Enter' });
-  INT.c2_town.spots.push({ id: 's2_e_mina', r: LOB_DOOR.r, at: LOB_DOOR.at, face: 0, lab: 'Enter' });
+  INT.c2_town.spots.push({ id: 's2_e_mshop', r: [4020, 3150, 4190, 3322], at: SHOP_DOOR.at, face: 3, lab: 'Enter' }); /* v6.5.66: the doors are on the building wall now; tap the shopfront (generous rect, no floating tag), Ryo walks to the step and in */
+  INT.c2_town.spots.push({ id: 's2_e_mina', r: [4396, 3150, 4566, 3322], at: LOB_DOOR.at, face: 3, lab: 'Enter' });
   INT.c2_town.spots.push({ id: 's2_p2_flip', r: [2320, 3110, 2400, 3210], at: [2360, 3190], face: 1, lab: 'Talk' });
-  if (typeof TRANS !== 'undefined') { TRANS.s2_e_mshop = 1; TRANS.s2_e_mina = 1; TRANS.s2_to_lobby = 1; TRANS.s2_to_shop = 1; }
+  if (typeof TRANS !== 'undefined') { TRANS.s2_to_lobby = 1; TRANS.s2_to_shop = 1; }
   delete INT.c2_town.G;
   function roomOpen() { return on() && punkAfterSeal(); }
   P2.roomOpen = roomOpen; P2.SHOP_DOOR = SHOP_DOOR; P2.LOB_DOOR = LOB_DOOR;
@@ -48092,7 +48200,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       try { if (root.FFF_S2P && root.FFF_S2P.minaSouth) root.FFF_S2P.minaSouth(FAC.getContext('2d')); } catch (eF) { ev('world:s2p2:err:facade:' + (eF && eF.message)); }
     }
     FAC.className = 'nqprop'; FAC.id = 's2MinaSouth';
-    FAC.style.cssText = 'position:absolute;left:3760px;top:3280px;width:1140px;height:220px;z-index:' + (100 + 3300) + ';pointer-events:none';
+    FAC.style.cssText = 'position:absolute;left:3760px;top:3080px;width:1140px;height:220px;z-index:' + (100 + 3200) + ';pointer-events:none'; /* v6.5.66: on the eastS frontage (3080-3300), was 3280-3500 over the sidewalk */
     var host = null, sample = document.querySelector('#world .nqprop, #wimap .nqprop, .nqprop');
     if (sample && sample.parentNode) host = sample.parentNode;
     else host = document.getElementById('wisp') || document.getElementById('world') || document.getElementById('wimap');
@@ -48224,7 +48332,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   var RUNS = [
     { at: [3610, 3050], k: 's2_r0', lab: 'East canal bridge' },
     { at: [3610, 3480], k: 's2_r1', lab: 'East canal bridge' },
-    { at: [4100, 3490], k: 's2_r2', lab: 'SE street' }
+    { at: [4100, 3376], k: 's2_r2', lab: 'SE street' } /* v6.5.66: on the sidewalk in front of Hase Repair (3490 was the canal) */
   ];
   function s2Tgt() {
     if (!punkAfterSeal() || !wagaDone()) return null;
@@ -48370,7 +48478,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       try {
         if (out && on()) out = out.filter(function (t) {
           if (!t || !t.key) return true;
-          if (t.key.indexOf(':s2_e_mshop') >= 0 || t.key.indexOf(':s2_e_mina') >= 0) return punkAfterSeal();
+          if (t.key.indexOf(':s2_e_mshop') >= 0 || t.key.indexOf(':s2_e_mina') >= 0) return false;
           if (t.key.indexOf(':s2_p2_flip') >= 0) return wagaDone() && qOn() && (stg() === '' || stg() === 'open');
           if (t.key.indexOf(':s2_hase_shop') >= 0) return room() === 'mshop';
           if (t.key.indexOf(':s2_stair') >= 0 || t.key.indexOf(':s2_talk_') >= 0 || t.key.indexOf(':s2_to_') >= 0) return room() === 'mina' || room() === 'mshop';
@@ -48385,7 +48493,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     c2ActC = function (k, a) {
       try {
         if (on()) {
-          if (a === 's2_e_mshop' || a === 's2_e_mina') return act0.apply(this, arguments);
+          if (a === 's2_e_mshop' || a === 's2_e_mina') { if (roomOpen()) c2Enter(a === 's2_e_mshop' ? 'mshop' : 'mina'); return true; }
           if (a === 's2_p2_flip') { flipTalk(); return true; }
           if (a === 's2_to_lobby') { if (typeof c2Go === 'function') c2Go('mina', [200, 400, 1]); return true; }
           if (a === 's2_to_shop') { if (typeof c2Go === 'function') c2Go('mshop', [200, 400, 1]); return true; }
