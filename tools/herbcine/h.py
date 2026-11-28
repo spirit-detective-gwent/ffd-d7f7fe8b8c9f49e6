@@ -45,7 +45,7 @@ class Game:
         threading.Thread(target=self.srv.serve_forever, daemon=True).start()
         self.p = await async_playwright().start()
         self.b = await self.p.chromium.launch(args=['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required'])
-        self.ctx = await self.b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, device_scale_factor=float(os.environ.get('DSF','1')))
+        self.ctx = await self.b.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, device_scale_factor=float(os.environ.get('DSF','1')), **({'record_video_dir': os.environ['VID'], 'record_video_size': {'width': 390, 'height': 844}} if os.environ.get('VID') else {}))
         self.pg = await self.ctx.new_page(); self.pg.on('pageerror', lambda e: self.errs.append(str(e)))
         if self.throttle:
             self.cdp = await self.ctx.new_cdp_session(self.pg); await self.cdp.send('Emulation.setCPUThrottlingRate', {'rate': self.throttle})

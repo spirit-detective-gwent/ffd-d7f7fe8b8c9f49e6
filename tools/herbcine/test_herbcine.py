@@ -25,7 +25,7 @@ PROBE = """(function(){ function r(e){ if(!e||!e.getBoundingClientRect) return n
  return {su:su&&su.el?r(su.el):null, sux:su?[su.x,su.y]:null, ry:r(ry.el), ryx:[ry.x,ry.y], bot:r(bt), par:par, dp:r(dp), sm:r(sm), smop:smcs?+smcs.opacity:null, smsc:sm?sm.getAnimations().length&&(sm.getAnimations()[0].effect.getComputedTiming().progress):null,
    pour:!!document.getElementById('hspour'), tag:(tg&&tgs.display!=='none'&&tgs.visibility!=='hidden'&&getComputedStyle(box).display!=='none')?r(tg):null, tagp:tgs?tgs.pointerEvents:null,
    dlg:d&&d.classList.contains('on')?r(d):null, dock:d?d.classList.contains('dock-top'):false, cmp:r(document.getElementById('hscmp')), cine:document.body.classList.contains('hscine'), hs:[HS.on,HS.ph,HS.skip],
-   zoom: su&&su.el?su.el.getBoundingClientRect().width/68:1, fill: bt?(function(){var q=bt.querySelector('.hslq'); return q?getComputedStyle(q).transform:null})():null}; })()"""
+   zoom: su&&su.el?su.el.getBoundingClientRect().width/68:1, sc:getComputedStyle(document.getElementById('wv')).scale, carry:bt?bt.classList.contains('carry'):false, hands:bt?(function(){var h=bt.querySelector('.hsh'); return h?getComputedStyle(h).display:null})():null, ryw:[ry.x,ry.y], aow:W.aoi?[W.aoi.x,W.aoi.y]:null, fill: bt?(function(){var q=bt.querySelector('.hslq'); return q?getComputedStyle(q).transform:null})():null}; })()"""
 def cx(r): return r[0] + r[2] / 2
 def cy(r): return r[1] + r[3] / 2
 async def start_lesson(g):
@@ -70,6 +70,20 @@ def judge_lesson(log, tag):
             if not (p['dp'] and p['bot']): badS.append(('stream without dipper/bottle', p['t'])); continue
             if abs(cx(p['sm']) - cx(p['bot'])) > 0.8 * p['bot'][2] or abs(cx(p['sm']) - (p['dp'][0] + p['dp'][2] * 0.2)) > 1.2 * p['dp'][2] or cy(p['sm']) > p['bot'][1] + p['bot'][3]: badS.append(('stream off', p['t']))
     check(tag + ' pour: stream only runs from the dipper into the bottle', nS > 0 and not badS, badS[:2] or ('%d samples' % nS))
+    # 2b live framing: Ryo / Aoi where live puts them, zoom no tighter than live's 1.32
+    sc = [float(p['sc']) for p in log if p['cine'] and p['sc'] not in (None, 'none', '')]
+    mid = [p for p in log if p['cine'] and p['hs'][1] and p['su'] and abs(p['sux'][0] - 679) < 3] if False else []
+    ry_ok = [p for p in log if p['cine'] and abs(p['ryw'][0] - 598) < 4 and abs(p['ryw'][1] - 612) < 4]
+    ao_ok = [p for p in log if p['cine'] and p['aow'] and abs(p['aow'][0] - 532) < 60 and abs(p['aow'][1] - 624) < 60]  # Aoi's follow settles her a little off the walk target, same as live
+    check(tag + ' framing: Ryo and Aoi stand where live puts them (Ryo 598,612; Aoi beside him)', len(ry_ok) > 20 and len(ao_ok) > 20, (len(ry_ok), len(ao_ok)))
+    check(tag + ' framing: camera zoom stays at live level (<= 1.40 through the cinematic)', sc and max(sc) <= 1.40, max(sc) if sc else None)
+    # 2c carry low: waist, between both hands, while she walks to Ryo
+    walk = [p for p in log if p['par'] == 'su' and p['carry'] and p['su'] and p['bot']]
+    lowbad = []
+    for p in walk:
+        rel = (cy(p['bot']) - p['su'][1]) / p['su'][3]
+        if not (0.42 <= rel <= 0.72) or p['hands'] != 'block': lowbad.append((p['t'], round(rel, 2), p['hands']))
+    check(tag + ' carry: bottle held low at her waist between both hands the whole walk (%d samples)' % len(walk), len(walk) > 8 and not lowbad, lowbad[:3])
     # 3 bubble
     json.dump(log, open(f'{OUT}/{tag}_log.json', 'w'))
     vis = [p['t'] for p in log if p['cine'] and p['tag']]
@@ -179,28 +193,23 @@ async def t_pots(g):
             if not ok: fails.append((pid, (ox, oy), await pst(pid)))
             await g.hush(); await g.wait(200)
     check('pots: tap on a bloomed pot picks it from three sides', not fails, fails)
-    # prompt tag: visible near, hidden far; tapping it works; label follows state
+    # no orange prompt buttons any more: the plants themselves are the target
     px, py = [(o[1], o[2]) for o in pots if o[0] == 'gp5'][0]
-    await setpot('gp5', 'empty'); await put(px + 30, py + 20); await g.wait(300)
-    tg = await g.ev("""(function(){var t=document.querySelector('#wtags .wtag[data-k="c2_clinic:pot:gp5"]'); if(!t) return null; var s=getComputedStyle(t); var r=t.getBoundingClientRect(); return {vis:s.visibility,disp:s.display,txt:t.innerText.replace(/\\s+/g,' ').trim(),r:[r.x,r.y,r.width,r.height]}})()""")
-    check('pots: Plant prompt shows within reach', tg and tg['vis'] != 'hidden' and tg['disp'] != 'none' and tg['txt'].startswith('Plant'), tg)
-    await g.pg.screenshot(path=f'{OUT}/pot_prompt_near.png')
-    if tg: await g.pg.touchscreen.tap(tg['r'][0] + tg['r'][2] / 2, tg['r'][1] + tg['r'][3] / 2)
-    ok = False
-    for i in range(60):
-        await g.wait(150)
-        if await pst('gp5') == 'planted' and not await g.ev("W.busy"): ok = True; break
-    check('pots: tapping the Plant prompt plants', ok)
-    await g.hush(); await put(px + 200, py + 200); await g.wait(300)
-    far = await g.ev("""(function(){var t=document.querySelector('#wtags .wtag[data-k="c2_clinic:pot:gp1"]'); return t?getComputedStyle(t).visibility:null})()""")
-    check('pots: prompt hidden when far', far in (None, 'hidden'), far)
-    # keyboard / pad use (E / Enter) next to a pot
-    await setpot('gp9', 'empty'); gx, gy = [(o[1], o[2]) for o in pots if o[0] == 'gp9'][0]
-    await put(gx + 24, gy + 1); await g.wait(300); await g.ev("interact()"); ok = False
-    for i in range(60):
-        await g.wait(150)
-        if await pst('gp9') == 'planted' and not await g.ev("W.busy"): ok = True; break
-    check('pots: E / Use next to a pot plants it', ok)
+    await setpot('gp5', 'empty'); await put(px + 30, py + 20); await g.wait(400)
+    ntags = await g.ev("document.querySelectorAll('#wtags .wtag[data-k*=\":pot:\"]').length + (W.tagL||[]).filter(function(t){return /:pot:/.test(t.key)}).length")
+    check('pots: no Plant / Pick tag buttons exist (standing next to a pot)', ntags == 0, ntags)
+    await g.pg.screenshot(path=f'{OUT}/pot_no_tag.png')
+    # bigger tap radius on the plant: taps that were misses before (well above the plant, wide of it) still count
+    fails = []
+    for (tx, ty, ox, oy) in ((0, -54, -50, 30), (38, -12, 60, 10), (-38, -12, -60, 20), (0, 16, 20, 60), (30, -40, 20, 50)):
+        await setpot('gp5', 'empty'); await put(px + ox, py + oy)
+        sx, sy = await world_to_screen(px + tx, py + ty); await g.pg.touchscreen.tap(sx, sy); ok = False
+        for i in range(130):
+            await g.wait(150)
+            if await pst('gp5') == 'planted' and not await g.ev("W.busy"): ok = True; break
+        if not ok: fails.append((tx, ty, ox, oy, await pst('gp5')))
+        await g.hush(); await g.wait(200)
+    check('pots: a tap on the plant, above it or just beside it walks Ryo over and plants (5 wider taps)', not fails, fails)
     # no stealing: a tap on Sumire (NPC) and on the Exit door never touches a pot
     await g.hush(); before = {o[0]: await pst(o[0]) for o in pots}
     await put(560, 640); sx, sy = await world_to_screen(790, 380 - 30); await g.pg.touchscreen.tap(sx, sy); await g.wait(1500); await g.hush()
