@@ -84,7 +84,7 @@ function grdPeek(f) { var r = W.ryo; return (f.peek || []).some(function (a) { r
 /* spotted: the bark, then 4 backups through the doors, all on you. One team = one fight. */
 function grdCall(f) { var R = CAFG[cafRoom()], doors = (f.peek || []).slice(); f.team = f.key; f.spot = 1; ev('world:cafe:guard:spot:' + f.key);
   var b = document.createElement('i'); b.className = 'wgbark'; b.textContent = 'BACKUP!'; b.style.left = Math.round(f.s.x) + 'px'; b.style.top = Math.round(f.s.y - 104) + 'px'; layer.appendChild(b); W.ints.push({ el: b });
-  setTimeout(function () { b.remove(); }, GRD_T.bark * 1000); AU.play('door', { gain: 0.6 });
+  setTimeout(function () { b.remove(); }, GRD_T.bark * 1000); AU.play('door', { gain: 0.6 }); toast('Spotted! He shouted for backup.');
   if (!doors.length) doors = [[f.s.x, f.s.y]];
   for (var i = 0; i < GRD_T.team; i++) { var id = CAF_FOES[i % CAF_FOES.length], s = intSprite(id + '_map', SPH, 'dgfoe'), a = doors[i % doors.length], j = Math.floor(i / doors.length) - (doors.length > 1 ? 0.5 : 1.5);
     s.el.classList.add('foe'); s.x = a[0] + j * 30; s.y = a[1] + (i % 2 ? 18 : -18); if (!okAt(s.x, s.y)) { s.x = a[0]; s.y = a[1]; } place(s, 0); waddle(s, 0, f.fa);
