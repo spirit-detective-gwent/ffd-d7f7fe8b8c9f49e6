@@ -10384,7 +10384,7 @@ function load() { try { var o = JSON.parse(localStorage.getItem('fff_world') || 
   try { pcApply(); } catch (e) {} /* v5.3.1 */
   try { carryRecover(); } catch (e) {} /* a hurdle or crate in hand is not a separate inventory slot; a reload used to delete it */
   if (STORY && STORY.bond && SAVE.sc.after && !(SAVE.bond && SAVE.bond.path)) { var B0 = STORY.bond(SAVE), sl0 = Math.max(SAVE.sigLv | 0, ((SAVE.chars.ryo || {}).sigLv) | 0); B0.path = 'fierce'; B0.picks.first = 'fierce'; B0.lock = 1; B0.ask = 1; B0.px = Math.max(B0.px, STORY.bondTot(Math.min(4, sl0) + 1)); } /* v4.13: a pre-Bond save keeps Fox Fire Fist at the level it had bought */
-  GK_RESUME = gkEndingOpen() || gkMidOpen(); }
+  GK_RESUME = gkEndingOpen() || gkMidOpen() || gkCardOpen(); }
 function save() { try { /* v6.3.1: a save during load runs before enter() copies SAVE onto the sprite. The sprite is born at 0,0, which is a walkable North Path corner, so sampling it here used to replace the real position. */ if (W.placed && W.ryo) { var sx = W.inside ? (W.inRet || nurseAt()) : [W.ryo.x, W.ryo.y]; SAVE.x = Math.round(sx[0]); SAVE.y = Math.round(sx[1]); /* the outside door stays the fallback if this room is missing on an old build */ if (W.restored || W.inside) { var at = intSaveAt(); if (at) SAVE.int = at; else if (!W.inside) SAVE.int = null; } /* a fight or a cutscene must not wipe a room we already saved */ } SAVE.carry = W.carry || ''; localStorage.setItem('fff_world', JSON.stringify(SAVE)); } catch (e) {} }
 function carryRecover() { /* lifted hurdles/crates set a saved flag and W.carry. W.carry was not in the save, so a closed browser left the object gone and the flag set. */
   W.carry = SAVE.carry || null; if (W.carry === '') W.carry = null;
@@ -12485,6 +12485,7 @@ ST.inWorld = false; ev('world:fight:' + SAVE.act + ':' + foes.join(','));
 function dblUnlocked() { return !!(SAVE.dbl || SAVE.gouki || SAVE.ch1 || SAVE.ngp || root.FFF_DBL); } /* v4.56: shared double locked until Gouki finale (preserve post-finale / NG+) */
 function benchOf(boss, ctx) { if (!STORY || !STORY.bond || root.FFF_NO_BENCH || (ctx && ctx.matspar) || (ctx && ctx.c2spar && ctx.c2lesson !== 'assist')) return null; /* v6.5.38: only the Sync Break lesson has a bench */ /* v5.3: a 1v1 spar has no bench. The training mat is Ryo vs Aoi only. A Genji lesson spar keeps the partner. */ var B = STORY.bond(SAVE); if (!B.path && !(ctx && ctx.c2lesson)) return null;
   var o = other(SAVE.act), T = viewOf(o), lo = STORY.loadout(T), allow = dblUnlocked() || (ctx && (ctx.gkFin || ctx.c2lesson));
+  if (ctx && (ctx.gkPhase === 1 || ctx.gkLoop) && !SAVE.gouki && !SAVE.ch1) allow = false; /* v6.5.66: NG+ Gouki finale locks the Double until the Bond moment, like a fresh run */
   var later = (SAVE.chapter | 0) >= 2; /* v6.3.3: after Chapter 1 the partner keeps their own Spirit. Chapter 1 still starts the bench full once the double is unlocked; the Gouki finish fight fills both either way. */
   var psp = (ctx && ctx.gkFin || (SAVE.dbl && !later)) ? SPMAX : (T.sp | 0);
   return { ch: o, path: allow ? (B.path || 'fierce') : null, pst: gearPst({ combo: true, hp: SAVE.hp, spirit: psp, deck: lo.deck, sig: lo.sig, sig2: null, disc: 0, cmax: lo.cmax, ctrPlus: lo.ctrPlus | 0, dgPlus: lo.dgPlus | 0, rebCap: lo.rebCap | 0 }, o) }; }
@@ -14155,12 +14156,13 @@ function close() {
  // v4.3: a chained dialog (scenes) keeps the map locked
 function joinWarn() { /* v6.5.37: early-challenge retired; relays no longer join Gouki. Kept as a stub so gymDialog still concatenates it. */ if (minisLeft()) return ''; return '<p class="dim">All four corners are quiet: you face Gouki alone.</p>'; }
 var GK_POST = ['I\u2019m not going anywhere. The Wardens can decide what to do with me.', 'The man in the gray coat never told me his name. Only that the shrine was the first door.', 'Hit me again if it helps. It won\u2019t change what I did.', 'They\u2019re waking up, the ones I pushed. Tell them\u2026 no. Don\u2019t tell them anything.'];
-function gkEndingOpen() { return !!(SAVE.gouki && !(SAVE.sc && SAVE.sc.ending) && !SAVE.ch1); } /* Gouki is down, the ending scene never finished */
-function gkMidOpen() { return !SAVE.gouki && !SAVE.ch1 && (SAVE.gkPh === 1 || (SAVE.gkRevives | 0) >= 1); } /* the finale was interrupted before the last blow */
-function gkStuckResume() { if (W.dlg || W.cut || (root.FFF && root.FFF.inGame)) return; if (gkEndingOpen()) { ev('world:gk:resume:ending'); if (typeof ofudaHoldMark === 'function') ofudaHoldMark('resume'); chapterEnd(); return; } if (gkMidOpen()) { ev('world:gk:resume:finale'); gkFight(); } }
+function gkEndingOpen() { return !!(SAVE.gouki && !(SAVE.sc && SAVE.sc.ending) && !SAVE.ch1 && (SAVE.chapter | 0) <= 1); } /* Gouki is down, the ending scene never finished (v6.5.66: NG+ too; ngBuild starts gouki/ch1/sc fresh) */
+function gkMidOpen() { return !SAVE.gouki && !SAVE.ch1 && (SAVE.chapter | 0) <= 1 && (SAVE.gkPh === 1 || (SAVE.gkRevives | 0) >= 1); } /* the finale was interrupted before the last blow (v6.5.66: NG+ too) */
+function gkCardOpen() { return !!(SAVE.gouki && SAVE.sc && SAVE.sc.ending && !SAVE.ch1 && (SAVE.chapter | 0) <= 1); } /* v6.5.66: the ending played, the Chapter One card never came (reload during the Wardens lines): Gouki looped forever */
+function gkStuckResume() { if (W.dlg || W.cut || (root.FFF && root.FFF.inGame)) return; if (gkEndingOpen()) { ev('world:gk:resume:ending'); if (typeof ofudaHoldMark === 'function') ofudaHoldMark('resume'); chapterEnd(); return; } if (gkCardOpen()) { ev('world:gk:resume:card'); if (typeof ofudaHoldMark === 'function') ofudaHoldMark('resume'); chapterCard(); return; } if (gkMidOpen()) { ev('world:gk:resume:finale'); gkFight(); } }
 function gkFight() { /* v4.64: phase1 → endless item-revival loop until player HP 0 → Bond → gkFin; rematch = single */
   if (gkEndingOpen()) { chapterEnd(); return; } /* a stuck win: challenging him again plays the ending, not another duel */
-  if (SAVE.gouki || SAVE.ch1) { fight(['gouki'], true); return; } /* v6566-ofuda (Erik pt535u): NG+ starts gouki/gkPh fresh, so an NG+ Chapter One plays the full finale (phase 1, revives, Bond, the Double) like a fresh game; SAVE.ngp here made it a one-round rematch */
+  if (SAVE.gouki || SAVE.ch1) { fight(['gouki'], true); return; } /* v6.5.66 (Erik, NG+): SAVE.ngp no longer skips the finale; an NG+ Ch1 Gouki plays phase 1, the item-revival loop and the Bond Double like a fresh game */
   if (SAVE.dbl && SAVE.gkPh) {
     SAVE.sp = SPMAX; var o = other(SAVE.act), pc = SAVE.chars[o] || (SAVE.chars[o] = {}); pc.sp = SPMAX; save();
     fight(['gouki'], true, { gkPhase: 2, gkFin: 1 }); return;
@@ -14200,8 +14202,10 @@ function gkCallSpawn() {
 }
 function gymDialog() {
   if (!SAVE.gouki && !SAVE.ch1) { /* v4.64: never start Gouki outdoors before the gym clear */ ev('world:gym:enter-only'); gymEnter(); return; }
+  /* v6.5.66 (Erik): no outright Gouki fight from the gym doors (fresh or NG+). Down but Chapter One not closed: finish it. */
+  if (!SAVE.ch1) { if (gkEndingOpen()) { ev('world:gym:resume:ending'); if (typeof ofudaHoldMark === 'function') ofudaHoldMark('resume'); chapterEnd(); return; } if (gkCardOpen()) { ev('world:gym:resume:card'); if (typeof ofudaHoldMark === 'function') ofudaHoldMark('resume'); chapterCard(); return; } }
   if (SAVE.ch1) { ev('world:gym:post'); gkStage(1); var q = GK_POST[(SAVE.gkTalk = ((SAVE.gkTalk || 0) + 1)) % GK_POST.length]; save(); // v4.13: post-credits talk, kneeling, with his kneeling portrait
-    dialog('<b>Gouki Daimon</b><small>Kneeling at the gym doors</small><p class="q">\u201c' + q + '\u201d</p><p class="dim">His spirit-fight is still here if you want it: a rematch (very hard).</p>', [['Leave him', null], ['Rematch (very hard)', function () { gkStage(0); gkFight(); }, 'hot']], IMG.gouki_kneel ? 'gouki_kneel' : 'gouki_fig', { versus: 1, name: 'Gouki Daimon' }); return; }
+    dialog('<b>Gouki Daimon</b><small>Kneeling at the gym doors</small><p class="q">\u201c' + q + '\u201d</p>', [['Leave him', null]], IMG.gouki_kneel ? 'gouki_kneel' : 'gouki_fig', { versus: 1, name: 'Gouki Daimon' }); return; }
   ev('world:gym');
   dialog('<b>Gouki Daimon</b><small>Student-council enforcer \u00b7 gym doors</small><p class="q">\u201cKazan. Hayase. The gym is closed by order of the student council.<br><b>Not yet.</b> Come back when you\u2019re worth my time.\u201d</p>' + ryoQ(RYO_GYM, RYO_GYM_P) + (SAVE.gouki ? '<p class="dim">' + CNAME[SAVE.act] + ' beat him before. He wants a rematch.</p>' : '') + '<p class="dim"><b class="rare">Rare enemy</b>: every win drops one card for Ryo or Aoi: <b>95% Uncommon, 5% Rare</b>.' + '</p>' + joinWarn() + '<p class="dim">You go in with your current HP ' + SAVE.hp + '/' + MAXHP + ' and spirit ' + SAVE.sp + '/' + SPMAX + '.</p>' + (SAVE.hp < MAXHP * 0.7 ? '<p class="warn">\u26a0 You\u2019re hurt (' + SAVE.hp + '/' + MAXHP + ' HP). Heal at the nurse\u2019s office first (south, past the pool).</p>' : ''),
     [['Walk away', null], [SAVE.gouki ? 'Rematch (very hard)' : 'Challenge (very hard)', function () { if (SAVE.hp < MAXHP * 0.5) { ev('world:gym:lowhp'); dialog('<b>Low health</b><p class="q">You\u2019re low on health (' + SAVE.hp + '/' + MAXHP + '). Fight Gouki anyway?</p><p class="dim">The nurse\u2019s office (glowing cross, south) heals you first.</p>', [['Back out', function () { ev('world:gym:backout'); }], ['Fight anyway', function () { gkFight(); }, 'hot']], 'gouki_fig', { versus: 1, name: 'Gouki Daimon' }); return; } gkFight(); }, 'hot']], 'gouki_fig', { versus: 1, name: 'Gouki Daimon' });
@@ -17356,8 +17360,7 @@ function tagDefs() {
         fn: function () { ev('world:mini:near:' + m.id + ':tag'); if (b) spiritDialog(m); else miniDialog(m); } }); });
   /* v4.29: the gym's side door is a walk-in doorway on its east wall (entUse 'gymside') */
   return foes.concat(PLACES.filter(tagPlace).map(function (p) { var v = p.vm && VMS.find(function (q) { return q.id === p.vm; });
-    if (p.boss) { if (SAVE.gouki || SAVE.ch1) { var g = W.gouki || { x: GYM.x, y: GYM.y - 42, k: GK_K }; return { key: 'out:' + p.id, lab: 'Fight', x: g.x, y: g.y - SPH * (g.k || GK_K) - 2, below: false, ax: p.x, ay: p.y, R: TAG_FOE.boss, vm: false, cls: ' boss', act: p }; }
-      return null; } /* v4.71 Hold #13: no floating Enter over the gym doors: walk (or tap) into the doorway */
+    if (p.boss) return null; /* v6.5.66 (Erik): the old outdoor 'Fight' tag over Gouki / the gym is gone (it fought him outright, skipping the gym, and in NG+ looped him). v4.71 Hold #13: walk (or tap) into the doorway */ /* v4.71 Hold #13: no floating Enter over the gym doors: walk (or tap) into the doorway */
     return v ? { key: 'out:' + p.id, lab: 'Get drink', x: v.x, y: v.y - 46, below: false, ax: p.x, ay: p.y, R: TAG_R.vm, vm: true, obj: [v.x - 26, v.y - 98, v.x + 26, v.y + 6], act: p }
       : { key: 'out:' + p.id, lab: 'Enter', x: p.x, y: p.y + 8, below: true, ax: p.x, ay: p.y, R: TAG_R.out, vm: false, act: p }; }).filter(Boolean)); }
 function tagsLive() { return W.on && !W.runUp && !W.busy && !W.dlg && !W.pan && !W.cut && !W.forced && !W.paused && !W.fading && !W.lying; }
@@ -25613,6 +25616,7 @@ function v640NgStart(o) {
   Object.keys(SAVE).forEach(function (k) { delete SAVE[k]; }); Object.keys(N).forEach(function (k) { SAVE[k] = N[k]; });
   try { var U = root.FFF_UI; if (U && U.ST && U.ST.set) { U.ST.set.foeStr = SAVE.foeStr; localStorage.setItem('fff_set', JSON.stringify(U.ST.set)); } } catch (eS) {}
   W.dgF = []; W.dgRelay = null; W.gymGouki = null; W.intBul = null; W.intNurse = null; W.carry = null; W.bxMem = {}; W.sitMem = {}; W.lvHud = null;
+  W.gymBossBusy = 0; W.gkFx = 0; W.gkFloor = null; W._gkLast = null; /* v6.5.66: no Gouki finale runtime from the last run leaks into the NG+ gym */
   var world = document.getElementById('world'); if (world) world.classList.remove('inside', 'inroom', 'c2', 'c2town', 'c3');
   try { chSync(); } catch (eC) {}
   try { if (typeof c2ApplyHp === 'function') c2ApplyHp(); } catch (eH) {}
