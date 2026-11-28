@@ -62,13 +62,15 @@
     return da0.apply(this, arguments); };
   function fullDown(f, p, i) { return !!(f[p + i + '_0'] && f[p + i + '_1']); }
   function repair(why) {
-    var N = root.FFF_NQ, S = c2S(), f = S.f || (S.f = {}), q = S.q || {}, ch = 0, R = rec();
+    var N = root.FFF_NQ, S = c2S(), f = S.f || (S.f = {}), q = S.q || {}, ch = 0, R = rec(), D0 = SAVE.crewDown || {}, hint = {};
+    Object.keys(D0).forEach(function (kk) { if (/^c2_nq_[cp]\d$/.test(kk)) hint[kk.slice(3)] = 1; }); /* the respawn timer remembers which crews were beaten */
     ch += purgeDown();
     Object.keys(R).forEach(function (k) { if (!f[k]) { f[k] = 1; ch++; } });
     if (N && N.stg && N.setStg) [['c', 'cold', 'cq2_nq_cold'], ['p', 'paint', 'cq2_nq_paint']].forEach(function (L) {
       if (!(q[L[2]] != null && q[L[2]] !== 9)) return; var p = 'nq_' + L[0], st = Math.min(3, N.stg(L[1]) | 0), down = [0, 1, 2].filter(function (i) { return fullDown(f, p, i); });
       /* a save from before the record: the stage remembers how many crews were beaten even after the flags went; put them back */
-      for (var i = 0; i < 3 && down.length < st; i++) if (down.indexOf(i) < 0) { f[p + i + '_0'] = 1; f[p + i + '_1'] = 1; R[p + i + '_0'] = 1; R[p + i + '_1'] = 1; down.push(i); ch++; ev('world:hp:restore:' + p + i); }
+      var ord = [0, 1, 2].sort(function (a, b) { return (hint[p + b] ? 1 : 0) - (hint[p + a] ? 1 : 0) || a - b; });
+      for (var oi = 0; oi < 3 && down.length < st; oi++) { var i = ord[oi]; if (down.indexOf(i) >= 0) continue; f[p + i + '_0'] = 1; f[p + i + '_1'] = 1; R[p + i + '_0'] = 1; R[p + i + '_1'] = 1; down.push(i); ch++; ev('world:hp:restore:' + p + i); }
       if (down.length > st && down.length < 3) { N.setStg(L[1], down.length); ch++; } /* a knockout win that skipped the count (3/3 is left to the quest chain: it steps the quest) */ });
     /* men whose win is on the books do not stand on the street */
     (W.dgF || []).slice().forEach(function (o) { if (o && o.key && f[o.key] && QKEY.test(o.key) && W.dgFight !== o) { try { g38tDrop(o); } catch (eD) {} ch++; } });
@@ -98,6 +100,17 @@
   if (typeof dlgGuard === 'function') { var dg0 = dlgGuard; dlgGuard = function (dt) { dg0.apply(this, arguments); try { guard(dt || 0); } catch (e) { ev('world:hp:err:guard:' + (e && e.message)); } }; }
   /* a fight start: a world overlay left over from the street (a dead block-win sting, a banner) must not sit over the cards */
   if (typeof fight === 'function') { var fi0 = fight; fight = function () { try { var st = document.getElementById('nqsting'); if (st && st.hpT && now() - st.hpT >= 12000) { st.remove(); ev('world:hp:fight:sting'); } } catch (e) {} return fi0.apply(this, arguments); }; }
+  /* ---------------- a shut doorway must not trap the player ----------------
+     intDoorsFrame walks Ryo through any doorway whose lip he stands on (useDoor: kills the stick, clears the path, acts). The NQ
+     shopfront doors (Kitsune Hotel, udon, motors) act by doing nothing while their room is shut, and useDoor clears doorHold, so
+     standing on a shut door's lip re-fired useDoor every frame: the stick died the instant it was touched (only pinch zoom got
+     through, it runs before the stick), and the handler ran 60 times a second (the hot phone). A doorway that did nothing is now
+     held until Ryo steps off its lip, and the shut hotel door says why once. */
+  HP.doorHolds = 0;
+  if (typeof useDoor === 'function') { var ud0 = useDoor; useDoor = function (sp) { var I = W.inside, id = I && I.id, r = ud0.apply(this, arguments);
+    try { if (sp && W.inside === I && !W.fading && !W.dlg && !W.busy && !W.cut && !W.scr && !(I && I.id !== id)) { W.doorHold = sp.id; W.arrive = null; HP.doorHolds++; ev('world:hp:doorhold:' + sp.id);
+      if (sp.id === 'nq_e_hotel' && W.hpDoorSaid !== sp.id) { W.hpDoorSaid = sp.id; try { toast('Locked. The crews out front run this door.'); } catch (e1) {} } }
+      else if (sp) W.hpDoorSaid = null; } catch (e) { ev('world:hp:err:door:' + (e && e.message)); } return r; }; }
   /* ---------------- hooks: town pop, fight back, frame ---------------- */
   if (typeof c2Pop === 'function') { var pp0 = c2Pop; c2Pop = function () { var r = pp0.apply(this, arguments); try { if (typeof chN === 'function' && chN() === 2) repair('pop'); } catch (e) { ev('world:hp:err:pop:' + (e && e.message)); } return r; }; }
   if (typeof c2Back === 'function') { var cb0 = c2Back; c2Back = function (win, st0) { var r = cb0.apply(this, arguments); try { var c = (st0 && st0.ctx) || {}; sawIt(c.dgks || [c.dgk]); if (town()) setTimeout(function () { try { repair('back'); } catch (e) {} }, 900); } catch (e) {} return r; }; }
