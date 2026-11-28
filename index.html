@@ -1110,6 +1110,7 @@ body.wshake #world{animation:wshk .3s steps(2) 2}
 /* v4.13.1 objects: no word tag; the object itself glows softly (the map tap under it walks up and uses it) */
 #wtags .wtag.obj{display:block;pointer-events:none;border-radius:10px;box-sizing:border-box;border:1.5px solid rgba(180,210,220,.38);background:radial-gradient(ellipse at 50% 50%,rgba(150,200,210,.10),rgba(150,200,210,0) 70%);box-shadow:0 0 10px 1px rgba(31,111,120,.30),inset 0 0 10px rgba(150,200,210,.18);animation:wobjb 2.6s ease-in-out infinite}
 #wtags .wtag.obj::before{display:none}
+#world.gkcine #wtags{display:none} /* v6.5.66: no interaction tags (or their pulse) over the Gouki entry cinematic */
 #wtags .wtag.obj.vm{border-color:rgba(150,235,255,.40);box-shadow:0 0 10px 1px rgba(90,220,255,.32),inset 0 0 10px rgba(120,230,255,.18)}
 #wtags .wtag.obj.near{border-color:rgba(159,216,210,.75);box-shadow:0 0 16px 3px rgba(31,111,120,.55),inset 0 0 14px rgba(170,214,216,.30);animation:wobjp 1.4s ease-in-out infinite}
 #wtags .wtag.obj.loot,#wtags .wtag.obj.loot.near{background:none;box-shadow:none;border-color:transparent;animation:none;opacity:0}
@@ -19673,7 +19674,7 @@ function gymRegrid(k) { var D = INT['gy_' + k], bl = gymBlocks(k), sig = JSON.st
   if (W.inside && W.inside.id === D.id && !D.G) { D.G = intGrid(D); GRID = D.G.g; GW = D.G.gw; GH = D.G.gh; } }
 function gymRet() { return entOf('gym_e') ? entOf('gym_e').out.slice() : gymSide(); }
 function gymGo(k, at) { gymRegrid(k); var out = !W.inside; intGo('gy_' + k, { at: at || INT['gy_' + k]['in'] }); if (out) W.inRet = gymRet();
-  var S = gymS(); S.v[k] = 1; S.room = k; W.cool = Math.max(W.cool, 1.4); W.libArm = {}; gymPop(); save(); ev('world:gym:room:' + k); gymArrive(k); }
+  var S = gymS(); S.v[k] = 1; S.room = k; W.cool = Math.max(W.cool, 1.4); W.libArm = {}; gymPop(); save(); ev('world:gym:room:' + k); if (W.gkCine && W.gkCineFin) { W.gymBossBusy = 0; W.gkCineFin(); } W.gkCineArm = k === 'arena' && gymOpen() && !SAVE.gouki && !!W.gymGouki ? 1 : 0; gymArrive(k); }
 function gkDoorBeaten() { return !!(SAVE.sc && SAVE.sc.gkDoor); }
 function gkDoorNeed() { return !!(W.gymFront && !SAVE.gouki && !SAVE.ch1 && typeof gymWalkIn === 'function' && gymWalkIn() && !gkDoorBeaten()); }
 function gkDoorGuards() { /* v6.5.42 b13j: same trio as Call him out, coming out the front door */
@@ -19744,9 +19745,9 @@ function gymDoor(d) { var k = gymRoom(), R = GYMG[k], D = R.doors[d]; if (!D) re
 function gymLeave() { var h = document.getElementById('lkeys'); if (h) h.classList.remove('on'); }
 function gymArrive(k) { var S = gymS(); if (S.e[k]) return; S.e[k] = 1; save(); var L = GYM_SC['in_' + k]; if (!L) return;
   libPend(function () { scene(null, L); }); }
-function gymFrame(dt) { if (!gymRoom()) return; if (!tagsLive() || W.cool > 0.6 && !W.libPend) return; if (W.libPend) { var p = W.libPend; W.libPend = null; p(); }
+function gymFrame(dt) { if (!gymRoom()) return; if (!tagsLive() || W.cool > 0.6 && !W.libPend && !W.gkCineArm) return; if (W.libPend) { var p = W.libPend; W.libPend = null; p(); return; }
   if (gymRoom() === 'arena' && gymOpen() && !SAVE.gouki && W.gymGouki && !W.gymBossBusy) {
-    var g = W.gymGouki, d = Math.hypot(W.ryo.x - g.x, W.ryo.y - g.y); if (d < 160 && W.ryo.moving) gymBoss(); } }
+    var g = W.gymGouki, d = Math.hypot(W.ryo.x - g.x, W.ryo.y - g.y); if (W.gkCineArm) { W.gkCineArm = 0; gymBoss(); } else if (d < 160 && W.ryo.moving) gymBoss(); } else W.gkCineArm = 0; }
 function gymTags(id, D) { var k = D.gym, S = gymS(), out = [], b = !!SAVE.gouki;
   /* v4.71 Hold #16: no overhead Challenge flag over Gouki: walk up (or tap him) and gymFrame starts gymBoss */
   D.spots.forEach(function (s) { if (TRANS[s.id] || s.id === 'exit') return;
@@ -19774,8 +19775,38 @@ function gymAct(a) { var k = gymRoom(); if (!k) return; if (GYMG[k].doors[a]) { 
 function gymBoss() { /* v4.64: finale only on Main Court after seals */
   if (SAVE.gouki || !gymOpen() || gymRoom() !== 'arena' || W.gymBossBusy) return;
   W.gymBossBusy = 1; W.path = []; W.ryo.v = 0; W.ryo.moving = false; ev('world:gym:boss');
-  var go = function () { W.gymBossBusy = 0; gkFight(); };
-  libPend(function () { bossEnt('gouki', GYM_SC.boss, go); }); }
+  gkCine(function (fin) { var go = function () { fin(); W.gymBossBusy = 0; gkFight(); };
+    bossEnt('gouki', GYM_SC.boss, go); }); }
+/* v6.5.66 (Erik t535): the Main Court entry is one cinematic, from the moment they step onto Gouki's court until the board opens.
+ * Input locks; Ryo and Aoi WALK in (c2Walk, one bounded rAF each, ends on arrival) and stop at a set distance in front of him, facing him;
+ * both settle on a standing frame (never a frozen stride: the boss-arrival hold stops frame() mid-step otherwise), the camera frames all three,
+ * the arrival / dialogue plays on the stopped poses (Aoi held in place: no trail-follow during the lines), then the run-up into the fight.
+ * No new always-running loop: c2Walk ends on arrival. */
+var GK_CINE = { d: 150, sp: 137, run: 230, far: 300, ease: 120, r: [-34, 150], a: [40, 162] };
+function gkCineSettle(s) { if (!s || !s.el) return; s.v = 0; s.moving = false; s.run = false; s.actMove = 0; try { if (s.walker) { animWalk(s, 0); animWalk(s, 0); } } catch (eS) {} place(s, 0); }
+function gkCineSpots(g) { var r = W.ryo, a = W.aoi; /* the court's own blocking: they face him from the south, the speaker framing (OTS) sits under the boss */
+  var rs = [g.x + GK_CINE.r[0], g.y + GK_CINE.r[1]], as = a ? [g.x + GK_CINE.a[0], g.y + GK_CINE.a[1]] : null;
+  if (!okAt(rs[0], rs[1]) || (as && !okAt(as[0], as[1]))) { var dx = r.x - g.x, dy = r.y - g.y, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d, D = Math.min(d, GK_CINE.d);
+    rs = [g.x + ux * D, g.y + uy * D]; if (!okAt(rs[0], rs[1])) rs = [r.x, r.y]; if (a) { as = [rs[0] - uy * 58 + ux * 20, rs[1] + ux * 58 + uy * 20]; if (!okAt(as[0], as[1])) as = [a.x, a.y]; } }
+  return { r: rs, a: as }; }
+function gkCineWalk(s, to, k, done) { var d = Math.hypot(to[0] - s.x, to[1] - s.y), f = (d - GK_CINE.ease) / d, mid = [s.x + (to[0] - s.x) * f, s.y + (to[1] - s.y) * f];
+  function walk() { c2Walk(s, to[0], to[1], GK_CINE.sp / k, done); }
+  if (d <= GK_CINE.far) { walk(); return; } /* a long way in: run most of it (Ryo on the normal path mover, so the sprint sheet plays), then ease to a walk and stop */
+  if (s !== W.ryo) { c2Walk(s, mid[0], mid[1], GK_CINE.run / k, walk); return; }
+  W.run = true; if (walkTo(mid[0], mid[1], true, true) === false) { W.run = false; walk(); return; }
+  var t0 = performance.now(), lim = d / GK_CINE.run * 1000 / k + 1500;
+  (function wait() { if (!W.gkCine) return; if ((!W.path || !W.path.length) || performance.now() - t0 > lim) { W.path = []; W.run = false; walk(); return; } setTimeout(wait, 50); })(); }
+function gkCine(next) { var r = W.ryo, a = W.aoi && W.aoi.el && W.aoi.el.style.visibility !== 'hidden' ? W.aoi : null, g = W.gymGouki, cf0 = W.camFocus, done = 0;
+  sLock(1, 'gkcine'); W.gkCine = 1; if (typeof stickEnd === 'function') stickEnd(); KEYS = {}; ev('world:gkcine:start'); var wd = document.getElementById('world'); if (wd) wd.classList.add('gkcine');
+  function free() { if (W.gkLock) { W.gkLock = 0; sLock(0, 'gkcine'); } } /* the arrival / dialogue holds input itself from here (bossEnt + scene) */
+  function fin() { if (done++) return; free(); if (a) a.actMove = 0; W.camFocus = cf0; W.gkCine = 0; if (wd) wd.classList.remove('gkcine'); ev('world:gkcine:end'); }
+  W.gkLock = 1; W.gkCineFin = fin; if (!g || !r) { free(); next(fin); return; }
+  if (a) a.actMove = 1; W.camFocus = [r, a, g].filter(Boolean);
+  var P = gkCineSpots(g), k = Math.max(0.25, cinK()), n = a && P.a ? 2 : 1;
+  function arrived() { if (--n) return; c2Face(r, g.x, g.y); if (a) c2Face(a, g.x, g.y); gkCineSettle(r); if (a) gkCineSettle(a); c2Face(r, g.x, g.y); if (a) { c2Face(a, g.x, g.y); a.actMove = 1; }
+    if (typeof resetTrail === 'function') resetTrail(r.x, r.y, r.dir); W.gkCineAt = [Math.round(r.x), Math.round(r.y)]; ev('world:gkcine:stop');
+    setTimeout(function () { if (!W.gkCine) return; free(); next(fin); }, Math.round(260 * k)); }
+  gkCineWalk(r, P.r, k, function () { c2Face(r, g.x, g.y); gkCineSettle(r); arrived(); }); if (n > 1) gkCineWalk(a, P.a, k, function () { c2Face(a, g.x, g.y); gkCineSettle(a); a.actMove = 1; arrived(); }); }
 function gymPress() { var S = gymS(), n = gymDone(); if (n < 1) { if (typeof sayKey === 'function') sayKey('hint', 'seal_none'); else toast('No seals yet.'); return; }
   if (S.e.press && n >= 3) { if (typeof sayKey === 'function') sayKey('hint', 'seal_done'); else toast('All three seals are pressed. The arena gate is open.'); return; }
   AU.play('place', { gain: 0.7 }); ev('world:gym:press:' + n);
