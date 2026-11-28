@@ -10,7 +10,9 @@
  5. Masa at the depot shutter: bossEnt's done fired while the cine still held W.dlg, so busy() dropped the fight and every
     talk replayed the intro. Talking to him (skipping the intro the way a player can) now starts the shutter fight.
  6. High Score at Ramen Kitsuneya with full HP/SP: every menu item is disabled ('HP full'), and the overheard-Suits beat only
-    fired after a purchase, so a healthy player was stuck. Closing the menu at the counter now plays the beat."""
+    fired after a purchase, so a healthy player was stuck. Closing the menu at the counter now plays the beat.
+ 7. Phase room canvases (Minato-so, Funayado lookout, quay garage) stayed in the map after you left, so the garage art sat
+    over the Izakaya and every room after it. Leaving now removes them."""
 import asyncio, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent)); import h
@@ -132,5 +134,20 @@ async def main():
         r = await g.ev("JSON.stringify({room:c2Room(),stg:FFF_S2P6.stg(),game:document.getElementById('game').classList.contains('on')})")
         chk(f'cq2_s2_jin ramen: at full HP ({full} items read full) closing the menu plays the overheard beat', shop and moved, [o, shop, full, r])
         chk('cq2_s2_jin ramen: no page errors', not [e for e in g.errs if '404' not in e], g.errs[:3])
+    async with h.Game(path='balanced') as g:
+        await g.boot()
+        await g.ev("(function(){var st=c2S(); st.q.cq2_s2_gar=0; st.qa='cq2_s2_gar'; c2QSync(); save(); return 1})()")
+        await g.go('town', 4040, 3735); await g.wait(600)
+        res = {}
+        for k in ('gar', 'boat', 'mina'):
+            await g.ev(f"c2Enter('{k}')")
+            for i in range(5): await h.adv(g, 1)
+            res[k + '_in'] = await g.ev(f"c2Room()")
+            await g.ev(f"c2Out('{k}')")
+            for i in range(5): await h.adv(g, 1)
+        await g.ev("c2Enter('izak')")
+        for i in range(5): await h.adv(g, 1)
+        left = await g.ev("JSON.stringify({room:c2Room(),left:['s2P4Room_gar','s2P3Room_boat','s2P2Room_mina','s2P2Room_mshop'].filter(function(id){return !!document.getElementById(id)})})")
+        chk('phase room canvases do not follow you into later rooms (Izakaya)', '"left":[]' in left and '"room":"izak"' in left, [res, left])
     n = sum(R); print(f'RESULT {n}/{len(R)} passed'); sys.exit(0 if n == len(R) else 1)
 asyncio.run(main())

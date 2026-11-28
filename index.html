@@ -48545,7 +48545,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
-    c2Pop = function () { pop0.apply(this, arguments); try { hookAmb(); if (on()) { chainRepair(); placeDoor(); hookBattle(); popShop(); popLobby(); if (room() === 'mina' || room() === 'mshop') paintRoom(); } syncIndoorRain(); } catch (eP) {} };
+    c2Pop = function () { pop0.apply(this, arguments); try { hookAmb(); if (on()) { chainRepair(); placeDoor(); hookBattle(); popShop(); popLobby(); paintRoom(); /* v6566-rc: always (it drops its canvas outside mina/mshop; a leftover sat over every later room) */ } syncIndoorRain(); } catch (eP) {} };
   }
   try { chainRepair(); } catch (eC) {}
   ev('world:s2p2:ready');
@@ -49011,7 +49011,7 @@ function s2LtFoe(id, name, title) { try { var CH = root.ENGINE && root.ENGINE.ch
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
-    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); placeDoor(); hookBattle(); popLookout(); popTown(); if (room() === 'boat') paintRoom(); } } catch (eP) {} };
+    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); placeDoor(); hookBattle(); popLookout(); popTown(); paintRoom(); /* v6566-rc: always, so the lookout canvas leaves with you */ } } catch (eP) {} };
   }
   try { chainRepair(); } catch (eC) {}
   ev('world:s2p3:ready');
@@ -49449,7 +49449,7 @@ function s2LtFoe(id, name, title) { try { var CH = root.ENGINE && root.ENGINE.ch
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
-    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); placeDoor(); hookBattle(); popGarage(); popTown(); if (room() === 'gar') paintRoom(); } } catch (eP) {} };
+    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); placeDoor(); hookBattle(); popGarage(); popTown(); paintRoom(); /* v6566-rc: always; the garage canvas used to cover the Izakaya and every room after it */ } } catch (eP) {} };
   }
   try { chainRepair(); } catch (eC) {}
   ev('world:s2p4:ready');
