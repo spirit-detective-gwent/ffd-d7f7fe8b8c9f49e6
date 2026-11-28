@@ -202,8 +202,9 @@
       if (F.mv.inv) F.inv = F.mv.inv; if (F.mv.vy) { F.vy = F.mv.vy; F.air = true; F.vx = F.face * 60; }
       tone(k === 'p' ? 520 : k === 'k' ? 330 : 260, now(), 0.06, 'square', 0.035); return true; }
     function say(m, d) { msg = m; msgT = d || 1; }
+    function boost(F, k, h, sp) { var c = {}, q0; for (q0 in F.c) c[q0] = F.c[q0]; c.hp = Math.round(c.hp * (h || 1)); c.spd = Math.round(c.spd * (sp || 1)); F.c = c; F.hp = F.max = c.hp; F.dk = k || 1; } /* v6566-handheld: a fighter's stars */
     function setupMatch() { var me = ORDER[sel], foe = lad[G.stage]; P = mk(me, 110, 1, false); E = mk(foe, 252, -1, true);
-      if (HH) { var pc = {}, q0; for (q0 in P.c) pc[q0] = P.c[q0]; pc.hp = Math.round(pc.hp * (HH.ph || 1)); pc.spd = Math.round(pc.spd * (HH.ps || 1)); P.c = pc; P.hp = P.max = pc.hp; P.dk = HH.pk || 1; P.dbl = HH.dbl === 'p'; E.dbl = HH.dbl === 'e'; }
+      if (HH) { boost(P, HH.pk, HH.ph, HH.ps); boost(E, HH.ek, HH.eh, HH.es); P.dbl = String(HH.dbl || '').indexOf('p') >= 0; E.dbl = String(HH.dbl || '').indexOf('e') >= 0; }
       rnd = 1; wins = [0, 0]; startRound(); }
     function startRound() { P.x = 110; E.x = 252; P.y = E.y = GY; P.hp = P.max; E.hp = E.max; [P, E].forEach(function (F) { F.st = 'idle'; F.stT = 0; F.vx = F.vy = 0; F.air = false; F.mv = null; F.flash = 0; F.inv = 0; F.pose = POSE.idle; });
       roundT = 60; phase = 'pre'; rT = 0; spHold = -1; jumpQ = 0; buf = null; bufT = 0; fx = []; proj = []; combo = 0; comboT = 0; slow = 0; shake = 0; freeze = 0; }
@@ -223,7 +224,7 @@
       drawFighter(q, a, t, 1.9); drawFighter(q, b, t, 1.9);
       otxt(q, P.c.n, 90, 400, P.c.n.length > 8 ? 17 : 22, '#ffd860'); otxt(q, E.c.n, 272, 400, E.c.n.length > 8 ? 17 : 22, '#7fe8ff'); txt(q, P.c.full, 90, 422, 9, '#fff', 'center', 700); txt(q, E.c.full, 272, 422, 9, '#fff', 'center', 700);
       otxt(q, 'VS', SW / 2, 230, 54 + Math.sin(t * 12) * 3, '#ff5a3a'); txt(q, HH ? (HH.title || 'VS CPU') : 'MATCH ' + (G.stage + 1) + ' / 5', SW / 2, 54, 13, '#ffd860'); txt(q, E.c.where, SW / 2, 74, 11, '#e8e0f8', 'center', 700);
-      if (!HH && G.stage === 4) otxt(q, 'FINAL BOSS', SW / 2, 470, 18, '#ff4a5a'); if (HH && HH.dbl) otxt(q, HH.dbl === 'p' ? 'CHEAT: DOUBLE SHOT' : '???: A HIDDEN RULE', SW / 2, 470, 16, HH.dbl === 'p' ? '#7aff9a' : '#ff4a5a'); };
+      if (!HH && G.stage === 4) otxt(q, 'FINAL BOSS', SW / 2, 470, 18, '#ff4a5a'); if (HH && HH.dbl) { var dp = String(HH.dbl).indexOf('p') >= 0, de = String(HH.dbl).indexOf('e') >= 0; if (dp) otxt(q, 'CHEAT: DOUBLE SHOT', SW / 2, de ? 452 : 470, 16, '#7aff9a'); if (de) otxt(q, '???: A HIDDEN RULE', SW / 2, 470 + (dp ? 8 : 0), 16, '#ff4a5a'); } };
     /* ---------- input ---------- */
     /* v6566-shonen: ATTACK (a) / SPECIAL (sp) only. SPECIAL fires on release (tap vs hold); with a full bar it fires the SUPER on press. */
     G.press = function (k) {

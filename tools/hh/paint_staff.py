@@ -231,7 +231,12 @@ def glitch_portrait():
 
 if __name__ == '__main__':
     staff_room().convert('RGB').save(ROOT / 'world/int_staff.webp', quality=90, method=6)
-    hall_patch().save(ROOT / 'world/int_hall_sdoor.webp', quality=92, method=6)
+    hp = hall_patch().convert('RGBA'); px = hp.load()
+    for x in range(3384 - 3188, 3394 - 3188):  # the cork-board edge copied with the Training door: the frame's grey runs all the way up
+        ref = px[x, 300 - 96]
+        for y in range(120 - 96, 300 - 96):
+            if px[x, y][0] > px[x, y][2] + 30: px[x, y] = ref
+    hp.save(ROOT / 'world/int_hall_sdoor.webp', quality=92, method=6)
     hh_item().save(ROOT / 'world/hh_boy.webp', quality=95, method=6)
     glitch_portrait().save(ROOT / 'portraits/glitch_neutral.webp', quality=88, method=6)
     print('painted')
