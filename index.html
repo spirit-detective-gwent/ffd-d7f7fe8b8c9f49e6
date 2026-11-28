@@ -54838,7 +54838,7 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
   if (typeof g38tDrop === 'function') {
     var gd0 = g38tDrop;
     g38tDrop = function (f) {
-      if (f && f.nalleyKeep) { ev('world:nalley:nodrop:' + (f.key || f.crew || '')); return; }
+      if (f && f.nalleyKeep) return;
       return gd0.apply(this, arguments);
     };
   }
@@ -55088,6 +55088,7 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
     function afterWalk() {
       if (!W.nalleyCine || W.nalleyCine.st !== 'walk') return;
       W.nalleyCine.st = 'offer';
+      skipBtn(0);
       face(man, r.x, r.y); face(r, (sprOf(man) || man).x, (sprOf(man) || man).y);
       if (W.aoi) face(W.aoi, (sprOf(man) || man).x, (sprOf(man) || man).y);
       ev('world:nalley:offer:' + f);
