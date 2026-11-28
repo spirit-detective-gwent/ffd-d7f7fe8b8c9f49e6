@@ -47218,10 +47218,14 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     P.box(g, 160, 64, 34, 18, '#f4ead2', 2, 2); P.jp(g, '\u55b6\u696d\u4e2d', 177, 73, 9, '#b8332a'); g.strokeStyle = P.INK; g.lineWidth = 3; g.strokeRect(1.5, 1.5, 197, 89); return c; }
   function placeSouth() {
     WAGA_DOOR.out = WAGA_N_OUT.slice(); /* back to the north exit once you are in the street */
-    if (!on() || !inTown() || !roomOpen() || document.getElementById('s2WagaSouth')) return;
+    /* facade is a street fixture once S2 is on (same gate as the north front); entering still uses roomOpen() */
+    if (!on() || !inTown() || document.getElementById('s2WagaSouth')) return;
     WAGA_SC = WAGA_SC || wagaSouthCanvas(); if (!WAGA_SC) return;
-    WAGA_SC.className = 'nqprop'; WAGA_SC.id = 's2WagaSouth'; WAGA_SC.style.cssText = 'position:absolute;left:2980px;top:3200px;width:200px;height:92px;z-index:' + (100 + 3299) + ';pointer-events:none';
-    var host = document.getElementById('wisp') || document.getElementById('world') || document.getElementById('wimap'); if (host) host.appendChild(WAGA_SC); try { W.ints.push({ el: WAGA_SC }); } catch (eI) {}
+    WAGA_SC.className = 'nqprop'; WAGA_SC.id = 's2WagaSouth'; WAGA_SC.style.cssText = 'position:absolute;left:2980px;top:3200px;width:200px;height:92px;z-index:' + (100 + 3200) + ';pointer-events:none';
+    var host = null, sample = document.querySelector('#world .nqprop, #wimap .nqprop, .nqprop');
+    if (sample && sample.parentNode) host = sample.parentNode;
+    else host = document.getElementById('wisp') || document.getElementById('world') || document.getElementById('wimap');
+    if (host) host.appendChild(WAGA_SC); try { if (W && W.ints) W.ints.push({ el: WAGA_SC }); } catch (eI) {}
   }
   S2.placeSouth = placeSouth; S2.WAGA_S = WAGA_S;
   delete INT.c2_town.G;
