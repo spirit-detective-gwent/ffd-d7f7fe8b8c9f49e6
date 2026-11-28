@@ -48699,7 +48699,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   /* south-quay walkway, not the canal (the old 4100,3720 pin sat in the water) */
   var QUAY_AT = [4780, 3880];
   var GARAGE_AT = [4040, 3900];
-  var BOAT_DOOR = { r: [4780, 3480, 4880, 3600], at: BOAT_AT, to: 'boat', out: [BOAT_AT[0], BOAT_AT[1] + 24] };
+  /* v6566-rc: the boardwalk under the façade is not walkable below y 3600, so the rect now reaches the walkable lip (y 3664+) and 'at'/'out' sit on it; before, no player could ever step into the door */
+  var BOAT_DOOR = { r: [4780, 3480, 4880, 3690], at: [4830, 3680], to: 'boat', out: [4830, 3712] };
   var QUAY_SPOT = { r: [4680, 3800, 4920, 3960], at: QUAY_AT };
   var RW = 1280, RH = 900;
   function roomDef(k, n, extra) {
@@ -48954,11 +48955,14 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       try {
         if (on()) {
           if (a === 's2_e_boat') {
+            /* v6566-rc: nothing ever entered the lookout (act0 has no s2_e_boat case) */
+            if (!roomOpen()) return true;
+            c2Enter('boat');
             if (alreadyClear() && qOn() && stg() !== 'skip') {
               /* let them enter, then the empty room plays the skip */
               later(400, function () { if (room() === 'boat' && qOn()) playSkip(); });
             }
-            return act0.apply(this, arguments);
+            return true;
           }
           if (a === 's2_qy') { quayTalk(); return true; }
           if (a === 's2_talk_kaji') { insideTalk(); return true; }
@@ -49138,7 +49142,8 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   var GAR_AT = [4040, 3900];
   var AP_AT = [4220, 3880];
   var DEPOT_AT = [4300, 3720];
-  var GAR_DOOR = { r: [3920, 3840, 4160, 3960], at: GAR_AT, to: 'gar', out: [GAR_AT[0], GAR_AT[1] - 16] };
+  /* v6566-rc: the quay row behind the rail is not walkable (path ends at y 3735), so the walk-in lip reaches the flower strip and 'at'/'out' sit on it */
+  var GAR_DOOR = { r: [3990, 3722, 4090, 3960], at: [4040, 3735], to: 'gar', out: [4040, 3700] };
   var AP_SPOT = { r: [4140, 3800, 4360, 3960], at: AP_AT };
   var RW = 1280, RH = 900;
   function roomDef(k, n, extra) {
@@ -49396,7 +49401,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     c2ActC = function (k, a) {
       try {
         if (on()) {
-          if (a === 's2_e_gar') return act0.apply(this, arguments);
+          if (a === 's2_e_gar') { if (roomOpen()) c2Enter('gar'); return true; } /* v6566-rc: act0 had no s2_e_gar case, so the garage never opened */
           if (a === 's2_ap') { approachTalk(); return true; }
           if (a === 's2_talk_sada') { insideTalk(); return true; }
         }
