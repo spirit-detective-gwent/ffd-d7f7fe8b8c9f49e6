@@ -54793,6 +54793,8 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
   /* ---- 1) start a waiting border if the approach edge was eaten while another clash ran ---- */
   function retrigger() {
     if (!on() || !inTown() || W.g38c || busyHard() || W.dlg || W.cut || W.busy) return;
+    try { var eH2 = E(); if (eH2 && eH2.lockAsk && eH2.lockAsk.fac && !eH2.run_fac) return; } catch (eR2) {}
+    if (W.nalleyCine && W.nalleyCine.st && W.nalleyCine.st !== 'done') return;
     if (typeof g38tRoam === 'function' && !g38tRoam()) return;
     if (typeof tagsLive === 'function' && !tagsLive()) return;
     var r = W.ryo; if (!r || typeof G38T === 'undefined' || !G38T.BORDER) return;
@@ -54811,11 +54813,49 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
     ev('world:nalley:retrigger:' + best);
     try { g38tStart(best, 'nalley'); } catch (eS) { ev('world:nalley:err:start:' + (eS && eS.message)); }
   }
+  function holdClashes() {
+    if (W.nalleyCine && W.nalleyCine.st && W.nalleyCine.st !== 'done') return true;
+    if (W.cut && (W.nalleyCine || (E() && E().lockAsk && !E().run_fac))) return true;
+    try { var e = E(); if (e && e.lockAsk && e.lockAsk.fac && !e.run_fac) return true; } catch (eH) {}
+    return false;
+  }
   if (typeof g38tClashCheck === 'function') {
     var ck0 = g38tClashCheck;
     g38tClashCheck = function () {
+      if (holdClashes()) return;
       var r = ck0.apply(this, arguments);
       try { retrigger(); } catch (eR) {}
+      return r;
+    };
+  }
+  if (typeof g38tStart === 'function') {
+    var gs1 = g38tStart;
+    g38tStart = function (b) {
+      if (holdClashes()) { ev('world:nalley:holdclash:' + b); return false; }
+      return gs1.apply(this, arguments);
+    };
+  }
+  if (typeof g38tDrop === 'function') {
+    var gd0 = g38tDrop;
+    g38tDrop = function (f) {
+      if (f && f.nalleyKeep) { ev('world:nalley:nodrop:' + (f.key || f.crew || '')); return; }
+      return gd0.apply(this, arguments);
+    };
+  }
+  /* arm the handshake the moment the clash is won, so a nearby overlapping border (X1 sits inside X2's 600px radius) cannot start during the 1.8s ask delay */
+  if (typeof c2BackX === 'function') {
+    var bxN = c2BackX;
+    c2BackX = function (win, st) {
+      var r = bxN.apply(this, arguments);
+      try {
+        var c = st && st.ctx || {}, s = S();
+        if (win && st && !st.escaped && c.g38clash && s && s.e && !s.e.run_fac && !s.e.solo) {
+          s.e.lockAsk = { fac: c.g38clash.backed, b: c.g38clash.b };
+          sv();
+          /* do not set W.cut here: c2sLockAsk waits until W.cut is clear (1.8s retry). holdClashes() already blocks other borders via lockAsk. */
+          ev('world:nalley:arm:' + c.g38clash.backed + ':' + c.g38clash.b);
+        }
+      } catch (eB) { ev('world:nalley:err:arm:' + (eB && eB.message)); }
       return r;
     };
   }
@@ -55039,6 +55079,7 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
     W.nalleySkipWalk = 0;
     skipBtn(1);
     lockIn(1);
+    try { if (W.g38c && typeof g38tEnd === 'function' && W.g38c.b !== ((E().lockAsk && E().lockAsk.b) || '')) g38tEnd(W.g38c, 'nalley'); } catch (eE) {}
     ev('world:nalley:cine:start:' + f + ':' + (from || 'ask'));
     var r = W.ryo, man = ensureMan(f);
     if (!r || !man) { askDialog(f); return; }
