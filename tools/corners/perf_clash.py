@@ -13,8 +13,12 @@ RUNS = int(os.environ.get('RUNS', '3'))
 SECS = float(os.environ.get('SECS', '8'))
 OUT = Path('/workspace/nailsalley/shots/perf_clash.json')
 
+PW = float(os.environ.get('PW', '0.8'))  # pre square-off is ~1 s
+CW = float(os.environ.get('CW', '3.0'))  # post cine is ~3.4 s
+
 async def one(index, label):
     g = h.Game(out='/workspace/nailsalley/shots', index=index, throttle=THR)
+    out = {}
     async with g:
         cdp = await g.ctx.new_cdp_session(g.pg)
         await cdp.send('Performance.enable')
@@ -28,32 +32,40 @@ async def one(index, label):
             try: await cdp.send('Emulation.setCPUThrottlingRate', {'rate': THR})
             except Exception: pass
         await g.boot()
-        await T.seed_at_clash(g)
-        await T.start_walkin(g)
-        st = await T.to_fight(g)
+        await T.seed(g); await T.walkin(g)
+        # pre: new = the square-off cine; live = the same street spot right after Flip's line (it cuts to battle)
+        st = await T.until(g, lambda s: s['dlg'] or s['xc'] == 'pre' or s['ig'], 40, 200)
+        if label == 'new':
+            st = await T.through_clash_line(g)  # returns as the square-off starts (~1 s cine)
+        out['pre'] = await P.window(g.pg, cdp, PW); out['pre']['xc'] = st.get('xc')
+        if label != 'new':
+            await T.through_clash_line(g)  # live: tap Flip's line, it cuts to the battle
+        st = await T.to_battle(g)
         await g.wait(400)
-        r = await P.window(g.pg, cdp, SECS)
-        r['label'] = label
-        r['foes'] = (st or {}).get('foes')
-        r['side'] = (st or {}).get('side')
-        r['ig'] = (st or {}).get('ig')
-        return r
+        out['battle'] = await P.window(g.pg, cdp, SECS); out['battle']['foes'] = st.get('foes'); out['battle']['side'] = st.get('side'); out['battle']['ig'] = st.get('ig')
+        await T.win(g)
+        st = await T.to_post(g)  # new: post cine up; live: Flip's line on the street
+        out['post'] = await P.window(g.pg, cdp, CW); out['post']['xc'] = st.get('xc')
+        out['label'] = label
+        return out
 
 async def main():
-    print('clash battle remasure', open('/proc/loadavg').read().strip(), 'thr', THR, 'dpr', DPR, flush=True)
+    print('clash cines + battle', open('/proc/loadavg').read().strip(), 'thr', THR, 'dpr', DPR, flush=True)
     runs = {'old': [], 'new': []}
     for i in range(RUNS):
         for lab, path in (('old', LIVE), ('new', NEW)):
             r = await one(path, lab)
             runs[lab].append(r)
-            print(lab, 'run', i+1, {k: r.get(k) for k in ('fps','low1','cpu_busy_pct','heap_mb','foes','side')}, flush=True)
-    def med(lab, k):
-        xs = [x[k] for x in runs[lab] if k in x and x[k] is not None]
+            print(lab, 'run', i+1, {w: {k: r[w].get(k) for k in ('fps','low1','cpu_busy_pct','heap_mb','xc','foes','ig')} for w in ('pre','battle','post')}, flush=True)
+    def med(lab, w, k):
+        xs = [x[w][k] for x in runs[lab] if x[w].get(k) is not None]
         return round(statistics.median(xs), 1) if xs else None
-    s = dict(fps_old=med('old','fps'), fps_new=med('new','fps'),
-             heat_old=med('old','cpu_busy_pct'), heat_new=med('new','cpu_busy_pct'),
-             heap_old=med('old','heap_mb'), heap_new=med('new','heap_mb'))
-    s['heat_delta'] = round(s['heat_new']-s['heat_old'], 1) if s['heat_new'] is not None and s['heat_old'] is not None else None
+    s = {}
+    for w in ('pre', 'battle', 'post'):
+        d = dict(fps_old=med('old', w, 'fps'), fps_new=med('new', w, 'fps'), low1_old=med('old', w, 'low1'), low1_new=med('new', w, 'low1'),
+                 heat_old=med('old', w, 'cpu_busy_pct'), heat_new=med('new', w, 'cpu_busy_pct'), heap_old=med('old', w, 'heap_mb'), heap_new=med('new', w, 'heap_mb'))
+        d['heat_delta'] = round(d['heat_new'] - d['heat_old'], 1) if None not in (d['heat_new'], d['heat_old']) else None
+        s[w] = d
     print('CLASH SUMMARY', json.dumps(s), flush=True)
     OUT.write_text(json.dumps({'runs': runs, 'summary': s}, indent=1))
     print('wrote', OUT)

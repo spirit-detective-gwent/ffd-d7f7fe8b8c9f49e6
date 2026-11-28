@@ -135,7 +135,7 @@ async def to_battle(g):
 async def win(g):
     return await g.ev("""(function(){
       var L=(window.__ctxs||[])[(window.__ctxs||[]).length-1]||{};
-      var st={ctx:L.ctx, escaped:false, endHp:40};
+      var st={ctx:L.ctx, escaped:false, endHp:40, drop:12};  // a real match always sets drop
       try{ var gm=document.getElementById('game'); if(gm) gm.classList.remove('on'); var rr=document.getElementById('result'); if(rr) rr.classList.remove('on'); }catch(e0){}
       try{ if(root.FFF_UI&&FFF_UI.ST){ FFF_UI.ST.inGame=false; FFF_UI.ST.inWorld=true; } }catch(e1){}
       try{ var wd=document.getElementById('world'); if(wd) wd.classList.add('on'); }catch(e3){}
