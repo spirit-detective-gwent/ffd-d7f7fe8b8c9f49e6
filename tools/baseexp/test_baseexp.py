@@ -172,7 +172,7 @@ async def main():
             await ev(pg, "['sq_riku','sq_yuto'].forEach(function(id){ var s=sqState(id); s.st=2; s.kills=9; s.item=0; }); save(); 1")
             q = await ev(pg, """(function(){ function has(fn,id,key){ var D=INT[id]; return (fn(id,D)||[]).some(t=>t.key===key); }
               return { dish: has(cafTags,'cf_dish','cafe:rations'), kitchen: has(cafTags,'cf_kitchen','cafe:rations'), booth: has(fldTags,'sf_booth','field:spikes'), bay: has(fldTags,'sf_bay','field:spikes'),
-                steps: [SQDEF.sq_riku.steps[1], SQDEF.sq_yuto.steps[1]], spot: [okAt.apply(null, lw(CAFG.dish, SIDEQ_API.SQ_SPOT.rations)), SIDEQ_API.SQ_SPOT.rations, SIDEQ_API.SQ_SPOT.spikes] }; })()""")
+                steps: [SQDEF.sq_riku.steps[1], SQDEF.sq_yuto.steps[1]], spot: [SIDEQ_API.SQ_SPOT.rations, SIDEQ_API.SQ_SPOT.spikes] }; })()""")
             ok('Q1 rations prop: Dish Room (not the Kitchen); spikes: Timing Booth (not the Bay); step text names the room',
                q['dish'] and not q['kitchen'] and q['booth'] and not q['bay'] and 'Dish Room' in q['steps'][0] and 'Timing Booth' in q['steps'][1], q)
             await enter(pg, 'caf'); await go(pg, 'caf', 'dish'); await pump(pg, 400)
