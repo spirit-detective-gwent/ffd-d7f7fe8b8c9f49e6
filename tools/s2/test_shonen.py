@@ -14,6 +14,10 @@ async def main():
         cab = json.loads(cab)
         ok('cabinet named Shonen Showdown', cab['n'] == 'Sh\u014dnen Showdown', cab['n'])
         ok('fighter names', cab['names'] == ['KAZE TENMA','BLUE LOTUS','IRON DAIMYO','RAZOR REI','THE RONIN','BLACK COMET'], cab['names'])
+        sty = json.loads(await g.ev("JSON.stringify(['ryo','aoi','masa'].reduce(function(o,k){var c=FFF_S2ARC.FIGHT_CAST[k];o[k]={style:c.style,hd:c.hd,top:c.top};return o},{}) )"))
+        ok('Kaze Tenma open jacket + tall spikes (not gakuran)', sty['ryo']['style']=='openjack' and sty['ryo']['hd']=='tallspike' and sty['ryo']['top']!='#1c2244', sty['ryo'])
+        ok('Blue Lotus light-blue sailor (not green)', sty['aoi']['style']=='sailor' and sty['aoi']['top']=='#7ec8e8', sty['aoi'])
+        ok('The Ronin kimono + kasa (not vest/hardhat)', sty['masa']['style']=='kimono' and sty['masa']['hd']=='kasa', sty['masa'])
         html = h.INDEX.read_text(encoding='utf8')
         i = html.index('/* S2ARCFIGHT_BEGIN'); j = html.index('/* S2ARCFIGHT_END */')
         import re as _re

@@ -20,15 +20,15 @@
   var PI = Math.PI;
   /* ---------- the cast ---------- */
   var CH = {
-    ryo: { n: 'KAZE TENMA', full: 'Hero of \u201cFox Spirit Kaze\u201d', hp: 100, spd: 92, w: 1, skin: '#e8b890', hair: '#14101a', top: '#1c2244', top2: '#2a3260', shirt: '#a01e24', pants: '#161a30', shoe: '#2a1a12', trim: '#d8b040', style: 'gakuran', hd: 'spiky', aura: '255,120,40',
+    ryo: { n: 'KAZE TENMA', full: 'Hero of \u201cFox Spirit Kaze\u201d', hp: 100, spd: 92, w: 1, skin: '#e8b890', hair: '#14101a', top: '#e8dcc8', top2: '#a01e24', shirt: '#1a1a22', pants: '#2a1820', shoe: '#2a1a12', trim: '#c82028', style: 'openjack', hd: 'tallspike', aura: '255,120,40',
       mv: { p: ['Jab', 4], k: ['Roundhouse', 9], sp: ['Fox Fire', 8, 'proj'], spf: ['Kitsune Rush', 10, 'dash'], spu: ['Rising Fox', 11, 'rise'], su: ['Nine-Tail Barrage', 30, 'rush'] }, stage: 'roof', where: 'School roof \u00b7 after class' },
-    aoi: { n: 'BLUE LOTUS', full: 'Star of \u201cShrine Maiden Blitz\u201d', hp: 95, spd: 100, w: 0.9, skin: '#f0c8a8', hair: '#121018', top: '#24503a', top2: '#2e6a4a', shirt: '#f2f2f2', pants: '#1a2a24', shoe: '#2a1a12', trim: '#f2f2f2', style: 'sailor', hd: 'pony', aura: '120,220,255',
+    aoi: { n: 'BLUE LOTUS', full: 'Star of \u201cShrine Maiden Blitz\u201d', hp: 95, spd: 100, w: 0.9, skin: '#f0c8a8', hair: '#121018', top: '#7ec8e8', top2: '#5ab0d8', shirt: '#f2f2f2', pants: '#1a3a5a', shoe: '#2a1a12', trim: '#f2f2f2', style: 'sailor', hd: 'pony', aura: '120,220,255',
       mv: { p: ['Palm', 4], k: ['High Kick', 9], sp: ['Ofuda Toss', 7, 'proj'], spf: ['Shrine Step', 9, 'slide'], spu: ['Crescent Kick', 10, 'rise'], su: ['Kagura Storm', 28, 'rush'] }, stage: 'shrine', where: 'Fox shrine steps' },
     goda: { n: 'IRON DAIMYO', full: 'Champ of \u201cSumo Shogun 3\u201d', hp: 118, spd: 68, w: 1.35, skin: '#e0b088', hair: '#14101a', top: '#6a3a1e', top2: '#7a4a2a', shirt: '#2a2a30', pants: '#3a2a20', shoe: '#1a1210', trim: '#e8e0d0', style: 'stripe', hd: 'topknot', aura: '255,160,90',
       mv: { p: ['Slap', 6], k: ['Belly Bump', 12], sp: ['Hundred Slaps', 12, 'multi'], spf: ['Boiler Charge', 13, 'dash'], spu: ['Steam Lift', 12, 'rise'], su: ['Steam Press', 34, 'rush'] }, stage: 'boiler', where: 'Boiler room \u00b7 Kitsune-no-Yu' },
     nails: { n: 'RAZOR REI', full: 'Punk of \u201cAlley Kings\u201d', hp: 100, spd: 96, w: 1, skin: '#c89068', hair: '#0e0c10', top: '#d8c8a0', top2: '#e8dab8', shirt: '#d0a030', pants: '#c8b890', shoe: '#5a3a1a', trim: '#e8c040', style: 'suit', hd: 'curly', aura: '255,216,96',
       mv: { p: ['Brass Jab', 4], k: ['Chain Lash', 8], sp: ['Shades Flash', 12, 'counter'], spf: ['Chain Snap', 10, 'chain'], spu: ['Pompadour Rise', 10, 'rise'], su: ['Delinquent\u2019s Honor', 30, 'rush'] }, stage: 'alley', where: 'Kitsune alley \u00b7 Punks\u2019 wall' },
-    masa: { n: 'THE RONIN', full: 'Drifter of \u201cSteel Ronin\u201d', hp: 110, spd: 78, w: 1.18, skin: '#d8a078', hair: '#1a1410', top: '#e8701e', top2: '#f08a3a', shirt: '#2a2a2a', pants: '#3a3a44', shoe: '#2a2018', trim: '#e8f0f0', style: 'hivis', hd: 'hardhat', aura: '255,200,60',
+    masa: { n: 'THE RONIN', full: 'Drifter of \u201cSteel Ronin\u201d', hp: 110, spd: 78, w: 1.18, skin: '#d8a078', hair: '#1a1410', top: '#3a4a62', top2: '#2a3448', shirt: '#8a2a24', pants: '#1e2430', shoe: '#1a1410', trim: '#d4b06a', style: 'kimono', hd: 'kasa', aura: '255,200,60',
       mv: { p: ['Glove Jab', 5], k: ['Wrench Swing', 11], sp: ['Bolt Toss', 8, 'proj'], spf: ['Hardhat Ram', 12, 'dash'], spu: ['Crane Hook', 11, 'rise'], su: ['Shutter Drop', 32, 'drop'] }, stage: 'depot', where: 'Freight depot \u00b7 the shutter' },
     jin: { n: 'BLACK COMET', full: 'Final boss of \u201cNeon Comet\u201d', hp: 96, spd: 108, w: 0.95, skin: '#e8c0a0', hair: '#121418', top: '#7ad82a', top2: '#9aee4a', shirt: '#141414', pants: '#18181c', shoe: '#e8e8e8', trim: '#1a1a1a', style: 'hoodie', hd: 'shaggy', aura: '120,255,80',
       mv: { p: ['Quick Jab', 3], k: ['Spin Kick', 8], sp: ['Bass Drop', 7, 'proj'], spf: ['Combo Breaker', 9, 'dash'], spu: ['1-UP Rise', 10, 'rise'], su: ['High Score', 32, 'rush'] }, stage: 'prize', where: 'Neon Game Center \u00b7 prize room' }
@@ -81,9 +81,9 @@
       ell(g, 0, 0, 30 * w, 6, 'rgba(0,0,0,.35)', 0);
       var hip = -ps.hip, lean = ps.lean, TL = 40, sx = Math.sin(lean) * TL * f, sy = hip - Math.cos(lean) * TL;
       var tw = 13 * w, lw = 11 * Math.sqrt(w), aw = 9 * Math.sqrt(w), LL = 25;
-      var top = hurt ? '#fff' : c.top, pants = hurt ? '#fff' : c.pants;
+      var top = hurt ? '#fff' : c.top, pants = hurt ? '#fff' : c.pants, arm = (c.style === 'openjack' && !hurt) ? c.skin : top;
       /* back arm + back leg */
-      var bh = limb(g, sx - 4 * f, sy + 6, ps.ba[0], ps.ba[1], 19, 19, aw, shade(top), f); fist(g, bh[0], bh[1], 5.5 * Math.sqrt(w), c.skin);
+      var bh = limb(g, sx - 4 * f, sy + 6, ps.ba[0], ps.ba[1], 19, 19, aw, shade(arm), f); fist(g, bh[0], bh[1], 5.5 * Math.sqrt(w), c.skin);
       var bl = limb(g, -4 * f, hip, ps.bl[0], ps.bl[1], LL, LL, lw, shade(pants), f); shoe(g, bl[0], bl[1], f, c.shoe);
       /* torso */
       g.save(); g.translate(0, hip); g.rotate(lean * f);
@@ -96,9 +96,9 @@
       var hx = sx + Math.sin(lean) * 12 * f, hy = sy - Math.cos(lean) * 12;
       head(g, c, hx, hy, f, (ps.hd || 0) + lean * 0.4, F, t);
       /* front arm */
-      var fh = limb(g, sx + 4 * f, sy + 6, ps.fa[0], ps.fa[1], 19, 19, aw, top, f); fist(g, fh[0], fh[1], 6 * Math.sqrt(w), c.skin);
+      var fh = limb(g, sx + 4 * f, sy + 6, ps.fa[0], ps.fa[1], 19, 19, aw, arm, f); fist(g, fh[0], fh[1], 6 * Math.sqrt(w), c.skin);
       if (c.style === 'suit' && F.st === 'atk' && F.mv && (F.mv.k === 'k' || F.mv.k === 'spf')) { g.strokeStyle = '#d8c060'; g.lineWidth = 3; g.beginPath(); g.moveTo(fh[0], fh[1]); for (var i = 1; i <= 6; i++) g.lineTo(fh[0] + f * i * 10, fh[1] + Math.sin(t * 30 + i) * 3); g.stroke(); }
-      if (c.style === 'hivis' && F.st === 'atk' && F.mv && F.mv.k === 'k') { g.save(); g.translate(fh[0], fh[1]); g.rotate(f * 0.6); rr(g, -3, -26, 6, 30, 2, '#8a96a8', 2.5); rr(g, -8, -32, 16, 10, 3, '#8a96a8', 2.5); g.restore(); }
+      if (F.id === 'masa' && F.st === 'atk' && F.mv && F.mv.k === 'k') { g.save(); g.translate(fh[0], fh[1]); g.rotate(f * 0.6); rr(g, -3, -26, 6, 30, 2, '#8a96a8', 2.5); rr(g, -8, -32, 16, 10, 3, '#8a96a8', 2.5); g.restore(); }
       g.restore();
       F.hand = [F.x + fh[0] * sc, F.y + fh[1] * sc]; F.headP = [F.x + hx * sc, F.y + hy * sc];
     }
@@ -106,11 +106,25 @@
     function shoe(g, x, y, f, c) { rr(g, x - 6 + (f > 0 ? 0 : -6), y - 3, 13, 7, 3, c, 2); }
     function outfit(g, c, bw, TL, f, hurt) { if (hurt) return; var s = c.style;
       if (s === 'gakuran') { g.fillStyle = c.shirt; poly(g, [-6, -TL - 3, 6, -TL - 3, 3, -TL + 14, -3, -TL + 14], c.shirt, 0); g.fillStyle = c.trim; for (var i = 0; i < 4; i++) { g.beginPath(); g.arc(f * 2, -TL + 10 + i * 9, 1.8, 0, 7); g.fill(); } rr(g, -bw, -TL - 6, bw * 2, 6, 3, c.top2, 2); }
-      else if (s === 'sailor') { poly(g, [-bw, -TL - 2, bw, -TL - 2, 0, -TL + 16], '#f2f2f2', 2); poly(g, [-5, -TL + 12, 5, -TL + 12, 0, -TL + 22], '#f2f2f2', 1.5); g.fillStyle = '#1a2a24'; g.fillRect(-bw, -6, bw * 2, 10); }
+      else if (s === 'sailor') { poly(g, [-bw, -TL - 2, bw, -TL - 2, 0, -TL + 16], '#f2f2f2', 2); g.strokeStyle = c.top2; g.lineWidth = 2.5; g.beginPath(); g.moveTo(-bw + 3, -TL); g.lineTo(0, -TL + 14); g.lineTo(bw - 3, -TL); g.stroke(); poly(g, [-5, -TL + 12, 5, -TL + 12, 0, -TL + 22], '#f2f2f2', 1.5); g.fillStyle = c.pants; g.fillRect(-bw, -6, bw * 2, 10); }
       else if (s === 'stripe') { g.save(); g.beginPath(); g.rect(-8, -TL - 2, 16, TL + 6); g.clip(); for (var j = 0; j < 9; j++) { g.fillStyle = j % 2 ? '#2a2a30' : '#8a8a90'; g.fillRect(-8, -TL - 2 + j * 5, 16, 5); } g.restore(); g.fillStyle = c.trim; g.fillRect(-bw + 3, -TL, 4, TL + 2); }
       else if (s === 'suit') { poly(g, [-7, -TL - 2, 7, -TL - 2, 0, -TL + 18], c.shirt, 1.5); g.strokeStyle = '#e8c040'; g.lineWidth = 2; g.beginPath(); g.arc(0, -TL + 2, 7, 0.2, PI - 0.2); g.stroke(); }
       else if (s === 'hivis') { g.fillStyle = c.trim; g.fillRect(-bw, -TL + 12, bw * 2, 4); g.fillRect(-bw, -TL + 22, bw * 2, 4); g.fillRect(-6, -TL - 2, 4, TL); g.fillRect(2, -TL - 2, 4, TL); }
-      else if (s === 'hoodie') { poly(g, [-6, -TL - 2, 6, -TL - 2, 0, -TL + 10], c.shirt, 1.5); g.strokeStyle = '#1a1a1a'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, -TL + 10); g.lineTo(0, 2); g.stroke(); rr(g, -bw + 2, -10, bw * 2 - 4, 8, 3, c.top2, 1.5); } }
+      else if (s === 'hoodie') { poly(g, [-6, -TL - 2, 6, -TL - 2, 0, -TL + 10], c.shirt, 1.5); g.strokeStyle = '#1a1a1a'; g.lineWidth = 2; g.beginPath(); g.moveTo(0, -TL + 10); g.lineTo(0, 2); g.stroke(); rr(g, -bw + 2, -10, bw * 2 - 4, 8, 3, c.top2, 1.5); }
+      else if (s === 'openjack') { /* v6566-shonen t600u: sleeveless open jacket, undershirt shows down the middle */
+        g.fillStyle = c.shirt; g.fillRect(-5, -TL - 2, 10, TL + 8);
+        poly(g, [-bw, -TL - 4, -5, -TL - 2, -4, 6, -bw, 6], c.top, 2.5);
+        poly(g, [bw, -TL - 4, 5, -TL - 2, 4, 6, bw, 6], c.top, 2.5);
+        poly(g, [-bw + 2, -TL - 2, -6, -TL, -5, 4, -bw + 2, 4], c.top2, 0);
+        poly(g, [bw - 2, -TL - 2, 6, -TL, 5, 4, bw - 2, 4], c.top2, 0);
+        g.strokeStyle = c.trim; g.lineWidth = 2; g.beginPath(); g.moveTo(-5, -TL - 2); g.lineTo(-4, 6); g.moveTo(5, -TL - 2); g.lineTo(4, 6); g.stroke(); }
+      else if (s === 'kimono') { /* v6566-shonen t597u: wrapped kimono, obi, hakama pleats at the hip */
+        poly(g, [f * -bw, -TL - 3, f * 3, -TL - 3, f * 7, 6, f * -bw, 6], c.top2, 2);
+        g.strokeStyle = c.shirt; g.lineWidth = 2.5; g.beginPath(); g.moveTo(f * 2, -TL - 2); g.lineTo(-f * 4, 6); g.stroke();
+        rr(g, -bw - 1, -9, bw * 2 + 2, 11, 2, c.shirt, 2.5);
+        rr(g, -5, -10, 10, 5, 2, '#5a1814', 0);
+        g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 1.4;
+        for (var h = -3; h <= 3; h++) { g.beginPath(); g.moveTo(h * (bw / 3), 2); g.lineTo(h * (bw / 3), 8); g.stroke(); } } }
     function head(g, c, x, y, f, tilt, F, t) { g.save(); g.translate(x, y); g.rotate(tilt * f); var r = 12.5 * (c.w > 1.2 ? 1.1 : 1);
       if (c.hd === 'pony') { g.strokeStyle = INK; g.lineWidth = 9; g.lineCap = 'round'; g.beginPath(); g.moveTo(-f * 6, -8); g.quadraticCurveTo(-f * 20, -4 + Math.sin(t * 6) * 2, -f * 18, 18); g.stroke(); g.strokeStyle = c.hair; g.lineWidth = 6; g.stroke(); }
       ell(g, 0, 0, r, r * 1.08, F.flash > 0 ? '#fff' : c.skin, 2.5);
@@ -120,6 +134,17 @@
       else if (c.hd === 'topknot') { g.beginPath(); g.arc(0, -2, r + 1, PI, 0); g.closePath(); g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke(); ell(g, -f * 2, -r - 4, 5, 4, c.hair, 2); }
       else if (c.hd === 'curly') { for (var i = 0; i < 7; i++) ell(g, -9 + i * 3, -8 - (i % 2) * 3, 5, 5, c.hair, 0); rr(g, f > 0 ? -2 : -12, -4, 14, 5, 2, '#0a0a0a', 1.5); }
       else if (c.hd === 'hardhat') { g.beginPath(); g.arc(0, -3, r + 2, PI, 0); g.closePath(); g.fillStyle = '#f2c020'; g.fill(); g.lineWidth = 2.5; g.strokeStyle = INK; g.stroke(); rr(g, -r - 5, -5, (r + 5) * 2, 4, 2, '#f2c020', 2); }
+      else if (c.hd === 'tallspike') { /* v6566-shonen t600u: taller spikes + red headband */
+        poly(g, [-13, 0, -16, -16, -9, -12, -12, -28, -4, -16, 0, -32, 5, -18, 11, -30, 10, -12, 16, -18, 13, 0, f * 6, -6, -f * 4, -4], c.hair, 2);
+        rr(g, -r - 2, -3, (r + 2) * 2, 5, 2, '#c82028', 2);
+        g.fillStyle = '#c82028'; g.fillRect(f * (r - 1), -2, 5, 2); g.fillRect(f * (r + 2), 0, 7, 2); }
+      else if (c.hd === 'kasa') { /* v6566-shonen t597u: short hair under a straw kasa */
+        g.beginPath(); g.arc(0, -1, r + 1, PI, 0); g.closePath(); g.fill(); g.lineWidth = 2; g.strokeStyle = INK; g.stroke();
+        var straw = '#d4b06a', rib = '#a07838';
+        poly(g, [0, -r - 15, -r - 16, -1, r + 16, -1], straw, 2.5);
+        g.strokeStyle = rib; g.lineWidth = 1.3;
+        for (var kasaI = -2; kasaI <= 2; kasaI++) { g.beginPath(); g.moveTo(0, -r - 14); g.lineTo(kasaI * 7, -1); g.stroke(); }
+        ell(g, 0, -1, r + 16, 3.2, '#c4a060', 2); }
       else if (c.hd === 'shaggy') { poly(g, [-13, 2, -13, -8, -6, -15, 4, -15, 12, -9, 13, 2, f * 8, -5, f * 2, -2, -f * 6, -4], c.hair, 2); g.fillStyle = '#7ad82a'; poly(g, [f * 8, -5, f * 13, 2, f * 10, -9], '#7ad82a', 0); g.strokeStyle = '#2a2a2a'; g.lineWidth = 3; g.beginPath(); g.arc(0, 0, r + 2, PI * 0.95, PI * 0.05, false); g.stroke(); ell(g, -f * 10, 4, 4, 5, '#2a2a2a', 1.5); }
       /* eyes */
       if (c.hd !== 'curly') { g.fillStyle = INK; var ex = f * 5; g.fillRect(ex - 1, -2, 3, F.st === 'hit' || F.st === 'down' ? 1 : 3); g.fillRect(ex - 6 * f - 1, -2, 2, F.st === 'hit' ? 1 : 3); }
