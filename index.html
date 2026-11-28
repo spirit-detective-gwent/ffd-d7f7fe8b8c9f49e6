@@ -51176,6 +51176,15 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
         return r;
       };
     }
+    if (typeof tagTap === 'function' && !G.ttWrap) {
+      G.ttWrap = 1;
+      var tt0 = tagTap;
+      /* a pot tag is drawn over the pot's top; tapping it from anywhere in view walks to the stand and acts (never 'Move closer') */
+      tagTap = function (t) {
+        if (t && t.pot && typeof t.fn === 'function' && !W.busy && !W.dlg && !W.cut && !W.scr) { ev('world:tag:pot:' + t.key); t.fn(); return true; }
+        return tt0.apply(this, arguments);
+      };
+    }
     if (typeof intSpotAt === 'function' && !G.spotWrap) {
       G.spotWrap = 1;
       var spot0 = intSpotAt;

@@ -10,7 +10,7 @@ PROBE = """(function(){ function r(e){ if(!e) return null; var b=e.getBoundingCl
  var su=W.c2n&&W.c2n.sumire, d=document.getElementById('wdlg'), bt=document.getElementById('hsbot'), pr=document.getElementById('hspour'), bb=document.getElementById('wbub');
  var c=document.getElementById('hscmp'), cd=document.querySelector('.hscard');
  return {su: su&&su.el?r(su.el):null, sux: su?[Math.round(su.x),Math.round(su.y)]:null, bot: r(bt), botz: bt&&bt.style.zIndex, pour: r(pr), bub: bb&&bb.offsetParent?r(bb):null, bubTxt: bb?(bb.innerText||'').slice(0,20):null,
-  dlg: d&&d.className?r(d):null, dlgc: d?d.className:null, cmp: c?r(c):null, card: cd?r(cd):null, ryo: W.ryo?r(W.ryo.el):null, cine: document.body.classList.contains('hscine'), dlgflag: !!W.dlg}; })()"""
+  dlg: d&&d.className?r(d):null, dlgc: d?d.className:null, cmp: c?r(c):null, card: cd?r(cd):null, ryo: W.ryo?r(W.ryo.el):null, cine: document.body.classList.contains('hscine'), dlgflag: !!W.dlg, sc: getComputedStyle(document.getElementById('wv')).scale, scst: [FFF_SCAM.st.on,FFF_SCAM.st.heavy,FFF_SCAM.st.soft,FFF_SCAM.st.keep]}; })()"""
 async def main():
     os.makedirs(OUT, exist_ok=True)
     async with h.Game(path='compassionate', out=OUT) as g:
