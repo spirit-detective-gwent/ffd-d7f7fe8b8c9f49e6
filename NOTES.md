@@ -4,6 +4,30 @@ SUP_PAIRS). Worktree /workspace/baseexp/wt. Not pushed. No version bump. Merge i
 All code changes are made by tools/baseexp/patch_code.py from /workspace/baseexp/work/index_base.html (pre-patch index.html,
 = ba39461) — rerun it after editing; it also re-embeds the 4 baked wall-kit backgrounds that gained doors.
 
+
+## Follow-ups (Erik t583u / t587u / t588u) — supersede the guard/roamer lines below
+- Room rules: crate rooms (Cooler / Dock / Bakery) hold ONLY the quest guard, never roamers (foes: [], R.after gate
+  removed). Interpretation: "lunch box rooms" = the three crate rooms. Dish Room: none. Lunch Line / Kitchen keep theirs.
+- Guard patrol (all three cafe guards): CAF_GRD[k].pts = a 4-corner loop round the room (picture px, all walkable:
+  cooler round the north shelf, dock + bakery round the middle). GRD_T: sp 58 px/s, corner pause 1.3 s with a +-0.5 rad
+  look, 0.55 s turn to the next leg. grdStep runs only inside dgFrame (Cafeteria rooms only) - no new always-on loop.
+  The cone (.wgcone) is translated + rotated to his spot/facing each frame, one transform write only when it changes.
+  Doorway landings are safe to peek from (grdPeek, 80 px) so entering a room never insta-spots you.
+- Spotted (any alert/chase): grdCall -> BACKUP! bark (.wgbark one-shot) + toast + door sound, 4 backups (CAF_FOES)
+  spawn at the room's door landings already alerted (f.team). Touching any team member = ONE fight of 5 (the normal
+  group fight, guard first; dgks = all 5). Unseen touch from behind = noticedPack finds nobody else = solo fight.
+  Win: all 5 keys down, guard resolved. Flee/lose: cafBack -> grdDismiss (backups leave), guard stunned -> scan -> 'ret'
+  to the nearest loop corner -> rounds resume. A lost chase also dismisses the backups when he returns.
+- Side quests moved into new rooms: sq_riku rations prop -> Dish Room (SQ_SPOT.rations [640,380]); sq_yuto spikes ->
+  Timing Booth ([560,430]); step texts name the rooms.
+- Hurdle rooms get library-style roamers (t587u/t588u): Cage 3, Showers 3, Trainer 2 (FLDG foes, FLD_FOES). Beaten =
+  S.f[key] (persisted, main quest; refill rules as every base). Keys are per room, so a kicked hurdle back in the Cage
+  never respawns anything. No special mechanics before pickup.
+- Hurdle carry facing away (t588u): .wcarry.fh in dir 3 is wider than Ryo with the middle masked out, so his full back
+  shows and only the hurdle's two ends stick out. Down / left / right unchanged (checked).
+- Tests: test_baseexp sections G (patrol/cone/peek/cover/solo/5/flee/carry), R (room rules), H (hurdle roamers,
+  reload), Q (side-quest props). Shots: shoot_patrol.py, shoot_carry.py.
+
 ## Cafeteria — "Lunch Duty" (modified: no Alley Cat in Ch1)
 - New rooms: Walk-in Cooler (cf_cooler), Loading Dock (cf_dock), Dish Room (cf_dish), Bakery (cf_bakery).
   Doors: kitchen.gW<->cooler.gE, kitchen.gN (custom x 700-830, the fridge blocks the usual spot)<->dish.gS,

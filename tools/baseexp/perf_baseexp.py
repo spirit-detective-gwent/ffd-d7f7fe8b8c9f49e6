@@ -8,7 +8,7 @@ exec(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../lockeramb
 LIVE, BR, OUT = Path(A[0]), Path(A[1]), A[2]; REPS = int(A[3]) if len(A) > 3 else 2
 SAMPLER = """()=>{window.__ft=[];var l=performance.now();window.__run=true;(function f(t){if(!window.__run)return;window.__ft.push(t-l);l=t;requestAnimationFrame(f)})(l);}"""
 NEXT = """()=>{var b=[...document.querySelectorAll('button')].filter(e=>/^(Next|Skip|Got it|Close|OK)/.test((e.textContent||'').trim())&&e.offsetParent!==null);if(b.length)b[0].click()}"""
-STUB = "(function(){ fight=function(){ ev('test:fight'); }; return 1; })()"
+STUB = "(function(){ if(!window.__fo) window.__fo=fight; fight=function(){ ev('test:fight'); }; return 1; })()"
 FREE = "W.dgFight=null; W.dlg=false; W.busy=false; W.cool=0; W.libPend=null; W.pan=null; W.fading=false"
 FLDOK = "var S=fldS(); S.e.entry=1; S.f.fbay0=1; S.f.fbay1=1; S.e.surprise=1; S.e.bay=1; S.e.track=1; S.e.lockers=1; S.e.coach=1; S.e.cage=1; S.e.showers=1; S.e.trainer=1; S.e.booth=1"
 CAFOK = "var C=cafS(); ['line','kitchen','staff','cooler','dock','dish','bakery'].forEach(function(k){C.e[k]=1;})"
@@ -32,6 +32,13 @@ if os.environ.get('SET') == '2':  # GGD-89 follow-up: guard rooms, Timing Booth 
     ]
 if os.environ.get('SET') == '3':  # slowed lap only, 3 s window so the whole sample is inside the slowed lap
     SCENES = [('track_slowed', "fldGo('track')", "fldS().e.slowArm=1; fldGo('track')")]
+if os.environ.get('SET') == '4':  # t583u: guard room while he patrols (you peek from the doorway), long walk, a real 5-enemy group fight
+    F5 = "__fo(['bully3','bully4','bully3','bully4','bully3'], false, { dg: 'cafe', dgk: 'gperf', dgks: ['gperf'], dgm: W.inside.id })"
+    SCENES = [
+      ('guard_patrol', "cafGo('kitchen'); setTimeout(function(){ W.ryo.x=972; W.ryo.y=450; place(W.ryo,0); },300)", "cafGo('cooler'); setTimeout(function(){ W.ryo.x=972; W.ryo.y=450; place(W.ryo,0); },300)"),
+      ('long_walk', "cafGo('line'); " + walk(980, 470, 160, 470), "cafGo('dock'); " + walk(980, 700, 160, 700)),
+      ('fight5', "cafGo('kitchen'); setTimeout(function(){ " + F5 + " },300)", "cafGo('cooler'); setTimeout(function(){ " + F5 + " },300)"),
+    ]
 def fps(ft):
     ft = ft[2:]; return round(1000 * len(ft) / sum(ft), 1) if ft else 0
 def p5(ft):
@@ -57,7 +64,7 @@ async def one(p, tree, port, thr, tag):
             await pg.evaluate(NEXT); await pg.wait_for_timeout(1000); el += 1000
         ft = await pg.evaluate("()=>{window.__run=false;return window.__ft}")
         m1 = {x['name']: x['value'] for x in (await cdp.send('Performance.getMetrics'))['metrics']}; wall = time.time() - t0
-        info = await ev(pg, "[(W.inside||{}).id, (W.dgF||[]).length, W.fldLap&&W.fldLap.slowTo!=null]")
+        info = await ev(pg, "[(W.inside||{}).id, (W.dgF||[]).length, W.fldLap&&W.fldLap.slowTo!=null, (function(){ var f=(W.dgF||[]).find(q=>q.grd); return f?[f.st, Math.round(f.s.x), Math.round(f.s.y)]:null; })(), (function(){ try{ return ST.b&&ST.b.grp? (ST.b.grp.length!=null?ST.b.grp.length:Object.keys(ST.b.grp).length) : null; }catch(e){ return 'x'; } })()]")
         res[name] = {'fps': fps(ft), 'p95fps': p5(ft), 'heat': round(100 * (m1['TaskDuration'] - m0['TaskDuration']) / wall, 1), 'heap_mb': round(m1['JSHeapUsedSize'] / 1e6, 1), 'at': info}
     res['errs'] = errs; await b.close(); h.shutdown(); return res
 async def main():
