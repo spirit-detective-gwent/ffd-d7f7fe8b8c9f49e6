@@ -72,3 +72,34 @@ Perf 4× dpr3 (3 interleaved runs): see shots/perf_clash.json
   heap 57.8 / 58.5. Both sides sit under the 55+ battle gate at 4× dpr3.
 
 Alley spawn/handshake work (t610u/t611u) unchanged on this branch.
+
+## t626u / t627u Flip clash: world cines replace the #nqxside canvases
+
+Erik: helpers should visibly run at their Hustlers while Ryo steps to his;
+after the win the camera is back on the street, the helpers finish theirs,
+everyone regroups, then Flip's line.
+
+- `#nqxside` canvases + their 80ms timeout removed (brawlOn/hookAllyMatch gone).
+- Walk-in bytes unchanged. After VO.clash: `preCine` (punks run 290px/s with
+  lean, guard poses; Ryo c2Walk + rdy sheet; Aoi steps up) -> `preDone` ->
+  fight Ryo vs one Hustler (dgks all three, as before).
+- Win: the stock Aoi post-fight quip plays first (it bumps scGen and would
+  kill a pan), then `postCine`: camPan 'nqxcam', two timed exchanges
+  (jab / swing / finisher, flash + squash poses), KO -> lieEl down, regroup
+  walk, then `wonTalk` = original Flip chain.
+- Skip button `#nqxskip` (single use, stops propagation). No input lock
+  survives: xcAbort clears timers/poses/pan/skip/rdy and lockIn(false).
+- Reload: c2Pop -> beatReset -> xcAbort. A reload after the win resumes
+  clashWon from flags (crew spawns by Ryo), never a re-fight.
+- Retreat/defeat: beatReset(true); Ryo is put back just outside the 190px
+  trigger (y <= 2335) so a retreat does not loop straight into the walk-in.
+- Only token-guarded timeouts + existing move/c2Walk/rdy rAF, during the cines.
+
+Tests: tools/corners/t13_clash.py 79/79 (main, skip, reload, retreat, defeat;
+menu home+journal, HUD map, swap, movement after each). ch_smoke PASS,
+verify_wired PASS. Harness note: fake back() result now sets drop (it
+made yen NaN on screen; game code fine).
+Video: shots/flipfight_cine.mp4 (tools/corners/rec_clash.py).
+Perf 4x dpr3 vs live e4139c5 (perf_clash.py, 3 interleaved, run 3 load-hit
+both sides): pre 57.5 vs 58.8 fps, heat 81.3 vs 91.3; battle 50.7 vs 48.3,
+heat 90.1 vs 87.5 (+2.6); post 59.0 vs 53.4, heat 81.4 vs 88.0.
