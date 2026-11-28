@@ -50,7 +50,8 @@ SNAP = r"""
     side: !!document.getElementById('nqxside'),
     foes: b&&b.grp ? b.grp.length : 0,
     flip: list('n13flip').length, punks: list('c2_punk').length, hus: list('c2_hustler').length,
-    guard: document.querySelectorAll('.nq.nqguard').length, rdy: !!(r&&r.rdy),
+    guard: document.querySelectorAll('.nq.nqguard').length, flash: !!document.getElementById('nqxflash'), lie: document.querySelectorAll('.wlie').length,
+    sqbad: [].slice.call(document.querySelectorAll('.nq')).filter(function(e){ var c=getComputedStyle(e); return c.scale!=='none'||c.translate!=='none'; }).length, rdy: !!(r&&r.rdy),
     west: (function(){ try{ return FFF_NQ.stg('west'); }catch(e){ return null; } })(),
     q: c2S().q&&c2S().q.cq2_nq_west, nfights:(window.__ctxs||[]).length,
     flags: {x0:!!c2S().f.nq_x_0, x1:!!c2S().f.nq_x_1, x2:!!c2S().f.nq_x_2},
@@ -71,6 +72,14 @@ PAIRS = r"""
 """
 
 BTN = """(re)=>{var b=[...document.querySelectorAll('button')].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden'&&new RegExp(re,'i').test((e.textContent||'').trim()));if(!b.length)return null;var r=b[0].getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,t=document.elementFromPoint(x,y);if(t!==b[0]&&!b[0].contains(t))return null;return [x,y]}"""
+
+
+JMON = r"""(function(){ if(window.__jm) return 1; var M=window.__jm={max:0,who:'',n:0,last:new WeakMap(),cam:[0,0],camMax:0,t:0};
+  function tick(){ if(!window.__jm||window.__jm.off) return; var now=performance.now(), els=[].slice.call(document.querySelectorAll('.nq,.wsp'));
+    els.forEach(function(e){ if(!e.isConnected||e.classList.contains('wlie')) return; var r=e.getBoundingClientRect(); if(!r.width) return; var c=[r.left+r.width/2,r.bottom], l=M.last.get(e);
+      if(l&&now-l.t<200){ var d=Math.hypot(c[0]-l.c[0],c[1]-l.c[1]); if(d>M.max){M.max=d;M.who=(e.dataset.npc||e.className)+'@'+Math.round(now-M.t0);} } M.last.set(e,{c:c,t:now}); }); }
+  M.t0=performance.now(); M.iv=setInterval(tick,40); return 1; })()"""
+JMOFF = "(function(){ var M=window.__jm; if(!M) return null; clearInterval(M.iv); M.off=1; var o={max:Math.round(M.max),who:M.who}; window.__jm=null; return o; })()"
 
 async def tap_btn(g, re_):
     c = await g.pg.evaluate(BTN, re_)
@@ -117,16 +126,17 @@ async def through_clash_line(g):
         await g.wait(450)
     return await g.ev(SNAP)
 
-async def to_post(g):
+async def to_line(g, txt, tries=60):
+    """tap through dialogs until one containing txt is showing"""
     st = None
-    for _ in range(40):
+    for _ in range(tries):
         st = await g.ev(SNAP)
-        if st['xc'] == 'post' or (st['xc'] == '' and 'West street' in st['dlgTxt']):
+        if st['dlg'] and txt in st['dlgTxt']:
             return st
         if st['dlg']:
             if not await tap_btn(g, '^(Next|OK)'):
                 await g.pg.touchscreen.tap(195, 760)
-        await g.wait(300)
+        await g.wait(250)
     return st
 
 async def to_battle(g):
@@ -220,6 +230,7 @@ def near(a, b, d):
 
 async def t_main(g, shots=False, frames=None):
     s = await seed(g); ok('seed', s['west'] == 'clash', s)
+    await g.ev(JMON)
     w = await walkin(g); ok('walk-in unchanged: Flip + two Punks walk up, three Hustlers wait', w['flip'] == 1 and w['punks'] == 2 and w['hus'] == 3, w)
     st = await through_clash_line(g)
     ok('pre-fight cine starts after Flip\u2019s line', st['xc'] == 'pre' and st['cut'] and st['skip'], st)
@@ -231,6 +242,7 @@ async def t_main(g, shots=False, frames=None):
     if shots:
         await g.shot('t13_squareoff', hush=False)
     ok('three pairs square off (guard stances)', sq['guard'] >= 4 or sq['ig'], {'guard': sq['guard'], 'pairs': pr})
+    ok('guard stance does not use CSS scale/translate properties (they fling sprites across the map)', sq['sqbad'] == 0, sq)
     hus = sorted([p for p in pr['hus'] if p], key=lambda p: p[0]); pks = sorted([p for p in pr['punks'] if p], key=lambda p: p[0])
     if not sq['ig'] and len(hus) == 3 and len(pks) == 2:
         ok('helper 1 faces the west Hustler', near(pks[0], (hus[0][0], hus[0][1]-42), 30), {'p': pks[0], 'h': hus[0]})
@@ -242,20 +254,28 @@ async def t_main(g, shots=False, frames=None):
     ok('pre cine released input before the fight', not b['cut'] and not b['skip'] and not b['rdy'], b)
     nf = b['nfights']
     ok('win back()', (await win(g)) == 'ok')
-    p = await to_post(g)
-    ok('post-win cine starts', p['xc'] == 'post' and p['cut'] and p['skip'], p)
-    ok('camera pulls back to the street', p['pan'], p)
+    fl = await g.ev(SNAP)
+    ok('win: white flash overlay up (one-shot, ignores taps)', fl['flash'], fl)
+    pe = await g.ev("(function(){var e=document.getElementById('nqxflash'); return e?getComputedStyle(e).pointerEvents:null})()")
+    ok('flash never catches a tap', pe == 'none', pe)
+    ok('win: all three Hustlers already lying down, no helper exchange', fl['hus'] == 0 and fl['lie'] >= 3 and fl['xc'] == '' and fl['punks'] == 2, fl)
     if shots:
-        await g.wait(900); await g.shot('t13_finish', hush=False)
-    k = await until(g, lambda s: s['hus'] == 0 or s['xc'] != 'post', 40, 150)
-    kos = [e for e in k['evs'] if 'nq:xc:ko' in e]
-    ok('both helpers KO their Hustlers (down)', k['hus'] == 0 and len(kos) >= 2, k)
-    rg = await until(g, lambda s: s['xc'] == '' and s['dlg'] and 'West street' in s['dlgTxt'], 50, 150)
+        await g.shot('t13_down', hush=False)
+    await g.wait(700)
+    gone = await g.ev(SNAP)
+    ok('flash fades out by itself (no overlay left)', not gone['flash'], gone)
+    # Aoi's stock quip, then the Punks line, then Flip's
+    pl = await to_line(g, 'My two Punks')
+    ok('Punks-beat-their-guys line plays after the win', pl['dlg'] and 'My two Punks' in pl['dlgTxt'] and pl['lie'] >= 3, pl)
     pr2 = await g.ev(PAIRS)
     if shots:
         await g.shot('t13_regroup', hush=False)
-    ok('Flip\u2019s line plays after the cine, input free of the cut', rg['dlg'] and not rg['cut'] and not rg['pan'] and 'West street' in rg['dlgTxt'], rg)
-    ok('regroup: both helpers back by Ryo', len([q for q in pr2['punks'] if q]) == 2 and all(near(q, pr2['ryo'], 110) for q in pr2['punks'] if q), pr2)
+    ok('Punks stay where they fought, in front of their guys (no teleport)', len(pr2['punks']) == 2 and abs(pr2['punks'][0][0]-pr['punks'][0][0]) < 2 and abs(pr2['punks'][1][1]-pr['punks'][1][1]) < 2, {'before': pr['punks'], 'after': pr2['punks']})
+    rg = await to_line(g, 'West street')
+    jm = await g.ev(JMOFF)
+    ok('no teleport: no sprite moved >70 screen px between 40 ms samples, walk-in through the return to the street', jm and jm['max'] < 70, jm)
+    ok('Flip\u2019s original line plays next', rg['dlg'] and 'West street' in rg['dlgTxt'], rg)
+    ok('Ryo did not move', rg['xy'] == b['xy'], {'rg': rg['xy'], 'b': b['xy']})
     ok('all three Hustlers marked down', all(rg['flags'].values()), rg['flags'])
     fin = await finish_chain(g)
     ok('west street closes, no re-fight', fin['q'] == 9 and fin['nfights'] == nf, fin)
@@ -272,12 +292,8 @@ async def t_skip(g):
     ok('skip pre: straight into Ryo vs one', b['ig'] and b['foes'] == 1 and not b['skip'], b)
     nf = b['nfights']
     await win(g)
-    p = await to_post(g)
-    await g.wait(250)
-    ok('skip: Skip pressed (post)', await tap_btn(g, '^Skip$'))
-    await tap_btn(g, '^Skip$')
-    q = await until(g, lambda s: s['xc'] == '' and s['dlg'] and 'West street' in s['dlgTxt'], 30, 150)
-    ok('skip post: Hustlers down, Flip\u2019s line, no lock', q['hus'] == 0 and 'West street' in q['dlgTxt'] and not q['cut'] and not q['pan'], q)
+    q = await to_line(g, 'West street')
+    ok('skip pre -> win: Hustlers down, the Punks line then Flip\u2019s line, no lock', q['hus'] == 0 and q['lie'] >= 3 and 'West street' in q['dlgTxt'] and not q['cut'] and not q['pan'] and not q['skip'], q)
     fin = await finish_chain(g)
     ok('skip: chain completes, one fight only', fin['q'] == 9 and fin['nfights'] == nf, fin)
     await inputs_ok(g, 'after skip')
@@ -298,11 +314,10 @@ async def t_reload(g):
     await through_clash_line(g)
     b = await to_battle(g); nf = b['nfights']
     await win(g)
-    p = await to_post(g)
-    await g.wait(700)
+    p = await to_line(g, 'My two Punks')
     await g.ev("try{ c2Pop(); }catch(e){} 1"); await g.wait(400)
-    r2 = await until(g, lambda s: s['dlg'] and 'West street' in s['dlgTxt'], 30, 200)
-    ok('reload mid-post: no re-fight; crew regrouped and Flip\u2019s line plays', r2['dlg'] and r2['nfights'] == nf and r2['hus'] == 0 and r2['flip'] >= 1 and not r2['cut'], r2)
+    r2 = await to_line(g, 'West street')
+    ok('reload mid-post (during the Punks line): no re-fight; crew back by Ryo and Flip\u2019s line plays', r2['dlg'] and r2['nfights'] == nf and r2['hus'] == 0 and r2['flip'] >= 1 and not r2['cut'], r2)
     fin = await finish_chain(g)
     ok('reload mid-post: chain completes', fin['q'] == 9 and fin['nfights'] == nf, fin)
     await inputs_ok(g, 'after reload')
