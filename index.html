@@ -47600,11 +47600,11 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   /* ride c2Frame, no new loop */
   if (typeof c2Frame === 'function') {
     var fr0 = c2Frame;
-    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { placeDoor(); flowTick(); } } catch (e) { if (!S2.ferr) { S2.ferr = 1; ev('world:s2:err:frame:' + (e && e.message)); } } };
+    c2Frame = function (dt) { fr0.apply(this, arguments); try { if (on()) { placeDoor(); placeSouth(); flowTick(); } } catch (e) { if (!S2.ferr) { S2.ferr = 1; ev('world:s2:err:frame:' + (e && e.message)); } } };
   }
   if (typeof c2Pop === 'function') {
     var pop0 = c2Pop;
-    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); crewSync(); flipPop(); suppressX3Loop(); placeDoor(); chiyoPop(); if (room() === 'waga') paintRoom(); } } catch (eP) {} };
+    c2Pop = function () { pop0.apply(this, arguments); try { if (on()) { chainRepair(); crewSync(); flipPop(); suppressX3Loop(); placeDoor(); placeSouth(); chiyoPop(); if (room() === 'waga') paintRoom(); } } catch (eP) {} };
   }
   try { chainRepair(); } catch (eC) {}
   ev('world:s2:ready');
@@ -47872,10 +47872,10 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     var surf0 = c2Surf;
     c2Surf = function (x, y) { var k = c2Room(); if (k === 'mina') return 'stone'; if (k === 'mshop') return 'concrete'; return surf0.apply(this, arguments); };
   }
-  INT.c2_town.spots.push({ id: 's2_e_mshop', r: SHOP_DOOR.r, at: SHOP_DOOR.at, face: 0, lab: 'Enter' });
-  INT.c2_town.spots.push({ id: 's2_e_mina', r: LOB_DOOR.r, at: LOB_DOOR.at, face: 0, lab: 'Enter' });
+  INT.c2_town.spots.push({ id: 's2_e_mshop', r: SHOP_DOOR.r, at: SHOP_DOOR.at, face: 3, lab: 'Shop' }); /* v6.5.66: doors are on the building wall now, so word tags (Ch2 silences 'Enter') instead of walk-ins */
+  INT.c2_town.spots.push({ id: 's2_e_mina', r: LOB_DOOR.r, at: LOB_DOOR.at, face: 3, lab: 'Lobby' });
   INT.c2_town.spots.push({ id: 's2_p2_flip', r: [2320, 3110, 2400, 3210], at: [2360, 3190], face: 1, lab: 'Talk' });
-  if (typeof TRANS !== 'undefined') { TRANS.s2_e_mshop = 1; TRANS.s2_e_mina = 1; TRANS.s2_to_lobby = 1; TRANS.s2_to_shop = 1; }
+  if (typeof TRANS !== 'undefined') { TRANS.s2_to_lobby = 1; TRANS.s2_to_shop = 1; }
   delete INT.c2_town.G;
   function roomOpen() { return on() && punkAfterSeal(); }
   P2.roomOpen = roomOpen; P2.SHOP_DOOR = SHOP_DOOR; P2.LOB_DOOR = LOB_DOOR;
@@ -48168,7 +48168,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       try {
         if (out && on()) out = out.filter(function (t) {
           if (!t || !t.key) return true;
-          if (t.key.indexOf(':s2_e_mshop') >= 0 || t.key.indexOf(':s2_e_mina') >= 0) return punkAfterSeal();
+          if (t.key.indexOf(':s2_e_mshop') >= 0 || t.key.indexOf(':s2_e_mina') >= 0) { t.obj = null; t.y = 3262; return punkAfterSeal(); }
           if (t.key.indexOf(':s2_p2_flip') >= 0) return wagaDone() && qOn() && (stg() === '' || stg() === 'open');
           if (t.key.indexOf(':s2_hase_shop') >= 0) return room() === 'mshop';
           if (t.key.indexOf(':s2_stair') >= 0 || t.key.indexOf(':s2_talk_') >= 0 || t.key.indexOf(':s2_to_') >= 0) return room() === 'mina' || room() === 'mshop';
@@ -48183,7 +48183,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     c2ActC = function (k, a) {
       try {
         if (on()) {
-          if (a === 's2_e_mshop' || a === 's2_e_mina') return act0.apply(this, arguments);
+          if (a === 's2_e_mshop' || a === 's2_e_mina') { if (roomOpen()) c2Enter(a === 's2_e_mshop' ? 'mshop' : 'mina'); return true; }
           if (a === 's2_p2_flip') { flipTalk(); return true; }
           if (a === 's2_to_lobby') { if (typeof c2Go === 'function') c2Go('mina', [200, 400, 1]); return true; }
           if (a === 's2_to_shop') { if (typeof c2Go === 'function') c2Go('mshop', [200, 400, 1]); return true; }

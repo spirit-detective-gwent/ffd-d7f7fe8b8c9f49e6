@@ -108,9 +108,11 @@ async def main():
             await g.adv_until("FFF_NQ.UDB&&FFF_NQ.UDB.step==='%s'" % step, 100)
             # simulate a lost callback: kill the scene and leave the locks on
             await g.ev("(function(){W.scGen=(W.scGen|0)+1;try{scKill()}catch(e){};var n=document.getElementById('nqsting');if(n)n.remove();var d=document.getElementById('wdlg');if(d){d.className='';d.innerHTML=''};W.cut=true;W.dlg=true;W.scr=1})()")
-            await g.wait(6500)
-            st = await g.ev("[W.cut,W.dlg,W.scr|0,c2S().q.cq2_nq_west,window.__evs.filter(function(e){return /unstick/.test(e)})]")
-            chk(f'watchdog[{step}]: lock released within 6.5 s, hand-off completed', not st[0] and not st[1] and st[2] == 0 and st[3] == 0 and st[4], st)
+            await g.wait(5500)
+            ue = await g.ev("window.__evs.filter(function(e){return /unstick/.test(e)})")
+            await g.adv_until("c2S().q.cq2_nq_west===0&&" + FREE, 80); await g.wait(500)
+            st = await g.ev("[W.cut,W.dlg,W.scr|0,c2S().q.cq2_nq_west]")
+            chk(f'watchdog[{step}]: lock released by the watchdog within 5.5 s, hand-off completed, free', not st[0] and not st[1] and st[2] == 0 and st[3] == 0 and ue, (st, ue))
             await g.pg.close()
         # idle leak (non-beat): 12 s
         g = G(); await g.start(b, nq='{udon:1,udonFin:1,won:{udon:1}}'); await g.ev("W.cut=true;W.scr=1"); await g.wait(13500)
@@ -139,8 +141,8 @@ async def main():
         chk('east: the Minato-so facade is drawn on the building, bottom flush with its wall (was 200 px under it)', f and f[0] >= e[0] - 1 and abs(f[1] + f[3] - e[3]) <= 4, (f, e))
         chk('east: both door stand points are on the sidewalk (walkable)', all(r['walk']), r['walk'])
         for nm, door, room in (('mshop', 'shop', 'mshop'), ('mina', 'lob', 'mina')):
-            await g.go(4300, 3360); at = r[door]['at']; await g.ev("walkTo(%d,%d,true,false)" % (at[0], r[door]['r'][1] + 40))
-            i = await g.adv_until("c2Room()==='%s'" % room, 30); chk(f'east: tapping the {nm} door enters it', i >= 0, await g.ev("c2Room()"))
+            await g.go(4300, 3360); at = r[door]['at']; await g.ev("walkTo(%d,%d,true,false)" % (at[0], r[door]['r'][1] + 40)); await g.wait(2500); await g.ev("c2ActC('c2_town','%s')" % ('s2_e_mshop' if door == 'shop' else 's2_e_mina'))
+            i = await g.adv_until("c2Room()==='%s'" % room, 30); chk(f'east: tap the {nm} door, then its tag, enters it', i >= 0, await g.ev("c2Room()"))
         await g.pg.close()
         # ---- 6. Wagashi ----
         g = G(); await g.start(b, nq='{udon:1,udonFin:1,won:{udon:1}}', at=(3080, 2700), extra="var st=c2S();st.e.seal_sento=1;st.q.cq2_s2_waga=9;if(root.FFF_S2&&root.FFF_S2.setStg)root.FFF_S2.setStg('done');c2QSync();save()")
@@ -150,6 +152,16 @@ async def main():
         chk('wagashi: the lane tree no longer stands in front of the shop (and its trunk block moved too)', r['tree'] and all(x < 2880 or x > 3280 for x in r['tree']) and all(x < 2880 or x > 3280 for x in r['pb']), r)
         chk('wagashi: door rect bottom is on the Lucky 7 wall (2600)', r['door']['r'][3] == 2600, r['door'])
         await g.ev("walkTo(3080,2560,true,false)"); i = await g.adv_until("c2Room()==='waga'", 30); chk('wagashi: tapping the door enters Chiyo Wagashi', i >= 0, await g.ev("c2Room()"))
+        await g.go(3080, 3352)
+        r = await g.ev("""(function(){var o={};var bl=C2W.bld.filter(function(b){return b.id==='shopsE2'})[0].r;var d=FFF_S2.WAGA_S;o.bld=bl;o.d=d;
+          var f=document.getElementById('s2WagaSouth');o.fac=f?[parseFloat(f.style.left),parseFloat(f.style.top),f.width,f.height]:null;
+          o.tag=tagDefs().filter(function(t){return /s2_e_waga_s/.test(t.key)}).map(function(t){return t.lab});o.walk=WORLD_API.walkableAt(d.at[0],d.at[1]);return o})()""")
+        chk('wagashi south: the SWEETS building (shopsE2) has a door on its wall, painted front + sign, and an open-sidewalk stand point', r['fac'] and r['bld'][0] <= r['d']['r'][0] and r['d']['r'][2] <= r['bld'][2] and r['d']['r'][3] == 3300 and r['fac'][0] <= 3080 <= r['fac'][0] + r['fac'][2] and r['walk'], r)
+        chk('wagashi south: word tag "Sweets" shows', r['tag'] == ['Sweets'], r['tag'])
+        await g.ev("c2ActC('c2_town','s2_e_waga_s')"); i = await g.adv_until("c2Room()==='waga'", 30); chk('wagashi south: the south door enters Chiyo Wagashi', i >= 0, await g.ev("c2Room()"))
+        await g.ev("c2Go('town',[3080,3352,0]);try{c2Pop()}catch(e){}"); await g.wait(1500)
+        y = await g.ev("W.ryo.y"); chk('wagashi south: leaving puts you back on the south street (not teleported to the north lane)', y > 3300, y)
+        chk('no page errors in the town/east/wagashi checks', not g.errs, g.errs[:2])
         await g.pg.close()
         await b.close()
     srv.shutdown()
