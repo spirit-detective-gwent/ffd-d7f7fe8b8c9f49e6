@@ -54780,14 +54780,19 @@ root.BT_PREVIEW = root.FFF_C2BT; /* the preview page can still call this name */
   /* ---------------- 2) they turn ---------------- */
   var TURN = { R: 125, OUT: 200, T: 0.8 }; HP.TURN = TURN;
   function postFa(f) { return f.face != null ? f.face : (f.fa0 != null ? f.fa0 : f.fa); }
-  function turnTo(f, fa) { f.clashFa = fa; f.fa = fa; try { f.s.flip = Math.cos(fa) < -0.1; waddle(f.s, 0, fa); } catch (e) {} }
+  /* waddle draws a standing street foe (.dgfoe) on its front row whatever its facing (and the street frame re-waddles it), so a turn
+     changed nothing on screen. A turned man carries s.hpFa and keeps the walk sheet's still frame for that facing (no new loop). */
+  function rowFor(s) { var bw = !s.loop && !s.hurtA && bwSheet(s); if (!bw) return; var k = s.k || 1, d = bwDir(s, s.hpFa), nc = shCols(bw);
+    frameBg(s.el, bw, nc === 8 ? 2 : 0, d, SPW * k, SPH * k); if (s.el.getAttribute('data-dir') !== '' + d) s.el.setAttribute('data-dir', d); }
+  if (typeof waddle === 'function') { var wd0 = waddle; waddle = function (s, moved) { var r = wd0.apply(this, arguments); if (s && s.hpFa != null && !(moved > 0)) { try { rowFor(s); } catch (e) {} } return r; }; }
+  function turnTo(f, fa, keep) { f.clashFa = fa; f.fa = fa; f.s.hpFa = keep ? fa : null; try { f.s.flip = !bwSheet(f.s) && Math.cos(fa) < -0.1; waddle(f.s, 0, fa); } /* a walk sheet has its own left row: no mirror */ catch (e) {} }
   function turner(f) { return f && f.c2 && f.s && f.st === 'g38' && !f.clashTo && !f.g38x && (f.qsHold || (f.nq && f.face != null)) && live(f); }
   var tAcc = 0;
   function turnTick(dt) { tAcc += dt; if (tAcc < 0.1) return; var step = tAcc; tAcc = 0; var r = W.ryo; if (!r || !W.dgF) return;
     var quiet = W.dgFight || W.busy || W.dlg || W.cut || W.paused;
     W.dgF.forEach(function (f) { if (!turner(f)) return; var d = Math.hypot(f.s.x - r.x, f.s.y - r.y);
-      if (f.hpTurn) { if (d > TURN.OUT && !quiet) { f.hpTurn = 0; f.hpNear = 0; f.clashFa = null; turnTo(f, postFa(f)); f.clashFa = null; ev('world:hp:turn:back:' + f.key); } else if (!quiet) turnTo(f, Math.atan2(r.y - f.s.y, r.x - f.s.x)); return; }
-      if (d < TURN.R && !W.hid && !quiet) { f.hpNear = (f.hpNear || 0) + step; if (f.hpNear >= TURN.T) { if (f.fa0 == null) f.fa0 = postFa(f); f.hpTurn = 1; turnTo(f, Math.atan2(r.y - f.s.y, r.x - f.s.x)); try { bubbleOn(f.s, '?'); } catch (eB) {} ev('world:hp:turn:' + f.key); } }
+      if (f.hpTurn) { if (d > TURN.OUT && !quiet) { f.hpTurn = 0; f.hpNear = 0; f.clashFa = null; turnTo(f, postFa(f)); f.clashFa = null; f.s.hpFa = null; ev('world:hp:turn:back:' + f.key); } else if (!quiet) turnTo(f, Math.atan2(r.y - f.s.y, r.x - f.s.x), 1); return; }
+      if (d < TURN.R && !W.hid && !quiet) { f.hpNear = (f.hpNear || 0) + step; if (f.hpNear >= TURN.T) { if (f.fa0 == null) f.fa0 = postFa(f); f.hpTurn = 1; turnTo(f, Math.atan2(r.y - f.s.y, r.x - f.s.x), 1); try { bubbleOn(f.s, '?'); } catch (eB) {} ev('world:hp:turn:' + f.key); } }
       else if (d > TURN.R) f.hpNear = 0; }); }
   HP.turnTick = turnTick;
   /* after a fight the men of that crew who are still standing saw it: they face Ryo at once */

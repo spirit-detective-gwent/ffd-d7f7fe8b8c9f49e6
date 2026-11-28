@@ -128,7 +128,7 @@ async def sec_turn():
     async with h.Game(out=OUT) as g:
         await boot(g, ST['cold'], 1890, 870)
         await g.ev("W.ryo.x=1700; W.ryo.y=760; place(W.ryo,0); camera(true); 1"); await g.wait(800)
-        await g.shot('before_facing_after', hush=True)
+        await g.shot('facing_far', hush=False)
         b = await g.ev("(W.dgF||[]).filter(function(o){return o.crew==='nq_c1'}).map(function(o){return [o.key, ambSide(o)]})")
         # quick approach: struck within the notice time = still from behind
         await g.ev("W.ryo.x=1864; W.ryo.y=860; place(W.ryo,0); camera(true); 1"); await g.wait(300)
@@ -137,7 +137,9 @@ async def sec_turn():
         await g.wait(1600)
         a = await g.ev("(W.dgF||[]).filter(function(o){return o.crew==='nq_c1'}).map(function(o){return [o.key, ambSide(o), !!o.hpTurn, +o.fa.toFixed(2)]})")
         ok('turn: after standing near, the men face Ryo (%s)' % a, all(x[1] == 'front' and x[2] for x in a), a)
-        await g.shot('after_facing', hush=True)
+        dd = await g.ev("(W.dgF||[]).filter(function(o){return o.crew==='nq_c1'}).map(function(o){return o.s.el.getAttribute('data-dir')})")
+        ok('turn: the turn shows on screen (sprite row for the new facing, not the front row) (%s)' % dd, all(x not in (None, '0') for x in dd), dd)
+        await g.shot('after_facing', hush=False)
         far = await g.ev("(W.dgF||[]).filter(function(o){return /^nq_c/.test(o.crew)&&Math.hypot(o.s.x-W.ryo.x,o.s.y-W.ryo.y)>260}).map(function(o){return !!o.hpTurn})")
         ok('turn: far crews keep their post (%s)' % far, not any(far), far)
         await g.ev("W.ryo.x=1890; W.ryo.y=700; place(W.ryo,0); camera(true); 1"); await g.wait(1200)
@@ -171,6 +173,7 @@ async def sec_door():
         await g.ev("W.ryo.x=1890; W.ryo.y=900; place(W.ryo,0); camera(true); 1"); await g.wait(500)
         up = await g.drag(0, -80); await g.ev("window.__wk=0"); await g.wait(2000); n = await g.ev("window.__wk")
         ok('door: the shut hotel door fires at most once, not every frame (%d in 2 s after walking in)' % n, n <= 1, n)
+        await g.shot('door_after_walk_in', hush=False)
         dn = await g.drag(0, 80); sd = await g.drag(-90, 0)
         ok('door: Ryo walks away from the shut door (up %s, down %s, side %s)' % (up, dn, sd), abs(dn[1]) > 40 and abs(sd[0]) > 40, [up, dn, sd])
         await g.ev("W.ryo.x=1890; W.ryo.y=830; place(W.ryo,0); save(); 1"); await g.wait(500)
