@@ -23187,7 +23187,7 @@ function phPrices() {
     soda: { yen: SODA.cost, effect: 'Not a heal. +5 Spirit on the map when you drink it, full Spirit on a chug win. No next-fight buff.' },
     food: { yen: FOOD.cost, heal: Math.round(FOOD.pct * 100) + '% HP eaten at the machine, not stored' },
     bandageMachine: { yen: AID.cost, heal: '20% stored bandage' },
-    potionShop: { yen: (STORY && STORY.POTION && STORY.POTION.cost) || 8, heal: '35% stored potion' },
+    potionShop: { yen: (STORY && STORY.POTION && STORY.POTION.cost) || 3, heal: '35% stored potion' },
     nurseFull: { yen: (typeof HEAL !== 'undefined' && HEAL.full) || 1, heal: 'full HP' },
     craftCh1: '1 Clean Gauze + 1 Medical Tape = 20% dressing. In Chapter 2, Hase, Machi Motors, and Ono sell both as kit materials. World-found and safe-room kits stay the cheap path.',
     craftCh2: '1 Mugwort Leaf + 1 Ginger Root = 35% potion. Ingredients already defined. Gated to Chapter 2.',
