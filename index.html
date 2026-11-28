@@ -40843,7 +40843,7 @@ function camPan(to, o, done) {
     if (DM && (force || !DM.f)) { kill(DM.k); (DM.g || []).forEach(kill); DM = null; try { var bg = window.c2DoorGuard && window.c2DoorGuard('sento'); if (bg && bg.el) bg.el.style.visibility = ''; } catch (e) {} }
     if (XC.st) { var wasPost = XC.st === 'post'; xcAbort(force ? 'reset' : 'pop'); if (wasPost && CL) { kill(CL.flip); (CL.pk || []).forEach(kill); CL = null; } }
     if (CL && (force || !CL.f)) { var r0 = CL.r0; kill(CL.flip); (CL.pk || []).forEach(kill); CL = null;
-      if (force && r0 && W.ryo && inTown()) { W.ryo.x = r0[0]; W.ryo.y = r0[1]; W.ryo.v = 0; W.path = []; try { place(W.ryo, 0); camera(true); } catch (eR) {} } /* retreat: back where the beat started */
+      if (force && r0 && W.ryo && inTown()) { W.ryo.x = r0[0]; W.ryo.y = Math.min(r0[1], 2550 - 215); /* just outside the 190px trigger, so a retreat does not loop straight back into the walk-in */ W.ryo.v = 0; W.path = []; try { place(W.ryo, 0); camera(true); } catch (eR) {} } /* retreat: back up the street, off the trigger */
       (NPC.clash || []).forEach(calm); }
     try { lockIn(false); } catch (e2) {} }
   /* and the chain itself is re-derived on each town visit, so an interrupted hand-off (quest closed, next one not yet opened) heals */

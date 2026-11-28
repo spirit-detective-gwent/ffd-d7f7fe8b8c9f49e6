@@ -70,7 +70,7 @@ PAIRS = r"""
 })()
 """
 
-BTN = """(re)=>{var b=[...document.querySelectorAll('button')].filter(e=>e.offsetParent&&new RegExp(re,'i').test((e.textContent||'').trim()));if(!b.length)return null;var r=b[0].getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]}"""
+BTN = """(re)=>{var b=[...document.querySelectorAll('button')].filter(e=>e.getClientRects().length&&getComputedStyle(e).visibility!=='hidden'&&new RegExp(re,'i').test((e.textContent||'').trim()));if(!b.length)return null;var r=b[0].getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,t=document.elementFromPoint(x,y);if(t!==b[0]&&!b[0].contains(t))return null;return [x,y]}"""
 
 async def tap_btn(g, re_):
     c = await g.pg.evaluate(BTN, re_)
@@ -287,12 +287,13 @@ async def t_reload(g):
     st = await through_clash_line(g)
     ok('reload pre: cine up', st['xc'] == 'pre', st)
     await g.wait(400)
-    await g.ev("try{ c2Pop(); }catch(e){} 1"); await g.wait(700)
-    r = await g.ev(SNAP)
+    # c2Pop is what a reload / town re-entry runs; check the state in the same tick, before the
+    # beat's proximity trigger (Ryo is still standing on it) can fire the walk-in again, as live does
+    r = await g.ev("(function(){ try{ c2Pop(); }catch(e){} return 1; })() && " + SNAP.strip())
     ok('reload mid-pre: cine aborted, no lock, nothing posed', r['xc'] == '' and not r['cut'] and not r['skip'] and not r['rdy'] and r['guard'] == 0 and not r['ig'], r)
-    ok('reload mid-pre: Hustlers back waiting, quest open', r['hus'] == 3 and r['q'] != 9, r)
-    # it can fire again and we finish the fight; then reload mid-post
-    await g.go_xy(1790, 2390); w = await walkin(g)
+    ok('reload mid-pre: Hustlers back waiting, helpers gone, quest open', r['hus'] == 3 and r['flip'] == 0 and r['punks'] == 0 and r['q'] != 9, r)
+    # it fires again (Ryo is on the trigger) and we finish the fight; then reload mid-post
+    w = await until(g, lambda s: s['flip'] >= 1 and s['punks'] >= 2, 30, 200)
     ok('reload pre: walk-in fires again', w['flip'] == 1, w)
     await through_clash_line(g)
     b = await to_battle(g); nf = b['nfights']
@@ -315,6 +316,9 @@ async def t_retreat(g):
     await g.ev("try{ c2Pop(); }catch(e){} 1"); await g.wait(500)
     r = await g.ev(SNAP)
     ok('retreat: beat can fire again', r['hus'] == 3, r)
+    await inputs_ok(g, 'after retreat')
+    w = await walkin(g)
+    ok('retreat: walking up fires the beat again', w['flip'] == 1 and w['punks'] == 2, w)
 
 async def t_defeat(g):
     await seed(g); await walkin(g); await through_clash_line(g)
@@ -328,9 +332,11 @@ async def t_defeat(g):
         await g.wait(400)
     await g.hush()
     await g.ev("try{ c2Go('town'); }catch(e){} 1"); await g.wait(900); await g.skipall(4)
-    await g.go_xy(1790, 2390); await g.ev("try{ FFF_NQ.crewSync(); }catch(e){} 1"); await g.wait(300)
+    await g.go_xy(1790, 2300); await g.ev("try{ FFF_NQ.crewSync(); }catch(e){} 1"); await g.wait(300)
     r = await g.ev(SNAP)
-    ok('defeat: back in town the Hustlers wait again', r['hus'] == 3 and not r['cut'], r)
+    ok('defeat: back in town the Hustlers wait again', r['hus'] == 3 and not r['cut'] and r['flip'] == 0, r)
+    w = await walkin(g)
+    ok('defeat: walking up fires the beat again', w['flip'] == 1 and w['punks'] == 2, w)
 
 async def main():
     tests = [('main', t_main), ('skip', t_skip), ('reload', t_reload), ('retreat', t_retreat), ('defeat', t_defeat)]
