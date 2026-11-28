@@ -57948,8 +57948,9 @@ function hsCss2() {
     '#hsmg .res div.f{background:rgba(255,210,90,.14);box-shadow:inset 0 0 0 1.5px #ffd25a}#hsmg .res div>svg,#hsmg .res div>.hsf{width:34px;height:34px;flex:0 0 34px}#hsmg .res div span{flex:1}#hsmg .res div em{font-style:normal;font-weight:900;color:#ffd25a}' +
     '#hsbw{position:absolute;inset:0;z-index:47;display:flex;align-items:center;justify-content:center;touch-action:none;background:rgba(8,10,16,.35)}' +
     '#hsbw .bw{position:relative;width:280px;height:224px;text-align:center;color:#fff;font:900 13px system-ui;text-shadow:0 2px 0 #14110d}' +
-    '#hsbw .tg{position:absolute;left:80px;top:28px;width:120px;height:120px;border-radius:50%;box-shadow:inset 0 0 0 4px #ffd25a,0 0 0 3px #14110d;background:rgba(20,30,44,.78)}#hsbw .tg>svg,#hsbw .tg>.hsf{position:absolute;left:24px;top:24px;width:72px;height:72px}' +
-    '#hsbw .rg{position:absolute;left:80px;top:28px;width:120px;height:120px;border-radius:50%;box-shadow:0 0 0 4px #fff,0 0 0 7px #14110d;will-change:transform}' +
+    '#hsbw .tg{position:absolute;left:80px;top:28px;width:120px;height:120px;border-radius:50%;box-shadow:0 0 0 1.5px #14110d;background:rgba(20,30,44,.78)}#hsbw .pz{position:absolute;left:140px;top:88px;width:0;height:0;pointer-events:none}#hsbw .pz>i{position:absolute;border-radius:50%;box-sizing:border-box;border:0 solid rgba(255,210,90,.62);box-shadow:0 0 0 1.5px #14110d,inset 0 0 0 1.5px #14110d}'+
+    '#hsbw .tg>svg,#hsbw .tg>.hsf{position:absolute;left:24px;top:24px;width:72px;height:72px}' +
+    '#hsbw .rg{position:absolute;left:80px;top:28px;width:120px;height:120px;border-radius:50%;box-shadow:inset 0 0 0 1.5px #fff,0 0 0 1.5px #fff,0 0 0 3px #14110d,inset 0 0 0 3px #14110d;will-change:transform}' +
     '#hsbw .hint{position:absolute;left:0;right:0;top:0;white-space:nowrap}#hsbw .fx{position:absolute;left:0;right:0;top:156px;font:900 italic 22px "Arial Black",system-ui}#hsbw .fx.p{color:#ffd25a}' +
     '#hsbw .sk{position:absolute;left:50%;top:196px;transform:translateX(-50%);white-space:nowrap;border:0;border-radius:14px;padding:6px 14px;background:rgba(20,30,44,.9);color:#dfe8f0;font:800 12px system-ui;box-shadow:0 0 0 1.5px #3a4a5c}' +
     '.hscart{position:absolute;width:58px;height:62px;margin-left:-29px;background-size:100% 100%;pointer-events:none}';
@@ -57988,18 +57989,29 @@ function hsUse() {
   });
   return true;
 }
-/* (b) beat wrap: one ring closes on the icon in ~1.6 s. Tap on the beat = +5% max HP. Skip, a miss or no tap = the item's full heal. rAF only while open. */
+/* (b) beat wrap: one ring closes on the icon in ~1.6 s. Tap on the beat = +5% max HP. Skip, a miss or no tap = the item's full heal. rAF only while open.
+ * v6566-healcircle (Erik t549u): the drawn circle and the hit test share ONE value. The ring's white line sits on radius HS_BEAT.R * scale;
+ * a tap is perfect when that line is inside the gold band, i.e. |scale - 1| <= tol, and the gold band is drawn from R*(1-tol) to R*(1+tol).
+ * tol comes from the old timing window (110 ms at 1.6 s, so the same difficulty). The hit test reads the scale that is on screen, and the
+ * ring now keeps closing past the target (it used to stop on it, so taps on a ring resting inside the circle counted as Good). */
+var HS_BEAT = { R: 60, grow: 1.6, min: 0.55, winMs: 110 };
+function hsBeatTol(T) { return HS_BEAT.grow * (root.FFF_HS_BEAT_WIN || HS_BEAT.winMs) / T; }
+function hsBeatScale(t, T) { return Math.max(HS_BEAT.min, 1 + HS_BEAT.grow * (1 - t / T)); }
+function hsBeatHit(s, tol) { return Math.abs(s - 1) <= tol + 1e-9; }
 function hsBeat(it, done) {
   if (root.FFF_HS_BEAT_OFF) { done(false); return; }
   hsCss2();
   var base = it.replace(/F$/, ''), fine = it !== base, host = document.getElementById('world') || document.body;
+  var T = root.FFF_HS_BEAT_T || 1600, tol = hsBeatTol(T), R = HS_BEAT.R, ri = R * Math.max(0, 1 - tol), ro = R * Math.min(1 + HS_BEAT.grow, 1 + tol); /* clamps only matter for test overrides of FFF_HS_BEAT_WIN */
   var o = document.createElement('div'); o.id = 'hsbw'; o.className = 'k-' + base;
-  o.innerHTML = '<div class="bw"><div class="hint">' + (base === 'potion' ? 'Tap when the ring meets the bottle' : 'Tap when the ring meets the wrap') + '</div><div class="tg">' + (fine ? hsSvgF(base) : hsSvg(base)) + '</div><div class="rg"></div><div class="fx"></div><button type="button" class="sk">Skip \u00b7 full heal</button></div>';
+  o.innerHTML = '<div class="bw"><div class="hint">' + (base === 'potion' ? 'Tap when the ring meets the bottle' : 'Tap when the ring meets the wrap') + '</div><div class="tg">' + (fine ? hsSvgF(base) : hsSvg(base)) + '</div>' +
+    '<div class="pz"><i style="left:' + (-ro).toFixed(2) + 'px;top:' + (-ro).toFixed(2) + 'px;width:' + (2 * ro).toFixed(2) + 'px;height:' + (2 * ro).toFixed(2) + 'px;border-width:' + (ro - ri).toFixed(2) + 'px"></i></div>' +
+    '<div class="rg"></div><div class="fx"></div><button type="button" class="sk">Skip \u00b7 full heal</button></div>';
   host.appendChild(o);
-  var rg = o.querySelector('.rg'), fx = o.querySelector('.fx'), T = root.FFF_HS_BEAT_T || 1600, t0 = performance.now(), raf = 0, end = 0, b0 = W.busy;
+  var rg = o.querySelector('.rg'), fx = o.querySelector('.fx'), t0 = performance.now(), raf = 0, end = 0, b0 = W.busy, shown = hsBeatScale(0, T);
   W.busy = true; W.path = []; if (W.ryo) W.ryo.v = 0;
-  function sc(t) { return 1 + 1.6 * Math.max(0, 1 - t / T); }
-  function frame(now) { if (end) return; var t = now - t0; rg.style.transform = 'scale(' + Math.max(0.55, sc(t)).toFixed(3) + ')'; if (t > T + 420) finish(false, 'skip'); else raf = requestAnimationFrame(frame); }
+  function draw(s) { shown = s; rg.style.transform = 'scale(' + s.toFixed(4) + ')'; }
+  function frame(now) { if (end) return; var t = now - t0; draw(hsBeatScale(t, T)); if (t > T + 420) finish(false, 'skip'); else raf = requestAnimationFrame(frame); }
   function finish(perfect, why) {
     if (end) return; end = 1; cancelAnimationFrame(raf);
     fx.textContent = perfect ? 'PERFECT +5%' : why === 'skip' ? '' : 'Good';
@@ -58007,14 +58019,15 @@ function hsBeat(it, done) {
     ev('world:hs:beat:' + it + ':' + (perfect ? 'perfect' : why));
     setTimeout(function () { o.remove(); W.busy = b0; done(perfect); }, perfect || why === 'tap' ? 380 : 0);
   }
+  o.__hs = { tol: tol, R: R, ri: ri, ro: ro, scale: function () { return shown; }, hit: function () { return hsBeatHit(shown, tol); } };
   o.addEventListener('pointerdown', function (e) {
     e.stopPropagation(); e.preventDefault();
     if (e.target.closest('.sk')) { AU.play('ui_back'); finish(false, 'skip'); return; }
-    var t = performance.now() - t0, d = Math.abs(t - T); AU.play(d <= 110 ? 'ui_sel' : 'tap');
-    finish(d <= (root.FFF_HS_BEAT_WIN || 110), 'tap');
+    var p = hsBeatHit(shown, tol); AU.play(p ? 'ui_sel' : 'tap');
+    finish(p, 'tap');
   });
-  if (root.FFF_HS_BEAT_FREEZE != null) { rg.style.transform = 'scale(' + sc(root.FFF_HS_BEAT_FREEZE).toFixed(3) + ')'; return; }
-  raf = requestAnimationFrame(frame);
+  if (root.FFF_HS_BEAT_FREEZE != null) { draw(hsBeatScale(root.FFF_HS_BEAT_FREEZE, T)); return; }
+  draw(shown); raf = requestAnimationFrame(frame);
 }
 /* Bag: items only. The Crafting tab is gone (stations craft). */
 phBag = function () { W.phBagTab = 'items'; return phItems(); };
