@@ -14155,12 +14155,12 @@ function close() {
  // v4.3: a chained dialog (scenes) keeps the map locked
 function joinWarn() { /* v6.5.37: early-challenge retired; relays no longer join Gouki. Kept as a stub so gymDialog still concatenates it. */ if (minisLeft()) return ''; return '<p class="dim">All four corners are quiet: you face Gouki alone.</p>'; }
 var GK_POST = ['I\u2019m not going anywhere. The Wardens can decide what to do with me.', 'The man in the gray coat never told me his name. Only that the shrine was the first door.', 'Hit me again if it helps. It won\u2019t change what I did.', 'They\u2019re waking up, the ones I pushed. Tell them\u2026 no. Don\u2019t tell them anything.'];
-function gkEndingOpen() { return !!(SAVE.gouki && !(SAVE.sc && SAVE.sc.ending) && !SAVE.ch1 && !SAVE.ngp); } /* Gouki is down, the ending scene never finished */
-function gkMidOpen() { return !SAVE.gouki && !SAVE.ch1 && !SAVE.ngp && (SAVE.gkPh === 1 || (SAVE.gkRevives | 0) >= 1); } /* the finale was interrupted before the last blow */
-function gkStuckResume() { if (W.dlg || W.cut || (root.FFF && root.FFF.inGame)) return; if (gkEndingOpen()) { ev('world:gk:resume:ending'); chapterEnd(); return; } if (gkMidOpen()) { ev('world:gk:resume:finale'); gkFight(); } }
+function gkEndingOpen() { return !!(SAVE.gouki && !(SAVE.sc && SAVE.sc.ending) && !SAVE.ch1); } /* Gouki is down, the ending scene never finished */
+function gkMidOpen() { return !SAVE.gouki && !SAVE.ch1 && (SAVE.gkPh === 1 || (SAVE.gkRevives | 0) >= 1); } /* the finale was interrupted before the last blow */
+function gkStuckResume() { if (W.dlg || W.cut || (root.FFF && root.FFF.inGame)) return; if (gkEndingOpen()) { ev('world:gk:resume:ending'); if (typeof ofudaHoldMark === 'function') ofudaHoldMark('resume'); chapterEnd(); return; } if (gkMidOpen()) { ev('world:gk:resume:finale'); gkFight(); } }
 function gkFight() { /* v4.64: phase1 → endless item-revival loop until player HP 0 → Bond → gkFin; rematch = single */
   if (gkEndingOpen()) { chapterEnd(); return; } /* a stuck win: challenging him again plays the ending, not another duel */
-  if (SAVE.gouki || SAVE.ch1 || SAVE.ngp) { fight(['gouki'], true); return; }
+  if (SAVE.gouki || SAVE.ch1) { fight(['gouki'], true); return; } /* v6566-ofuda (Erik pt535u): NG+ starts gouki/gkPh fresh, so an NG+ Chapter One plays the full finale (phase 1, revives, Bond, the Double) like a fresh game; SAVE.ngp here made it a one-round rematch */
   if (SAVE.dbl && SAVE.gkPh) {
     SAVE.sp = SPMAX; var o = other(SAVE.act), pc = SAVE.chars[o] || (SAVE.chars[o] = {}); pc.sp = SPMAX; save();
     fight(['gouki'], true, { gkPhase: 2, gkFin: 1 }); return;
@@ -23680,7 +23680,7 @@ n9LevelFire = function (lv) { lvQueue(lv); };
 W.lvcCalm = 0;
 (function () {
   var si = (root.FFF_NATIVE_SI || setInterval);
-  si(function () { if (!lvQ().length || !lvCalm()) { W.lvcCalm = 0; return; } W.lvcCalm += 240; if (W.lvcCalm >= (root.FFF_LVC_WAIT != null ? root.FFF_LVC_WAIT : 720)) { W.lvcCalm = 0; lvShow(); } }, 240);
+  si(function () { var oh = !lvQ().length && typeof ofudaHoldDue === 'function' && ofudaHoldDue(); if ((!lvQ().length && !oh) || !lvCalm()) { W.lvcCalm = 0; return; } W.lvcCalm += 240; if (W.lvcCalm >= (root.FFF_LVC_WAIT != null ? root.FFF_LVC_WAIT : 720)) { W.lvcCalm = 0; if (oh) ofudaHoldShow(); else lvShow(); } }, 240); /* v6566-ofuda: the held Spirit Ofuda rides the Level Up hold (after any queued level cards) */
 })();
 /* v6.5.15 (Ernest): the Aptitude box on Menu > Player (Ryo and Aoi tabs), under HP and Spirit: path, one line, the special and
  * its damage, and only the perk values unlocked now (lvPerks = BOND.PERK / bondSig / bondFight), plus what the path pairs with. */
@@ -25518,7 +25518,7 @@ ngOpt({ k: 'enh', sec: 'DECK &amp; CARDS', title: 'Enhancements', base: 'keep', 
 ngOpt({ k: 'ess', sec: 'DECK &amp; CARDS', title: 'Spirit essences', base: 'keep', fresh: 'reset', ch: [['keep', 'Keep'], ['reset', 'Reset']], rv: { keep: 'Kept', reset: 'Reset' },
   keys: ['ess', 'seal', 'books'], apply: function (S, v) { if (v === 'reset') { S.ess = 0; S.seal = 0; S.books = { common: 0, uncommon: 0 }; } } });
 ngOpt({ k: 'acc', sec: 'GEAR &amp; BAG', title: 'Accessories', base: 'keep', fresh: 'hide', ch: [['keep', 'Keep'], ['hide', 'Hidden again in the world']], rv: { keep: 'Kept', hide: 'Hidden in the world' },
-  keys: ['gear'], apply: function (S, v) { if (v === 'hide' && S.gear) { S.gear.own = {}; S.gear.of = {}; S.gear.ofNew = {}; Object.keys(S.gear.eq || {}).forEach(function (ch) { if (S.gear.eq[ch]) { S.gear.eq[ch].head = null; S.gear.eq[ch].acc = null; S.gear.eq[ch].tm = null; } }); } } });
+  keys: ['gear'], apply: function (S, v) { if (v === 'hide' && S.gear) { delete S.gear.ofudaHold; delete S.gear.ofudaWait; /* v6566-ofuda: a held Ofuda from the last run is re-earned, not carried */ S.gear.own = {}; S.gear.of = {}; S.gear.ofNew = {}; Object.keys(S.gear.eq || {}).forEach(function (ch) { if (S.gear.eq[ch]) { S.gear.eq[ch].head = null; S.gear.eq[ch].acc = null; S.gear.eq[ch].tm = null; } }); } } });
 ngOpt({ k: 'items', sec: 'GEAR &amp; BAG', title: 'Items &amp; ingredients', base: 'keep', fresh: 'reset', ch: [['keep', 'Keep'], ['reset', 'Reset']], rv: { keep: 'Kept', reset: 'Reset' },
   keys: ['heal', 'soda', 'sodaOn', 'sodaK', 'herbs'], apply: function (S, v) { if (v === 'reset') { S.heal = []; S.soda = {}; S.sodaOn = 0; S.sodaK = ''; S.herbs = S.herbs || {}; ['leaf', 'ginger', 'gauze', 'tape', 'kelp', 'bonito', 'pearl'].forEach(function (k) { S.herbs[k] = 0; }); } } });
 ngOpt({ k: 'yen', sec: 'GEAR &amp; BAG', title: 'Yen', base: 'keep', fresh: 'reset', ch: [['keep', 'Keep'], ['reset', 'Reset']], rv: { keep: 'Kept', reset: 'Reset' },
@@ -55580,46 +55580,46 @@ if (typeof gearOvSync === 'function' && !gearOvSync._ofuda29) {
   gearOvSync._ofuda29 = 1;
 }
 
-function gearOfudaOnWin(then) {
-  if (typeof gearHas === 'function' && gearHas('ofuda')) { if (then) then(); return; }
-  var gt = typeof gearGate === 'function' ? gearGate('ofuda') : '';
-  if (!gt) {
-    ev('world:gear:ofuda:drop');
-    scene(null, [['', '<p class="dim">A paper tag slips from Gouki\u2019s jacket.</p>']], function () {
-      W.gfindThen = then;
-      gearFind('ofuda', 'Gouki');
-      if (!document.querySelector('#gfind.on') && then) then();
-    });
-    return;
-  }
-  if (gt === 'later') { gearS().ofudaWait = 1; save(); ev('world:gear:ofuda:wait'); }
+function gearOfudaOnWin(then) { /* v6566-ofuda (Erik pt535u): no drop in the gym any more. Earned here, handed over at the first Chapter Two free walk (ofudaHold) */
+  ofudaHoldMark('gouki');
   if (then) then();
 }
-
+function ofudaHoldMark(from) {
+  if (typeof gearHas === 'function' && gearHas('ofuda')) return 0;
+  var g = gearS(), gt = typeof gearGate === 'function' ? gearGate('ofuda') : '';
+  if (gt === 'never') return 0;
+  if (gt === 'later') { if (!g.ofudaWait) { g.ofudaWait = 1; save(); ev('world:gear:ofuda:wait'); } return 0; }
+  if (!g.ofudaHold) { g.ofudaWait = 0; g.ofudaHold = 1; save(); ev('world:gear:ofuda:hold:' + (from || '')); }
+  return 1;
+}
+function ofudaHoldDue() { var g = SAVE.gear; return !!(g && g.ofudaHold && (SAVE.chapter | 0) >= 2); } /* lvCalm (the Level Up hold) already waits for the Ch2 arrival scene, its help tip and any modal */
+function ofudaHoldShow() {
+  var g = gearS(); if (!g.ofudaHold) return false;
+  g.ofudaHold = 0;
+  if (gearHas('ofuda')) { save(); ev('world:gear:ofuda:hold:had'); return false; }
+  g.own.ofuda = 1; g.seen = g.seen || {}; g.seen.ofuda = 0; gearSeenPersist(); save(); /* owned before the card shows: a reload never awards it twice */
+  ev('world:gear:ofuda:grant:ch2');
+  var who = SAVE.act || 'ryo';
+  W.dlg = true; W.path = [];
+  scene(null, [['', '<p class="dim">Something papery crinkles in ' + (who === 'aoi' ? 'Aoi' : 'Ryo') + '\u2019s pocket: the tag that slipped from Gouki\u2019s jacket in the gym.</p>']], function () {
+    try { AU.play('place'); } catch (e0) {}
+    try { gfindShow('ofuda', who, 'late'); } catch (e1) { W.dlg = false; }
+  });
+  return true;
+}
 var _gearCapCheck29 = typeof gearCapCheck === 'function' ? gearCapCheck : function () { return false; };
 gearCapCheck = function () {
   var granted = false;
   try { granted = !!_gearCapCheck29(); } catch (eC) {}
   try {
     var g = gearS();
-    if (g.ofudaWait && !gearHas('ofuda') && !gearGate('ofuda')) {
-      g.ofudaWait = 0;
-      g.own.ofuda = 1;
-      g.seen = g.seen || {};
-      g.seen.ofuda = 0;
-      gearSeenPersist();
-      save();
-      ev('world:gear:ofuda:grant');
-      try { AU.play('place'); } catch (e0) {}
-      try { if (typeof gfindShow === 'function') gfindShow('ofuda', SAVE.act || 'ryo', 'late'); } catch (e1) {}
-      granted = true;
-    }
+    if (g.ofudaWait && !gearHas('ofuda') && !gearGate('ofuda')) { g.ofudaWait = 0; ofudaHoldMark('late'); } /* v6566-ofuda: held, shown at the next calm Ch2 free walk */
   } catch (eO2) {}
   return granted;
 };
 
 if (typeof WORLD_API === 'object' && WORLD_API) {
-  WORLD_API.gearOfudaOnWin = gearOfudaOnWin;
+  WORLD_API.gearOfudaOnWin = gearOfudaOnWin; WORLD_API.ofudaHoldShow = ofudaHoldShow; WORLD_API.ofudaHoldDue = ofudaHoldDue;
   WORLD_API.ofudaCharmPaint = ofudaCharmPaint;
   WORLD_API.ofudaPosSync = ofudaPosSync;
   WORLD_API.gearCapCheck = gearCapCheck;
