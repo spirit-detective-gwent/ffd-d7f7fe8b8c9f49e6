@@ -41251,7 +41251,7 @@ function camPan(to, o, done) {
   };
   var RCV = null, RKEY = '';
   function roomShow() { var I = W.inside, D = I && INT[I.id]; if (!D || !D.nq) return; var k = D.c2, m = document.getElementById('wimap'); if (!m) return;
-    if (!RCV || RKEY !== k) { RCV = RCV || document.createElement('canvas'); var rw = D.w || RW, rh = D.h || RH; RCV.width = rw; RCV.height = rh; var g = RCV.getContext('2d'); g.clearRect(0, 0, rw, rh); try { PAINT[k](g); } catch (e) { ev('world:nq:err:paint:' + k + ':' + (e && e.message)); } RKEY = k; RCV.complete = true; RCV.naturalWidth = D.w || RW; RCV.naturalHeight = D.h || RH; }
+    if (!RCV || RKEY !== k) { RCV = RCV || document.createElement('canvas'); var rw = D.w || RW, rh = D.h || RH; RCV.width = rw; RCV.height = rh; var g = RCV.getContext('2d'); g.clearRect(0, 0, rw, rh); try { if (typeof PAINT[k] === 'function') PAINT[k](g); /* v6566-rc: phase rooms (boat, gar) paint themselves */ } catch (e) { ev('world:nq:err:paint:' + k + ':' + (e && e.message)); } RKEY = k; RCV.complete = true; RCV.naturalWidth = D.w || RW; RCV.naturalHeight = D.h || RH; }
     RCV.id = 'nqRoom'; RCV.style.cssText = 'position:absolute;left:0;top:0;width:' + (D.w || RW) + 'px;height:' + (D.h || RH) + 'px;pointer-events:none;z-index:0'; if (RCV.parentNode !== m) m.insertBefore(RCV, m.firstChild); m.style.backgroundImage = 'none';
     try { SWC[D.src + '?v=' + BUILD] = RCV; } catch (eS) {} }
   function roomDrop() { var c = document.getElementById('nqRoom'); if (c) c.remove(); if (RCV) { RCV.width = 0; RCV.height = 0; RCV = null; RKEY = ''; } }
@@ -48559,6 +48559,10 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
  * ran this). After a win the pin moves to the quay garage; no Phase 4 quest.
  * Path voice is new tables only. Wraps only; no new always-running loops.
  * Does not edit existing Fierce/Strategic Nails copy or S2 / S2P2 VO. */
+/* v6566-rc: Kaji (Funayado lookout) and Sada (quay garage) had no battle character, so newSide crashed on CH.nq_kaji inside the swirl and the world froze (W.on false). Register them on first fight as a Rider-built lieutenant with their own fig. */
+function s2LtFoe(id, name, title) { try { var CH = root.ENGINE && root.ENGINE.chars ? root.ENGINE.chars() : null; if (!CH || CH[id]) return id; var base = CH.c2_boso || CH.c2_hustler || {};
+  CH[id] = Object.assign({}, base, { name: name, title: title, story: 1, hp: (base.hp || 40) + 6, art: (typeof IMG !== 'undefined' && IMG[id + '_fig']) ? id + '_fig' : base.art, fig: (typeof IMG !== 'undefined' && IMG[id + '_fig']) ? id + '_fig' : base.fig });
+  if (typeof NM !== 'undefined') NM[id] = name; ev('world:s2:ltfoe:' + id); } catch (e) { ev('world:s2:ltfoe:err:' + (e && e.message)); } return id; }
 (function () {
   try {
   if (typeof c2S !== 'function' || typeof C2W === 'undefined' || !C2W || typeof INT === 'undefined' || !INT.c2_town) {
@@ -48843,14 +48847,14 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     fighting = 1;
     lockIn(0);
     var ctx = { dg: 'c2', dgk: 's2_lk_0', dgks: ['s2_lk_0', 's2_lk_1'], s2k: 's2_lk', s2: 1, s2lk: 1 };
-    try { fight(['nq_kaji', 'c2_boso'], false, ctx); } catch (eF) { fighting = 0; ev('world:s2p3:err:fight:' + (eF && eF.message)); }
+    try { s2LtFoe('nq_kaji', 'Kaji', 'Funayado lookout'); fight(['nq_kaji', 'c2_boso'], false, ctx); } catch (eF) { fighting = 0; ev('world:s2p3:err:fight:' + (eF && eF.message)); }
   }
   function startQuayFight() {
     if (fighting || busy()) return;
     fighting = 1;
     lockIn(0);
     var ctx = { dg: 'c2', dgk: 's2_qy_0', dgks: ['s2_qy_0', 's2_qy_1'], s2k: 's2_qy', s2: 1, s2qy: 1, freeOpen: 1 };
-    try { fight(['nq_kaji', 'c2_boso'], false, ctx); } catch (eF) { fighting = 0; ev('world:s2p3:err:fight:' + (eF && eF.message)); }
+    try { s2LtFoe('nq_kaji', 'Kaji', 'Funayado lookout'); fight(['nq_kaji', 'c2_boso'], false, ctx); } catch (eF) { fighting = 0; ev('world:s2p3:err:fight:' + (eF && eF.message)); }
   }
   function finishQuest() {
     setStg('done');
@@ -49309,14 +49313,14 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     fighting = 1;
     lockIn(0);
     var ctx = { dg: 'c2', dgk: 's2_gg_0', dgks: ['s2_gg_0', 's2_gg_1', 's2_gg_2'], s2k: 's2_gg', s2: 1, s2gg: 1 };
-    try { fight(['nq_sada', 'c2_boso', 'c2_boso'], false, ctx); } catch (eF) { fighting = 0; ev('world:s2p4:err:fight:' + (eF && eF.message)); }
+    try { s2LtFoe('nq_sada', 'Sada', 'Quay garage dispatch'); fight(['nq_sada', 'c2_boso', 'c2_boso'], false, ctx); } catch (eF) { fighting = 0; ev('world:s2p4:err:fight:' + (eF && eF.message)); }
   }
   function startApproachFight() {
     if (fighting || busy()) return;
     fighting = 1;
     lockIn(0);
     var ctx = { dg: 'c2', dgk: 's2_ap_0', dgks: ['s2_ap_0', 's2_ap_1', 's2_ap_2'], s2k: 's2_ap', s2: 1, s2ap: 1, freeOpen: 1 };
-    try { fight(['nq_sada', 'c2_boso', 'c2_boso'], false, ctx); } catch (eF) { fighting = 0; ev('world:s2p4:err:fight:' + (eF && eF.message)); }
+    try { s2LtFoe('nq_sada', 'Sada', 'Quay garage dispatch'); fight(['nq_sada', 'c2_boso', 'c2_boso'], false, ctx); } catch (eF) { fighting = 0; ev('world:s2p4:err:fight:' + (eF && eF.message)); }
   }
   function finishQuest() {
     setStg('done');
@@ -49977,7 +49981,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
   }
   function introThenFight() {
     var lines = pv(VO.shutter);
-    function go() { startShutterFight(); }
+    function go() { whenFree(startShutterFight); } /* v6566-rc: bossEnt's done fires while the cine still holds W.dlg/W.cut, so busy() swallowed the fight and Masa looped his intro forever */
     try {
       if (typeof bossEnt === 'function') {
         if (MASA) W.bentS = { id: 'mb2_depot', s: MASA };
@@ -51881,7 +51885,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
         if (k && typeof k === 'string') {
           if (k.indexOf('world:s2m:buy:j6_') === 0) P6._ate = 1;
           if (k.indexOf('world:s2m:buy:j6_ramen:') === 0 && /:0$/.test(k) && (J().freeBowls | 0) > 0) { J().freeBowls = (J().freeBowls | 0) - 1; sv(); }
-          else if (k === 'world:shop:close' && afterMeal && P6._ate) { var f = afterMeal; afterMeal = null; P6._ate = 0; setTimeout(function () { whenFree(f); }, 400); }
+          else if (k === 'world:shop:close' && afterMeal) { /* v6566-rc: was '&& P6._ate'; at full HP and SP every bowl/tea reads 'HP full'/'SP full', so a healthy player could never buy and the Ramen (and Izakaya tip) beat never fired. Closing the menu at the counter now counts. */ var f = afterMeal; afterMeal = null; P6._ate = 0; setTimeout(function () { whenFree(f); }, 400); }
           if (P6.onEv) P6.onEv(k);
         }
       } catch (e) {}
