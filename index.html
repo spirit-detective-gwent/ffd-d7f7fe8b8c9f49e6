@@ -39021,6 +39021,8 @@ var GINKO = (function () {
     try {
       if (typeof c2BaseUnlocked === 'function' && c2BaseUnlocked(GUARD_GANG[lm])) return true;
     } catch (e) {}
+    /* v6566-rc: High Score (cq2_s2_jin) sends you onto the Game Center floor through lm_game; this guard intercepted the tap first ("The floor's closed.") so Jin was unreachable. Once the strip is open he lets you by. */
+    try { if (lm === 'game' && window.FFF_S2P6 && typeof window.FFF_S2P6.stripOpen === 'function' && window.FFF_S2P6.stripOpen()) return true; } catch (eS6) {}
     var e = guardFlags();
     if (e['baseOpen_' + (GUARD_GANG[lm] || '')]) return true;
     if (e['guardGone_' + lm]) return true;

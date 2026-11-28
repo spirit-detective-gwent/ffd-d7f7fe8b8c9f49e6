@@ -12,7 +12,9 @@
  6. High Score at Ramen Kitsuneya with full HP/SP: every menu item is disabled ('HP full'), and the overheard-Suits beat only
     fired after a purchase, so a healthy player was stuck. Closing the menu at the counter now plays the beat.
  7. Phase room canvases (Minato-so, Funayado lookout, quay garage) stayed in the map after you left, so the garage art sat
-    over the Izakaya and every room after it. Leaving now removes them."""
+    over the Izakaya and every room after it. Leaving now removes them.
+ 8. Neon Game Center during High Score: the v6551 door guard ("The floor's closed.") caught the lm_game tap before the strip
+    module could open the floor, so Jin was unreachable. With the strip open the guard lets you in."""
 import asyncio, sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent)); import h
@@ -149,5 +151,16 @@ async def main():
         for i in range(5): await h.adv(g, 1)
         left = await g.ev("JSON.stringify({room:c2Room(),left:['s2P4Room_gar','s2P3Room_boat','s2P2Room_mina','s2P2Room_mshop'].filter(function(id){return !!document.getElementById(id)})})")
         chk('phase room canvases do not follow you into later rooms (Izakaya)', '"left":[]' in left and '"room":"izak"' in left, [res, left])
+    async with h.Game(path='balanced') as g:
+        await g.boot()
+        o = await g.ev("(function(){var st=c2S(); delete st.e.guardGone_game; delete st.e.baseOpen_neo; delete st.e.seal_game; st.q.cq2_s2_jin=5; st.qa='cq2_s2_jin'; FFF_S2P6.setStg('izak'); c2QSync(); save(); return JSON.stringify({strip:FFF_S2P6.stripOpen(), guard:window.c2DoorGuardOpen('game')})})()")
+        await g.go('town', 3680, 1700); await g.wait(800)
+        await g.ev("String(walkTo(3680,1540,true))")
+        for i in range(20):
+            await h.adv(g, 1)
+            if await g.ev("c2Room()==='gc'"): break
+        r = await g.ev("JSON.stringify({room:c2Room(),said:FFF_UI.ST.events.filter(function(e){return /guard:talk:game/.test(e)}).length})")
+        chk('High Score: with the strip open the Game Center guard lets you onto the floor (lm_game -> gc)', '"room":"gc"' in r and '"strip":true' in o, [o, r])
+        chk('Game Center: no page errors', not [e for e in g.errs if '404' not in e], g.errs[:3])
     n = sum(R); print(f'RESULT {n}/{len(R)} passed'); sys.exit(0 if n == len(R) else 1)
 asyncio.run(main())
