@@ -19096,7 +19096,8 @@ function grdConeSet(f) { var e = f.cone; if (!e) return; var k = Math.round(f.s.
   if (k === f._ck) return; f._ck = k; e.style.transform = 'translate(' + Math.round(f.s.x) + 'px,' + Math.round(f.s.y) + 'px) rotate(' + Math.round(f.fa * 180 / Math.PI + 90) + 'deg) scale(' + (W.carry ? GRD_T.carryR : 1) + ')'; }
 function grdVis(f) { var on = f.st === 'grd', sus = !!f.qm, c = f.cone; if (!f.team && (f.st === 'alert' || f.st === 'chase')) grdCall(f); if (!c) return;
   if (c._on !== on) { c._on = on; c.classList.toggle('off', !on); } if (c._sus !== sus) { c._sus = sus; c.style.backgroundImage = grdConeImg(f.N0.r, f.grd.a, sus); }
-  var cr = !!W.carry; if (f._cr !== cr) { f._cr = cr; f.N = cr ? f.Nc : f.N0; ev('world:cafe:guard:carry:' + f.key + ':' + (cr ? 1 : 0)); } if (on) grdConeSet(f); }
+  var cr = !!W.carry; if (f._cr !== cr) { f._cr = cr; f.N = cr ? f.Nc : f.N0; ev('world:cafe:guard:carry:' + f.key + ':' + (cr ? 1 : 0)); }
+  var vis = on && visible(f.s.x, f.s.y, f.N.r * 1.1 + 40); if (c._vis !== vis) { c._vis = vis; c.style.display = vis ? '' : 'none'; f._ck = ''; } if (vis) grdConeSet(f); } /* off camera: no cone writes, no layer */
 /* doorway landings: you can always peek in */
 function grdPeek(f) { var r = W.ryo; return (f.peek || []).some(function (a) { return Math.hypot(r.x - a[0], r.y - a[1]) < GRD_T.peek; }); }
 /* spotted: the bark, then 4 backups through the doors, all on you. One team = one fight. */

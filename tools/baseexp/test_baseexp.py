@@ -10,7 +10,7 @@ SECT = os.environ.get('SECT', 'DGRHQLSCO')
 exec(open(__file__.rsplit('/', 1)[0] + '/../lockeramb/lib.py').read())
 NEXT = """()=>{var b=[...document.querySelectorAll('button')].filter(e=>/^(Next|Skip|Close|OK|Got it)/.test((e.textContent||'').trim())&&e.offsetParent!==null);if(!b.length)return 0;b[0].click();return 1}"""
 STUB = "(function(){ if(!W.__fo){ W.__fo=fight; } W.__fights=[]; fight=function(g,b,c){ W.__fights.push({g:g.slice(),c:c}); ev('test:fight'); }; return 1; })()"
-GF = "(function(){ var f=(W.dgF||[]).find(q=>q.grd); return f?{k:f.key,st:f.st,x:Math.round(f.s.x),y:Math.round(f.s.y),fa:+f.fa.toFixed(3),sus:+(f.sus||0).toFixed(3),gi:f.gi,N:f.N&&f.N.r,cone:f.cone&&f.cone.style.transform,off:f.cone&&f.cone.classList.contains('off')}:null; })()"
+GF = "(function(){ var f=(W.dgF||[]).find(q=>q.grd); return f?{k:f.key,st:f.st,x:Math.round(f.s.x),y:Math.round(f.s.y),fa:+f.fa.toFixed(3),sus:+(f.sus||0).toFixed(3),gi:f.gi,N:f.N&&f.N.r,cone:f.cone&&f.cone.style.transform,off:f.cone&&f.cone.classList.contains('off'),disp:f.cone&&f.cone.style.display}:null; })()"
 FOES = "(W.dgF||[]).map(f=>({k:f.key,st:f.st,g:!!f.grd}))"
 async def pump(pg, ms, sample=None):
     out = []; t = 0
@@ -79,7 +79,8 @@ async def main():
                 if not m: return False
                 dg = (int(m.group(3)) - (s['fa'] * 180 / math.pi + 90) + 540) % 360 - 180
                 return abs(int(m.group(1)) - s['x']) <= 1 and abs(int(m.group(2)) - s['y']) <= 1 and abs(dg) <= 1.5
-            ok('G3 the cone follows his position and facing on every sample, visible while on rounds', all(cone_ok(s) and not s['off'] for s in smp if s['st'] == 'grd'), smp[-1])
+            vis = [s for s in smp if s['st'] == 'grd' and s['disp'] != 'none']; hid = [s for s in smp if s['disp'] == 'none']
+            ok('G3 the cone follows his position and facing on every on-camera sample (off camera it is hidden, no writes)', len(vis) >= 30 and all(cone_ok(s) and not s['off'] for s in vis), (len(vis), len(hid), smp[-1]))
             ok('G4 standing on the doorway landing: never noticed (safe to peek)', all(s['sus'] == 0 and s['st'] == 'grd' for s in smp), [s for s in smp if s['sus']][:2])
             # dock: freeze him (test hold) facing west at 430,420
             await go(pg, 'caf', 'dock'); await ev(pg, HOLD % (430, 420, math.pi))
