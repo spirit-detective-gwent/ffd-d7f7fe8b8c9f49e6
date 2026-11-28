@@ -201,13 +201,14 @@ async def t_pots(g):
     await g.pg.screenshot(path=f'{OUT}/pot_no_tag.png')
     # bigger tap radius on the plant: taps that were misses before (well above the plant, wide of it) still count
     fails = []
-    for (tx, ty, ox, oy) in ((0, -54, -50, 30), (38, -12, 60, 10), (-38, -12, -60, 20), (0, 16, 20, 60), (30, -40, 20, 50)):
-        await setpot('gp5', 'empty'); await put(px + ox, py + oy)
-        sx, sy = await world_to_screen(px + tx, py + ty); await g.pg.touchscreen.tap(sx, sy); ok = False
+    gx2, gy2 = [(o[1], o[2]) for o in pots if o[0] == 'gp2'][0]
+    for (pid, qx, qy, tx, ty, ox, oy) in (('gp2', gx2, gy2, 0, -54, -50, 40), ('gp5', px, py, 38, -12, 60, 10), ('gp5', px, py, -38, -12, -60, 20), ('gp5', px, py, 0, 16, 20, 60), ('gp5', px, py, 30, -34, 20, 50)):
+        await setpot(pid, 'empty'); await put(qx + ox, qy + oy)
+        sx, sy = await world_to_screen(qx + tx, qy + ty); await g.pg.touchscreen.tap(sx, sy); ok = False
         for i in range(130):
             await g.wait(150)
-            if await pst('gp5') == 'planted' and not await g.ev("W.busy"): ok = True; break
-        if not ok: fails.append((tx, ty, ox, oy, await pst('gp5')))
+            if await pst(pid) == 'planted' and not await g.ev("W.busy"): ok = True; break
+        if not ok: fails.append((pid, tx, ty, ox, oy, await pst(pid), await g.ev('[W.scr,W.cut,W.dlg,W.busy,W.ryo.x|0,W.ryo.y|0]'), await g.ev('FFF_UI.ST.events.slice(-4)')))
         await g.hush(); await g.wait(200)
     check('pots: a tap on the plant, above it or just beside it walks Ryo over and plants (5 wider taps)', not fails, fails)
     # no stealing: a tap on Sumire (NPC) and on the Exit door never touches a pot
