@@ -22301,7 +22301,7 @@ function c3HerbDrop() { var r = Math.random(); return r < 0.45 ? 'kelp' : r < 0.
 var C3SHOPS = {
   shop_surplus: { n: 'Mio\u2019s Sailor Surplus', who: 'npc3_stall', at: null, loc: 'North Quay (in front of the net shed)', hi: 'Navy surplus, fresh off the boat. Fits a fox and a swordswoman.',
     items: [{ id: 'of_peacoat', k: 'outfit', of: 'peacoat', cost: 24, stock: 1 }, { id: 'of_oilskin', k: 'outfit', of: 'oilskin', cost: 34, stock: 1, unlock: function () { return c2Seals() >= 1; }, why: 'Clear one corner first' },
-      { id: 's3_soda', k: 'soda', n: 'Ramune (cold box)', cost: 2, stock: 3, d: 'A soda: +5 Spirit on the map, full Spirit on a chug win.' }, { id: 's3_ging', k: 'herb', hb: 'ginger', n: 'Ginger Root', cost: 1, stock: 3, d: 'Pot ingredient: Ginger + Bonito = Ginger Dashi.' }] },
+      { id: 's3_soda', k: 'soda', n: 'Ramune (cold box)', cost: 3, stock: 3, d: 'A soda: +5 Spirit on the map, full Spirit on a chug win.' }, { id: 's3_ging', k: 'herb', hb: 'ginger', n: 'Ginger Root', cost: 1, stock: 3, d: 'Pot ingredient: Ginger + Bonito = Ginger Dashi.' }] },
   fence_pier: { n: 'Pier Fence \u00b7 Kujira', who: 'npc3_fence', at: [1060, 2020], loc: 'Dock Road (by Pier 4)', hi: 'Kujira. Things fall off boats. I catch them.',
     items: [{ id: 'p3_intel', k: 'intel', n: 'Harbor Intel: the ice-hook man', cost: 4, stock: 1, lines: 'market' },
       { id: 'p3_card', k: 'card', rar: 'common', n: 'Sealed card pack (Common)', cost: 10, stock: 2 },
@@ -23192,7 +23192,7 @@ function phPrices() {
     craftCh1: '1 Clean Gauze + 1 Medical Tape = 20% dressing. In Chapter 2, Hase, Machi Motors, and Ono sell both as kit materials. World-found and safe-room kits stay the cheap path.',
     craftCh2: '1 Mugwort Leaf + 1 Ginger Root = 35% potion. Ingredients already defined. Gated to Chapter 2.',
     income: 'Each bully rolls 50% of \u00a51 (expected \u00a50.5). A relay rolls 50% of \u00a52 (expected \u00a51). Gouki alone rolls 50% of \u00a53 (expected \u00a51.5), plus \u00a51 of that roll per joiner before the half.',
-    recommendation: 'v6.5.66: Chapter 1 food and drink now match Chapter 2 (about \u00a50.5 per HP). Soda \u00a53, machine food \u00a57 (30% HP), hot lunch \u00a512, once per playthrough (half HP, full HP on an eating-game win). Potion stays \u00a56. The harbor machines share the soda and food prices. The \u00a54 bandage machine, the nurse and candy are unchanged. Fight yen is unchanged.'
+    recommendation: 'v6.5.66: Chapter 1 food and drink now match Chapter 2 (about \u00a50.5 per HP). Soda \u00a53, machine food \u00a57 (30% HP), hot lunch \u00a512, once per playthrough (half HP, full HP on an eating-game win). Potion stays \u00a56. The harbor machines share the soda and food prices. Chapter 2 shop sodas are \u00a53 too (harbor cold box, Dagashi Fumi, Machi Motors; Machi Motors stays \u00a52 at Nails\u2019 price). The \u00a54 bandage machine, the nurse and candy are unchanged. Fight yen is unchanged.'
   };
 }
 function phSetUI() { return root.FFF_UI; }
@@ -40825,7 +40825,7 @@ function camPan(to, o, done) {
   SHOPS.nq_motors = { n: 'Machi Motors', who: 'nq_mech', hi: 'Tape, gauze, cold cans. The bike stuff\u2019s not for kids.', nq: 1,
     items: [{ id: 'tape', k: 'herb', hb: 'tape', n: 'Medical Tape', base: 3, cost: 2, stock: 3, d: 'For a 20% dressing, with clean gauze.' }, { id: 'gauze', k: 'herb', hb: 'gauze', n: 'Gauze', base: 3, cost: 2, stock: 3, d: 'For a dressing. Craft with tape.' }, { id: 'can', k: 'soda', n: 'Canned soda', base: 3, cost: 2, stock: 3, d: 'Cold from the fridge. One soda in your bag.' }] };
   /* the Ginko stalls Nails' wins open */
-  SHOPS.nq_gk1 = { n: 'Dagashi Fumi', who: 'nq_dagashi', hi: 'Ten yen candy. Well. One yen, for you.', items: [{ id: 'ram', k: 'soda', n: 'Ramune', cost: 2, stock: 3, d: 'Marble soda. One soda in your bag.' }, { id: 'candy', k: 'heal', h: 'candy', cost: 1, stock: 3 }] };
+  SHOPS.nq_gk1 = { n: 'Dagashi Fumi', who: 'nq_dagashi', hi: 'Ten yen candy. Well. One yen, for you.', items: [{ id: 'ram', k: 'soda', n: 'Ramune', cost: 3, stock: 3, d: 'Marble soda. One soda in your bag.' }, { id: 'candy', k: 'heal', h: 'candy', cost: 1, stock: 3 }] };
   SHOPS.nq_gk2 = { n: 'Ono Drugstore', who: 'nq_drug', hi: 'Tape and gauze. Don\u2019t tell me how.', items: [{ id: 'tape', k: 'herb', hb: 'tape', n: 'Medical Tape', base: 3, cost: 2, stock: 3, d: 'For a 20% dressing, with clean gauze.' }, { id: 'gauze', k: 'herb', hb: 'gauze', n: 'Gauze', base: 3, cost: 2, stock: 3, d: 'For a dressing. Craft with tape.' }] };
   SHOPS.nq_gk3 = { n: 'Hon\u2019s Used Books', who: 'nq_books', hi: 'Old fight manuals. Some of them even work.', nqBook: 1, items: [{ id: 'bkc', k: 'book', bk: 'common', n: 'Dog-eared manual', cost: 10, stock: 2, d: 'Open it: +1 ' + (typeof essName === 'function' ? essName() : 'essence') + '.' }, { id: 'bku', k: 'book', bk: 'uncommon', n: 'Rare fight manual', cost: 24, stock: 1, d: 'Open it: +3 ' + (typeof essName === 'function' ? essName() : 'essence') + '.' }] };
   SHOPS.nq_gk4 = { n: 'Gacha Corner', who: 'nq_gacha', hi: 'Turn the crank! Every capsule\u2019s a card!', items: [{ id: 'gc', k: 'card', rar: 'common', n: 'Capsule (common)', cost: 8, stock: 3 }, { id: 'gu', k: 'card', rar: 'uncommon', n: 'Gold capsule (uncommon)', cost: 20, stock: 1 }] };
