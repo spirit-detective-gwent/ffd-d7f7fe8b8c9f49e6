@@ -56,12 +56,14 @@ async def pull_run(g, crew_re, how, expect_sizes, label):
         left = await g.ev(foes_js(crew_re))
         if not left: break
         n0 = await g.ev("window.__ctxs.length")
-        r = await g.ev((TAP if how == 'tap' else TOUCH) % crew_re)
+        if await g.ev("document.getElementById('game').classList.contains('on')"): n0 -= 1; r = 'already on (a man stood on Ryo)'  # the next crewmate walked into Ryo
+        else: r = await g.ev((TAP if how == 'tap' else TOUCH) % crew_re)
         if not await wait_battle(g, n0):
             ok(label + ' battle %d starts' % k, False, r); return sizes
         ctx = (await g.ev("window.__ctxs.slice(-1)[0].ctx.dgks"))
         crews = set(x.rsplit('_', 1)[0] for x in ctx)
         await g.wait(1500); bt = await g.ev(BATTLE)
+        if k == 0: await g.shot(label + '_battle', hush=False)
         sizes.append(len(ctx))
         same = await g.ev("(function(ks){ var c=ks[0].replace(/_\\d+$/,''); return (W.dgF||[]).filter(function(o){return o.crew===c && ks.indexOf(o.key)<0 && o.s&&o.s.el&&o.s.el.parentNode}).length })(%s)" % json.dumps(ctx))
         exp = min(2, len(ctx) + same)
@@ -72,7 +74,11 @@ async def pull_run(g, crew_re, how, expect_sizes, label):
         await settle(g, 8)
         gone = await g.ev("(function(ks){ return ks.every(function(k){ var f=c2S().f[k]; var w=(W.dgF||[]).some(function(o){return o.key===k&&o.s&&o.s.el&&o.s.el.parentNode}); return f&&!w; }) })(%s)" % json.dumps(ctx))
         ok('%s fight %d: both flagged + world sprites gone (%s)' % (label, k, res), gone, ctx)
-        lk = json.loads(await g.ev(LOCK)); hud = await g.ev(HUD)
+        if await g.ev("document.getElementById('game').classList.contains('on')"): continue
+        for t in range(14):  # a crew's last fight may roll a short story beat: let it play, then the world must be free
+            lk = json.loads(await g.ev(LOCK)); hud = await g.ev(HUD)
+            if not (lk['busy'] or lk['cut'] or lk['dlg'] or lk['amb'] or lk['dgF']) and all(hud.values()): break
+            await g.adv(4); await g.skipall(2); await g.wait(600)
         ok('%s fight %d: no lock after' % (label, k), not (lk['busy'] or lk['cut'] or lk['dlg'] or lk['amb'] or lk['dgF']) and all(hud.values()), [lk, hud])
     return sizes
 
@@ -100,7 +106,9 @@ async def sec_ko():
 async def sec_groups():
     async with h.Game(out=OUT) as g:
         await boot(g, ST['west'], 1760, 2120)
-        await g.ev("FFF_NQ.setStg('west','w2'); FFF_NQ.crewSync(); 1"); await g.wait(1500)
+        s1 = await pull_run(g, '/^nq_w1$/', 'touch', None, 'west-w1')
+        ok('west w1 (2 men): one fight of two (%s)' % s1, s1 == [2], s1)
+        await settle(g, 6); await g.hush(); await g.ev("if(FFF_NQ.stg('west')!=='w2'){FFF_NQ.setStg('west','w2')} FFF_NQ.crewSync(); 1"); await g.wait(1500)
         sizes = await pull_run(g, '/^nq_w2$/', 'touch', None, 'west-w2')
         ok('west w2 (3 men): 2 then 1 (%s)' % sizes, sizes == [2, 1], sizes)
     async with h.Game(out=OUT) as g:
@@ -197,9 +205,9 @@ async def sec_repair(fx):
         ok('repair: the menu opens (%s)' % m, m[1], m)
         a0 = await g.ev("SAVE.act"); await g.ev("swapTap(); 1"); await g.wait(1200); a1 = await g.ev("SAVE.act")
         ok('repair: swap works (%s -> %s)' % (a0, a1), a0 != a1, [a0, a1])
-        await g.ev("W.ryo.x=1890; W.ryo.y=860; place(W.ryo,0); camera(true); 1"); await g.wait(500)
-        mv = await g.drag(0, -70); mv2 = await g.drag(90, 0)
-        ok('repair: town movement up / sideways (%s %s)' % (mv, mv2), abs(mv[1]) > 15 and abs(mv2[0]) > 40, [mv, mv2])
+        await g.ev("W.ryo.x=1890; W.ryo.y=900; place(W.ryo,0); camera(true); 1"); await g.wait(500)
+        mv = await g.drag(0, 80); mv0 = await g.drag(0, -80); mv2 = await g.drag(90, 0)
+        ok('repair: town movement down / up / sideways (%s %s %s)' % (mv, mv0, mv2), abs(mv[1]) > 40 and abs(mv0[1]) > 40 and abs(mv2[0]) > 40, [mv, mv0, mv2])
         # the rematch: the last crew, a stale world lock and a dead overlay left over; the cards must still take a tap
         await g.ev("(function(){var o=document.createElement('div'); o.id='nqsting'; o.className='v2'; o.hpT=performance.now()-20000; document.body.appendChild(o); return 1})()")
         n0 = await g.ev("window.__ctxs.length"); await g.ev(TOUCH % '/^nq_c0$/')
