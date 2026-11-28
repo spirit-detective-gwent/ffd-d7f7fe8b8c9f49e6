@@ -71,15 +71,9 @@ def judge_lesson(log, tag):
             if abs(cx(p['sm']) - cx(p['bot'])) > 0.8 * p['bot'][2] or abs(cx(p['sm']) - (p['dp'][0] + p['dp'][2] * 0.2)) > 1.2 * p['dp'][2] or cy(p['sm']) > p['bot'][1] + p['bot'][3]: badS.append(('stream off', p['t']))
     check(tag + ' pour: stream only runs from the dipper into the bottle', nS > 0 and not badS, badS[:2] or ('%d samples' % nS))
     # 3 bubble
-    badB = []; nB = 0
     json.dump(log, open(f'{OUT}/{tag}_log.json', 'w'))
-    for p in log:
-        if p['tag'] and p['su']:
-            nB += 1; z = max(0.3, p['zoom']); dx = abs(cx(p['tag']) - cx(p['su'])) / z; dy = (p['su'][1] - cy(p['tag'])) / z
-            if dx > 24 or dy < -30 or dy > 60: badB.append((round(dx), round(dy), p['t']))
-    check(tag + ' bubble: Talk bubble stays on her through the walk down and back', nB > 20 and not badB, badB[:3] or ('%d visible samples' % nB))
-    inert = [p['t'] for p in log if p['cine'] and p['tagp'] not in (None, 'none')]
-    check(tag + ' bubble: inert during the cinematic', not inert, inert[:3])
+    vis = [p['t'] for p in log if p['cine'] and p['tag']]
+    check(tag + ' bubble: no stray Talk bubble while the story camera is zoomed (hidden during the cinematic)', not vis, vis[:3])
     # 4 compare card never under the portrait / box at bottom
     badD = []; nD = 0
     for p in log:
@@ -93,6 +87,8 @@ async def end_state(g, tag):
        home:[Math.round(su.x),Math.round(su.y)], loop:!!su.loop, pot:SAVE.craft&&SAVE.craft.potion, sp:SAVE.sc.pot, potions:(SAVE.heal||[]).filter(function(k){return k==='potion'}).length, dlg:!!W.dlg, paused:!!W.paused, busy:!!W.busy,
        sc:getComputedStyle(document.getElementById('wv')).scale, tags:!!document.querySelector('#wtags .wtag[data-k="c2_clinic:sumire"]')}})()""")
     return s
+def scale_ok(sc):
+    return sc in ('none', '', '1') or abs(float(sc) - 1) < 0.25
 async def t_lesson(g, tag, skip=False):
     d = f'{OUT}/{tag}'; os.makedirs(d, exist_ok=True)
     await start_lesson(g); log = await run_lesson(g, tap_skip=skip, shotdir=d if not skip else None)
@@ -100,13 +96,24 @@ async def t_lesson(g, tag, skip=False):
     judge_lesson(log, tag)
     s = await end_state(g, tag)
     check(tag + ' flow: learned, Kampo granted, scene over', s['pot'] == 1 and s['sp'] == 'learned' and s['potions'] >= 1 and not s['HS'] and not s['cine'], s)
-    check(tag + ' flow: no props left, she is back at her counter, idle loop on, camera back', not s['props'] and abs(s['home'][0]-790)<=3 and abs(s['home'][1]-380)<=3 and s['loop'] and abs(float(s['sc']) - 1) < 0.2, s)
+    check(tag + ' flow: no props left, she is back at her counter, idle loop on, camera back', not s['props'] and abs(s['home'][0]-790)<=3 and abs(s['home'][1]-380)<=3 and s['loop'] and scale_ok(s['sc']), s)
     return log
 async def t_menu_after(g):
     await g.hush(); await g.ev("c2SumireD()"); await g.wait(900)
     d = await g.ev("(function(){var d=document.getElementById('wdlg');return [...d.querySelectorAll('button')].map(function(x){return x.textContent.trim()})})()")
     check('flow: seed menu after the lesson', any(b.startswith('Seeds') for b in d) and not any('Teach me' in b for b in d), d)
     await g.hush()
+async def t_bubble(g):
+    await g.hush(); await g.ev("c2S().e.sumire=1; W.scr=0; W.cut=0; 1")
+    bad = []; n = 0
+    for (x, y) in ((790, 380), (700, 470), (640, 560), (560, 430), (900, 500)):
+        await g.ev(f"(function(){{var su=W.c2n.sumire; su.x={x}; su.y={y}; place(su,0); W.ryo.x=620; W.ryo.y=700; place(W.ryo,0); camera(true); return 1}})()"); await g.wait(500)
+        p = await g.ev(PROBE); n += 1
+        if not p['tag']: bad.append((x, y, 'no tag')); continue
+        z = max(0.3, p['zoom']); dx = abs(cx(p['tag']) - cx(p['su'])) / z; dy = (p['su'][1] - cy(p['tag'])) / z
+        if dx > 12 or dy < -25 or dy > 25: bad.append((x, y, round(dx), round(dy)))
+    check('bubble: her Talk bubble sits on her wherever she stands (5 spots)', n == 5 and not bad, bad)
+    await g.ev("(function(){var su=W.c2n.sumire; su.x=790; su.y=380; place(su,0); return 1})()")
 async def t_dialog(g):
     await g.hush(); await g.ev("(function(){var st=c2S(); st.e.sumire=1; return 1})()")
     res = {}
@@ -141,7 +148,7 @@ async def t_pots(g):
     async def setpot(pid, st): await g.ev(f"(function(){{c2Cyc().pots['{pid}'].st='{st}'; W.tagSig=null; return 1}})()"); await g.wait(300)
     async def put(x, y):
         await g.ev(f"(function(){{W.ryo.x={x}; W.ryo.y={y}; W.ryo.v=0; W.path=[]; place(W.ryo,0); if(W.aoi){{W.aoi.x={x}-60; W.aoi.y={y}+10; place(W.aoi,0)}} camera(true); return 1}})()"); await g.wait(500)
-    fails = []; n = 0
+    fails = []; n = 0; await g.ev('W.scr=0;W.cut=0;1')
     for pid, kind in (('gp5', ''), ('gg2', 'ginger')):
         px, py = [(o[1], o[2]) for o in pots if o[0] == pid][0]
         # (start offset from the pot's feet, tap offset on the pot)
@@ -155,7 +162,7 @@ async def t_pots(g):
                 await g.wait(150)
                 if await pst(pid) == 'planted' and not await g.ev("W.busy"): ok = True; break
             n += 1
-            if not ok: fails.append((pid, (ox, oy), (tx, ty), await pst(pid)))
+            if not ok: fails.append((pid, (ox, oy), (tx, ty), await pst(pid), await g.ev('[W.scr,W.cut,W.dlg,W.busy]'), await g.ev('FFF_UI.ST.events.slice(-3)')))
             await g.hush(); await g.wait(200)
     check('pots: tap on the pot plants from %d start spots / tap points (both kinds)' % n, not fails, fails[:4])
     # pick (bloomed) the same way
@@ -233,7 +240,7 @@ async def t_stale(g):
     mid = await g.ev("[HS.on, !!document.getElementById('hsbot'), !!document.getElementById('hsladle'), document.body.classList.contains('hscine')]")
     await g.ev("W.scGen=(W.scGen|0)+1; scKill(); 1"); await g.wait(600)
     s = await end_state(g, 'stale')
-    check('stale: Reset / NG+ (scKill) mid-beat clears the props, class and state', mid[0] and mid[2] and not s['props'] and not s['cine'] and not s['HS'] and abs(s['home'][0]-790)<=3 and abs(s['home'][1]-380)<=3, (mid, s))
+    check('stale: Reset / NG+ (scKill) mid-beat clears the props, class and state', mid[0] and mid[2] and not s['props'] and not s['cine'] and not s['HS'] and abs(s['home'][0]-790)<=3 and abs(s['home'][1]-380)<=3 and scale_ok(s['sc']), (mid, s))
     await g.ev("W.dlg=false; W.cut=0; 1"); await g.hush()
 async def main():
     os.makedirs(OUT, exist_ok=True)
@@ -241,9 +248,10 @@ async def main():
     if idx: h.INDEX = h.Path(idx)
     async with h.Game(path='compassionate', out=OUT) as g:
         await g.boot(); await g.enter('clinic', 560, 640)
-        ONLY = os.environ.get('ONLY', 'lesson,menu,dialog,pots,stale').split(',')
+        ONLY = os.environ.get('ONLY', 'lesson,menu,bubble,dialog,pots,stale').split(',')
         if 'lesson' in ONLY: await t_lesson(g, 'compassionate')
         if 'menu' in ONLY: await t_menu_after(g)
+        if 'bubble' in ONLY: await t_bubble(g)
         if 'dialog' in ONLY: await t_dialog(g)
         if 'pots' in ONLY: await t_pots(g)
         if 'stale' in ONLY: await t_stale(g)

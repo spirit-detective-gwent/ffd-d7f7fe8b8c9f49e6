@@ -58316,7 +58316,7 @@ function hsBottleSvg(fill) { return '<svg viewBox="0 0 40 40" width="100%" heigh
 /* the brass dipper: handle to the right (grip at x=44), bowl at the left end. Hung from the brazier's corner it points straight down. */
 function hsDipperSvg() { return '<svg viewBox="0 0 44 24" width="100%" height="100%" aria-hidden="true"><path d="M14 10h26" stroke="#14110d" stroke-width="5" stroke-linecap="round"/><path d="M14 10h26" stroke="#b98a52" stroke-width="2.6" stroke-linecap="round"/><circle cx="42" cy="10" r="2.2" fill="none" stroke="#14110d" stroke-width="1.6"/><path d="M1.5 9h15a7.5 7.5 0 0 1-15 0z" fill="#d9b04a" stroke="#14110d" stroke-width="1.8" stroke-linejoin="round"/><ellipse class="hsdq" cx="9" cy="9.3" rx="6" ry="1.5" fill="#7a4520" opacity="0"/><path d="M4 12.5c1 2 3 3 5 3" stroke="#fff3c4" stroke-width="1" fill="none" opacity=".7" stroke-linecap="round"/></svg>'; }
 function hsCineCss() { if (document.getElementById('hscine')) return; var s = document.createElement('style'); s.id = 'hscine';
-  s.textContent = 'body.hscine #wbub,body.hscine #wmark{display:none!important}body.hscine #wtags{pointer-events:none!important}body.hscine #wtags .wtag{pointer-events:none!important}' + '.hsprop{position:absolute;display:block;pointer-events:none}' +
+  s.textContent = 'body.hscine #wbub,body.hscine #wmark{display:none!important}body.hscine #wtags{display:none!important}body.hscine #wtags .wtag{pointer-events:none!important}' + '.hsprop{position:absolute;display:block;pointer-events:none}' +
     '#hssteam b{position:absolute;bottom:0;width:14px;height:14px;margin-left:-7px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#fff 0,#f2efe8 45%,rgba(240,236,228,0) 72%);opacity:0;animation:hspuff 1.5s ease-out 4}' +
     '#hssteam b:nth-child(2){animation-delay:.5s;left:60%}#hssteam b:nth-child(3){animation-delay:1s;left:35%}#hssteam b:nth-child(1){left:50%}' +
     '@keyframes hspuff{0%{opacity:0;transform:translate(0,0) scale(.5)}20%{opacity:.95}100%{opacity:0;transform:translate(6px,-34px) scale(1.9)}}' +
@@ -58436,6 +58436,7 @@ function hsCineBack(next) { var su = hsSu(), b = document.getElementById('hsbot'
   ], next); }
 function hsCineEnd(stale) { HS.g++; HS.on = false; HS.ph = false; HS.skip = false; HS.timers = []; HS.walk = null; HS.anims.forEach(function (a) { try { a.cancel(); } catch (e) {} }); HS.anims = [];
   try { document.body.classList.remove('hscine'); } catch (eB) {} hsPropsOff(); var su = hsSu();
+  if (stale) { try { if (root.FFF_SCAM && FFF_SCAM.clear) FFF_SCAM.clear(); } catch (eC) {} } /* a Reset / leave mid-beat drops the story camera too */
   if (stale && su && su.el && HS.home) { su.x = HS.home[0]; su.y = HS.home[1]; try { place(su, 0); } catch (eP) {} }
   if (su && su.el) { try { if (IMG.tsukikage_idle && typeof celLoop === 'function') celLoop(su, 'tsukikage_idle', 0, { ms: 420 }); } catch (e) {} } }
 var hsScKill0 = scKill;
