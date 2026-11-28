@@ -131,6 +131,11 @@ async def main():
         g = G(); await g.start(b, nq='{udon:1,udonTry:3}')
         chk('reload: after 3 tries the old fallback hands the quest off (never stranded)', await g.ev("c2S().q.cq2_nq_west===0||FFF_NQ.stg('west')==='w1'"))
         await g.pg.close()
+        # v6566-rc: an older save that already took the hand-off (won.udon set, no udonFin) must not replay the beat (hotelpull 'west' setup)
+        g = G(); await g.start(b, nq='{udon:1,won:{udon:1}}', at=(1760, 2120)); await g.wait(2500)
+        r = await g.ev("[window.__evs.indexOf('world:nq:udon:resume'), c2S().q.cq2_nq_west, FFF_NQ.stg('west'), !!c2S().e.nq.udonFin, W.cut, W.dlg]")
+        chk('reload: a save with won.udon (hand-off done) opens the west job, no beat replay, free', r[0] < 0 and r[1] == 0 and r[2] == 'w1' and r[3] and not r[4] and not r[5], r)
+        await g.pg.close()
         # ---- 5. east row ----
         g = G(); await g.start(b, nq='{udon:1,udonFin:1,won:{udon:1}}', at=(4300, 3360), extra="var st=c2S();st.e.seal_sento=1;st.q.cq2_s2_waga=9;if(root.FFF_S2&&root.FFF_S2.setStg)root.FFF_S2.setStg('done');c2QSync();save()")
         r = await g.ev("""(function(){var o={};var P2=FFF_S2P2;o.shop=P2.SHOP_DOOR;o.lob=P2.LOB_DOOR;var e=C2W.bld.filter(function(b){return b.id==='eastS'})[0];o.eastS=e.r;

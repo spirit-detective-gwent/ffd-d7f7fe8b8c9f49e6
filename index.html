@@ -40912,7 +40912,7 @@ function camPan(to, o, done) {
   function udonFin() { var n = NS(); n.udonFin = 1; sv(); if (UDB && UDB.own) kill(UDB.own); UDB = NQ.UDB = null; ev('world:nq:udon:fin'); openFront(); }
   /* a reload (or an app close) mid-beat: the shop is already open (e.udon); Oda-san steps out again and the beat finishes from his lines */
   function udonResume() { var n = NS(); if (!nailsRun() || !n.udon || n.udonFin || UDB) return;
-    if (qOn('west') || qDone('west') || (n.udonTry | 0) >= 3) { n.udonFin = 1; sv(); return; } /* already handed off (older saves) */
+    if (qOn('west') || qDone('west') || won().udon || (n.udonTry | 0) >= 3) { n.udonFin = 1; sv(); return; } /* already handed off (older saves; v6566-rc: won.udon is only ever set by that hand-off, so a save carrying it never replays the beat) */
     n.udonTry = (n.udonTry | 0) + 1; sv();
     whenFree(function () { if (UDB || NS().udonFin || !inTown()) return; UDB = NQ.UDB = { t0: performance.now(), step: 'talk', own: null, resumed: 1 }; ev('world:nq:udon:resume');
       var own = null; try { own = UDB.own = npc('nq_udon', 960, 3306, Math.PI / 2); face(own, W.ryo.x, W.ryo.y); c2Face(W.ryo, own.x, own.y); } catch (eN) {}
