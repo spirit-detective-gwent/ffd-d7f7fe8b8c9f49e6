@@ -60,8 +60,7 @@ var CAF_GRD = { cooler: { pts: [[170, 440], [170, 270], [900, 270], [900, 440]],
   bakery: { pts: [[260, 340], [840, 340], [840, 560], [260, 560]], r: %BR%, a: %BA%, id: 'bully3' } };
 var GRD_T = { sp: 58, pause: 1.3, look: 0.5, turn: 0.55, t: 0.55, carryR: 1.25, carryT: 0.5, peek: 80, team: 4, bark: 1.6 };
 (function () { var st = document.createElement('style'); st.id = 'ggd89css';
-  st.textContent = '.wgcone{position:absolute;left:0;top:0;pointer-events:none;border-radius:50%;background:conic-gradient(from -46deg,rgba(255,222,96,.46) 0deg 92deg,rgba(0,0,0,0) 92deg 360deg);-webkit-mask:radial-gradient(closest-side,#000 62%,rgba(0,0,0,0) 100%);mask:radial-gradient(closest-side,#000 62%,rgba(0,0,0,0) 100%);transition:opacity .25s;will-change:transform;z-index:60}'
-    + '.wgcone.sus{background:conic-gradient(from -46deg,rgba(255,100,70,.5) 0deg 92deg,rgba(0,0,0,0) 92deg 360deg)}.wgcone.off{opacity:0}'
+  st.textContent = '.wgcone{position:absolute;left:0;top:0;pointer-events:none;background:center/100% 100% no-repeat;transition:opacity .25s;will-change:transform;z-index:60}.wgcone.off{opacity:0}'
     + '.wgbark{position:absolute;transform:translate(-50%,-100%);padding:3px 9px 4px;background:#fff3c4;color:#1c1622;border:2px solid #1c1622;border-radius:9px;font:900 15px/1.1 system-ui,sans-serif;letter-spacing:.04em;white-space:nowrap;pointer-events:none;z-index:120;box-shadow:0 3px 0 #1c1622;animation:wgbark 1.6s ease-out forwards}'
     + '.wgbark::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-6px;border:6px solid transparent;border-top-color:#1c1622;border-bottom:0}'
     + '@keyframes wgbark{0%{scale:.3;opacity:0}12%{scale:1.18;opacity:1}22%{scale:1}80%{opacity:1}100%{opacity:0;translate:0 -14px}}'
@@ -71,13 +70,20 @@ var GRD_T = { sp: 58, pause: 1.3, look: 0.5, turn: 0.55, t: 0.55, carryR: 1.25, 
     + '.fkick{animation:fkick .75s cubic-bezier(.2,.6,.4,1) forwards;pointer-events:none}@keyframes fkick{0%{translate:0 0;rotate:0deg;opacity:1}60%{translate:var(--kx,-120px) -70px;rotate:-260deg;opacity:1}100%{translate:calc(var(--kx,-120px)*1.6) -20px;rotate:-400deg;opacity:0}}'
     + '.fldlap.fslow{filter:saturate(.55) brightness(.92)}.fldlap.fslow::after{content:"";position:absolute;left:50%;top:-14px;width:22px;height:22px;margin-left:-11px;border-radius:50%;background:#fff;border:2px solid #1c1622;box-shadow:inset 0 0 0 3px #6fb6e8}';
   document.head.appendChild(st); })();
+/* the cone is a bitmap drawn once (half resolution, cached per reach + colour): moving / turning it is a compositor-only transform */
+var GRD_IMG = {};
+function grdConeImg(R, a, sus) { var k = R + ':' + a + ':' + (sus ? 1 : 0); if (GRD_IMG[k]) return GRD_IMG[k]; var h = Math.ceil(R / 2), c = document.createElement('canvas'); c.width = c.height = 2 * h;
+  var x = c.getContext('2d'), g = x.createRadialGradient(h, h, 0, h, h, h), col = sus ? '255,100,70' : '255,222,96', al = sus ? 0.5 : 0.46;
+  g.addColorStop(0, 'rgba(' + col + ',' + al + ')'); g.addColorStop(0.62, 'rgba(' + col + ',' + al + ')'); g.addColorStop(1, 'rgba(' + col + ',0)');
+  x.fillStyle = g; x.beginPath(); x.moveTo(h, h); x.arc(h, h, h, -Math.PI / 2 - a * Math.PI / 180, -Math.PI / 2 + a * Math.PI / 180); x.closePath(); x.fill();
+  return (GRD_IMG[k] = 'url(' + c.toDataURL() + ')'); }
 function grdCone(f) { var e = document.createElement('i'), R = f.N0.r; e.className = 'wgcone'; e.style.width = e.style.height = (2 * R) + 'px'; e.style.margin = (-R - 18) + 'px 0 0 ' + (-R) + 'px';
-  f.cone = e; f._ck = ''; grdConeSet(f); layer.appendChild(e); W.ints.push({ el: e }); }
+  e.style.backgroundImage = grdConeImg(R, f.grd.a, 0); f.cone = e; f._ck = ''; grdConeSet(f); layer.appendChild(e); W.ints.push({ el: e }); }
 /* the cone sits on him and points where he faces; one transform write, only when it changed */
 function grdConeSet(f) { var e = f.cone; if (!e) return; var k = Math.round(f.s.x) + ',' + Math.round(f.s.y) + ',' + Math.round(f.fa * 180 / Math.PI + 90) + ',' + (W.carry ? 1 : 0);
   if (k === f._ck) return; f._ck = k; e.style.transform = 'translate(' + Math.round(f.s.x) + 'px,' + Math.round(f.s.y) + 'px) rotate(' + Math.round(f.fa * 180 / Math.PI + 90) + 'deg) scale(' + (W.carry ? GRD_T.carryR : 1) + ')'; }
 function grdVis(f) { var on = f.st === 'grd', sus = !!f.qm, c = f.cone; if (!f.team && (f.st === 'alert' || f.st === 'chase')) grdCall(f); if (!c) return;
-  if (c._on !== on) { c._on = on; c.classList.toggle('off', !on); } if (c._sus !== sus) { c._sus = sus; c.classList.toggle('sus', sus); }
+  if (c._on !== on) { c._on = on; c.classList.toggle('off', !on); } if (c._sus !== sus) { c._sus = sus; c.style.backgroundImage = grdConeImg(f.N0.r, f.grd.a, sus); }
   var cr = !!W.carry; if (f._cr !== cr) { f._cr = cr; f.N = cr ? f.Nc : f.N0; ev('world:cafe:guard:carry:' + f.key + ':' + (cr ? 1 : 0)); } if (on) grdConeSet(f); }
 /* doorway landings: you can always peek in */
 function grdPeek(f) { var r = W.ryo; return (f.peek || []).some(function (a) { return Math.hypot(r.x - a[0], r.y - a[1]) < GRD_T.peek; }); }
