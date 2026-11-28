@@ -111,6 +111,19 @@ async def main():
         await g.pg.evaluate("""()=>{const c=document.querySelector('#j6arc canvas'); const r=c.getBoundingClientRect(), s=r.width/390;
             const e=(t)=>new PointerEvent(t,{pointerId:10,clientX:r.left+240*s,clientY:r.top+728*s,bubbles:true,pointerType:'touch'}); c.dispatchEvent(e('pointerdown')); c.dispatchEvent(e('pointerup'));}""")
         await g.wait(60); at = await g.ev("%s._pe()[0].st+'|'+(%s._pe()[0].mv&&%s._pe()[0].mv.k)" % (G, G, G)); ok('ATTACK button tap attacks', at.startswith('atk|p'), at)
+
+        # v6566-shonen t606u: hitstop on landed hits; bufT holds during freeze
+        await g.ev(RESET + "({d:48})")
+        # Pause the cabinet rAF stepper so only these scripted steps run; two 1/60 steps stay inside the 0.045s jab freeze.
+        hs = await g.ev("(function(){var G=FFF_S2ARC.cabG(),P=G._pe()[0],E=G._pe()[1]; if(!G._rawStep) G._rawStep=G.step; G.step=function(){}; E.aiT=99;E.want={}; G._rawStep(0); G.press('a'); var seen=0,f0=0,kind='',x0=0,x1=0,bufKept=0,b1=0,b2=0; for(var i=0;i<40;i++){ G._rawStep(1/60); if(P.st==='atk'&&P.mv&&P.mv.hit&&!seen){ seen=1; f0=G._in().freeze; kind=P.mv.k; x0=E.x; G.press('a'); b1=G._in().bufT; G._rawStep(1/60); G._rawStep(1/60); b2=G._in().bufT; bufKept=(b2>=b1-1e-9 && b2>0)?1:0; x1=E.x; break; } } G.step=G._rawStep; return {seen:seen,f0:+f0.toFixed(4),kind:kind,bufKept:bufKept,b1:+b1.toFixed(4),b2:+b2.toFixed(4),moved:+Math.abs(x1-x0).toFixed(4),fr:+G._in().freeze.toFixed(4)}; })()")
+        ok('jab hitstop ~0.045s', hs.get('seen') and hs['kind']=='p' and 0.03 <= hs['f0'] <= 0.055, hs)
+        ok('hitstop does not eat a buffered ATTACK (bufT holds, foe does not slide)', hs.get('bufKept')==1 and hs.get('moved',99)<0.02, hs)
+        await g.wait(400); await g.ev(RESET + "({d:48})")
+        hk = await g.ev("(function(){var G=FFF_S2ARC.cabG(),P=G._pe()[0]; G._pe()[1].aiT=99; G._pe()[1].want={}; var fK=0; for(var i=0;i<90;i++){ if(i%6===0) G.press('a'); G.step(1/60); if(P.st==='atk'&&P.mv&&P.mv.k==='k'&&P.mv.hit){ fK=G._in().freeze; break; } } return {fK:+fK.toFixed(4),chain:P.chainN}; })()")
+        ok('kick/finisher hitstop ~0.06-0.09s', 0.05 <= hk['fK'] <= 0.09, hk)
+        await g.wait(400); await g.ev(RESET + "({d:46})")
+        hb = await g.ev("(function(){var G=FFF_S2ARC.cabG(),E=G._pe()[1]; var b0=G._in().blocks,f=0; E.aiT=99; E.want={act:'k'}; for(var i=0;i<50;i++){ G.step(1/60); if(G._in().blocks>b0){ f=G._in().freeze; break; } } return {f:+f.toFixed(4),blocks:G._in().blocks-b0}; })()")
+        ok('blocked hit gets ~0.03s hitstop', hb.get('blocks',0)>=1 and 0.02 <= hb['f'] <= 0.04, hb)
         e1 = [e for e in g.errs if '404' not in e]; ok('no console errors (controls session)', not e1, e1[:5])
     # full ladder by a bot in node (all 6 fighters, continues allowed)
     import subprocess

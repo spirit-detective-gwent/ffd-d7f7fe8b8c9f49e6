@@ -53354,6 +53354,16 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       if (m.reach >= 999) return true; /* drop: hits anywhere */
       var dx = (O.x - F.x) * F.face; if (dx < -10) return false; if (dx > m.reach + 18 * O.c.w) return false;
       if (m.lvl === 'low' && O.air) return false; if (!m.air && O.air && O.y < GY - 70 && m.k !== 'spu') return false; return true; }
+    /* v6566-shonen t606u: hitstop on a landed hit. Jab ~0.045s, kick/special ~0.06s, scaled by damage and capped at 0.09s.
+       Blocked hits ~0.03s. Follow-up hits of a multi are shorter so a slap string does not freeze the round. Super's own 0.5s freeze is never shortened.
+       bufT / jumpQ do not tick while freeze > 0 (see G.step), so a buffered ATTACK or SPECIAL is still there after the pause; F.cancel also holds because stepF is skipped. */
+    function hitStop(m, blocked, follow) {
+      if (G.noHS) return;
+      if (follow) { freeze = Math.max(freeze, 0.02); return; }
+      if (blocked) { freeze = Math.max(freeze, 0.03); return; }
+      var base = (m && m.k === 'p') ? 0.045 : 0.06, dmg = (m && m.dmg) || 8;
+      freeze = Math.max(freeze, Math.min(0.09, base * Math.max(1, dmg / 9)));
+    }
     function land(F, O, m, mult) {
       if (O.inv > 0) return 'whiff';
       if (O.st === 'atk' && O.mv && O.mv.pose === 'counter' && O.stT >= O.mv.s && O.stT < O.mv.s + O.mv.a && !m.sup) { /* Shades Flash */ O.stT = O.mv.s + O.mv.a; O.inv = 0.3; flashFx(O.x, O.y - 70, '255,216,96'); say('COUNTER!', 0.8); var mm = moveOf(O, 'sp'); mm.dmg = 12; applyHit(O, F, mm, 1); return 'counter'; }
@@ -53362,11 +53372,13 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
       if (!O.ai) canBlock = !O.air && !(O.lockT > 0) && (O.st === 'idle' || O.st === 'walk' || O.st === 'block'); /* v6566-shonen: auto-block, no high / low */
       else { canBlock = O.blockW && !O.air && (O.st === 'idle' || O.st === 'walk' || O.st === 'crouch' || O.st === 'block'); crouchB = O.want.crouch;
         if (canBlock && ((m.lvl === 'low' && !crouchB) || (m.lvl === 'over' && crouchB))) canBlock = false; }
-      if (canBlock) { O.st = 'block'; O.stT = 0; O.bsT = m.bs; O.crouch = crouchB; O.vx = -O.face * 80; O.hp = Math.max(1, O.hp - (m.chip || 0)); O.meter = Math.min(100, O.meter + (O.ai ? 3 : 2)); F.meter = Math.min(100, F.meter + 2); if (!O.ai) G._blocks = (G._blocks | 0) + 1; fx.push({ k: 'blk', x: (F.x + O.x) / 2, y: O.y - 60, t: 0 }); tone(900, now(), 0.04, 'square', 0.04); return 'block'; }
+      if (canBlock) { O.st = 'block'; O.stT = 0; O.bsT = m.bs; O.crouch = crouchB; O.vx = -O.face * 80; O.hp = Math.max(1, O.hp - (m.chip || 0)); O.meter = Math.min(100, O.meter + (O.ai ? 3 : 2)); F.meter = Math.min(100, F.meter + 2); if (!O.ai) G._blocks = (G._blocks | 0) + 1; fx.push({ k: 'blk', x: (F.x + O.x) / 2, y: O.y - 60, t: 0 }); tone(900, now(), 0.04, 'square', 0.04); hitStop(m, true, F.rushN > 1); return 'block'; }
       applyHit(F, O, m, mult || 1); return 'hit'; }
     function applyHit(F, O, m, mult) { var d = Math.round(m.dmg * mult); O.hp = Math.max(0, O.hp - d); O.flash = 0.08; O.meter = Math.min(100, O.meter + 5); F.meter = Math.min(100, F.meter + 8);
-      if (m.kd || O.air || O.hp <= 0) { O.st = 'down'; O.stT = 0; O.vy = O.air ? O.vy : -260; O.air = true; O.vx = -O.face * 120; } else { O.st = 'hit'; O.stT = 0; O.hsT = m.hs; O.vx = -O.face * (m.kb || 60); }
-      if (m) m.hit = true; F.cancel = 0.2;
+      var kb = m.kb || 60;
+      if (F.chainN === 3 && !m.kd) kb = Math.round(kb * 1.2); /* v6566-shonen: a little more push on the P>P>K finisher */
+      if (m.kd || O.air || O.hp <= 0) { O.st = 'down'; O.stT = 0; O.vy = O.air ? O.vy : -260; O.air = true; O.vx = -O.face * 120; } else { O.st = 'hit'; O.stT = 0; O.hsT = m.hs; O.vx = -O.face * kb; }
+      if (m) m.hit = true; F.cancel = 0.2; hitStop(m, false, F.rushN > 1);
       if (F === P) { combo = comboT > 0 ? combo + 1 : 1; comboT = 0.9; G.score += d * 10 + (combo >= 3 ? combo * 60 : 0); } else { combo = 0; }
       shake = Math.min(0.25, 0.05 + d * 0.008); fx.push({ k: 'hit', x: (F.x + O.x) / 2 + O.face * -10, y: O.y - 64 - Math.random() * 20, t: 0, big: d >= 9 }); drum(d >= 9 ? 'k' : 's', now(), d >= 9 ? 0.5 : 0.3); tone(180 + d * 10, now(), 0.06, 'square', 0.04);
       if (O.hp <= 0) { slow = 1; say('K.O.', 2); drum('k', now(), 0.7); drum('k', now() + 0.2, 0.6); } }
@@ -53399,8 +53411,9 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     G.step = function (dt) {
       if (phase === 'select') { selT += dt; return; }
       if (phase === 'vs') { phase = 'pre'; rT = 0; return 'go'; }
-      fx.forEach(function (F) { F.t += dt; }); fx = fx.filter(function (F) { return F.t < 0.35; }); msgT = Math.max(0, (msgT || 0) - dt); bufT = Math.max(0, bufT - dt); jumpQ = Math.max(0, jumpQ - dt); if (spHold >= 0 && phase === 'fight') spHold += dt; comboT -= dt; shake = Math.max(0, shake - dt); superFlash = Math.max(0, superFlash - dt);
-      if (freeze > 0) { freeze -= dt; return; }
+      fx.forEach(function (F) { F.t += dt; }); fx = fx.filter(function (F) { return F.t < 0.35; }); msgT = Math.max(0, (msgT || 0) - dt); shake = Math.max(0, shake - dt); superFlash = Math.max(0, superFlash - dt);
+      if (freeze > 0) { freeze = Math.max(0, freeze - dt); if (freeze > 0) return; } /* v6566-shonen t606u: bufT holds through hitstop so a buffered input is not eaten */
+      bufT = Math.max(0, bufT - dt); jumpQ = Math.max(0, jumpQ - dt); if (spHold >= 0 && phase === 'fight') spHold += dt; comboT -= dt;
       var sdt = slow > 0 ? dt * 0.3 : dt; slow = Math.max(0, slow - dt);
       rT += dt;
       if (phase === 'pre') { if (rT < 0.05) say('ROUND ' + rnd, 1); if (rT > 1.0 && rT - dt <= 1.0) { say('FIGHT!', 0.7); tone(880, now(), 0.2, 'square', 0.07); } if (rT > 1.4) { phase = 'fight'; rT = 0; } stepF(P, E, sdt); stepF(E, P, sdt); return; }
@@ -53456,9 +53469,10 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     }
     function drawSelect(g, t) {
       var bg = g.createLinearGradient(0, 0, 0, SH); bg.addColorStop(0, '#2a0a06'); bg.addColorStop(1, '#0a0614'); g.fillStyle = bg; g.fillRect(0, 0, SW, SH);
-      otxt(g, 'SELECT YOUR FIGHTER', SW / 2, 44, 20, '#ffd860');
       var c = CH[ORDER[sel]]; g.drawImage(glow(c.aura, 90), 90 - 90, 170 - 90);
       drawFighter(g, { c: c, pose: lerpPose(POSE.idle, POSE.idle, 0), face: 1, flash: 0, x: 92, y: 250, st: 'idle' }, t, 1.6);
+      /* v6566-shonen t604u: keep the tall hair at full size; paint the title last so it sits above the spikes */
+      otxt(g, 'SELECT YOUR FIGHTER', SW / 2, 44, 20, '#ffd860');
       otxt(g, c.n, 262, 84, c.n.length > 9 ? 20 : 24, '#fff'); txt(g, c.full, 262, 108, 10, '#ffd860');
       var M = c.mv; [['TAP SPECIAL', M.sp[0]], ['HOLD SPECIAL', M.spf[0]], ['FULL BAR \u00b7 SUPER', M.su[0]]].forEach(function (q, i) { txt(g, q[0], 190, 130 + i * 30, 9, '#7fe8ff', 'left'); txt(g, q[1], 190, 143 + i * 30, 12, '#fff', 'left', 800); });
       txt(g, 'HP ' + c.hp + '  \u00b7  SPEED ' + c.spd, 262, 232, 10, 'rgba(255,255,255,.7)');
@@ -53482,7 +53496,7 @@ function skyline(x, c, seedN, top) { var r = seed(seedN || 5), X = 0; while (X <
     G.dispose = function () { bgL = {}; TT = null; };
     G.dbg = function (o) { o = o || {}; if (phase === 'select') { if (o.sel != null) sel = o.sel; confirmSel(); phase = 'pre'; } if (o.lives) { P.max = P.hp = 9999; } if (o.foeHp != null) E.hp = o.foeHp; if (o.meter) P.meter = 100; return { phase: phase, p: P && P.hp, e: E && E.hp, foe: E && E.id, me: P && P.id, wins: wins, rnd: rnd }; };
     G.phase = function () { return phase; }; G._pe = function () { return [P, E]; };
-    G._in = function () { return { buf: buf, bufT: bufT, spHold: spHold, jumpQ: jumpQ, blocks: G._blocks | 0 }; };
+    G._in = function () { return { buf: buf, bufT: bufT, spHold: spHold, jumpQ: jumpQ, blocks: G._blocks | 0, freeze: freeze }; };
     return G;
   };
   } catch (eTop) { try { console.warn('S2ARC fight init', eTop); } catch (e2) {} }
